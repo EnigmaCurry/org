@@ -1,0 +1,12 @@
+(("el-get" . "a5ba5852648a90ee0cde9fb5d72e69497d260eec")
+ ("emacsmirror-mirror" . "ffb0ad0ce17a28de89e445208942b003be93461d")
+ ("gnu-elpa-mirror" . "b797798108528ab021ef52eef2f7dce56021bc19")
+ ("map" . "941b1e5fa39acce026b287565cb1a95c57d611ed")
+ ("melpa" . "ec8cb06e00e79a36f614fb7d041ce1f8af3530ff")
+ ("nongnu-elpa" . "b299b0d074a4762e99474ba443d37263f87ace1d")
+ ("ox-hugo" . "cb1b6cfd7b080e889352150416c1725f11ba937a")
+ ("seq" . "4355cde01767911660f761cf874edb412d06bd7a")
+ ("straight.el" . "b3760f5829dba37e855add7323304561eb57a3d4")
+ ("tomelr" . "d26c278ea4a5ec5b5036830dbd34368c9e141b0d")
+ ("use-package" . "a6e856418d2ebd053b34e0ab2fda328abeba731c"))
+:gamma
