@@ -26,7 +26,11 @@ build-hugo:
 
 .PHONY: serve
 serve:
-	@cd hugo && hugo server --buildDrafts --navigateToChanged
+	@cd hugo && hugo server --buildDrafts --disableFastRender
+
+.PHONY: serve-prod
+serve-prod:
+	@cd hugo && hugo server --navigateToChanged
 
 .PHONY: clean
 clean:
