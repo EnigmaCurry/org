@@ -27,8 +27,6 @@
 (setq straight-use-package-by-default t)
 
 (use-package ox-hugo
-  :config
-  (org-hugo-section "blog")
   :ensure t)
 
 (defun build (org-file)
