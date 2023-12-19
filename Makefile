@@ -2,7 +2,7 @@ MAKE_ := $(MAKE) -j1 --no-print-directory
 LIB ?= emacs.d/init.el
 
 .PHONY: build # Export notes.org to separate markdown files and build hugo site
-build: build-md build-hugo
+build: clean build-md build-hugo
 
 .PHONY: help # Show this help screen
 help:
@@ -20,6 +20,7 @@ install:
 
 build-md:
 	@${MAKE_} emacs-batch FUNC=build ARGS='\"notes.org\"'
+	@${MAKE_} emacs-batch FUNC=build ARGS='\"books/d.rymcg.tech.org\"'
 
 build-hugo:
 	@cd hugo && hugo
