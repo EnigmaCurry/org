@@ -26,7 +26,7 @@ build-hugo:
 
 .PHONY: serve
 serve:
-	@cd hugo && hugo server --buildDrafts --disableFastRender
+	@cd book && mdbook serve
 
 .PHONY: serve-prod
 serve-prod:
