@@ -5,7 +5,7 @@ PUBLISH_RCLONE_REMOTE ?= book_preview
 PUBLISH_RCLONE_DIRECTORY ?= book_preview
 
 .PHONY: build # Export notes.org to separate markdown files and build hugo site
-build: clean build-md build-hugo
+build: clean build-org build-hugo
 
 .PHONY: help # Show this help screen
 help:
@@ -21,9 +21,13 @@ emacs-batch:
 install:
 	git submodule update --init --recursive
 
+build-org:
+	@${MAKE_} build-md ORG_FILE=books.org
+	@${MAKE_} build-md ORG_FILE=license.org
+	@${MAKE_} build-md ORG_FILE=books/d.rymcg.tech.org
+
 build-md:
-	@${MAKE_} emacs-batch FUNC=build ARGS='\"books.org\"'
-	@${MAKE_} emacs-batch FUNC=build ARGS='\"books/d.rymcg.tech.org\"'
+	@${MAKE_} emacs-batch FUNC=build ARGS='\"${ORG_FILE}\"'
 
 build-hugo:
 	@cd hugo && hugo
