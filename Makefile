@@ -19,7 +19,7 @@ install:
 	git submodule update --init --recursive
 
 build-md:
-	@${MAKE_} emacs-batch FUNC=build ARGS='\"notes.org\"'
+	@${MAKE_} emacs-batch FUNC=build ARGS='\"books.org\"'
 	@${MAKE_} emacs-batch FUNC=build ARGS='\"books/d.rymcg.tech.org\"'
 
 build-hugo:
