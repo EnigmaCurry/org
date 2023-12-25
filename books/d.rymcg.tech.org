@@ -1,6 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /d.rymcg.tech
 #+hugo_weight: auto
+#+STARTUP: align
 
 * Self-hosting Docker with d.rymcg.tech
 :PROPERTIES:
@@ -8,6 +9,8 @@
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :linkTitle Self-hosting Docker
 :END:
 
+This book describes how to get started with self-hosting your own
+Docker server, using the tools provided by [[https://d.rymcg.tech][d.rymcg.tech]].
 
 * Introduction
 :PROPERTIES:
@@ -19,26 +22,36 @@
 [[https://en.wikipedia.org/wiki/Self-hosting_(web_services)][Self-hosting]] is described on Wikipedia as the following:
 
 #+BEGIN_QUOTE
-Self-hosting is the practice of running and maintaining a website or service using a private web server, instead of using a service outside of someone's own control. Self-hosting allows users to have more control over their data, privacy, and computing infrastructure, as well as potentially saving costs and improving skills. 
+Self-hosting is the practice of running and maintaining a website or
+service using a private web server, instead of using a service outside
+of someone's own control. Self-hosting allows users to have more
+control over their data, privacy, and computing infrastructure, as
+well as potentially saving costs and improving skills.
 #+END_QUOTE
 
-The definition of Self-hosting lives on a spectrum. On the one hand,
+You can apply self-hosting a little bit, or a lot. On the one hand,
 you could post all of your content on Facebook (obviously, this is
 /not/ self-hosting), and on the other hand you could build all your
-servers yourself from parts, and run them in your basement, on your
+servers yourself, from parts, and run them in your basement, on your
 own network, bootstrapping everything. For most people though,
 self-hosting means to use cloud computing, using a generic Linux VPS
 (virtual private server), installing and operating open-source
 software (or software that you built), but still letting the cloud
 provider handle the hardware and network side of things.
 
+Demarcate your own level of abstraction. Test that your abstraction
+works in a generic way, portable to any other provider at the same
+level of abstraction. Try running it entirely at home, at least for
+development purposes. Don't get locked into a single vendor. Use open
+source software, or software you built yourself. This is self-hosting.
+
 ** What is Docker?
 
 [[https://www.docker.com/][Docker]] is a software platform for running containers on Linux.
-Containers let you install and run software in a generic way. It
-solves the problems of [[https://en.wikipedia.org/wiki/Dependency_hell]["dependency hell"]] and [[https://donthitsave.com/comic/2016/07/15/it-works-on-my-computer]["But it works on my
-computer!"]], for all Linux distributions. Containers are created from
-images that include /all/ of their dependencies, including the
+Containers let you install and run software in an isolated and generic
+way. It solves the problems of [[https://en.wikipedia.org/wiki/Dependency_hell]["dependency hell"]] and [[https://donthitsave.com/comic/2016/07/15/it-works-on-my-computer]["But it works on
+my computer!"]], for all Linux distributions. Containers are created
+from images that include /all/ of their dependencies, including the
 operating system to support it. The only thing a container does /not/
 include, is the Linux kernel, which is shared from the host with all
 the containers running on the same host. This abstraction makes it
@@ -68,6 +81,7 @@ fundamental differences between containers and virtual machines, and
 so it is useful to describe them here as a comparison:
 
 | Feature           | Container                                                                                                                      | Virtual Machine                                                       |
+|-------------------+--------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------|
 | Kernel            | Containers share a kernel with the host                                                                                        | VMs runs their own kernel                                             |
 | Hardware          | Containers hare hardware with the host, but with the addition of a permissions model to access it                              | VMs use hardware virtualization features                              |
 | Memory            | Containers share memory with the host                                                                                          | VMs use a fixed size virtual hardware memory space                    |
@@ -78,6 +92,19 @@ so it is useful to describe them here as a comparison:
 | Process isolation | Containers run as as regular Linux processes, which have a capabilities system to limit privileges                             | VMs are like a separate machine, and a have a separate process space  |
 | Root filesystem   | Containers run inherit a root filesystem from their image, which contain all the application files, and the OS, minus a kernel | VMs are run from (linked) virtual disk images                         |
 | Volumes           | Containers automatically mount volumes provided from Docker. Docker maintains the lifecycle of these volumes.                  | VMs can have multiple virtual disks, or manually mount remote volumes |
+
+Containerization uses features of the Linux kernel, (specifically,
+namespaces and cgroups). For the purposes of this book, the term
+"container" will always imply that it is running on a Linux host; it
+is inseparable from the host kernel, and it can't work without it!
+(You may be aware that you can install a product called `Docker
+Desktop` on Windows or MacOS. This product installs a Linux virtual
+machine on your host OS and runs Docker inside it, and then it
+installs the docker client on the host OS, so it appears seamless.)
+
+In a general context, there are other OS containers, like Windows
+containers, however they are on the fringe, and will not be discussed
+in this book. Containers imply Linux.
 
 Docker is a good platform to pick for self-hosting containers, because
 it's a mature open source project, and it works on virtually any Linux
@@ -90,18 +117,18 @@ beginner.
 Docker uses a client-server API pattern of control. You install the
 Docker daemon on a server machine, and this machine is called the
 Docker Host. Usually you interact with the API through the command
-line ~docker~ tool. Docker provides primitive commands for running
-single containers directly, with ~docker run~. However, for larger
+line =docker= tool. Docker provides primitive commands for running
+single containers directly, with =docker run=. However, for larger
 projects that need more than one container (eg. a webserver + a
-database) and need to be able to talk to one another, ~docker run~ is
+database) and need to be able to talk to one another, =docker run= is
 not the best tool to use.
 
-~docker compose~ is a command that operates your containers from a
-project level abstraction. ~docker compose~ lets you define all the
+=docker compose= is a command that operates your containers from a
+project level abstraction. =docker compose= lets you define all the
 containers and volumes that you need for a given project, in a
-declarative way, in a ~docker-compose.yaml~ file.
+declarative way, in a =docker-compose.yaml= file.
 
-With ~docker compose~ you can start/stop/delete all the project
+With =docker compose= you can start/stop/delete all the project
 containers together, as a single unit.
 
 ** What is d.rymcg.tech?
@@ -115,7 +142,7 @@ instances at the same time, with seprate configs in .env files.
 
 d.rymcg.tech focuses on the config rules of the [[https://12factor.net/config][12-factor principle]].
 All of the configuration for a container should be specified as
-environment variables, which Docker loads from a standard ~.env~ file.
+environment variables, which Docker loads from a standard =.env= file.
 All of the data for a container should live inside a [[https://docs.docker.com/storage/volumes/][Docker Volume]]
 (not a bind mount), and so the lifecycle of the volume is maintained
 by Docker directly.
