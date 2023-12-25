@@ -1,6 +1,9 @@
 MAKE_ := $(MAKE) -j1 --no-print-directory
 LIB ?= emacs.d/init.el
 
+PUBLISH_RCLONE_REMOTE ?= book_preview
+PUBLISH_RCLONE_DIRECTORY ?= book_preview
+
 .PHONY: build # Export notes.org to separate markdown files and build hugo site
 build: clean build-md build-hugo
 
@@ -36,3 +39,10 @@ serve-prod: build
 .PHONY: clean
 clean:
 	rm -rf hugo/content public
+
+.PHONY: publish
+publish: build
+	@rclone listremotes | grep "^${PUBLISH_RCLONE_REMOTE}:$$" || (echo -e "Missing rclone remote: ${PUBLISH_RCLONE_REMOTE} \nPlease run 'rclone config' and create this remote." && false)
+	@echo "## Publishing books via rclone ... be patient ..."
+	time -p rclone sync public ${PUBLISH_RCLONE_REMOTE}:${PUBLISH_RCLONE_DIRECTORY}/public
+	@echo Done

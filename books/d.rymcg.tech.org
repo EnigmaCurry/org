@@ -80,18 +80,18 @@ already be familar with: Virtual Machines. However, there are several
 fundamental differences between containers and virtual machines, and
 so it is useful to describe them here as a comparison:
 
-| Feature           | Container                                                                                                                      | Virtual Machine                                                       |
-|-------------------+--------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------|
-| Kernel            | Containers share a kernel with the host                                                                                        | VMs runs their own kernel                                             |
-| Hardware          | Containers hare hardware with the host, but with the addition of a permissions model to access it                              | VMs use hardware virtualization features                              |
-| Memory            | Containers share memory with the host                                                                                          | VMs use a fixed size virtual hardware memory space                    |
-| Disk              | Containers share storage system with the host (volumes live under /var/lib/docker/ by default)                                 | VMs use a fixed size (but expandable) virtual hard disk image         |
-| Network           | Containers support Host level networking, or can do NAT                                                                        | NAT or bridge network, not host level                                 |
-| Execution model   | Containers are just a regular Linux processes, run under a given user account                                                  | VMs run their own kernel and init (systemd)                           |
-| Init process      | Containers don't need an init process, Docker runs the containers process (CMD) directly                                       | VMs run their own kernel and init (systemd)                           |
-| Process isolation | Containers run as as regular Linux processes, which have a capabilities system to limit privileges                             | VMs are like a separate machine, and a have a separate process space  |
-| Root filesystem   | Containers run inherit a root filesystem from their image, which contain all the application files, and the OS, minus a kernel | VMs are run from (linked) virtual disk images                         |
-| Volumes           | Containers automatically mount volumes provided from Docker. Docker maintains the lifecycle of these volumes.                  | VMs can have multiple virtual disks, or manually mount remote volumes |
+| Feature           | Container                                                                                                                  | Virtual Machine                                                       |
+|-------------------+----------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------|
+| Kernel            | Containers share a kernel with the host                                                                                    | VMs runs their own kernel                                             |
+| Hardware          | Containers hare hardware with the host, but with the addition of a permissions model to access it                          | VMs use hardware virtualization features                              |
+| Memory            | Containers share memory with the host                                                                                      | VMs use a fixed size virtual hardware memory space                    |
+| Disk              | Containers share storage system with the host (volumes live under =/var/lib/docker/= by default)                           | VMs use a fixed size (but expandable) virtual hard disk image         |
+| Network           | Containers support Host level networking, or can do NAT                                                                    | NAT or bridge network, not host level                                 |
+| Execution model   | Containers are just a regular Linux processes, run under a given user account                                              | VMs run their own kernel and init (systemd)                           |
+| Init process      | Containers don't need an init process, Docker runs the containers process (CMD) directly                                   | VMs run their own kernel and init (systemd)                           |
+| Process isolation | Containers run as as regular Linux processes, which have a capabilities system to limit privileges                         | VMs are like a separate machine, and a have a separate process space  |
+| Root filesystem   | Containers inherit a root filesystem from their image, which contain all the application files, and the OS, minus a kernel | VMs are run from (linked) virtual disk images                         |
+| Volumes           | Containers automatically mount volumes provided from Docker. Docker maintains the lifecycle of these volumes.              | VMs can have multiple virtual disks, or manually mount remote volumes |
 
 Containerization uses features of the Linux kernel, (specifically,
 namespaces and cgroups). For the purposes of this book, the term
