@@ -25,6 +25,7 @@ build-org:
 	@${MAKE_} build-md ORG_FILE=books.org
 	@${MAKE_} build-md ORG_FILE=license.org
 	@${MAKE_} build-md ORG_FILE=books/d.rymcg.tech.org
+	@${MAKE_} build-md ORG_FILE=books/publishing-with-org-mode.org
 
 build-md:
 	@${MAKE_} emacs-batch FUNC=build ARGS='\"${ORG_FILE}\"'
