@@ -4,6 +4,9 @@ LIB ?= emacs.d/init.el
 PUBLISH_RCLONE_REMOTE ?= book_preview
 PUBLISH_RCLONE_DIRECTORY ?= book_preview
 
+RELEARN_THEME_SNAPSHOT ?= 974798afca08ff5f9768a0a7d575a71399ce7148
+RELEARN_THEME_TARBALL_URL_PREFIX ?= https://codeload.github.com/McShelby/hugo-theme-relearn/tar.gz/
+
 .PHONY: build # Export notes.org to separate markdown files and build hugo site
 build: clean build-org build-hugo
 
@@ -19,7 +22,7 @@ emacs-batch:
 
 .PHONY: install
 install:
-	git submodule update --init --recursive
+	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
 
 build-org:
 	@${MAKE_} build-md ORG_FILE=books.org
