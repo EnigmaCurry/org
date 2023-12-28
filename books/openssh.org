@@ -17,7 +17,57 @@ server.
 :EXPORT_FILE_NAME: introduction
 :END:
 
-introduction
+SSH (secure shell) is a secure networking tool used between a client
+and a server. Using an encrypted network protocol, it can be used to
+securely login to a server remotely, as well as for more advanded
+networking scenarios. Typical use cases for SSH include:
+
+ * Access a server's terminal console, remotely.
+ * Transfer files between the server and client (using =rsync=, =scp=,
+   or =sftp=).
+ * Create network tunnels to access private servers, in both
+   directions, either on the server, or on the client.
+ * Create a server that acts as a bastion or "jump" host, to be a port
+   of entry into a larger private network. SSH is configured to only
+   allow authorized client keys access through the bastion host.
+ * Create a server to act as an HTTP (socks) client proxy, to allow
+   remote clients to browse the web, using the server's IP address as
+   the origin.
+
+SSH is based upon public key cryptography. Both the client and the
+server need to create their own public/private keypair. Keys can be
+encrypted on disk (eg. =~/.ssh/id_ecdsa=) or they may also be loaded
+from a USB hardware token. Upon connecting to a remote server for the
+first time, the client asks the user to validate the server's public
+key fingerprint, and then the server's public key is written into a
+file called =~/.ssh/known_hosts=, which marks the connection as
+trusted from then on. The server also authorizes the client through a
+predefined =authorized_keys= file. If either side rejects the key
+presented by the other, the connection is unauthorized, and is closed
+immediately.
+
+SSH is a protocol that has become standardized, and there are various
+implementations, however the most venerable example is still [[https://www.openssh.com/][OpenSSH]],
+and this is the only implementation that this book will cover. If you
+want to use an SSH client from a different vendor, just make sure that
+is supports the SSH v2 protocol.
+
+OpenSSH has legacy support for passwords that you type via the
+keyboard. This is as an older alternative to SSH keys. It is still
+enabled by default in many distributions. The instructions in this
+book will entirely disable these interactive passwords. Clients
+wishing to gain entry to your server will be forced to provide a valid
+SSH key credentials, and no keyboard passwords are allowed!
+
+* Install SSH server
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-ssh-server
+:END:
+
+* Install SSH client
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-ssh-client
+:END:
 
 * Create new SSH key(s) on a new client workstation
 :PROPERTIES:
@@ -26,9 +76,9 @@ introduction
 
 When setting up a new user on a workstation, you should create a new
 (client) SSH key. In other words, don't share your SSH private key on
-two machines, create two separate keys instead. If one machine becomes
-lost or stolen, you only have to remove the one key from your
-authorized keys lists.
+two machines: create two separate keys instead. That way, if one
+machine becomes lost or stolen, you only have to remove the one key
+from your authorized keys lists.
 
 If you have a hardware token that stores your SSH key, like the
 [[https://solokeys.com/][solokey]], you can ignore the advice about creating separate keys per
@@ -36,15 +86,15 @@ machine, and simply unplug and replug your token between machines.
 
 ** Choosing the SSH key type
 
-It is recommended to use the newer =ecdsa= key type, which has the
-latest encryption types. This may or may not be the default keytype
-for your distribution, so you should explicitly select it when
-creating the key.
+It is recommended to use the newer =ecdsa= key type, which uses the
+latest encryption standards. Your distribution may still use the older
+standard =rsa= by default, so you should explicitly select =ecdsa=
+when creating the key.
 
-However, some older servers don't allow ecdsa keys, and so in those
+However, some older servers don't accpet =ecdsa= keys, and so in those
 cases you should create an =id_rsa= key. Although you should prefer
 =ecdsa=, you likely will need to create both key types for the time
-being. (In late 2023, even Amazon AWS does not support ecdsa yet.)
+being. (In late 2023, even Amazon AWS does not support =ecdsa= yet.)
 
 ** Create the new SSH keys
 
