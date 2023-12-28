@@ -20,7 +20,7 @@ emacs-batch:
     (${FUNC} ${ARGS})\
 	)"
 
-.PHONY: install
+.PHONY: install # Install the hugo theme
 install:
 	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
 
@@ -30,19 +30,19 @@ build-md:
 build-hugo:
 	@cd hugo && hugo
 
-.PHONY: serve
+.PHONY: serve # Build and serve the site on http://localhost:1313
 serve: build
-	@cd hugo && hugo server --buildDrafts --disableFastRender
+	@cd hugo && xdg-open http://localhost:1313 && hugo server --buildDrafts --disableFastRender
 
 .PHONY: serve-prod
 serve-prod: build
-	@cd hugo && hugo server --navigateToChanged
+	@cd hugo && hugo && hugo server --navigateToChanged
 
 .PHONY: clean
 clean:
 	rm -rf hugo/content public
 
-.PHONY: publish
+.PHONY: publish # Publish changes to rclone remote
 publish: build
 	@rclone listremotes | grep "^${PUBLISH_RCLONE_REMOTE}:$$" || (echo -e "Missing rclone remote: ${PUBLISH_RCLONE_REMOTE} \nPlease run 'rclone config' and create this remote." && false)
 	@echo "## Publishing books via rclone ... be patient ..."
