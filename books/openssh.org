@@ -1,0 +1,92 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /openssh
+#+hugo_weight: auto
+#+STARTUP: align
+
+* OpenSSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 900
+:END:
+
+This book describes how to use [[https://www.openssh.com/][OpenSSH]], both as a client, and as a
+server.
+
+* Introduction
+:PROPERTIES:
+:EXPORT_FILE_NAME: introduction
+:END:
+
+introduction
+
+* Create new SSH key(s) on a new client workstation
+
+When setting up a new user on a workstation, you should create a new
+(client) SSH key. In other words, don't share your SSH private key on
+two machines, create two separate keys instead. If one machine becomes
+lost or stolen, you only have to remove the one key from your
+authorized keys lists.
+
+If you have a hardware token that stores your SSH key, like the
+[[https://solokeys.com/][solokey]], you can ignore the advice about creating separate keys per
+machine, and simply unplug and replug your token between machines.
+
+** Choosing the SSH key type
+
+It is recommended to use the newer =ecdsa= key type, which has the
+latest encryption types. This may or may not be the default keytype
+for your distribution, so you should explicitly select it when
+creating the key.
+
+However, some older servers don't allow ecdsa keys, and so in those
+cases you should create an =id_rsa= key. Although you should prefer
+=ecdsa=, you likely will need to create both key types for the time
+being. (In late 2023, even Amazon AWS does not support ecdsa yet.)
+
+** Create the new SSH keys
+
+Create the =rsa= key type:
+
+: ssh-keygen -t rsa -f ~/.ssh/id_rsa
+
+You will be prompted to enter a passphrase, to encrypt the keyfile,
+which you should definitely not skip!
+
+** Setup the ssh-agent
+
+Because you encrypted your keyfile, you need to enter the passphrase
+everytime you use it. This is inconvenient, so you can run =ssh-agent=
+to temporarily store your key in memory, and therefore you only need
+to enter your passphrase once, when you log in.
+
+Install the =keychain= program:
+
+: # On Debian / Ubuntu machines:
+: sudo apt install keychain
+:
+: # On Arch Linux machines:
+: sudo pacman -S keychain
+:
+: # On Fedora:
+: sudo dnf install keychain
+
+To configure keychain, edit your =~/.bashrc= file:
+
+: # Put this line in your ~/.bashrc:
+: eval $(keychain --eval --quiet)
+
+Log out of your desktop session, and log back in. Open your terminal,
+and you should be automatically prompted to enter your SSH passphrase.
+Once you have entered the passphrase, the SSH key will remain resident
+in memory until you log out.
+
+Double check that the key has been loaded, run:
+
+: ssh-add -L
+
+The above should print your public key, loaded into the running
+=ssh-agent=. Now you should be able to use your key without entering a
+passphrase. Copy the output and upload it to your services as your
+authorized key. For servers, put the key into
+=~/.ssh/authorized_keys=. For hosted services, like GitHub, paste the
+key into your SSH settings page.

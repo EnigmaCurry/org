@@ -1,12 +1,13 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /publishing-with-org-mode
-#+hugo_weight: 300
+#+hugo_weight: auto
 #+STARTUP: align
 
 * Publishing with org-mode, ox-hugo, and literate programming.
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :linkTitle Publishing with org-mode
+:EXPORT_HUGO_WEIGHT: 900
 :END:
 
 This book describes how this site is written, in Org-mode, with
@@ -17,3 +18,67 @@ ox-hugo, and bits of Literate Programming.
 :EXPORT_FILE_NAME: introduction
 :END:
 
+intro
+
+* Dependencies
+:PROPERTIES:
+:EXPORT_FILE_NAME: dependencies
+:END:
+
+This site is built with:
+
+- [[https://www.gnu.org/software/emacs/][Emacs]]
+- [[https://orgmode.org/][Org-mode]]
+- [[https://ox-hugo.scripter.co/][Ox-hugo]]
+- [[https://gohugo.io][Hugo]] (extended edition)
+- GitHub actions (also compatible with Gitea actions)
+
+The GitHub/Gitea actions file includes all its dependencies
+declaratively.
+
+To build locally, you must install Emacs (29+), and hugo (v0.120+),
+using your package manager, or by downloading directly from their
+respective project pages. Please be aware that hugo has two editions:
+[[https://gohugo.io/installation/linux/#editions][standard and extended]], and this build requires the extended edition
+(TODO: verify this - I had some problems before - but maybe they are
+resolved - I am still using the extended edition for now).
+
+You will also need to clone the source to your workstation:
+
+: git clone https://github.com/EnigmaCurry/org.git 
+:    ~/git/vendor/enigmacurry/org
+
+I always recommend to everyone, that you choose to use the
+=~/git/vendor/ORG_NAME/REPO_NAME= path structure when cloning any git
+repository (including your own!). This suggested path is a
+vendor-neutral convention, useful for documentation purposes, and
+which shouldn't conflict with any existing directory you might have.
+Therefore the instructions should generally work on all machines. If
+we all agree to use the same path, the instructions are much easier to
+write, and read from! If you are adamant about cloning this elsewhere,
+consider making a symlink from this path anyway (In this case,
+=~/git/vendor/enigmacurry/org=).
+
+* Building locally
+:PROPERTIES:
+:EXPORT_FILE_NAME: building-locally
+:END:
+
+Change into the directory where you cloned the source:
+
+: cd ~/git/vendor/enigmacurry/org
+
+Run the install method to download the theme:
+
+: # This just downloads/installs the theme:
+: make install
+
+Build the site:
+
+: # This builds the entire static site into the public/ directory:
+: make build
+
+Run the development server:
+
+: # This builds the entire site, and then runs the live reload server:
+: make serve
