@@ -32,7 +32,7 @@ build-hugo:
 
 .PHONY: serve # Build and serve the site on http://localhost:1313
 serve: build
-	@cd hugo && xdg-open http://localhost:1313 && hugo server --buildDrafts --disableFastRender
+	@cd hugo && hugo server --buildDrafts --disableFastRender
 
 .PHONY: serve-prod
 serve-prod: build

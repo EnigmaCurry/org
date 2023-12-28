@@ -169,56 +169,70 @@ in a git repository).
 :END:
 
 To host a web service, one of the first things you will need is to
-register domain name. This is the domain name for all your links, and
-what your users will type into their browsers to visit your pages.
+register your domain name. This will be the domain name used for all
+your service links, and it is what your users will need to type into
+their browsers to visit your pages.
 
-Domain names are a globally scarce resource. Because of its scarcity,
-you must pay for your domain registrations, and they are only valid in
-1 year increments. In return you receive exclusive use of your domain
-name. You can pay for several years in advance, or pay for just one
-year. Howver, you must remember to pay each year to maintain a current
-valid registration.
-
-You can buy a domain name from lots of places. This chapter will
-assume you are use [[https://www.gandi.net][Gandi.net]], which is pretty good. You can search for
-any other reputable domain name seller, and pick your favorite. These
-instructions will be very similar regardless of the provider you pick.
-
-** Register a domain name on Gandi.net
-
- * Sign up for an account at [[https://www.gandi.net/][Gandi.net]]
- * Once signed in, from your dashboard, click =Register=.
- * Search for any domain name you like, eg. =your-name.com=.
- * Add your domain to the shopping card, go to Checkout and complete
-   your purchase.
- * Once you have purchased the domain, it should show up in your
-   =Dashboard=, under the =Domain= tab.
- * Leave this browser tab open, you will return to it in the next
-   section.
+Domain names a scarce resource. Because of their scarcity, you must
+pay for your domain registrations, doing so in 1 year increments. If
+domains were free, all the good ones would be taken by now, but
+because they cost money, there are still some good enough ones left to
+be had. In return for your fee, you receive exclusive use of your
+domain name for the period that you paid for. You can pre-pay for
+several years in advance, or for just one year at a time. You must
+remember to renew your domains for every year, lest they expire and no
+longer resolve to your services, and you lose control of the domain,
+possibly forever.
 
 ** Domain names for private servers
 
 If your Docker server won't be a public server, (eg. running a private
 Docker server at home), it is still recommended that you use a valid
-internet domain name, because you will need one in order to create
-valid TLS certificates, however this is not required for development
-purposes, and you may choose to make up your own fake domain name
-instead. In either case, you will still need to setup DNS, and this is
-explained in the next chapter.
+internet domain name, because you will still need one in order to
+create valid TLS certificates from [[https://letsencrypt.org/][Let's Encrypt]]. However, having
+working TLS is not /required/ for development purposes (but certainly
+nice to have!), so you may choose to make up your own fake domain name
+instead, and forgo TLS. In either case, you will still need to setup
+DNS, and this is explained in the next section.
 
-* Setup DNS
+** Register an Internet domain name
+
+You can buy (rent) a domain name from lots of places. For
+documentation purposes, we will use [[https://www.gandi.net][Gandi.net]], but these instructions
+will be similar regardless of the domain provider you pick.
+
+ * Sign up for an account at [[https://www.gandi.net/][Gandi.net]]
+ * Once signed in, from your dashboard, click =Register=.
+ * Search for any domain name you like, eg. =your-name.com=.
+ * Add your domain to the shopping cart, go to checkout, and complete
+   your purchase.
+ * Once you have purchased the domain, it should show up in your
+   =Dashboard=, under the =Domain= tab.
+ * Leave this browser tab open, you will return to it in the next
+   chapter.
+
+* Setup public DNS
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-dns
 :END:
 
-Now that you have registered a domain name (or chosen to use a fake
-one), you need to setup the DNS server for it. Usually you will use
-the DNS server of your cloud provider, but you may choose any DNS
-provider you like. If you are creating a private server, you can use a
-self-hosted private DNS server, or you can also use a public one.
+A DNS server maps your domain (and subdomain) names to the various IP
+addresses of your servers. DNS is required for your users to be able
+to type your domain name =prod.example.com= and have it resolve to the
+IP address that is required to contact your Docker server.
 
-This chapter will assume you are using Gandi as your domain registrar,
-and want to use DigitalOcean as your domain's DNS server.
+Now that you have registered a domain name, you need to tell your
+registrar where your DNS server is. Usually you will use the DNS
+server that your cloud provider gives you, but you may choose any DNS
+provider you like. If you are creating a private server, you may still
+want to choose a public DNS server, but using private IP addresses
+ranges for the records. You can also setup a local/private DNS server,
+but this will be discussed later.
+
+For documentation purposes, this chapter will assume you are using
+Gandi.net as your domain registrar, and that you want to use
+DigitalOcean.com as your domain's public DNS server, but these
+instructions will be similar regardless of the providers you pick.
 
 ** Configure your domain's DNS server on Gandi.net
 
@@ -235,7 +249,7 @@ and want to use DigitalOcean as your domain's DNS server.
    * =ns3.digitalocean.com=
 
 Once changed, you can verify the setting from your workstation, using
-the `whois` command:
+the =whois= command:
 
 : whois your-domain.com
 
@@ -250,29 +264,33 @@ list of the new nameservers.
  * Click on the =Domains= tab.
  * Enter your domain name into the box and click =Add Domain=.
 
-DigitalOcean is now in charge of your domain DNS. You will return to
-this screen later on when creating inividual subdomain records for
-your services.
+DigitalOcean is now in charge of your DNS for your domain. You will
+return to this screen later on, when creating individual subdomain
+records for your services.
 
 * Create a Docker server
 :PROPERTIES:
 :EXPORT_FILE_NAME: docker-server
 :END:
 
-This chapter will guide you to install Docker, for three different scenarios:
+The next three chapters will guide you to install Docker, for three
+different server scenarios:
 
  1. A production/staging Docker server on the public Internet (eg.
     DigitalOcean or any other VPS cloud provider).
  2. A production/staging Docker server on a private LAN.
  3. A development Docker server in a local VM.
 
-** Create a public Docker server 
+* Create a public Docker server 
+:PROPERTIES:
+:EXPORT_FILE_NAME: public-docker-server
+:END:
 
 This section will guide you to create your own public Docker server as
 a DigitalOcean droplet, however you may also install Docker on any
 cloud provider or dedicated host that you prefer.
 
-*** Choosing a VPS provider
+** Choosing a VPS provider
 
 One of the most basic units of cloud computing is the Virtual Private
 Server (VPS). A VPS is a virtual machine that is provisioned by a
@@ -293,7 +311,7 @@ the host level automatically, and so your hands should probably stay
 off of it. If you want to reliably block traffic, in addition to the
 automatic rules, it must be done on an external/upstream firewall.
 
-*** Create a DigitalOcean account and setup your SSH key
+** Create a DigitalOcean account and setup your SSH key
 
 If you have not yet setup an SSH key on your workstation, [[file:openssh.org][read the
 OpenSSH book]] and do that first.
@@ -309,7 +327,33 @@ OpenSSH book]] and do that first.
    computer.
  * Finish adding the key, click =Add SSH Key=.
 
-*** Creating a DigitalOcean droplet for a Docker server
+** Create a DigitalOcean firewall template
+
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Networking= in the menu.
+ * Click the =Firewalls= tab.
+ * Click =Create Firewall=.
+ * Enter the name, eg. =basic-docker-public-web=.
+ * Enter the following rules:
+   * SSH:
+     * Type: =SSH=
+     * Protocol: =TCP=
+     * Port Range: =22=
+     * Sources: All IPv4, All IPv6, or a specific static IP address if
+       you want to be more secure.
+   * HTTP:
+     * Type: =HTTP=
+     * Protocol: =TCP=
+     * Port Range: =80=
+     * Sources: All IPv4, All IPv6.
+   * HTTPS:
+     * Type: =HTTP=
+     * Protocol: =TCP=
+     * Port Range: =443=
+     * Sources: All IPv4, All IPv6.
+  * Click =Create Firewall=.
+ 
+** Creating a DigitalOcean droplet for a Docker server
 
 DigitalOcean provides a Docker image with which to create a droplet
 (DigitalOcean's name for their own VPS product).
@@ -335,10 +379,21 @@ DigitalOcean provides a Docker image with which to create a droplet
    is already sufficient, and you perform regular backups, this might
    not be needed.)
  * Select your SSH key for the root user.
- * Set the hostname for the docker server.
+ * Set the hostname for the docker server. The name should be short
+   and typeable, as it will become a part of the canononical service
+   URLs. For this example, we choose =prod=.
  * Verify everything's correct, and then click =Create Dropet=.
 
-*** Create wildcard DNS records for the droplet
+** Apply the DigitalOcean droplet firewall
+
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Networking= in the menu.
+ * Find the firewall template you created, and click it.
+ * Click on the firewall's =Droplets= tab.
+ * Click =Add Droplets= and search for the droplet you created and select it.
+ * Click =Add Droplet= to add the firewall to the droplet.
+
+** Create wildcard DNS records for the droplet
 
 For the purposes of documentation, assume you you own the domain
 =example.com= and you have created the Docker server named =prod=. You
@@ -377,50 +432,81 @@ install =bind-tools=. For Fedora install =bind-utils=.)
 
 Pick some random subdomain off your domain:
 
-: dig laksdflkweieri.docker.example.com
+: dig laksdflkweieri.prod.example.com
 
-Since you created the wildcard record for =*.docker.example.com= dig
+Since you created the wildcard record for =*.prod.example.com= dig
 should return your Docker server's IP address in the =ANSWER SECTION=
 of the output. You can test all your other records the same way.
 
 If you run into DNS caching problems, verify with the source DNS
 server directly:
 
-: dig @ns1.digitalocean.com laksdflkweieri.docker.example.com
+: dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
 
-*** Setup your local workstation
+** Setup your local workstation
 
 Edit your SSH config file: =~/.ssh/config= (create it if necessary).
 Add the following lines, and change it for your domain name that you
 already created the DNS record for:
 
-: Host ssh.docker.example.com
+: Host ssh.prod.example.com
 :     User root
 :     ControlMaster auto
 :     ControlPersist yes
 :     ControlPath /tmp/ssh-%u-%r@%h:%p
 
-(The name ssh.docker.example.com should work automatically if you
-setup the wildcard DNS entry (*.docker.example.com) created
+(The name ssh.prod.example.com should work automatically if you
+setup the wildcard DNS entry (*.prod.example.com) created
 previously. The ControlMaster, ControlPersist, ControlPath adds SSH
 connection multi-plexing, and will make repeated logins/docker
 commands faster.)
 
 Now test that you can SSH to your droplet:
 
-ssh ssh.docker.example.com
+ssh ssh.prod.example.com
 
 The first time you login to your droplet, you need to confirm the SSH
 pubkey fingerprint; press Enter. Once connected, log out: press Ctrl-D
 or type exit and press Enter.
  
-** Create a private Docker Server
+* Create a private Docker Server for a LAN
+:PROPERTIES:
+:EXPORT_FILE_NAME: private-docker-server
+:END:
 
 Create a VM
 
-** Create a development Docker Server
+** Setup private DNS
+
+If you chose a fake domain, you can set the DNS record on your local
+DNS server. Generally, most LANs already have a local DNS server
+install on a home router. You can add your records there. If you don't
+have a DNS server, you can install [[https://dnsmasq.org/][dnsmasq]]. dnsmasq can act as DNS
+and/or DHCP servers for your LAN.
+
+A dnsmasq entry for the wildcard records would look like this (in
+=dnsmasq.conf=):
+
+: # dnsmasq wildcard records for your Docker server (192.168.0.1):
+: address=/prod.example.com/192.168.0.1
+: address=/.prod.example.com/192.168.0.1
+
+Replace =192.168.0.1= with the ip of your Docker server.
+
+Alternatively, you can edit =/etc/hosts= directly on your workstation,
+but it does not support wildcard records, so you would have to specify
+each name one by one:
+
+: ## /etc/hosts excerpt for three explicit domains:
+: 192.168.0.1 prod.example.com www.prod.example.com test.prod.example.com
+
+
+* Create a development Docker Server VM
+:PROPERTIES:
+:EXPORT_FILE_NAME: development-docker-server-vm
+:END:
 
 * Create a Docker workstation
 :PROPERTIES:
 :EXPORT_FILE_NAME: docker-workstation
-:END:
+:END
