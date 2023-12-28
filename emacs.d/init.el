@@ -29,10 +29,17 @@
 (use-package ox-hugo
   :ensure t)
 
-(defun build (org-file)
-  (find-file org-file)
-  (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)
-  )
+(use-package f)
+
+(defun build (root-dir)
+  "Build all org books into hugo markdown"
+  (let ((org-files (append
+                    (directory-files root-dir "\\.org$")
+                    (directory-files (f-join root-dir "books") t "\\.org$"))))
+    (dolist (e org-files)
+      (find-file e)
+      (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror))))
+
 
 ;; Run this occasionally, to lock new package versions:
 ;;(straight-freeze-versions)
