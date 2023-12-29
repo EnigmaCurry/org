@@ -86,21 +86,27 @@ machine, and simply unplug and replug your token between machines.
 
 ** Choosing the SSH key type
 
-It is recommended to use the newer =ecdsa= key type, which uses the
-latest encryption standards. Your distribution may still use the older
-standard =rsa= by default, so you should explicitly select =ecdsa=
-when creating the key.
+It is recommended to use the newer =ecdsa= or =ed25519= key types,
+which uses the latest encryption standards. Your distribution may
+still use the older standard =rsa= by default, so you should
+explicitly select the type when creating the key.
 
-However, some older servers don't accpet =ecdsa= keys, and so in those
-cases you should create an =id_rsa= key. Although you should prefer
-=ecdsa=, you likely will need to create both key types for the time
-being. (In late 2023, even Amazon AWS does not support =ecdsa= yet.)
+However, some older servers don't accpet =ecdsa= or =ed25519= keys,
+and so in those cases you should create an =rsa= key.
 
 ** Create the new SSH keys
 
 Create the =rsa= key type:
 
 : ssh-keygen -t rsa -f ~/.ssh/id_rsa
+
+Create the =ecdsa= key type:
+
+: ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa
+
+Create the =ed25519= key type:
+
+: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 
 You will be prompted to enter a passphrase, to encrypt the keyfile,
 which you should definitely not skip!
