@@ -1,5 +1,6 @@
 MAKE_ := $(MAKE) -j1 --no-print-directory
 LIB ?= emacs.d/init.el
+SHELL := /bin/bash
 
 PUBLISH_RCLONE_REMOTE ?= book_preview
 PUBLISH_RCLONE_DIRECTORY ?= book_preview
@@ -22,7 +23,7 @@ emacs-batch:
 
 .PHONY: install # Install the hugo theme
 install:
-	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
+	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && mkdir -p hugo/themes && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
 
 build-md:
 	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"$${PWD}\"'
@@ -46,5 +47,5 @@ clean:
 publish: build
 	@rclone listremotes | grep "^${PUBLISH_RCLONE_REMOTE}:$$" || (echo -e "Missing rclone remote: ${PUBLISH_RCLONE_REMOTE} \nPlease run 'rclone config' and create this remote." && false)
 	@echo "## Publishing books via rclone ... be patient ..."
-	time -p rclone sync public ${PUBLISH_RCLONE_REMOTE}:${PUBLISH_RCLONE_DIRECTORY}/public
+	time rclone sync public ${PUBLISH_RCLONE_REMOTE}:${PUBLISH_RCLONE_DIRECTORY}/public
 	@echo Done
