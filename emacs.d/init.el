@@ -2,7 +2,7 @@
 ;; It is not a general purpose emacs config!
 
 (message load-file-name)
-(setq user-emacs-directory "/home/ryan/git/vendor/enigmacurry/org/emacs.d")
+(setq user-emacs-directory "~/git/vendor/enigmacurry/org/emacs.d")
 (defvar bootstrap-version)
 (let
   (
