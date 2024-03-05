@@ -1,0 +1,167 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /linux-workstation
+#+hugo_weight: auto
+#+STARTUP: align
+
+* Linux Workstation
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 190
+:END:
+
+This book describes how I setup a Linux Workstation (on a personal
+Desktop or Laptop computer).
+
+* Introduction
+:PROPERTIES:
+:EXPORT_FILE_NAME: introduction
+:END:
+
+A Linux Workstation is a single user computer that you use as your
+primary interface for computing, especially for "work" purposes. At a
+bare minimum, a workstation includes a keyboard to type on, and a
+display to display things on. Historically, there has been a hardware
+distinction between a personal computer (PC) and a Unix workstation,
+but ever since the introduction of Linux, the difference in hardware
+doesn't really exist anymore, and any computing device can become a
+workstation. The only important distinctions for a workstation is the
+role that it serves, and how /you/ configure and use it on daily
+basis.
+
+The role of a workstation is very different than that of a server. A
+workstation's only purpose is to serve you, the user, while
+interacting with its physical keyboard/mouse/etc interface. A
+workstation /is/ usually connected to a network, but only as a client,
+not as a server. (Of course, you may bend this rule if you like, to
+make your computer a server-workstation or "Sworkstation", but it is
+cleaner, and more secure, to use separate machines for these very
+differnt roles.)
+
+This book will describe my preferred method for setting up a brand new
+computer for use as a personal workstation.
+
+* Fedora Sway Atomic
+:PROPERTIES:
+:EXPORT_FILE_NAME: fedora-sway-atomic
+:END:
+
+I have tried a great many different Linux distributions over the
+years, but I have recently settled on using [[https://fedoraproject.org/atomic-desktops/sway/][Fedora Sway Atomic]] for my
+desktop and laptop workstations.
+
+[[https://github.com/swaywm/sway][Sway]] is a minimal tiling window manager for Wayland. It is ideal for
+efficient keyboard centric development and for getting out of your
+way.
+
+The "Atomic" part refers to [[https://coreos.github.io/rpm-ostree/][rpm-ostree]] which was developed by the
+CoreOS team to build an operating system that is built entirely to
+support containers. The root file system of the host operating system
+is mounted read-only, and the packages are distributed in an image,
+rather than installed individually. This makes updating (or rolling
+back) the system far easier, and makes for a more stable environment.
+There is no need to replace packages one-by-one, you just download the
+new image provided by the distro, and then reboot the system to use
+it.
+
+The base image includes all the typical things everyone needs:
+coreutils, a display manager, web browser, terminal apps etc. However,
+the base image is still pretty bare bones. Furthermore, the image is
+read-only, so you can't install packages like you can with a more
+traditional Linux distro. If you want to install something that isn't
+in the base image, you have a few different options:
+
+ * Podman or Docker containers. Since containers use their own image,
+   they are separate from the main image, and can be freely created
+   and destroyed separately.
+ * Flatpak is a type of application container that includes all of its
+   dependencies, and it is sandboxed/isolated from the host system,
+   therefore they can be installed/managed separately from the base
+   image.
+ * Use rpm-ostree itself to create a new image *layer*. This extends
+   the base layer with extra packages you want to install. This is
+   fully supported, but not optimal, as when you upgrade the base
+   image, this layer needs to be recreated each time.
+
+I only use a couple of Flatpak apps for a few things. For almost
+everything else I use Podman containers via [[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][toolbox]] and/or [[https://distrobox.it/][distrobox]]
+and these can even include graphical applications. Creating your own
+[[https://docs.fedoraproject.org/en-US/iot/adding-layered/][rpm-ostree layers]] is to be avoided if possible, but some things don't
+like running in containers, so this remains an option.
+
+* Requirements
+:PROPERTIES:
+:EXPORT_FILE_NAME: requirements
+:END:
+
+You will need the following hardware:
+
+ * An x86_64 desktop or laptop computer.
+ * A USB drive for copying the .iso installer to.
+ * A [[https://solokeys.com/][solokey]] or other FIDO2 compatible hardware authentication key.
+   (This is optional, but highly recommended for storing secure shell
+   keys, PGP keys, and logging into websites with Webauthn.)
+
+* Installation
+:PROPERTIES:
+:EXPORT_FILE_NAME: install
+:END:
+
+[[https://fedoraproject.org/atomic-desktops/sway/download][Download the Fedora Sway Atomic iso image.]]
+
+Assuming you are temporarily using another Linux workstation, write
+the .iso image to a USB drive (eg. replace ~/dev/sdX~ with your device name):
+
+: dd if=Fedora-Sericea-ostree-x86_64-39-1.5-respin2.iso \
+:    of=/dev/sdX bs=10M status=progress conv=sync
+
+Boot the target workstation computer using the USB drive. You will
+boot into the Anaconda install wizard. Just follow the prompts to
+install it, it is exactly the same as any other Fedora / Redhat
+install.
+
+Tips:
+
+ * Enable whole disk encryption and choose a secure passphrase.
+   Especially for laptop computers that you may travel with, this an
+   important thing to do to keep your files safe at rest.
+ * Use the entire disk for the install. Dual booting another operating
+   system on the same workstation is not considered a safe/secure
+   thing to do. If you want to run Windows or play games, use a
+   separate computer for that.
+
+Once the installer finishes, reboot, remove the USB, and login to your
+new system.
+
+** Setup Sway
+
+The Fedora Atomic Sway edition includes a default configuration for
+Sway. It's pretty nice out of the box, and so if you like it you can
+just use it. However, I have my own custom configuration that I
+replace it with, and you can do the same if you like.
+
+Open the default terminal emulator (foot) with the keyboard shortcut:
+=Win+Enter= (hold down the "Windows" key on your keyboard, then press
+Enter.)
+
+My custom config replaces several of the default configuration files.
+So you must first get rid of these files, by renaming them with the
+suffix =.orig= for posterity:
+
+: mv ~/.config ~/.config.orig
+: mv ~/.bashrc ~/.bashrc.orig
+: mv ~/.bash_profile ~/.bash_profile.orig
+
+Next, install my [[https://github.com/enigmacurry/sway-home][customized sway config repository]] :
+
+: git clone https://github.com/enigmacurry/sway-home \
+:   ~/git/vendor/enigmacurry/sway-home
+: cd ~/git/vendor/enigmacurry/sway-home
+: ./setup.sh
+
+The =setup.sh= script links the repository files to the same original
+paths as the files you just moved. It also asks you some questions to
+help setup your git profile.
+
+Once you have finished entering the information setup asks for, press
+=Win+Shift+E=, and choose Log Out. Log back in, and this will load the
+new config files.
