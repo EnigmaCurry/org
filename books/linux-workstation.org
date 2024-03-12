@@ -311,3 +311,95 @@ and so when you close your browser all the cookies for that site
 disappears.
 
 
+* Emacs
+:PROPERTIES:
+:EXPORT_FILE_NAME: emacs-on-fedora
+:END:
+
+Emacs is my long time favorite code editor IDE. Because Sway runs on
+Wayland, you'll want to install the Wayland (pgtk) version of Emacs.
+
+In Fedora 40 onwards, the Wayland (pgtk) version is the default. For
+Fedora 39, [[https://copr.fedorainfracloud.org/coprs/enigm-a/emacs-pgtk-nativecomp][you can use this COPR]] (a COPR is to Fedora what PPA is to
+Ubuntu and what AUR is to Arch Linux), which includes a custom build
+for Wayland (pgtk).
+
+** Install Emacs
+
+To enable this, you need to be running your dev toolbox:
+
+: toolbox enter dev
+
+Once the toolbox is running, enabled the COPR:
+
+: sudo dnf copr enable enigm-a/emacs-pgtk-nativecomp
+
+
+** Install dependencies
+
+Most Emacs packages are written in Emacs Lisp, and therefore have no
+external dependencies. The one exception is for Vterm terminal
+support, which requires compiling a C library (libvterm). This
+compilation can be done automatically by Emacs, but it requires you
+have some tools preinstalled:
+
+ * CMake
+ * libtool
+
+Install the dependencies inside the toolbox:
+
+: sudo dnf install cmake libtool
+
+** Remove any existing Emacs config
+
+Assuming you want to use my Emacs config, you need to delete any
+existing config you already have. Also note that Emacs creates a
+default config the first time it runs, so if you started Emacs
+already, you may have a config and not even know it.
+
+Here's how to remove the existing Emacs config:
+
+: rm ~/.emacs ~/.emacs.d
+
+** Install my Emacs config
+
+[[https://github.com/EnigmaCurry/emacs][My Emacs config is on github]]. Install it with the following script:
+
+: REMOTE=git@github.com:EnigmaCurry/emacs.git
+: REPO=${HOME}/git/vendor/enigmacurry/emacs
+: BRANCH=straight
+: 
+: (set -e
+: test -d ~/.emacs.d && (echo "~/.emacs.d already exists. Aborting install." && exit 1)
+: test -d ${REPO} || git clone -b ${BRANCH} ${REMOTE} ${REPO}
+: mkdir ~/.emacs.d && ls -1 ${REPO}/*.el | xargs -iXX ln -s XX ~/.emacs.d
+: mkdir ~/.emacs.d/straight && ln -s ${REPO}/straight-versions ~/.emacs.d/straight/versions
+: ln -s ${REPO}/snippets ~/.emacs.d/snippets
+: )
+
+** Start Emacs to finish the installation
+
+The first time Emacs starts, it will install all of the dependencies
+listed in the main config file =~/.emacs.d/init.el=.
+
+Run:
+
+: emacs
+
+Wait for everything to install. You may see a blank screen for up to
+10 minutes, but you should see some minimal information of the
+progress in the bottom minibuffer.
+
+If it gets stuck at any point, quit and restart it, and it should
+continue where it left off. If you get any error message, you may want
+to start Emacs again with debug mode turned on:
+
+: emacs --debug-init
+
+This will usually give you a more verbose error message which can be
+helpful in debugging the startup.
+
+
+** Read the README for my config
+
+More notes are available in the [[https://github.com/EnigmaCurry/emacs#readme][README]].
