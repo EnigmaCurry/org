@@ -310,6 +310,52 @@ container. By default, new sites will always open in temporary ones,
 and so when you close your browser all the cookies for that site
 disappears.
 
+* Toolbox
+:PROPERTIES:
+:EXPORT_FILE_NAME: toolbox
+:END:
+
+[[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][Toolbox]] is an integral part of Fedora Atomic, and it is one the main
+methods of installing software (the alternative being Flatpak).
+Toolbox can actually be used on any Linux system that is capable of
+running [[https://podman.io/][Podman]], but is especially useful on Atomic hosts. Toolbox is
+more tightly integrated with your host OS than Docker or Podman
+containers normally are. They share the same home directory, and they
+live in the same network and process namespace as the host (ie. you
+can run =ps= or =kill= from inside the toolbox, and it will see/affect
+the host.) Toolbox containers are not really sandboxed like normal
+Docker containers are, but they are a convenience for
+installing/removing software on Atomic hosts, because theres not
+really any other way (since the host filesystem is read-only).
+
+The killer feature of a toolbox is that it lets you try things out,
+and if you want to start over, you can just delete the toolbox
+container and create a new one. You are less likely to mess up the
+host by playing around inside the toolbox. Just remember that =/home=
+and =/etc= are bind mounted to the host, and so if you change or
+delete things in those directories, they are affected the same way on
+the host too.
+
+** Dev toolbox (Fedora)
+
+Let's create a toolbox to install some of the common development tools
+we will use on a daily basis.
+
+: toolbox create dev
+
+This will create a new toolbox container called =dev= based upon the
+same Fedora version as the host (the toolbox itself is not Atomic
+though, but the normal Fedora Workstation version instead.)
+
+To enter the toolbox run:
+
+: toolbox enter dev
+
+This will enter the toolbox container, and now you can install extra
+software:
+
+: sudo dnf install keychain
+: sudo dnf groupinstall "Development Tools" "Development Libraries"
 
 * Emacs
 :PROPERTIES:
@@ -338,6 +384,25 @@ Once the toolbox is running, you may enable the COPR:
 Install Emacs:
 
 : sudo dnf install emacs
+
+** Create Emacs script
+
+In order to be able to quickly launch Emacs insdide the toolbox from
+the host, you will need a little script installed on the host.
+
+You can create this script and put it in =/usr/local/bin/emacs=. Run
+this on the host (not in the toolbox), to create it as the root user:
+
+: cat <<EOF | sudo tee /usr/local/bin/emacs
+: #!/bin/bash
+: # Run Emacs in the dev toolbox and pass it any args:
+: toolbox run -c dev emacs $@
+: EOF
+:
+: sudo chmod a+x /usr/local/bin/emacs
+
+Now you can run Emacs from the host, and it will run inside the
+Toolbox.
 
 ** Install dependencies
 
