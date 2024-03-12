@@ -354,8 +354,46 @@ To enter the toolbox run:
 This will enter the toolbox container, and now you can install extra
 software:
 
-: sudo dnf install keychain
+: sudo dnf install keychain htop
 : sudo dnf groupinstall "Development Tools" "Development Libraries"
+
+** Arch Linux toolbox
+
+You are not limited to running Fedora toolboxes, in fact you can run
+any container image you want, or even build your own from a
+=Dockerfile=. Here is a Dockerfile for Arch Linux you can use to build
+an Arch Linux toolbox container:
+
+
+: FROM docker.io/archlinux/archlinux:latest
+: ENV NAME=arch-toolbox VERSION=rolling
+: LABEL com.github.containers.toolbox="true" \
+:   name="$NAME" \
+:   version="$VERSION"
+: RUN pacman -Syu --noconfirm \
+:   && pacman -S sudo inetutils less --noconfirm \
+:   && pacman -Scc --noconfirm \
+:   && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
+: CMD ["bash"]
+
+Write this to a file named =Dockerfile= and open your host terminal to
+the same directory. Then run this command to build the container:
+
+: podman build -t arch .
+
+Now you can create a new toolbox based on the new image (both called
+=arch=):
+
+: toolbox create --image arch arch
+
+To enter the Arch Linux container, run:
+
+: toolbox enter arch
+
+Now inside you can run any Arch Linux command, consult the [[http://wiki.archlinux.org/][Arch Wiki]].
+
+: sudo pacman -Syu
+: sudo pacman -S keychain base-devel
 
 * Emacs
 :PROPERTIES:
