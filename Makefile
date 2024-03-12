@@ -2,8 +2,8 @@ MAKE_ := $(MAKE) -j1 --no-print-directory
 LIB ?= emacs.d/init.el
 SHELL := /bin/bash
 
-PUBLISH_RCLONE_REMOTE ?= book_preview
-PUBLISH_RCLONE_DIRECTORY ?= book_preview
+PUBLISH_RCLONE_REMOTE ?= book
+PUBLISH_RCLONE_DIRECTORY ?= book
 
 RELEARN_THEME_SNAPSHOT ?= 974798afca08ff5f9768a0a7d575a71399ce7148
 RELEARN_THEME_TARBALL_URL_PREFIX ?= https://codeload.github.com/McShelby/hugo-theme-relearn/tar.gz/

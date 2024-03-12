@@ -13,13 +13,6 @@
 This book describes how this site is written, in Org-mode, with
 ox-hugo, and bits of Literate Programming.
 
-* Introduction
-:PROPERTIES:
-:EXPORT_FILE_NAME: introduction
-:END:
-
-intro
-
 * Dependencies
 :PROPERTIES:
 :EXPORT_FILE_NAME: dependencies
@@ -43,7 +36,23 @@ respective project pages. Please be aware that hugo has two editions:
 (TODO: verify this - I had some problems before - but maybe they are
 resolved - I am still using the extended edition for now).
 
-You will also need to clone the source to your workstation:
+Read the [[/linux-workstation/emacs-on-fedora/index.html][Linux Workstation chapter for setting up Emacs]].
+
+Please note that your package manager may container an old version of
+Hugo that is incompatible with the Relearn theme. You can install the
+/latest/ version of Hugo from the [[https://github.com/gohugoio/hugo/releases][Hugo GitHub releases page]].
+
+For example, to download the X86_64 release of hugo =v0.123.8=:
+
+: # Do this if your package manager installs an old incompatible version of Hugo:
+:
+: cd ~/Downloads
+: wget https://github.com/gohugoio/hugo/releases/download/v0.123.8/hugo_extended_0.123.8_linux-amd64.tar.gz
+: tar xfvz hugo_extended_0.123.8_linux-amd64.tar.gz
+: sudo install hugo /usr/local/bin/hugo
+
+You will also need to clone the git source of this website to your
+workstation:
 
 : git clone https://github.com/EnigmaCurry/org.git 
 :    ~/git/vendor/enigmacurry/org
@@ -82,3 +91,62 @@ Run the development server:
 
 : # This builds the entire site, and then runs the live reload server:
 : make serve
+
+* Publishing with GitHub pages
+:PROPERTIES:
+:EXPORT_FILE_NAME: publish-with-github-pages
+:END:
+
+This site is automatically published to [[https://pages.github.com][GitHub Pages]] via the included
+action file: [[https://github.com/EnigmaCurry/org/blob/ox-hugo/.github/workflows/deploy.yaml][.github/workflows/deploy.yaml]]. You can fork the
+repository and enable the action to run on your behalf and publish to
+your own site automatically, whenever you run =git push=.
+
+* Publishing with SFTP
+:PROPERTIES:
+:EXPORT_FILE_NAME: publish-with-sftp
+:END:
+
+If you don't want to use GitHub pages, you can alternatively publish
+to any webserver via SFTP.
+
+To do so, you must install [[https://rclone.org/][Rclone]].
+
+For example, on Fedora:
+
+: # On Fedora atomic, make sure to do this in a toolbox container:
+: sudo dnf install rclone
+
+Once installed, you need to configure the remote SFTP server you want to publish to:
+
+: rclone config
+
+Follow the prompts to setup your SFTP remote, or you can see the
+[[https://rclone.org/sftp/][example SFTP documentation]] for doing this. You must set all of the
+following details:
+
+ * The unique name of the remote (eg. =book=)
+ * The hostname of the SFTP server (eg. =sftp.example.com=)
+ * The SFTP username, password, or SSH key, and whether to use the SSH
+   agent (recommended!)
+
+The connection details are saved in your clone config file (eg.
+=~/.config/rclone/rclone.conf=)
+
+The included [[https://github.com/EnigmaCurry/org/blob/ox-hugo/Makefile][Makefile]] has a variable at the top called
+=PUBLISH_RCLONE_REMOTE= (default =book=). Make sure this is the same
+as the name of the rclone remote you configured (edit the Makefile if
+it is not).
+
+Once everything is configured, simply run =make publish= to publish
+your site to the SFTP remote.
+
+Your webserver document root needs to be configured to use the same
+path that the SFTP server is configured for.
+
+If you don't have a webserver or SFTP server, you can use the
+following from d.rymcg.tech:
+
+ * [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/sftp#readme][SFTP server]]
+ * [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/nginx#readme][Nginx webserver]]
+
