@@ -8,31 +8,31 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Create new SSH key(s) on a new client workstation :: book.rymcg.tech">
-    <meta name="twitter:description" content="When setting up a new user on a workstation, you should create a new (client) SSH key. In other words, don&rsquo;t share your SSH private key on two machines: create two separate keys instead. That way, if one machine becomes lost or stolen, you only have to remove the one key from your authorized keys lists.
-If you have a hardware token that stores your SSH key, like the solokey, you can ignore the advice about creating separate keys per machine, and simply unplug and replug your token between machines.">
-    <meta property="og:title" content="Create new SSH key(s) on a new client workstation :: book.rymcg.tech">
-    <meta property="og:description" content="When setting up a new user on a workstation, you should create a new (client) SSH key. In other words, don&rsquo;t share your SSH private key on two machines: create two separate keys instead. That way, if one machine becomes lost or stolen, you only have to remove the one key from your authorized keys lists.
-If you have a hardware token that stores your SSH key, like the solokey, you can ignore the advice about creating separate keys per machine, and simply unplug and replug your token between machines.">
+    <meta name="twitter:title" content="SSH :: book.rymcg.tech">
+    <meta name="twitter:description" content="SSH (secure shell) is a secure networking tool used between a client and a server. Using an encrypted network protocol, it can be used to securely login to a server remotely, as well as for more advanded networking scenarios. Typical use cases for SSH include:
+Access to a server&rsquo;s console shell, remotely. Transfer files between the server and client (using rsync, scp, or sftp). Create network tunnels to access private servers, in both directions, either on the server, or on the client.">
+    <meta property="og:title" content="SSH :: book.rymcg.tech">
+    <meta property="og:description" content="SSH (secure shell) is a secure networking tool used between a client and a server. Using an encrypted network protocol, it can be used to securely login to a server remotely, as well as for more advanded networking scenarios. Typical use cases for SSH include:
+Access to a server&rsquo;s console shell, remotely. Transfer files between the server and client (using rsync, scp, or sftp). Create network tunnels to access private servers, in both directions, either on the server, or on the client.">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://book.rymcg.tech/openssh/client-keys/index.html">
-    <meta property="article:section" content="OpenSSH :: book.rymcg.tech">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/ssh/index.html">
+    <meta property="article:section" content="Linux Workstation :: book.rymcg.tech">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <title>Create new SSH key(s) on a new client workstation :: book.rymcg.tech</title>
+    <title>SSH :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1710259759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1710259759" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1710259759" rel="stylesheet">
-    <link href="/css/auto-complete.css?1710259759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1710259759" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1710259759" rel="stylesheet">
-    <link href="/css/fonts.css?1710259759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1710259759" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1710259759" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1710259759" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1710259759" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1710259759" rel="stylesheet">
-    <link href="/css/print.css?1710259759" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1710259759" rel="stylesheet">
-    <script src="/js/url.js?1710259759"></script>
-    <script src="/js/variant.js?1710259759"></script>
+    <link href="/css/fontawesome-all.min.css?1710346256" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1710346256" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1710346256" rel="stylesheet">
+    <link href="/css/auto-complete.css?1710346256" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1710346256" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1710346256" rel="stylesheet">
+    <link href="/css/fonts.css?1710346256" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1710346256" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1710346256" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1710346256" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1710346256" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1710346256" rel="stylesheet">
+    <link href="/css/print.css?1710346256" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1710346256" rel="stylesheet">
+    <script src="/js/url.js?1710346256"></script>
+    <script src="/js/variant.js?1710346256"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -56,7 +56,7 @@ If you have a hardware token that stores your SSH key, like the solokey, you can
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/openssh/client-keys/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/ssh/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -69,9 +69,14 @@ If you have a hardware token that stores your SSH key, like the solokey, you can
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#choosing-the-ssh-key-type">Choosing the SSH key type</a></li>
-    <li><a href="#create-the-new-ssh-keys">Create the new SSH keys</a></li>
+    <li><a href="#create-ssh-keys">Create SSH Keys</a>
+      <ul>
+        <li><a href="#setup-solokey--fido2--hardware-authentication">Setup Solokey (FIDO2) hardware authentication</a></li>
+        <li><a href="#traditional-ssh-keyfiles">Traditional SSH keyfiles</a></li>
+      </ul>
+    </li>
     <li><a href="#setup-the-ssh-agent">Setup the ssh-agent</a></li>
+    <li><a href="#add-your-solokey-identity-per-session">Add your solokey identity per session</a></li>
   </ul>
 </nav>
                 </div>
@@ -80,13 +85,13 @@ If you have a hardware token that stores your SSH key, like the solokey, you can
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/openssh/index.html"><span itemprop="name">OpenSSH</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create new SSH key(s) on a new client workstation</span><meta itemprop="position" content="3"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">SSH</span><meta itemprop="position" content="3"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/openssh/install-ssh-client/index.html" title="Install SSH client (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/emacs-on-fedora/index.html" title="Emacs (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/publishing-with-org-mode/index.html" title="Publishing with org-mode, ox-hugo, and literate programming. (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/index.html" title="Self-hosting Docker with d.rymcg.tech (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -105,44 +110,89 @@ If you have a hardware token that stores your SSH key, like the solokey, you can
           <article class="default">
             <header class="headline">
             </header>
-<h1 id="create-new-ssh-keys-on-a-new-client-workstation">Create new SSH key(s) on a new client workstation</h1>
+<h1 id="ssh">SSH</h1>
 
-<p>When setting up a new user on a workstation, you should create a new
-(client) SSH key. In other words, don&rsquo;t share your SSH private key on
-two machines: create two separate keys instead. That way, if one
-machine becomes lost or stolen, you only have to remove the one key
-from your authorized keys lists.</p>
-<p>If you have a hardware token that stores your SSH key, like the
-<a href="https://solokeys.com/" target="_blank">solokey</a>, you can ignore the advice about creating separate keys per
-machine, and simply unplug and replug your token between machines.</p>
-<h2 id="choosing-the-ssh-key-type">Choosing the SSH key type</h2>
-<p>It is recommended to use the newer <code>ecdsa</code> or <code>ed25519</code> key types,
-which uses the latest encryption standards. Your distribution may
-still use the older standard <code>rsa</code> by default, so you should
-explicitly select the type when creating the key.</p>
-<p>However, some older servers don&rsquo;t accpet <code>ecdsa</code> or <code>ed25519</code> keys,
-and so in those cases you should create an <code>rsa</code> key.</p>
-<h2 id="create-the-new-ssh-keys">Create the new SSH keys</h2>
+<p>SSH (secure shell) is a secure networking tool used between a client
+and a server. Using an encrypted network protocol, it can be used to
+securely login to a server remotely, as well as for more advanded
+networking scenarios. Typical use cases for SSH include:</p>
+<ul>
+<li>Access to a server&rsquo;s console shell, remotely.</li>
+<li>Transfer files between the server and client (using <code>rsync</code>, <code>scp</code>,
+or <code>sftp</code>).</li>
+<li>Create network tunnels to access private servers, in both
+directions, either on the server, or on the client.</li>
+<li>Create a server that acts as a bastion or &ldquo;jump&rdquo; host, to be a port
+of entry into a larger private network. SSH is configured to only
+allow authorized client keys access through the bastion host.</li>
+<li>Create a server to act as an HTTP (socks) client proxy, to allow
+remote clients to browse the web, using the server&rsquo;s IP address as
+the origin.</li>
+</ul>
+<p>SSH is based upon public key cryptography. Both the client and the
+server need to create their own public/private keypair. Keys can be
+encrypted on disk (eg. <code>~/.ssh/id_ecdsa</code>) or they may also be loaded
+from a USB hardware token. Upon connecting to a remote server for the
+first time, the client asks the user to validate the server&rsquo;s public
+key fingerprint, and then the server&rsquo;s public key is written into a
+file called <code>~/.ssh/known_hosts</code>, which marks the connection as
+trusted from then on. The server also authorizes the client through a
+predefined <code>authorized_keys</code> file. If either side rejects the key
+presented by the other, the connection is unauthorized, and is closed
+immediately.</p>
+<h2 id="create-ssh-keys">Create SSH Keys</h2>
+<p>This book recommends the use of hardware authentication tokens, like
+the <a href="https://solokeys.com/" target="_blank">Solokey</a>. Traditional SSH keyfiles are also acceptable, but these
+should be considered as a legacy format, as they are less secure.
+Finally, plain password authentication (non-key based) is fully
+deprecated and should <strong>never</strong> be used.</p>
+<h3 id="setup-solokey--fido2--hardware-authentication">Setup Solokey (FIDO2) hardware authentication</h3>
+<p>Plug in your Solokey (or compatible hardware) to the USB port.</p>
+<p>Initialize the hardware with a new SSH key:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># You only need to do this one time per solokey!
+</span></span><span style="display:flex;"><span>ssh-keygen -t ed25519-sk -O resident -O verify-required</span></span></code></pre></div><p>You will be required to create/enter a PIN for the Solokey.</p>
+<h3 id="traditional-ssh-keyfiles">Traditional SSH keyfiles</h3>
+<p>The Solokey still has some drawbacks, and cannot be used in all cases.
+Traditional SSH keyfiles are still useful for automated and unattended
+clients. Technically, the solokey is supposed to be able to work in a
+&ldquo;touchless&rdquo; mode, by using the <code>-O no-touch-required</code> option, but I
+never got this to work.</p>
+<p>Key files should be created uniquely for each user and workstation.
+They should never be shared between multiple users or workstations.</p>
+<h4 id="choosing-the-ssh-key-type">Choosing the SSH key type</h4>
+<p>It is recommended to use the newer <code>ed25519</code> key type, which uses the
+latest encryption standards. Your distribution may still use the older
+standard <code>rsa</code> by default (which is acceptable). You should explicitly
+select the key type when creating the keyfile to be sure.</p>
+<p>Some older servers don&rsquo;t accpet <code>ed25519</code> keys, and so in those cases
+you should still create an <code>rsa</code> key as well. Each key type is stored
+in a different file, so its OK to have multiple types installed on the
+same machine.</p>
+<h4 id="create-the-new-ssh-keys">Create the new SSH keys</h4>
 <p>Create the <code>rsa</code> key type:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh-keygen -t rsa -f ~/.ssh/id_rsa</span></span></code></pre></div><p>Create the <code>ecdsa</code> key type:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa</span></span></code></pre></div><p>Create the <code>ed25519</code> key type:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519</span></span></code></pre></div><p>You will be prompted to enter a passphrase, to encrypt the keyfile,
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh-keygen -t rsa -f ~/.ssh/id_rsa</span></span></code></pre></div><p>Create the <code>ed25519</code> key type:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519</span></span></code></pre></div><p>You will be prompted to enter an encryption passphrase for each file,
 which you should definitely not skip!</p>
 <h2 id="setup-the-ssh-agent">Setup the ssh-agent</h2>
-<p>Because you encrypted your keyfile, you need to enter the passphrase
-everytime you use it. This is inconvenient, so you can run <code>ssh-agent</code>
-to temporarily store your key in memory, and therefore you only need
-to enter your passphrase once, when you log in.</p>
-<p>Install the <code>keychain</code> program:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># On Debian / Ubuntu machines:
+<p>Because your keyfiles are encrypted with a passphrase, you need to
+enter the passphrase everytime you use it. This is inconvenient, so
+you can run <code>ssh-agent</code> to temporarily store your key/identity in
+memory, and therefore you only need to enter your passphrase once,
+when you log in. (In the case of the solokey, the key is never held in
+memory, but you still need to hold the identity of it in the
+ssh-agent.)</p>
+<p>Keychain is a program that helps you setup the ssh-agent. Install
+<code>keychain</code>:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># On Fedora:
+</span></span><span style="display:flex;"><span>sudo dnf install keychain
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># On Debian / Ubuntu machines:
 </span></span><span style="display:flex;"><span>sudo apt install keychain
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span># On Arch Linux machines:
-</span></span><span style="display:flex;"><span>sudo pacman -S keychain
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span># On Fedora:
-</span></span><span style="display:flex;"><span>sudo dnf install keychain</span></span></code></pre></div><p>To configure keychain, edit your <code>~/.bashrc</code> file:</p>
+</span></span><span style="display:flex;"><span>sudo pacman -S keychain</span></span></code></pre></div><p>To configure keychain, edit your <code>~/.bashrc</code> file:</p>
 <div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># Put this line in your ~/.bashrc:
+</span></span><span style="display:flex;"><span># (If you&#39;re using my config, this is already in it.)
 </span></span><span style="display:flex;"><span>eval $(keychain --eval --quiet)</span></span></code></pre></div><p>Log out of your desktop session, and log back in. Open your terminal,
 and you should be automatically prompted to enter your SSH passphrase.
 Once you have entered the passphrase, the SSH key will remain resident
@@ -154,6 +204,13 @@ passphrase. Copy the output and upload it to your services as your
 authorized key. For servers, put the key into
 <code>~/.ssh/authorized_keys</code>. For hosted services, like GitHub, paste the
 key into your SSH settings page.</p>
+<h2 id="add-your-solokey-identity-per-session">Add your solokey identity per session</h2>
+<p>Apparently, keychain does not yet know how to load the Solokey
+automatically. You must add the Solokey to the ssh-agent manually, one
+time, each time you boot your workstation:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># Do this to load your Solokey into the ssh-agent:
+</span></span><span style="display:flex;"><span>ssh-add -K</span></span></code></pre></div><p>You will be prompted one time to enter your Solokey pin to unlock the
+key.</p>
 
             <footer class="footline">
             </footer>
@@ -177,12 +234,12 @@ key into your SSH settings page.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1710259759" defer></script>
-        <script src="/js/lunr/lunr.min.js?1710259759" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1710259759" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1710259759" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1710259759" defer></script>
-        <script src="/js/search.js?1710259759" defer></script>
+        <script src="/js/auto-complete.js?1710346256" defer></script>
+        <script src="/js/lunr/lunr.min.js?1710346256" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1710346256" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1710346256" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1710346256" defer></script>
+        <script src="/js/search.js?1710346256" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -193,14 +250,15 @@ key into your SSH settings page.</p>
       <div id="R-content-wrapper" class="highlightable">
         <div id="R-topics">
           <ul class="enlarge morespace collapsible-menu">
-          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class="parent "><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/index.html" class=""><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/linux-workstation/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
           <li data-nav-id="/linux-workstation/requirements/index.html" class=""><a class="padding" href="/linux-workstation/requirements/index.html">Requirements</a></li>
           <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Installation</a></li>
           <li data-nav-id="/linux-workstation/firefox/index.html" class=""><a class="padding" href="/linux-workstation/firefox/index.html">Firefox</a></li>
           <li data-nav-id="/linux-workstation/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/toolbox/index.html">Toolbox</a></li>
-          <li data-nav-id="/linux-workstation/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/emacs-on-fedora/index.html">Emacs</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/emacs-on-fedora/index.html">Emacs</a></li>
+          <li data-nav-id="/linux-workstation/ssh/index.html" class="active"><a class="padding" href="/linux-workstation/ssh/index.html">SSH</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/d.rymcg.tech/register-a-domain-name/index.html" class=""><a class="padding" href="/d.rymcg.tech/register-a-domain-name/index.html">Register a domain name</a></li>
@@ -209,11 +267,6 @@ key into your SSH settings page.</p>
           <li data-nav-id="/d.rymcg.tech/public-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/public-docker-server/index.html">Create a public Docker server</a></li>
           <li data-nav-id="/d.rymcg.tech/private-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/private-docker-server/index.html">Create a private Docker Server for a LAN</a></li>
           <li data-nav-id="/d.rymcg.tech/development-docker-server-vm/index.html" class=""><a class="padding" href="/d.rymcg.tech/development-docker-server-vm/index.html">Create a development Docker Server VM</a></li></ul></li>
-          <li data-nav-id="/openssh/index.html" class="parent "><a class="padding" href="/openssh/index.html">OpenSSH</a><ul id="R-subsections-ea2f97aa51644161356a8ada44dd1de8" class="morespace collapsible-menu">
-          <li data-nav-id="/openssh/introduction/index.html" class=""><a class="padding" href="/openssh/introduction/index.html">Introduction</a></li>
-          <li data-nav-id="/openssh/install-ssh-server/index.html" class=""><a class="padding" href="/openssh/install-ssh-server/index.html">Install SSH server</a></li>
-          <li data-nav-id="/openssh/install-ssh-client/index.html" class=""><a class="padding" href="/openssh/install-ssh-client/index.html">Install SSH client</a></li>
-          <li data-nav-id="/openssh/client-keys/index.html" class="active"><a class="padding" href="/openssh/client-keys/index.html">Create new SSH key(s) on a new client workstation</a></li></ul></li>
           <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
           <li data-nav-id="/publishing-with-org-mode/building-locally/index.html" class=""><a class="padding" href="/publishing-with-org-mode/building-locally/index.html">Building locally</a></li>
@@ -234,7 +287,7 @@ key into your SSH settings page.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = baseUri + this.value;">
-                      <option id="R-en" value="/openssh/client-keys/index.html" lang="en-us" selected></option>
+                      <option id="R-en" value="/linux-workstation/ssh/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -277,14 +330,14 @@ key into your SSH settings page.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Mar 12, 2024 at 4:09pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Mar 13, 2024 at 4:10pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1710259759" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1710259759" defer></script>
-    <script src="/js/theme.js?1710259759" defer></script>
+    <script src="/js/clipboard.min.js?1710346256" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1710346256" defer></script>
+    <script src="/js/theme.js?1710346256" defer></script>
   </body>
 </html>
