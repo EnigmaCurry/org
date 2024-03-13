@@ -137,13 +137,13 @@ new system.
 ** Setup Sway
 
 The Fedora Atomic Sway edition includes a default configuration for
-Sway. It's pretty nice out of the box, and so if you like it you can
-just use it. However, I have my own custom configuration that I
+Sway. It's pretty nice out of the box, and so if you like it, you can
+just use it. However, I have [[https://github.com/enigmacurry/sway-home][my own custom configuration]] that I
 replace it with, and you can do the same if you like.
 
 Open the default terminal emulator (foot) with the keyboard shortcut:
-=Win+Enter= (hold down the "Windows" key on your keyboard, then press
-Enter.)
+=Win+Enter= (hold down the "Windows" key on your keyboard, then
+simultaneously press Enter.)
 
 My custom config replaces several of the default configuration files.
 So you must first get rid of these files, by renaming them with the
@@ -157,12 +157,15 @@ Next, install my [[https://github.com/enigmacurry/sway-home][customized sway con
 
 : git clone https://github.com/enigmacurry/sway-home \
 :   ~/git/vendor/enigmacurry/sway-home
+
+Run the included setup script:
+
 : cd ~/git/vendor/enigmacurry/sway-home
 : ./setup.sh
 
-The =setup.sh= script links the repository files to the same original
-paths as the files you just moved. It also asks you some questions to
-help setup your git profile.
+The =setup.sh= script will make [[https://github.com/EnigmaCurry/sway-home/blob/master/setup.sh#L57-L61][symlinks]] to the repository files from
+the same original paths as the files you just moved. It also asks you
+some questions to help setup your git profile.
 
 Once you have finished entering the information setup asks for, press
 =Win+Shift+E=, and choose Log Out. Log back in, and this will load the
@@ -416,15 +419,16 @@ You can remove existing toolboxes:
 :EXPORT_FILE_NAME: emacs-on-fedora
 :END:
 
-Emacs is my long time favorite code editor IDE. Because Sway runs on
-Wayland, you'll want to install the Wayland (pgtk) version of Emacs.
-
-In Fedora 40 onwards, the Wayland (pgtk) version is already the
-default. For Fedora 39, [[https://copr.fedorainfracloud.org/coprs/enigm-a/emacs-pgtk-nativecomp][you can use this COPR]] (a COPR is to Fedora
-what PPA is to Ubuntu and what AUR is to Arch Linux), which includes a
-custom build for Wayland (pgtk).
+[[https://www.gnu.org/software/emacs/][Emacs]] is my long time favorite code editor (IDE) and for writing
+documentation (including this book).
 
 ** Install Emacs
+
+Because Sway runs on Wayland, you'll want to install the Wayland
+(pgtk) version of Emacs. In Fedora 40 onwards, the Wayland (pgtk)
+version is already the default. For Fedora 39, [[https://copr.fedorainfracloud.org/coprs/enigm-a/emacs-pgtk-nativecomp][you can use this COPR]]
+(a COPR is to Fedora what PPA is to Ubuntu and what AUR is to Arch
+Linux), which includes a custom build for Wayland (pgtk).
 
 To enable this, you need to be running your dev toolbox:
 
@@ -526,3 +530,148 @@ helpful in debugging the startup.
 ** Read the README for my config
 
 More notes are available in the [[https://github.com/EnigmaCurry/emacs#readme][README]].
+
+* SSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: ssh
+:END:
+
+SSH (secure shell) is a secure networking tool used between a client
+and a server. Using an encrypted network protocol, it can be used to
+securely login to a server remotely, as well as for more advanded
+networking scenarios. Typical use cases for SSH include:
+
+ * Access to a server's console shell, remotely.
+ * Transfer files between the server and client (using =rsync=, =scp=,
+   or =sftp=).
+ * Create network tunnels to access private servers, in both
+   directions, either on the server, or on the client.
+ * Create a server that acts as a bastion or "jump" host, to be a port
+   of entry into a larger private network. SSH is configured to only
+   allow authorized client keys access through the bastion host.
+ * Create a server to act as an HTTP (socks) client proxy, to allow
+   remote clients to browse the web, using the server's IP address as
+   the origin.
+
+SSH is based upon public key cryptography. Both the client and the
+server need to create their own public/private keypair. Keys can be
+encrypted on disk (eg. =~/.ssh/id_ecdsa=) or they may also be loaded
+from a USB hardware token. Upon connecting to a remote server for the
+first time, the client asks the user to validate the server's public
+key fingerprint, and then the server's public key is written into a
+file called =~/.ssh/known_hosts=, which marks the connection as
+trusted from then on. The server also authorizes the client through a
+predefined =authorized_keys= file. If either side rejects the key
+presented by the other, the connection is unauthorized, and is closed
+immediately.
+
+** Create SSH Keys
+
+This book recommends the use of hardware authentication tokens, like
+the [[https://solokeys.com/][Solokey]]. Traditional SSH keyfiles are also acceptable, but these
+should be considered as a legacy format, as they are less secure.
+Finally, plain password authentication (non-key based) is fully
+deprecated and should *never* be used.
+
+*** Setup Solokey (FIDO2) hardware authentication
+
+Plug in your Solokey (or compatible hardware) to the USB port.
+
+Initialize the hardware with a new SSH key:
+
+: # You only need to do this one time per solokey!
+: ssh-keygen -t ed25519-sk -O resident -O verify-required
+
+You will be required to create/enter a PIN for the Solokey.
+
+*** Traditional SSH keyfiles
+
+The Solokey still has some drawbacks, and cannot be used in all cases.
+Traditional SSH keyfiles are still useful for automated and unattended
+clients. Technically, the solokey is supposed to be able to work in a
+"touchless" mode, by using the =-O no-touch-required= option, but I
+never got this to work.
+
+Key files should be created uniquely for each user and workstation.
+They should never be shared between multiple users or workstations.
+
+**** Choosing the SSH key type
+
+It is recommended to use the newer =ed25519= key type, which uses the
+latest encryption standards. Your distribution may still use the older
+standard =rsa= by default (which is acceptable). You should explicitly
+select the key type when creating the keyfile to be sure.
+
+Some older servers don't accpet =ed25519= keys, and so in those cases
+you should still create an =rsa= key as well. Each key type is stored
+in a different file, so its OK to have multiple types installed on the
+same machine.
+
+**** Create the new SSH keys
+
+Create the =rsa= key type:
+
+: ssh-keygen -t rsa -f ~/.ssh/id_rsa
+
+Create the =ed25519= key type:
+
+: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+
+You will be prompted to enter an encryption passphrase for each file,
+which you should definitely not skip!
+
+** Setup the ssh-agent
+
+Because your keyfiles are encrypted with a passphrase, you need to
+enter the passphrase everytime you use it. This is inconvenient, so
+you can run =ssh-agent= to temporarily store your key/identity in
+memory, and therefore you only need to enter your passphrase once,
+when you log in. (In the case of the solokey, the key is never held in
+memory, but you still need to hold the identity of it in the
+ssh-agent.)
+
+Keychain is a program that helps you setup the ssh-agent. Install
+=keychain=:
+
+: # On Fedora:
+: sudo dnf install keychain
+:
+: # On Debian / Ubuntu machines:
+: sudo apt install keychain
+:
+: # On Arch Linux machines:
+: sudo pacman -S keychain
+
+To configure keychain, edit your =~/.bashrc= file:
+
+: # Put this line in your ~/.bashrc:
+: # (If you're using my config, this is already in it.)
+: eval $(keychain --eval --quiet)
+
+Log out of your desktop session, and log back in. Open your terminal,
+and you should be automatically prompted to enter your SSH passphrase.
+Once you have entered the passphrase, the SSH key will remain resident
+in memory until you log out.
+
+Double check that the key has been loaded, run:
+
+: ssh-add -L
+
+The above should print your public key, loaded into the running
+=ssh-agent=. Now you should be able to use your key without entering a
+passphrase. Copy the output and upload it to your services as your
+authorized key. For servers, put the key into
+=~/.ssh/authorized_keys=. For hosted services, like GitHub, paste the
+key into your SSH settings page.
+
+** Add your solokey identity per session
+
+Apparently, keychain does not yet know how to load the Solokey
+automatically. You must add the Solokey to the ssh-agent manually, one
+time, each time you boot your workstation:
+
+: # Do this to load your Solokey into the ssh-agent:
+: ssh-add -K
+
+You will be prompted one time to enter your Solokey pin to unlock the
+key.
