@@ -370,16 +370,22 @@ any container image you want, or even build your own from a
 =Dockerfile=. Here is a Dockerfile for Arch Linux you can use to build
 an Arch Linux toolbox container:
 
-
 : FROM docker.io/archlinux/archlinux:latest
 : ENV NAME=arch-toolbox VERSION=rolling
 : LABEL com.github.containers.toolbox="true" \
 :   name="$NAME" \
 :   version="$VERSION"
 : RUN pacman -Syu --noconfirm \
-:   && pacman -S sudo inetutils less --noconfirm \
-:   && pacman -Scc --noconfirm \
-:   && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
+:     && pacman  -S --noconfirm sudo inetutils less \
+:        git base-devel go \
+:        noto-fonts noto-fonts-cjk \
+:        noto-fonts-emoji noto-fonts-extra \
+:     && pacman -Scc --noconfirm \
+:     && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
+: RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
+:     && cd /tmp/yay \
+:     && sudo -u nobody makepkg -s \
+:     && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
 : CMD ["bash"]
 
 Write this to a file named =Dockerfile= and open your host terminal to
