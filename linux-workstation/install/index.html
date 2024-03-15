@@ -22,19 +22,19 @@ dd if=Fedora-Sericea-ostree-x86_64-39-1.5-respin2.iso \ of=/dev/sdX bs=10M statu
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Installation :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1710360215" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1710360215" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1710360215" rel="stylesheet">
-    <link href="/css/auto-complete.css?1710360215" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1710360215" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1710360215" rel="stylesheet">
-    <link href="/css/fonts.css?1710360215" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1710360215" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1710360215" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1710360215" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1710360215" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1710360215" rel="stylesheet">
-    <link href="/css/print.css?1710360215" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1710360215" rel="stylesheet">
-    <script src="/js/url.js?1710360215"></script>
-    <script src="/js/variant.js?1710360215"></script>
+    <link href="/css/fontawesome-all.min.css?1710534070" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1710534070" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1710534070" rel="stylesheet">
+    <link href="/css/auto-complete.css?1710534070" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1710534070" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1710534070" rel="stylesheet">
+    <link href="/css/fonts.css?1710534070" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1710534070" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1710534070" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1710534070" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1710534070" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1710534070" rel="stylesheet">
+    <link href="/css/print.css?1710534070" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1710534070" rel="stylesheet">
+    <script src="/js/url.js?1710534070"></script>
+    <script src="/js/variant.js?1710534070"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -73,6 +73,7 @@ dd if=Fedora-Sericea-ostree-x86_64-39-1.5-respin2.iso \ of=/dev/sdX bs=10M statu
   <ul>
     <li><a href="#create-usb-installation-media">Create USB installation media</a></li>
     <li><a href="#setup-sway">Setup Sway</a></li>
+    <li><a href="#setup-display-resolutions-and-orientation">Setup display resolutions and orientation</a></li>
   </ul>
 </nav>
                 </div>
@@ -152,6 +153,35 @@ some questions to help setup your git profile.</p>
 <p>Once you have finished entering the information setup asks for, press
 <code>Win+Shift+E</code>, and choose Log Out. Log back in, and this will load the
 new config files.</p>
+<h2 id="setup-display-resolutions-and-orientation">Setup display resolutions and orientation</h2>
+<p>Fedora Sway Atomic ships with <a href="https://git.sr.ht/~emersion/kanshi" target="_blank">kanshi</a> for display setup. Kanshi does
+not include any GUI for setting it up, so another program called
+<a href="https://github.com/artizirk/wdisplays" target="_blank">wdisplays</a> is useful, however it is not included in the base Atomic
+distribution, and you will have to install it via <a href="/linux-workstation/toolbox/index.html">toolbox</a>.</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># install wdisplays inside of toolbox
+</span></span><span style="display:flex;"><span>sudo dnf install wdisplays</span></span></code></pre></div><p>You can configure all of your displays using the wdisplays GUI
+program, however, the configuration will not persist across login
+sessions. So what you need to do is set it up how you like it, and
+then transfer that information into the Kanshi config file so that it
+sets it up the same way everytime you login.</p>
+<p>For example, on my test system I have two display port monitors, with
+outputs named <code>DP-3</code> and <code>DP-4</code>. These are shown in wdisplays and I
+have set up the size, position, and DPI scaling exactly how I like it:</p>
+<p>DP-3:</p>
+<figure><img src="/img/wdisplays1.webp"/>
+</figure>
+
+<p>DP-4:</p>
+<figure><img src="/img/wdisplays2.webp"/>
+</figure>
+
+<p>Open the Kanshi config file <code>~/.config/kanshi/config</code> and copy the
+information into the config file:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>profile {
+</span></span><span style="display:flex;"><span>   output DP-3 enable mode 2560x1440 position 3840,0 scale 1
+</span></span><span style="display:flex;"><span>   output DP-4 enable mode 3840x2160 position 1920,360 scale 2
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div><p>Kanshi is automatically started when sway is, so you can test it by
+logging out and logging back in.</p>
 
             <footer class="footline">
             </footer>
@@ -175,12 +205,12 @@ new config files.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1710360215" defer></script>
-        <script src="/js/lunr/lunr.min.js?1710360215" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1710360215" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1710360215" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1710360215" defer></script>
-        <script src="/js/search.js?1710360215" defer></script>
+        <script src="/js/auto-complete.js?1710534070" defer></script>
+        <script src="/js/lunr/lunr.min.js?1710534070" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1710534070" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1710534070" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1710534070" defer></script>
+        <script src="/js/search.js?1710534070" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -271,14 +301,14 @@ new config files.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Mar 13, 2024 at 8:03pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Mar 15, 2024 at 8:21pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1710360215" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1710360215" defer></script>
-    <script src="/js/theme.js?1710360215" defer></script>
+    <script src="/js/clipboard.min.js?1710534070" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1710534070" defer></script>
+    <script src="/js/theme.js?1710534070" defer></script>
   </body>
 </html>
