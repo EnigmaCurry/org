@@ -171,6 +171,45 @@ Once you have finished entering the information setup asks for, press
 =Win+Shift+E=, and choose Log Out. Log back in, and this will load the
 new config files.
 
+** Setup display resolutions and orientation
+
+Fedora Sway Atomic ships with [[https://git.sr.ht/~emersion/kanshi][kanshi]] for display setup. Kanshi does
+not include any GUI for setting it up, so another program called
+[[https://github.com/artizirk/wdisplays][wdisplays]] is useful, however it is not included in the base Atomic
+distribution, and you will have to install it via [[/linux-workstation/toolbox][toolbox]].
+
+: # install wdisplays inside of toolbox
+: sudo dnf install wdisplays
+
+You can configure all of your displays using the wdisplays GUI
+program, however, the configuration will not persist across login
+sessions. So what you need to do is set it up how you like it, and
+then transfer that information into the Kanshi config file so that it
+sets it up the same way everytime you login.
+
+For example, on my test system I have two display port monitors, with
+outputs named =DP-3= and =DP-4=. These are shown in wdisplays and I
+have set up the size, position, and DPI scaling exactly how I like it:
+
+DP-3:
+
+[[/img/wdisplays1.webp]]
+
+DP-4:
+
+[[/img/wdisplays2.webp]]
+
+Open the Kanshi config file =~/.config/kanshi/config= and copy the
+information into the config file:
+
+: profile {
+:    output DP-3 enable mode 2560x1440 position 3840,0 scale 1
+:    output DP-4 enable mode 3840x2160 position 1920,360 scale 2
+: }
+
+Kanshi is automatically started when sway is, so you can test it by
+logging out and logging back in.
+
 * Firefox
 :PROPERTIES:
 :EXPORT_FILE_NAME: firefox
