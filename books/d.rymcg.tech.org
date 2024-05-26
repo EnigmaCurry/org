@@ -21,28 +21,26 @@ Docker server, using the tools provided by [[https://d.rymcg.tech][d.rymcg.tech]
 
 ** What is self-hosting?
 
-[[https://en.wikipedia.org/wiki/Self-hosting_(web_services)][Self-hosting]] is described on Wikipedia as the following:
-
-#+BEGIN_QUOTE
-Self-hosting is the practice of running and maintaining a website or
-service using a private web server, instead of using a service outside
-of someone's own control. Self-hosting allows users to have more
-control over their data, privacy, and computing infrastructure, as
-well as potentially saving costs and improving skills.
-#+END_QUOTE
+Self-hosting is the practice of hosting network applications (web /
+internet / LAN / etc), using your own server hardware, or at least on
+virtual machines that you fundamentally control (ie. you have root
+access). As a preparedness skill, the self-hoster prioritizes the use
+of open source software, as it becomes an inalienable toolset to
+bootstrap infrastructure in the wilderness.
 
 You can apply self-hosting a little bit, or a lot. On the one hand,
 you could post all of your content on Facebook (obviously, this is
 /not/ self-hosting), and on the other hand you could build all your
 servers yourself, from parts, and run them in your basement, on your
 own network, bootstrapping everything. For most people though,
-self-hosting means to use cloud computing, using a generic Linux VPS
-(virtual private server), installing and operating open-source
-software (or software that you built), but still letting the cloud
-provider handle the hardware and network side of things.
+self-hosting means to use a Raspberry Pi at home, or a cloud computing
+provider that offers you a generic Linux VPS (virtual private server)
+on the public internet, to configure in any way you wish, but still
+letting the cloud provider handle the hardware and network side of
+things for a monthly fee.
 
-Demarcate your own level of abstraction. Test that your abstraction
-works in a generic way, portable to any other provider at the same
+Demarcate your own level of abstraction. Test that your operations
+work in a generic way, portable to any other provider at the same
 level of abstraction. Try running it entirely at home, at least for
 development purposes. Don't get locked into a single vendor. Use open
 source software, or software you built yourself. This is self-hosting.
@@ -136,11 +134,12 @@ containers together, as a single unit.
 ** What is d.rymcg.tech?
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech][d.rymcg.tech]] is a collection of docker compose projects for various
-open source server applications, with an integrated frontend proxy
-with [[https://doc.traefik.io/traefik/][Traefik Proxy]], including integrated authentication (HTTP Basic
-and/or OAuth2) and IP address filtering, and is a framework for
+open source server applications, but it can also be used as a template
+for your own services. It has an integrated frontend proxy ([[https://doc.traefik.io/traefik/][Traefik
+Proxy)]], including sentry authorization middleware (mTLS, OAuth2, or
+HTTP Basic auth) and IP address filtering. It is a framework for
 packaging your own applications, and managing several container
-instances at the same time, with seprate configs in .env files.
+instances at the same time, each with seprate configs in .env files.
 
 d.rymcg.tech focuses on the config rules of the [[https://12factor.net/config][12-factor principle]].
 All of the configuration for a container should be specified as
@@ -149,18 +148,18 @@ All of the data for a container should live inside a [[https://docs.docker.com/s
 (not a bind mount), and so the lifecycle of the volume is maintained
 by Docker directly.
 
-d.rymcg.tech is designed to work on a workstation, not a server. The
-Docker client-server API is accessed remotely over SSH. Only your
+*d.rymcg.tech is designed to run on a workstation, not the docker
+host*. The Docker server API is accessed remotely over SSH. Only your
 personal workstation should be used to issue =docker= commands that
-affect the server, they should not be run on the server itself. It's
+affect the server, they should never be run on the server itself. It's
 important to keep the server as bare bones and hands off as possible.
-The server's only job is to run containers, configured from a remote
-workstation. Once the server is setup, you won't normally need to even
-login to the server console ever again. By controlling the server from
-your workstation, you can manage the server in a clean fashion. You
-can even create a new server from scratch, in no time. All of the
-important configuration stays on your workstation (and are backed up
-in a git repository).
+The server's only job is to /run/ containers. The job of /configuring/
+them is always performed from a remote workstation. Once the server is
+setup, you won't normally need to even login to the server console
+ever again. By controlling the server from your workstation, you can
+manage the server in a clean fashion. You can even create a new server
+from scratch, in no time. All of the important configuration stays on
+your workstation (and are backed up in a git repository).
 
 
 * Register a domain name
@@ -170,12 +169,12 @@ in a git repository).
 
 To host a web service, one of the first things you will need is to
 register your domain name. This will be the domain name used for all
-your service links, and it is what your users will need to type into
-their browsers to visit your pages.
+of your service links, and it is what your users will need to type
+into their browsers (or click on) to visit your pages.
 
-Domain names a scarce resource. Because of their scarcity, you must
-pay for your domain registrations, doing so in 1 year increments. If
-domains were free, all the good ones would be taken by now, but
+Domain names are a scarce resource. Because of their scarcity, you
+must pay for your domain registrations, doing so in 1 year increments.
+If domain names were free, all the good ones would be taken by now, but
 because they cost money, there are still some good enough ones left to
 be had. In return for your fee, you receive exclusive use of your
 domain name for the period that you paid for. You can pre-pay for
@@ -188,12 +187,13 @@ possibly forever.
 
 If your Docker server won't be a public server, (eg. running a private
 Docker server at home), it is still recommended that you use a valid
-internet domain name, because you will still need one in order to
-create valid TLS certificates from [[https://letsencrypt.org/][Let's Encrypt]]. However, having
-working TLS is not /required/ for development purposes (but certainly
-nice to have!), so you may choose to make up your own fake domain name
-instead, and forgo TLS. In either case, you will still need to setup
-DNS, and this is explained in the next section.
+internet domain name, with public DNS servers, because you will still
+need this in order to create valid TLS certificates from [[https://letsencrypt.org/][Let's
+Encrypt]]. However, having valid working TLS is not /required/ for
+development purposes (but certainly nice to have!), so you may choose
+to make up your own fake domain name instead, and forgo TLS, or you
+can setup [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/step-ca#readme][Step-CA]] for off-grid TLS. In either case, you will still
+need to setup DNS, and this is explained in the next section.
 
 ** Register an Internet domain name
 
@@ -229,10 +229,17 @@ want to choose a public DNS server, but using private IP addresses
 ranges for the records. You can also setup a local/private DNS server,
 but this will be discussed later.
 
+For the purposes of ACME (automatic TLS certificate issuing/renewals),
+your DNS server/provider will need to support [[https://go-acme.github.io/lego/dns/#dns-providers][one of the APIs
+supported by the go-lego project]]. Find out what API tokens or other
+settings your provider may need by by finding your provider in the
+list on that page.
+
 For documentation purposes, this chapter will assume you are using
 Gandi.net as your domain registrar, and that you want to use
-DigitalOcean.com as your domain's public DNS server, but these
-instructions will be similar regardless of the providers you pick.
+DigitalOcean.com as your domain's public DNS server (and [[https://go-acme.github.io/lego/dns/digitalocean/][digitalocean
+is supported by go-lego]]), but these instructions will be similar
+regardless of the supported provider you pick.
 
 ** Configure your domain's DNS server on Gandi.net
 
@@ -276,11 +283,15 @@ records for your services.
 The next three chapters will guide you to install Docker, for three
 different server scenarios:
 
- 1. A production/staging Docker server on the public Internet (eg.
-    DigitalOcean or any other VPS cloud provider).
- 2. A production/staging Docker server on a private LAN.
- 3. A development Docker server in a local VM.
+ 1. A production, public Docker server on the Internet (eg. hosted at
+    DigitalOcean, or any other VPS cloud, and/or bare-metal server).
+ 2. A production/staging Docker server on a private LAN (eg. a
+    Raspberry Pi).
+ 3. A development Docker server in a Proxmox VM.
 
+If you only care about a particular scenario, you may now want to skip
+directly to the appropriate chapter.
+ 
 * Create a public Docker server 
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
@@ -350,6 +361,11 @@ Linux Workstation book]] and do that first.
      * Type: =HTTP=
      * Protocol: =TCP=
      * Port Range: =443=
+     * Sources: All IPv4, All IPv6.
+   * Wireguard VPN (optional):
+     * Type: =Custom=
+     * Protocol: =UDP=
+     * Port Range: =51820=
      * Sources: All IPv4, All IPv6.
   * Click =Create Firewall=.
  
