@@ -275,31 +275,15 @@ DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
 
-* Create a Docker server
-:PROPERTIES:
-:EXPORT_FILE_NAME: docker-server
-:END:
-
-The next three chapters will guide you to install Docker, for three
-different server scenarios:
-
- 1. A production, public Docker server on the Internet (eg. hosted at
-    DigitalOcean, or any other VPS cloud, and/or bare-metal server).
- 2. A production/staging Docker server on a private LAN (eg. a
-    Raspberry Pi).
- 3. A development Docker server in a Proxmox VM.
-
-If you only care about a particular scenario, you may now want to skip
-directly to the appropriate chapter.
- 
 * Create a public Docker server 
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
 :END:
 
-This section will guide you to create your own public Docker server as
-a DigitalOcean droplet, however you may also install Docker on any
-cloud provider or dedicated host that you prefer.
+This section will guide you to create your own public Docker server,
+using a DigitalOcean droplet as an example. In a similar fashion, you
+can install Docker on any cloud provider, or dedicated host that you
+prefer.
 
 ** Choosing a VPS provider
 
@@ -488,8 +472,10 @@ host operating system:
 
 ** Install Docker
 
-The droplet has Debian installed on it, with only basic packages
-installed. To install Docker, run :
+The droplet has Debian installed on it, but with only basic packages
+installed by default. To install the latest version of Docker, run the
+installer script, which configures the upstream package repositories
+provided by the Docker organization:
 
 : ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
 : ssh prod sh install-docker.sh
@@ -512,50 +498,128 @@ workstation will take effect on the remote Docker host instead.
 
 Test that the context works:
 
+: ## From your workstation:
 : docker run hello-world
 
 ** Congratulations
 
-You have now finished installation of a remote Docker host server,
-configured via remote docker context on your workstation.
+You have now finished installation of a remote Docker host server, on
+a Debian based droplet (VPS), and configured it on your workstation as
+a remote (SSH) docker context.
 
-* Create a private Docker Server for a LAN
+* Install d.rymcg.tech tools
 :PROPERTIES:
-:EXPORT_FILE_NAME: private-docker-server
+:EXPORT_FILE_NAME: install-d-rymcg-tech
 :END:
 
-Create a VM
+Install d.rymcg.tech and its dependencies *on your workstation*.
 
-** Setup private DNS
+** Install dependencies
 
-If you chose a fake domain, you can set the DNS record on your local
-DNS server. Generally, most LANs already have a local DNS server
-install on a home router. You can add your records there. If you don't
-have a DNS server, you can install [[https://dnsmasq.org/][dnsmasq]]. dnsmasq can act as DNS
-and/or DHCP servers for your LAN.
+: ## Fedora
+: dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools
 
-A dnsmasq entry for the wildcard records would look like this (in
-=dnsmasq.conf=):
+: ## Debian
+: apt-get install bash build-essential gettext git openssl apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools
 
-: # dnsmasq wildcard records for your Docker server (192.168.0.1):
-: address=/prod.example.com/192.168.0.1
-: address=/.prod.example.com/192.168.0.1
+: ## Arch Linux
+: pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-tools
 
-Replace =192.168.0.1= with the ip of your Docker server.
+** Clone d.rymcg.tech repository
 
-Alternatively, you can edit =/etc/hosts= directly on your workstation,
-but it does not support wildcard records, so you would have to specify
-each name one by one:
+: git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
+:    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+:
+: cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 
-: ## /etc/hosts excerpt for three explicit domains:
-: 192.168.0.1 prod.example.com www.prod.example.com test.prod.example.com
 
-* Create a development Docker Server VM
+** Setup =d.rymcg.tech= command line tool
+
+You must edit your workstation user's =~.bashrc= file, which modifies
+the Bash shell environment config:
+
+: # Put this in ~/.bashrc to enable d.rymcg.tech command line tools:
+: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
+: eval "$(d.rymcg.tech completion bash)"
+: # Setup shorter alias as just 'd'
+: __d.rymcg.tech_cli_alias d
+
+Now close and restart your shell (terminal) to load the new config.
+
+* Main config for d.rymcg.tech
 :PROPERTIES:
-:EXPORT_FILE_NAME: development-docker-server-vm
+:EXPORT_FILE_NAME: main-config-for-d.rymcg.tech
 :END:
 
-* Create a Docker workstation
+Each Docker context has a separate config file (=.env_{CONTEXT}=).
+
+** Configure current Docker context
+
+: d make - config
+
+This will create a config file for your current Docker context, and
+name it =.env_{CONTEXT}= (eg. =.env_prod=). You must run this for each
+new Docker context you create, so that each context has its own config
+file.
+
+The interactive config will ask you to enter the =ROOT_DOMAIN=
+variable, which needs to be the root domain that you want to apply to
+your Docker host.
+
+: ROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com)
+: : prod.example.com
+
+The root domain serves as the example root domain for all application
+default configs.
+
+* Install Traefik Proxy
 :PROPERTIES:
-:EXPORT_FILE_NAME: docker-workstation
-:END
+:EXPORT_FILE_NAME: install-traefik-proxy
+:END:
+
+** Configure Traefik Proxy
+
+Run on your workstation:
+
+: d make traefik config
+
+The configuration for Traefik is driven by a text wizard menu system.
+
+: ? Traefik config main menu:  
+: > Create system user on Docker host
+:   Configure entrypoints (including dashboard)
+:   Configure Certificate Authorities (CA)
+:   Configure ACME (Let's Encrypt or Step-CA)
+:   Configure TLS certificates and domains (make certs)
+:   Configure middleware (including auth)
+: v Configure error page template
+: [↑↓ to move, enter to select, type to filter, ESC to cancel]
+
+Use your arrow keys to select a menu item and press the =Enter= key.
+To cancel, press the =ESC= key.
+
+You do not need to visit every menu option, as every install will be
+different. The most common options will be discussed here.
+
+*** Create system user on Docker host
+
+This option will create a new username on the Docker host, called
+=traefik=. This is necessary to reserve a unique UID for traefik to
+run as on the system. Run this first before anything else.
+
+*** Configure entrypoints
+
+Traefik uses various entrypoints to allow requests on certain TCP
+ports. By default, only port 80 and 443 are enabled. You can enable
+extra entrypoints through this menu, which may be necessary for any
+application that doesn't use the standard =websecure= entrypoint (port
+443).
+
+By default, the Traefik Dashboard is not enabled. To enable it, you
+must select it via this menu option, and set a username / password.
+
+*** Configure ACME (Let's Encrypt or Step-CA)
+
+
+
+
