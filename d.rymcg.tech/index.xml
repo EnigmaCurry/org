@@ -32,36 +32,38 @@ Domain names are a scarce resource. Because of their scarcity, you must pay for 
 Now that you have registered a domain name, you need to tell your registrar where your DNS server is. Usually you will use the DNS server that your cloud provider gives you, but you may choose any DNS provider you like.</description>
     </item>
     <item>
-      <title>Create a Docker server</title>
-      <link>https://book.rymcg.tech/d.rymcg.tech/docker-server/index.html</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/d.rymcg.tech/docker-server/index.html</guid>
-      <description>The next three chapters will guide you to install Docker, for three different server scenarios:
-A production, public Docker server on the Internet (eg. hosted at DigitalOcean, or any other VPS cloud, and/or bare-metal server). A production/staging Docker server on a private LAN (eg. a Raspberry Pi). A development Docker server in a Proxmox VM. If you only care about a particular scenario, you may now want to skip directly to the appropriate chapter.</description>
-    </item>
-    <item>
       <title>Create a public Docker server</title>
       <link>https://book.rymcg.tech/d.rymcg.tech/public-docker-server/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/d.rymcg.tech/public-docker-server/index.html</guid>
-      <description>This section will guide you to create your own public Docker server as a DigitalOcean droplet, however you may also install Docker on any cloud provider or dedicated host that you prefer.
+      <description>This section will guide you to create your own public Docker server, using a DigitalOcean droplet as an example. In a similar fashion, you can install Docker on any cloud provider, or dedicated host that you prefer.
 Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.</description>
     </item>
     <item>
-      <title>Create a private Docker Server for a LAN</title>
-      <link>https://book.rymcg.tech/d.rymcg.tech/private-docker-server/index.html</link>
+      <title>Install d.rymcg.tech tools</title>
+      <link>https://book.rymcg.tech/d.rymcg.tech/install-d-rymcg-tech/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/d.rymcg.tech/private-docker-server/index.html</guid>
-      <description>Create a VM
-Setup private DNS If you chose a fake domain, you can set the DNS record on your local DNS server. Generally, most LANs already have a local DNS server install on a home router. You can add your records there. If you don&amp;rsquo;t have a DNS server, you can install dnsmasq. dnsmasq can act as DNS and/or DHCP servers for your LAN.
-A dnsmasq entry for the wildcard records would look like this (in dnsmasq.</description>
+      <guid>https://book.rymcg.tech/d.rymcg.tech/install-d-rymcg-tech/index.html</guid>
+      <description>Install d.rymcg.tech and its dependencies on your workstation.
+Install dependencies ## Fedora dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools## Debian apt-get install bash build-essential gettext git openssl apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools## Arch Linux pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-toolsClone d.rymcg.tech repository git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \ ${HOME}/git/vendor/enigmacurry/d.rymcg.tech cd ${HOME}/git/vendor/enigmacurry/d.rymcg.techSetup d.rymcg.tech command line tool You must edit your workstation user&amp;rsquo;s ~.</description>
     </item>
     <item>
-      <title>Create a development Docker Server VM</title>
-      <link>https://book.rymcg.tech/d.rymcg.tech/development-docker-server-vm/index.html</link>
+      <title>Main config for d.rymcg.tech</title>
+      <link>https://book.rymcg.tech/d.rymcg.tech/main-config-for-d.rymcg/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/d.rymcg.tech/development-docker-server-vm/index.html</guid>
-      <description></description>
+      <guid>https://book.rymcg.tech/d.rymcg.tech/main-config-for-d.rymcg/index.html</guid>
+      <description>Each Docker context has a separate config file (.env_{CONTEXT}).
+Configure current Docker context d make - configThis will create a config file for your current Docker context, and name it .env_{CONTEXT} (eg. .env_prod). You must run this for each new Docker context you create, so that each context has its own config file.
+The interactive config will ask you to enter the ROOT_DOMAIN variable, which needs to be the root domain that you want to apply to your Docker host.</description>
+    </item>
+    <item>
+      <title>Install Traefik Proxy</title>
+      <link>https://book.rymcg.tech/d.rymcg.tech/install-traefik-proxy/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/d.rymcg.tech/install-traefik-proxy/index.html</guid>
+      <description>Configure Traefik Proxy Run on your workstation:
+d make traefik configThe configuration for Traefik is driven by a text wizard menu system.
+? Traefik config main menu: &amp;gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&amp;#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel]Use your arrow keys to select a menu item and press the Enter key.</description>
     </item>
   </channel>
 </rss>
