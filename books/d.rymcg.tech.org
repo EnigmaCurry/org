@@ -304,23 +304,20 @@ cloud provider or dedicated host that you prefer.
 ** Choosing a VPS provider
 
 One of the most basic units of cloud computing is the Virtual Private
-Server (VPS). A VPS is a virtual machine that is provisioned by a
-cloud service, that you are given full adminstrative control of. You
-are given root access to the VPS (running Linux), and you can install
-whatever you want. VPS generally come with a dedicated IP address and
-have a public internet connection, although some VPS only have NAT,
-with dedicated port forwarding.
+Server (VPS). A VPS is a (Linux) virtual machine that is provisioned
+by a cloud service, and you are given root access to fully administer
+it, to install whatever you want on it. VPS generally come with a dedicated
+IP address and have a public internet connection, although some VPS
+only have NAT, but with dedicated port forwarding.
 
 In this guide you will create a VPS with a DigitalOcean droplet.
 
-You can install Docker on almost any VPS, but some are better than
-others. DigitalOcean is a good choice for experimenting, because it is
-billed hourly, and because it has an integrated external firewall.
-Having an external firewall is one of the most important features to
-look for in a hosting provider. Docker maintains its own firewall on
-the host level automatically, and so your hands should probably stay
-off of it. If you want to reliably block traffic, in addition to the
-automatic rules, it must be done on an external/upstream firewall.
+You can install Docker on almost any Linux machine, but some are
+better than others. DigitalOcean droplets (VPS) are a good choice for
+experimenting, because they are billed hourly, and because the service
+layer has an integrated firewall, external to the droplet operating
+system. Having a firewall that is external (in front of) the VPS is
+one of the most important features to look for in a hosting provider.
 
 ** Create a DigitalOcean account and setup your SSH key
 
@@ -378,10 +375,8 @@ DigitalOcean provides a Docker image with which to create a droplet
  * Click =Droplets= in the menu.
  * Click =Create Droplet=.
  * Choose a Region (eg. New York), where the droplet will be created.
- * Underneath the heading =Choose an image=, select the =Marketplace=
-   tab.
- * Find the image called =Docker 2x.x.x= (eg. =23.0.6= or a later
-   version)
+ * Underneath the heading =Choose an image=, choose =Debian= (select
+   the latest version).
  * Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
    size production installs. (It is tested working on as little as
    512MB ram, [[https://blog.rymcg.tech/blog/linux/zram/][if you enable zram]] and/or create a 1GB swapfile. Do not
@@ -462,29 +457,68 @@ server directly:
 ** Setup your local workstation
 
 Edit your SSH config file: =~/.ssh/config= (create it if necessary).
-Add the following lines, and change it for your domain name that you
-already created the DNS record for:
+Create a new config for a host named =prod= (or whatever you want),
+and change it so that the domain name is one that you already created
+the DNS record for:
 
-: Host ssh.prod.example.com
+: Host prod
+:     Hostname ssh.prod.example.com
 :     User root
 :     ControlMaster auto
 :     ControlPersist yes
 :     ControlPath /tmp/ssh-%u-%r@%h:%p
 
-(The name ssh.prod.example.com should work automatically if you
-setup the wildcard DNS entry (*.prod.example.com) created
+(The name =ssh.prod.example.com= should work automatically if you
+setup the wildcard DNS entry (=*.prod.example.com=) created
 previously. The ControlMaster, ControlPersist, ControlPath adds SSH
 connection multi-plexing, and will make repeated logins/docker
 commands faster.)
 
 Now test that you can SSH to your droplet:
 
-ssh ssh.prod.example.com
+: ssh prod uname -a
 
 The first time you login to your droplet, you need to confirm the SSH
-pubkey fingerprint; press Enter. Once connected, log out: press Ctrl-D
-or type exit and press Enter.
- 
+pubkey fingerprint; press Enter.
+
+If the connection worked, it should print information about the remote
+host operating system:
+
+: Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
+
+** Install Docker
+
+The droplet has Debian installed on it, with only basic packages
+installed. To install Docker, run :
+
+: ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
+: ssh prod sh install-docker.sh
+
+** Setup Docker context
+
+Now that Docker is installed, you won't be needing to use ssh directly
+again, except to do system maintainance.
+
+Setup the Docker context on your workstation:
+
+: docker context create prod --docker host=ssh://prod
+
+Now you can switch to the new context:
+
+: docker context use prod
+
+With this context active, all =docker= commands you run from your
+workstation will take effect on the remote Docker host instead.
+
+Test that the context works:
+
+: docker run hello-world
+
+** Congratulations
+
+You have now finished installation of a remote Docker host server,
+configured via remote docker context on your workstation.
+
 * Create a private Docker Server for a LAN
 :PROPERTIES:
 :EXPORT_FILE_NAME: private-docker-server
@@ -515,7 +549,6 @@ each name one by one:
 
 : ## /etc/hosts excerpt for three explicit domains:
 : 192.168.0.1 prod.example.com www.prod.example.com test.prod.example.com
-
 
 * Create a development Docker Server VM
 :PROPERTIES:
