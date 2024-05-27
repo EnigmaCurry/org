@@ -10,29 +10,29 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Create a public Docker server :: book.rymcg.tech">
     <meta name="twitter:description" content="This section will guide you to create your own public Docker server as a DigitalOcean droplet, however you may also install Docker on any cloud provider or dedicated host that you prefer.
-Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a virtual machine that is provisioned by a cloud service, that you are given full adminstrative control of.">
+Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.">
     <meta property="og:title" content="Create a public Docker server :: book.rymcg.tech">
     <meta property="og:description" content="This section will guide you to create your own public Docker server as a DigitalOcean droplet, however you may also install Docker on any cloud provider or dedicated host that you prefer.
-Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a virtual machine that is provisioned by a cloud service, that you are given full adminstrative control of.">
+Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/public-docker-server/index.html">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech :: book.rymcg.tech">
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Create a public Docker server :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1716756427" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716756427" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1716756427" rel="stylesheet">
-    <link href="/css/auto-complete.css?1716756427" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716756427" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1716756427" rel="stylesheet">
-    <link href="/css/fonts.css?1716756427" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716756427" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1716756427" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1716756427" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1716756427" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1716756427" rel="stylesheet">
-    <link href="/css/print.css?1716756427" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1716756427" rel="stylesheet">
-    <script src="/js/url.js?1716756427"></script>
-    <script src="/js/variant.js?1716756427"></script>
+    <link href="/css/fontawesome-all.min.css?1716776058" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716776058" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1716776058" rel="stylesheet">
+    <link href="/css/auto-complete.css?1716776058" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716776058" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1716776058" rel="stylesheet">
+    <link href="/css/fonts.css?1716776058" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716776058" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1716776058" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1716776058" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1716776058" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1716776058" rel="stylesheet">
+    <link href="/css/print.css?1716776058" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1716776058" rel="stylesheet">
+    <script src="/js/url.js?1716776058"></script>
+    <script src="/js/variant.js?1716776058"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -76,6 +76,9 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     <li><a href="#apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</a></li>
     <li><a href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></li>
     <li><a href="#setup-your-local-workstation">Setup your local workstation</a></li>
+    <li><a href="#install-docker">Install Docker</a></li>
+    <li><a href="#setup-docker-context">Setup Docker context</a></li>
+    <li><a href="#congratulations">Congratulations</a></li>
   </ul>
 </nav>
                 </div>
@@ -116,21 +119,18 @@ a DigitalOcean droplet, however you may also install Docker on any
 cloud provider or dedicated host that you prefer.</p>
 <h2 id="choosing-a-vps-provider">Choosing a VPS provider</h2>
 <p>One of the most basic units of cloud computing is the Virtual Private
-Server (VPS). A VPS is a virtual machine that is provisioned by a
-cloud service, that you are given full adminstrative control of. You
-are given root access to the VPS (running Linux), and you can install
-whatever you want. VPS generally come with a dedicated IP address and
-have a public internet connection, although some VPS only have NAT,
-with dedicated port forwarding.</p>
+Server (VPS). A VPS is a (Linux) virtual machine that is provisioned
+by a cloud service, and you are given root access to fully administer
+it, to install whatever you want on it. VPS generally come with a dedicated
+IP address and have a public internet connection, although some VPS
+only have NAT, but with dedicated port forwarding.</p>
 <p>In this guide you will create a VPS with a DigitalOcean droplet.</p>
-<p>You can install Docker on almost any VPS, but some are better than
-others. DigitalOcean is a good choice for experimenting, because it is
-billed hourly, and because it has an integrated external firewall.
-Having an external firewall is one of the most important features to
-look for in a hosting provider. Docker maintains its own firewall on
-the host level automatically, and so your hands should probably stay
-off of it. If you want to reliably block traffic, in addition to the
-automatic rules, it must be done on an external/upstream firewall.</p>
+<p>You can install Docker on almost any Linux machine, but some are
+better than others. DigitalOcean droplets (VPS) are a good choice for
+experimenting, because they are billed hourly, and because the service
+layer has an integrated firewall, external to the droplet operating
+system. Having a firewall that is external (in front of) the VPS is
+one of the most important features to look for in a hosting provider.</p>
 <h2 id="create-a-digitalocean-account-and-setup-your-ssh-key">Create a DigitalOcean account and setup your SSH key</h2>
 <p>If you have not yet setup an SSH key on your workstation, <a href="/linux-workstation/">read the
 Linux Workstation book</a> and do that first.</p>
@@ -200,10 +200,8 @@ you want to be more secure.</li>
 <li>Click <code>Droplets</code> in the menu.</li>
 <li>Click <code>Create Droplet</code>.</li>
 <li>Choose a Region (eg. New York), where the droplet will be created.</li>
-<li>Underneath the heading <code>Choose an image</code>, select the <code>Marketplace</code>
-tab.</li>
-<li>Find the image called <code>Docker 2x.x.x</code> (eg. <code>23.0.6</code> or a later
-version)</li>
+<li>Underneath the heading <code>Choose an image</code>, choose <code>Debian</code> (select
+the latest version).</li>
 <li>Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
 size production installs. (It is tested working on as little as
 512MB ram, <a href="https://blog.rymcg.tech/blog/linux/zram/" target="_blank">if you enable zram</a> and/or create a 1GB swapfile. Do not
@@ -280,22 +278,39 @@ of the output. You can test all your other records the same way.</p>
 server directly:</p>
 <div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>dig @ns1.digitalocean.com laksdflkweieri.prod.example.com</span></span></code></pre></div><h2 id="setup-your-local-workstation">Setup your local workstation</h2>
 <p>Edit your SSH config file: <code>~/.ssh/config</code> (create it if necessary).
-Add the following lines, and change it for your domain name that you
-already created the DNS record for:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Host ssh.prod.example.com
+Create a new config for a host named <code>prod</code> (or whatever you want),
+and change it so that the domain name is one that you already created
+the DNS record for:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Host prod
+</span></span><span style="display:flex;"><span>    Hostname ssh.prod.example.com
 </span></span><span style="display:flex;"><span>    User root
 </span></span><span style="display:flex;"><span>    ControlMaster auto
 </span></span><span style="display:flex;"><span>    ControlPersist yes
-</span></span><span style="display:flex;"><span>    ControlPath /tmp/ssh-%u-%r@%h:%p</span></span></code></pre></div><p>(The name ssh.prod.example.com should work automatically if you
-setup the wildcard DNS entry (*.prod.example.com) created
+</span></span><span style="display:flex;"><span>    ControlPath /tmp/ssh-%u-%r@%h:%p</span></span></code></pre></div><p>(The name <code>ssh.prod.example.com</code> should work automatically if you
+setup the wildcard DNS entry (<code>*.prod.example.com</code>) created
 previously. The ControlMaster, ControlPersist, ControlPath adds SSH
 connection multi-plexing, and will make repeated logins/docker
 commands faster.)</p>
 <p>Now test that you can SSH to your droplet:</p>
-<p>ssh ssh.prod.example.com</p>
-<p>The first time you login to your droplet, you need to confirm the SSH
-pubkey fingerprint; press Enter. Once connected, log out: press Ctrl-D
-or type exit and press Enter.</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh prod uname -a</span></span></code></pre></div><p>The first time you login to your droplet, you need to confirm the SSH
+pubkey fingerprint; press Enter.</p>
+<p>If the connection worked, it should print information about the remote
+host operating system:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux</span></span></code></pre></div><h2 id="install-docker">Install Docker</h2>
+<p>The droplet has Debian installed on it, with only basic packages
+installed. To install Docker, run :</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
+</span></span><span style="display:flex;"><span>ssh prod sh install-docker.sh</span></span></code></pre></div><h2 id="setup-docker-context">Setup Docker context</h2>
+<p>Now that Docker is installed, you won&rsquo;t be needing to use ssh directly
+again, except to do system maintainance.</p>
+<p>Setup the Docker context on your workstation:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker context create prod --docker host=ssh://prod</span></span></code></pre></div><p>Now you can switch to the new context:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker context use prod</span></span></code></pre></div><p>With this context active, all <code>docker</code> commands you run from your
+workstation will take effect on the remote Docker host instead.</p>
+<p>Test that the context works:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker run hello-world</span></span></code></pre></div><h2 id="congratulations">Congratulations</h2>
+<p>You have now finished installation of a remote Docker host server,
+configured via remote docker context on your workstation.</p>
 
             <footer class="footline">
             </footer>
@@ -319,12 +334,12 @@ or type exit and press Enter.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1716756427" defer></script>
-        <script src="/js/lunr/lunr.min.js?1716756427" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1716756427" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1716756427" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1716756427" defer></script>
-        <script src="/js/search.js?1716756427" defer></script>
+        <script src="/js/auto-complete.js?1716776058" defer></script>
+        <script src="/js/lunr/lunr.min.js?1716776058" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1716776058" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1716776058" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1716776058" defer></script>
+        <script src="/js/search.js?1716776058" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -416,14 +431,14 @@ or type exit and press Enter.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 26, 2024 at 8:47pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 27, 2024 at 2:14am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1716756427" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1716756427" defer></script>
-    <script src="/js/theme.js?1716756427" defer></script>
+    <script src="/js/clipboard.min.js?1716776058" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1716776058" defer></script>
+    <script src="/js/theme.js?1716776058" defer></script>
   </body>
 </html>
