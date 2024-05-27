@@ -22,19 +22,19 @@ d make traefik configThe configuration for Traefik is driven by a text wizard me
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Install Traefik Proxy :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1716781633" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716781633" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1716781633" rel="stylesheet">
-    <link href="/css/auto-complete.css?1716781633" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716781633" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1716781633" rel="stylesheet">
-    <link href="/css/fonts.css?1716781633" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716781633" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1716781633" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1716781633" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1716781633" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1716781633" rel="stylesheet">
-    <link href="/css/print.css?1716781633" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1716781633" rel="stylesheet">
-    <script src="/js/url.js?1716781633"></script>
-    <script src="/js/variant.js?1716781633"></script>
+    <link href="/css/fontawesome-all.min.css?1716783040" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716783040" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1716783040" rel="stylesheet">
+    <link href="/css/auto-complete.css?1716783040" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716783040" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1716783040" rel="stylesheet">
+    <link href="/css/fonts.css?1716783040" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716783040" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1716783040" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1716783040" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1716783040" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1716783040" rel="stylesheet">
+    <link href="/css/print.css?1716783040" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1716783040" rel="stylesheet">
+    <script src="/js/url.js?1716783040"></script>
+    <script src="/js/variant.js?1716783040"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -75,7 +75,12 @@ d make traefik configThe configuration for Traefik is driven by a text wizard me
       <ul>
         <li><a href="#create-system-user-on-docker-host">Create system user on Docker host</a></li>
         <li><a href="#configure-entrypoints">Configure entrypoints</a></li>
+        <li><a href="#configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</a></li>
         <li><a href="#configure-acme--let-s-encrypt-or-step-ca">Configure ACME (Let&rsquo;s Encrypt or Step-CA)</a></li>
+        <li><a href="#configure-tls-certificates-and-domains">Configure TLS certificates and domains</a></li>
+        <li><a href="#configure-middleware">Configure middleware</a></li>
+        <li><a href="#configure-error-page-template">Configure error page template</a></li>
+        <li><a href="#configure-wireguard-vpn">Configure wireguard VPN</a></li>
       </ul>
     </li>
   </ul>
@@ -126,8 +131,6 @@ d make traefik configThe configuration for Traefik is driven by a text wizard me
 </span></span><span style="display:flex;"><span>v Configure error page template
 </span></span><span style="display:flex;"><span>[↑↓ to move, enter to select, type to filter, ESC to cancel]</span></span></code></pre></div><p>Use your arrow keys to select a menu item and press the <code>Enter</code> key.
 To cancel, press the <code>ESC</code> key.</p>
-<p>You do not need to visit every menu option, as every install will be
-different. The most common options will be discussed here.</p>
 <h3 id="create-system-user-on-docker-host">Create system user on Docker host</h3>
 <p>This option will create a new username on the Docker host, called
 <code>traefik</code>. This is necessary to reserve a unique UID for traefik to
@@ -140,7 +143,70 @@ application that doesn&rsquo;t use the standard <code>websecure</code> entrypoin
 443).</p>
 <p>By default, the Traefik Dashboard is not enabled. To enable it, you
 must select it via this menu option, and set a username / password.</p>
+<h3 id="configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</h3>
+<p>If you&rsquo;re planning on running a public server, using TLS certificates
+from Let&rsquo;s Encrypt, you can skip this option.</p>
+<p>You only need to run this if you wish to modify the TLS certificate
+trust store to accomodate a &ldquo;self-signed&rdquo; Step-CA authority.</p>
 <h3 id="configure-acme--let-s-encrypt-or-step-ca">Configure ACME (Let&rsquo;s Encrypt or Step-CA)</h3>
+<p>Choose this option to configure ACME, which makes requesting and
+renewing TLS certificates an easy and automatic process.</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>? Which ACME provider do you want to use?
+</span></span><span style="display:flex;"><span>&gt; Let&#39;s Encrypt (ACME)
+</span></span><span style="display:flex;"><span>  Step-CA (ACME)
+</span></span><span style="display:flex;"><span>  Disable ACME
+</span></span><span style="display:flex;"><span>  Cancel / Go back</span></span></code></pre></div><p>For most installs, you should choose <code>Let's Encrypt (ACME)</code>. This is
+the only option that will create valid TLS certificates for public
+websites.</p>
+<p>If you want to run private services, you may want to consider using
+<code>Step-CA</code> instead, as it does not rely upon any external platform like
+Let&rsquo;s Encrypt does.</p>
+<p>Finally, if you want to setup TLS certificates manually, you can
+choose <code>Disable ACME</code>.</p>
+<h4 id="configure-let-s-encrypt-environment">Configure Let&rsquo;s Encrypt environment</h4>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>? Which LE environment do you want to use?
+</span></span><span style="display:flex;"><span>&gt; Production (recommended!)
+</span></span><span style="display:flex;"><span>  Staging (untrusted / testing)</span></span></code></pre></div><p>Always choose the <code>Production</code> environment, unless you really know
+what you&rsquo;re doing. <code>Production</code> is the only environment that produces
+valid (trusted) TLS certificates.</p>
+<h4 id="choose-type-of-acme-challenge">Choose type of ACME challenge</h4>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>? Which type of ACME challenge should be used?
+</span></span><span style="display:flex;"><span>&gt; TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+</span></span><span style="display:flex;"><span>  DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)</span></span></code></pre></div><p>For your first install, choose <code>TLS-ALPN-01</code>, it is the easiest method
+to use for public servers.</p>
+<p>If you want to use wildcard DNS records, you must choose the more
+advanced method <code>DNS-01</code>, and setup your DNS platform for programmatic
+access with an API token.</p>
+<h4 id="configure-acme-email-address--optional">Configure ACME email address (optional)</h4>
+<p>You don&rsquo;t have to provide your email address, but if you do, Let&rsquo;s
+Encrypt can email you about configuration issues, like certitficates
+about to expire.</p>
+<h3 id="configure-tls-certificates-and-domains">Configure TLS certificates and domains</h3>
+<p>d.rymcg.tech uses explicit certificate requests configured centrally,
+on the traefik project:</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>? Configure Traefik TLS certificates
+</span></span><span style="display:flex;"><span>&gt; Manage all certificates.
+</span></span><span style="display:flex;"><span>  Create a new certificate.
+</span></span><span style="display:flex;"><span>  Done / Go back</span></span></code></pre></div><h4 id="manage-all-certificates">Manage all certificates</h4>
+<p>This will show you all the certificate requests that have been defined
+and allow you to manage each one. It will be blank to start out with.</p>
+<h4 id="create-a-new-certificate">Create a new certificate</h4>
+<p>Use this to define all the certificates you need for all your
+applications.</p>
+<!--list-separator-->
+<ul>
+<li>
+<p>Set certificate main domain (CN)</p>
+<p>Each certificate needs a main name (CN), which should be the main
+domain name of the certificate.</p>
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>prod.example.com</span></span></code></pre></div><p>Each certificate also may contain several other domain names, known as
+SANs (Subject Alternative Names). You can use this to list as many
+additional domain names that you want to allow for the certificate.</p>
+</li>
+</ul>
+<h3 id="configure-middleware">Configure middleware</h3>
+<h3 id="configure-error-page-template">Configure error page template</h3>
+<h3 id="configure-wireguard-vpn">Configure wireguard VPN</h3>
 
             <footer class="footline">
             </footer>
@@ -164,12 +230,12 @@ must select it via this menu option, and set a username / password.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1716781633" defer></script>
-        <script src="/js/lunr/lunr.min.js?1716781633" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1716781633" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1716781633" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1716781633" defer></script>
-        <script src="/js/search.js?1716781633" defer></script>
+        <script src="/js/auto-complete.js?1716783040" defer></script>
+        <script src="/js/lunr/lunr.min.js?1716783040" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1716783040" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1716783040" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1716783040" defer></script>
+        <script src="/js/search.js?1716783040" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -261,14 +327,14 @@ must select it via this menu option, and set a username / password.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 27, 2024 at 3:47am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 27, 2024 at 4:10am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1716781633" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1716781633" defer></script>
-    <script src="/js/theme.js?1716781633" defer></script>
+    <script src="/js/clipboard.min.js?1716783040" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1716783040" defer></script>
+    <script src="/js/theme.js?1716783040" defer></script>
   </body>
 </html>
