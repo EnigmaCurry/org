@@ -25,11 +25,19 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Create a public Docker server Domain Infrastructure Register a domain name Setup public DNS service Setup your workstation Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech Install Traefik Proxy ",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Domain Infrastructure Register a domain name Setup public DNS service Create a public Docker server Setup your workstation Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech Install Traefik Proxy ",
     "description": "",
     "tags": null,
     "title": "Self-hosting Docker with d.rymcg.tech",
     "uri": "/d.rymcg.tech/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech",
+    "content": "A public internet Docker server needs several resources that you need to procure :\nA Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). A domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). Index Register a domain name Setup public DNS service ",
+    "description": "",
+    "tags": null,
+    "title": "Domain Infrastructure",
+    "uri": "/d.rymcg.tech/domain-infrastructure/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech",
@@ -102,14 +110,6 @@ var relearn_search_index = [
     "tags": null,
     "title": "Config",
     "uri": "/linux-workstation/config/index.html"
-  },
-  {
-    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech",
-    "content": "A public internet Docker server needs several resources that you need to procure :\nA Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). A domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). Index Register a domain name Setup public DNS service ",
-    "description": "",
-    "tags": null,
-    "title": "Domain Infrastructure",
-    "uri": "/d.rymcg.tech/domain-infrastructure/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming.",
