@@ -20,19 +20,19 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Create a public Docker server :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1716875246" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716875246" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1716875246" rel="stylesheet">
-    <link href="/css/auto-complete.css?1716875246" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716875246" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1716875246" rel="stylesheet">
-    <link href="/css/fonts.css?1716875246" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716875246" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1716875246" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1716875246" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1716875246" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1716875246" rel="stylesheet">
-    <link href="/css/print.css?1716875246" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1716875246" rel="stylesheet">
-    <script src="/js/url.js?1716875246"></script>
-    <script src="/js/variant.js?1716875246"></script>
+    <link href="/css/fontawesome-all.min.css?1716878759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716878759" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1716878759" rel="stylesheet">
+    <link href="/css/auto-complete.css?1716878759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716878759" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1716878759" rel="stylesheet">
+    <link href="/css/fonts.css?1716878759" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716878759" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1716878759" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1716878759" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1716878759" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1716878759" rel="stylesheet">
+    <link href="/css/print.css?1716878759" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1716878759" rel="stylesheet">
+    <script src="/js/url.js?1716878759"></script>
+    <script src="/js/variant.js?1716878759"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -273,47 +273,125 @@ non-wildcard, and this means you must add them one by one.</li>
 (For Debian/Ubuntu install the <code>dnsutils</code> package. For Arch Linux
 install <code>bind-tools</code>. For Fedora install <code>bind-utils</code>.)</p>
 <p>Pick some random subdomain off your domain:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>dig laksdflkweieri.prod.example.com</span></span></code></pre></div><p>Since you created the wildcard record for <code>*.prod.example.com</code> dig
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+dig laksdflkweieri.prod.example.com
+</pre>
+    </div>
+</div>
+<p>Since you created the wildcard record for <code>*.prod.example.com</code> dig
 should return your Docker server&rsquo;s IP address in the <code>ANSWER SECTION</code>
 of the output. You can test all your other records the same way.</p>
 <p>If you run into DNS caching problems, verify with the source DNS
 server directly:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>dig @ns1.digitalocean.com laksdflkweieri.prod.example.com</span></span></code></pre></div><h2 id="setup-your-local-workstation">Setup your local workstation</h2>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+</pre>
+    </div>
+</div>
+<h2 id="setup-your-local-workstation">Setup your local workstation</h2>
 <p>Edit your SSH config file: <code>~/.ssh/config</code> (create it if necessary).
 Create a new config for a host named <code>prod</code> (or whatever you want),
 and change it so that the domain name is one that you already created
 the DNS record for:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Host prod
-</span></span><span style="display:flex;"><span>    Hostname ssh.prod.example.com
-</span></span><span style="display:flex;"><span>    User root
-</span></span><span style="display:flex;"><span>    ControlMaster auto
-</span></span><span style="display:flex;"><span>    ControlPersist yes
-</span></span><span style="display:flex;"><span>    ControlPath /tmp/ssh-%u-%r@%h:%p</span></span></code></pre></div><p>(The name <code>ssh.prod.example.com</code> should work automatically if you
-setup the wildcard DNS entry (<code>*.prod.example.com</code>) created
-previously. The ControlMaster, ControlPersist, ControlPath adds SSH
-connection multi-plexing, and will make repeated logins/docker
-commands faster.)</p>
+<div class="box notices cstyle tip edit">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.ssh/config</div>
+    <div class="box-content">
+        <pre>
+Host prod
+    Hostname ssh.prod.example.com
+    User root
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+</pre>
+    </div>
+</div>
+ 
+<div class="box notices cstyle default">
+  <div class="box-label">Notice</div>
+  <div class="box-content">
+
+<p>(The domain name <code>ssh.prod.example.com</code> should automatically point to
+your VPS if you setup the wildcard DNS entry (<code>*.prod.example.com</code>).
+The SSH config settings <code>ControlMaster</code>, <code>ControlPersist</code>, <code>ControlPath</code>
+adds SSH connection multi-plexing, and will make repeated
+logins/docker commands faster.)</p>
+</div>
+</div>
 <p>Now test that you can SSH to your droplet:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh prod uname -a</span></span></code></pre></div><p>The first time you login to your droplet, you need to confirm the SSH
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+ssh prod uname -a
+</pre>
+    </div>
+</div>
+<p>The first time you login to your droplet, you need to confirm the SSH
 pubkey fingerprint; press Enter.</p>
 <p>If the connection worked, it should print information about the remote
 host operating system:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux</span></span></code></pre></div><h2 id="install-docker">Install Docker</h2>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
+</pre>
+    </div>
+</div>
+<h2 id="install-docker">Install Docker</h2>
 <p>The droplet has Debian installed on it, but with only basic packages
 installed by default. To install the latest version of Docker, run the
 installer script, which configures the upstream package repositories
 provided by the Docker organization:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
-</span></span><span style="display:flex;"><span>ssh prod sh install-docker.sh</span></span></code></pre></div><h2 id="setup-docker-context">Setup Docker context</h2>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
+ssh prod sh install-docker.sh
+</pre>
+    </div>
+</div>
+<h2 id="setup-docker-context">Setup Docker context</h2>
 <p>Now that Docker is installed, you won&rsquo;t be needing to use ssh directly
 again, except to do system maintainance.</p>
 <p>Setup the Docker context on your workstation:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker context create prod --docker host=ssh://prod</span></span></code></pre></div><p>Now you can switch to the new context:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>docker context use prod</span></span></code></pre></div><p>With this context active, all <code>docker</code> commands you run from your
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+docker context create prod --docker host=ssh://prod
+</pre>
+    </div>
+</div>
+<p>Now you can switch to the new context:</p>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+docker context use prod
+</pre>
+    </div>
+</div>
+<p>With this context active, all <code>docker</code> commands you run from your
 workstation will take effect on the remote Docker host instead.</p>
 <p>Test that the context works:</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## From your workstation:
-</span></span><span style="display:flex;"><span>docker run hello-world</span></span></code></pre></div><h2 id="congratulations">Congratulations</h2>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>Run this on your Workstation Bash shell ::</div>
+    <div class="box-content'">
+        <pre>
+docker run hello-world
+</pre>
+    </div>
+</div>
+<h2 id="congratulations">Congratulations</h2>
 <p>You have now finished installation of a remote Docker host server, on
 a Debian based droplet (VPS), and configured it on your workstation as
 a remote (SSH) docker context.</p>
@@ -340,12 +418,12 @@ a remote (SSH) docker context.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1716875247" defer></script>
-        <script src="/js/lunr/lunr.min.js?1716875247" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1716875247" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1716875247" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1716875247" defer></script>
-        <script src="/js/search.js?1716875247" defer></script>
+        <script src="/js/auto-complete.js?1716878759" defer></script>
+        <script src="/js/lunr/lunr.min.js?1716878759" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1716878759" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1716878759" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1716878759" defer></script>
+        <script src="/js/search.js?1716878759" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -447,14 +525,14 @@ a remote (SSH) docker context.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 28, 2024 at 5:47am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 28, 2024 at 6:45am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1716875247" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1716875247" defer></script>
-    <script src="/js/theme.js?1716875247" defer></script>
+    <script src="/js/clipboard.min.js?1716878759" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1716878759" defer></script>
+    <script src="/js/theme.js?1716878759" defer></script>
   </body>
 </html>
