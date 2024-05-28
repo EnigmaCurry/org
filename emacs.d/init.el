@@ -27,7 +27,16 @@
 (setq straight-use-package-by-default t)
 
 (use-package ox-hugo
-  :ensure t)
+  :after org
+  :config
+  (setq org-hugo-special-block-type-properties
+        '(("audio" :raw t)
+          ("katex" :raw t)
+          ("mark" :trim-pre t :trim-post t)
+          ("tikzjax" :raw t)
+          ("video" :raw t)
+          ("math" :raw t)))
+  )
 
 (use-package f)
 
