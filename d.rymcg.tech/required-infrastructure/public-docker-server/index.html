@@ -15,24 +15,24 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     <meta property="og:description" content="This section will guide you to create your own public Docker server, using a DigitalOcean droplet as an example. In a similar fashion, you can install Docker on any cloud provider, or dedicated host that you prefer.
 Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/public-docker-server/index.html">
-    <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech :: book.rymcg.tech">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">
+    <meta property="article:section" content="Required Infrastructure :: book.rymcg.tech">
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Create a public Docker server :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1716923555" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716923555" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1716923555" rel="stylesheet">
-    <link href="/css/auto-complete.css?1716923555" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716923555" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1716923555" rel="stylesheet">
-    <link href="/css/fonts.css?1716923555" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716923555" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1716923555" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1716923555" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1716923555" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1716923555" rel="stylesheet">
-    <link href="/css/print.css?1716923555" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1716923555" rel="stylesheet">
-    <script src="/js/url.js?1716923555"></script>
-    <script src="/js/variant.js?1716923555"></script>
+    <link href="/css/fontawesome-all.min.css?1716924180" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716924180" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1716924180" rel="stylesheet">
+    <link href="/css/auto-complete.css?1716924180" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716924180" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1716924180" rel="stylesheet">
+    <link href="/css/fonts.css?1716924180" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716924180" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1716924180" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1716924180" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1716924180" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1716924180" rel="stylesheet">
+    <link href="/css/print.css?1716924180" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1716924180" rel="stylesheet">
+    <script src="/js/url.js?1716924180"></script>
+    <script src="/js/variant.js?1716924180"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -56,7 +56,7 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/public-docker-server/index.html">
+  <body class="mobile-support html" data-url="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -77,7 +77,6 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     <li><a href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></li>
     <li><a href="#setup-your-local-workstation">Setup your local workstation</a></li>
     <li><a href="#install-docker">Install Docker</a></li>
-    <li><a href="#setup-docker-context">Setup Docker context</a></li>
     <li><a href="#congratulations">Congratulations</a></li>
   </ul>
 </nav>
@@ -88,10 +87,11 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker with d.rymcg.tech</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create a public Docker server</span><meta itemprop="position" content="3"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/required-infrastructure/index.html"><span itemprop="name">Required Infrastructure</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create a public Docker server</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/domain-infrastructure/setup-dns/index.html" title="Setup public DNS service (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" title="Setup public DNS service (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
             <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/index.html" title="Setup your workstation (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
@@ -367,42 +367,11 @@ ssh prod sh install-docker.sh
 </pre>
     </div>
 </div>
-<h2 id="setup-docker-context">Setup Docker context</h2>
-<p>Now that Docker is installed, you won&rsquo;t be needing to use ssh directly
-again, except to do system maintainance.</p>
-<p>Setup the Docker context on your workstation:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-docker context create prod --docker host=ssh://prod
-</pre>
-    </div>
-</div>
-<p>Now you can switch to the new context:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-docker context use prod
-</pre>
-    </div>
-</div>
-<p>With this context active, all <code>docker</code> commands you run from your
-workstation will take effect on the remote Docker host instead.</p>
-<p>Test that the context works:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-docker run hello-world
-</pre>
-    </div>
-</div>
 <h2 id="congratulations">Congratulations</h2>
 <p>You have now finished installation of a remote Docker host server, on
-a Debian based droplet (VPS), and configured it on your workstation as
-a remote (SSH) docker context.</p>
+a Debian based droplet (VPS).</p>
+<p>You must now configure your workstation to use your remote Docker
+context.</p>
 
             <footer class="footline">
             </footer>
@@ -426,12 +395,12 @@ a remote (SSH) docker context.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1716923555" defer></script>
-        <script src="/js/lunr/lunr.min.js?1716923555" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1716923555" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1716923555" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1716923555" defer></script>
-        <script src="/js/search.js?1716923555" defer></script>
+        <script src="/js/auto-complete.js?1716924180" defer></script>
+        <script src="/js/lunr/lunr.min.js?1716924180" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1716924180" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1716924180" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1716924180" defer></script>
+        <script src="/js/search.js?1716924180" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -455,10 +424,10 @@ a remote (SSH) docker context.</p>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class="parent "><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
-          <li data-nav-id="/d.rymcg.tech/domain-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/domain-infrastructure/index.html">Domain Infrastructure</a><ul id="R-subsections-2e6c9d6f3f28aa1f06e5d56d72b4acc8" class="morespace collapsible-menu">
-          <li data-nav-id="/d.rymcg.tech/domain-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/domain-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
-          <li data-nav-id="/d.rymcg.tech/domain-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/domain-infrastructure/setup-dns/index.html">Setup public DNS service</a></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/public-docker-server/index.html" class="active"><a class="padding" href="/d.rymcg.tech/public-docker-server/index.html">Create a public Docker server</a></li>
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html">Setup public DNS service</a></li>
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class="active"><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public Docker server</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">Create SSH config and Docker Context</a></li>
@@ -492,7 +461,7 @@ a remote (SSH) docker context.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = baseUri + this.value;">
-                      <option id="R-en" value="/d.rymcg.tech/public-docker-server/index.html" lang="en-us" selected></option>
+                      <option id="R-en" value="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -535,14 +504,14 @@ a remote (SSH) docker context.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 28, 2024 at 7:12pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 28, 2024 at 7:23pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1716923555" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1716923555" defer></script>
-    <script src="/js/theme.js?1716923555" defer></script>
+    <script src="/js/clipboard.min.js?1716924180" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1716924180" defer></script>
+    <script src="/js/theme.js?1716924180" defer></script>
   </body>
 </html>
