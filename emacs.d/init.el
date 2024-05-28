@@ -37,6 +37,7 @@
           ("video" :raw t)
           ("run" :raw t)
           ("stdout" :trim-pre t :trim-post t)
+          ("edit" :trim-pre t :trim-post t)
           ("math" :raw t)))
   )
 

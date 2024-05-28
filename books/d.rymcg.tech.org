@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /d.rymcg.tech
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit
 #+STARTUP: align
 
 * Self-hosting Docker with d.rymcg.tech
@@ -293,7 +293,18 @@ regardless of the supported provider you pick.
 Once changed, you can verify the setting from your workstation, using
 the =whois= command:
 
-: whois your-domain.com
+#+begin_run
+whois your-domain.com
+#+end_run
+
+#+begin_stdout
+Domain Name: your-domain.com
+Registrar WHOIS Server: whois.gandi.net
+Name Server: DNS1.EXAMPLE.NET
+Name Server: DNS2.EXAMPLE.NET
+Name Server: DNS3.EXAMPLE.NET
+Name Server: DNS4.EXAMPLE.NET
+#+end_stdout
 
 The output shows a report for your domain registration, including the
 list of the new nameservers.
@@ -461,7 +472,9 @@ install =bind-tools=. For Fedora install =bind-utils=.)
 
 Pick some random subdomain off your domain:
 
-: dig laksdflkweieri.prod.example.com
+#+begin_run
+dig laksdflkweieri.prod.example.com
+#+end_run
 
 Since you created the wildcard record for =*.prod.example.com= dig
 should return your Docker server's IP address in the =ANSWER SECTION=
@@ -470,7 +483,9 @@ of the output. You can test all your other records the same way.
 If you run into DNS caching problems, verify with the source DNS
 server directly:
 
-: dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+#+begin_run
+dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+#+end_run
 
 *** Setup your local workstation
 
@@ -479,22 +494,30 @@ Create a new config for a host named =prod= (or whatever you want),
 and change it so that the domain name is one that you already created
 the DNS record for:
 
-: Host prod
-:     Hostname ssh.prod.example.com
-:     User root
-:     ControlMaster auto
-:     ControlPersist yes
-:     ControlPath /tmp/ssh-%u-%r@%h:%p
+#+attr_shortcode: :file ~/.ssh/config
+#+begin_edit
+Host prod
+    Hostname ssh.prod.example.com
+    User root
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+#+end_edit
 
-(The name =ssh.prod.example.com= should work automatically if you
-setup the wildcard DNS entry (=*.prod.example.com=) created
-previously. The ControlMaster, ControlPersist, ControlPath adds SSH
-connection multi-plexing, and will make repeated logins/docker
-commands faster.)
+#+attr_shortcode: :title Notice
+#+begin_notice
+(The domain name =ssh.prod.example.com= should automatically point to
+your VPS if you setup the wildcard DNS entry (=*.prod.example.com=).
+The SSH config settings =ControlMaster=, =ControlPersist=, =ControlPath=
+adds SSH connection multi-plexing, and will make repeated
+logins/docker commands faster.)
+#+end_notice
 
 Now test that you can SSH to your droplet:
 
-: ssh prod uname -a
+#+begin_run
+ssh prod uname -a
+#+end_run
 
 The first time you login to your droplet, you need to confirm the SSH
 pubkey fingerprint; press Enter.
@@ -502,7 +525,9 @@ pubkey fingerprint; press Enter.
 If the connection worked, it should print information about the remote
 host operating system:
 
-: Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
+#+begin_stdout
+Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
+#+end_stdout
 
 *** Install Docker
 
@@ -511,8 +536,10 @@ installed by default. To install the latest version of Docker, run the
 installer script, which configures the upstream package repositories
 provided by the Docker organization:
 
-: ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
-: ssh prod sh install-docker.sh
+#+begin_run
+ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
+ssh prod sh install-docker.sh
+#+end_run
 
 *** Setup Docker context
 
@@ -521,19 +548,24 @@ again, except to do system maintainance.
 
 Setup the Docker context on your workstation:
 
-: docker context create prod --docker host=ssh://prod
+#+begin_run
+docker context create prod --docker host=ssh://prod
+#+end_run
 
 Now you can switch to the new context:
 
-: docker context use prod
+#+begin_run
+docker context use prod
+#+end_run
 
 With this context active, all =docker= commands you run from your
 workstation will take effect on the remote Docker host instead.
 
 Test that the context works:
 
-: ## From your workstation:
-: docker run hello-world
+#+begin_run
+docker run hello-world
+#+end_run
 
 *** Congratulations
 
