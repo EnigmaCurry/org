@@ -32,6 +32,7 @@ index
 * Introduction
 :PROPERTIES:
 :EXPORT_FILE_NAME: introduction
+:EXPORT_HUGO_WEIGHT: 200
 :END:
 
 
@@ -176,12 +177,13 @@ ever again. By controlling the server from your workstation, you can
 manage the server in a clean fashion. You can even create a new server
 from scratch, in no time. All of the important configuration stays on
 your workstation (and are backed up in a git repository).
-* Infrastructure
+
+* Domain Infrastructure
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: infrastructure
+:EXPORT_HUGO_SECTION_FRAG: domain-infrastructure
 :END:
 
-** Infrastructure
+** Domain Infrastructure
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :END:
@@ -246,7 +248,7 @@ will be similar regardless of the domain provider you pick.
    =Dashboard=, under the =Domain= tab.
  * Leave this browser tab open, you will return to it in the next
    chapter.
-** Setup public DNS
+** Setup public DNS service
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-dns
 :END:
@@ -320,7 +322,7 @@ list of the new nameservers.
 DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
-** Create a public Docker server 
+* Create a public Docker server 
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
 :END:
@@ -645,9 +647,69 @@ __d.rymcg.tech_cli_alias d
 #+end_edit
 Now close and restart your shell (terminal) to load the new config.
 
+** Create SSH config and Docker Context
+:PROPERTIES:
+:EXPORT_FILE_NAME: ssh-config-and-docker-context
+:END:
+
+To remotely control your Docker host from your workstation, you need
+two additional configs:
+
+ * SSH Host config in =~/.ssh/config=.
+ * Docker Context config via =docker context create ...=.
+
+Both of these can be created automatically by running:
+ 
+#+begin_run
+d context new
+#+end_run
+
+#+begin_stdout
+? This command can help create a new SSH config and Docker context. Proceed? (Y/n)
+
+? You must specify the SSH config entry to use  
+  I already have an SSH host entry in ~/.ssh/config that I want to use
+\> I want to make a new SSH host entry in ~/.ssh/config
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+
+? Enter the new SSH context name (short host name) : foo
+
+? Enter the fully qualified SSH Host DNS name : foo.example.com
+
+\## Here is the new SSH config entry:
+Host foo
+     Hostname foo.example.com
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+
+? Do you want to append this config to ~/.ssh/config? (y/N) y
+? Do you want to switch to the new foo context now? (y/N) y
+foo
+Current context is now "foo"
+#+end_stdout
+
+*** List all Docker contexts and switch the active one
+
+#+begin_run
+d context
+#+end_run
+
+#+begin_stdout
+? Select the Docker context to use  
+  deb
+> foo
+  step-ca
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+
+Current context is now "foo"
+#+end_stdout
+
 ** Main config for d.rymcg.tech
 :PROPERTIES:
 :EXPORT_FILE_NAME: main-config-for-d.rymcg.tech
+:EXPORT_HUGO_WEIGHT: 2010
 :END:
 
 *** Select your active Docker context
@@ -661,8 +723,7 @@ your workstation:
 
 #+begin_stdout
 ? Select the Docker context to use  
-> deb
-  default
+> prod
   step-ca
   test-tmp
 [↑↓ to move, enter to select, type to filter, ESC to cancel]
@@ -670,9 +731,10 @@ your workstation:
 
 Each Docker context has a separate config file (=.env_{CONTEXT}=),
 stored in the root d.rymcg.tech directory
-(=~/git/vendor/enigmacurry/d.rymcg.tech=).
+(=~/git/vendor/enigmacurry/d.rymcg.tech=), so you must actively select
+your current context before you can configure it.
 
-*** Configure current Docker context
+*** Configure d.rymcg.tech for the current Docker context
 
 #+begin_run
 d make - config
@@ -698,6 +760,7 @@ default configs.
 ** Install Traefik Proxy
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-traefik-proxy
+:EXPORT_HUGO_WEIGHT: 2020
 :END:
 
 *** Configure Traefik Proxy
@@ -708,7 +771,11 @@ Run on your workstation:
 d make traefik config
 #+end_run
 
-The configuration for Traefik is driven by a text wizard menu system.
+This creates a config for Traefik on your active Docker context. The
+configuration is driven by a text wizard menu system.
+
+Once complete, it will have created and configured your
+=.env_{CONTEXT}= file for you.
 
 #+begin_stdout
 ? Traefik config main menu:  
@@ -843,3 +910,15 @@ additional domain names that you want to allow for the certificate.
 **** Configure middleware
 **** Configure error page template
 **** Configure wireguard VPN
+**** Install Traefik
+
+To install Traefik (on your active Docker context), you can simply
+choose the =Reinstall Traefik= option in the menu, or you can run that
+step all by itself from the command line at any time:
+
+#+begin_run
+d make traefik install
+#+end_run
+
+You should always reinstall Traefik after changing any configuration
+setting.
