@@ -1,7 +1,7 @@
 var relearn_search_index = [
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIntroduction Fedora Sway Atomic Requirements Installation Sway Firefox Toolbox Emacs SSH ",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Installation Sway Firefox Toolbox Emacs SSH ",
     "description": "",
     "tags": null,
     "title": "Linux Workstation",
@@ -9,7 +9,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Introduction Register a domain name Setup public DNS Create a public Docker server Install d.rymcg.tech tools Main config for d.rymcg.tech Install Traefik Proxy ",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Index Introduction Register a domain name Setup public DNS Create a public Docker server Install d.rymcg.tech tools Main config for d.rymcg.tech Install Traefik Proxy ",
     "description": "",
     "tags": null,
     "title": "Self-hosting Docker with d.rymcg.tech",
@@ -17,7 +17,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nDependencies Building locally Publishing with GitHub pages Publishing with SFTP Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nIndex Dependencies Building locally Publishing with GitHub pages Publishing with SFTP Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Publishing with org-mode, ox-hugo, and literate programming.",
@@ -193,7 +193,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming.",
-    "content": "This chapter serves as an example of various shortcodes/markup for Ox-Hugo and the Hugo Relearn theme.\nThis chapter is broken into several sub-chapters to discuss the various Hugo related features.\nIndex Example Org Blocks Example Shortcodes Example of a deeply … ",
+    "content": "This chapter serves as an example of various shortcodes/markup for Ox-Hugo and the Hugo Relearn theme.\nThis chapter is broken into several sub-chapters to discuss the various Hugo related features.\nIndex Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Example Org / Hugo content",
@@ -217,7 +217,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
-    "content": " Nested … ",
+    "content": "Index Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Example of a deeply …",
@@ -225,7 +225,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply …",
-    "content": " Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "content": "Index Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Nested …",
