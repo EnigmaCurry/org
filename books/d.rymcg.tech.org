@@ -19,6 +19,12 @@ Docker server, using the tools provided by [[https://d.rymcg.tech][d.rymcg.tech]
 d.rymcg.tech
 #+end_button
 
+#+attr_shortcode: :icon comment-dots :style red :href https://matrix.to/#/#d.rymcg.tech:enigmacurry.com
+#+begin_button
+Chat with us on Matrix
+#+end_button
+
+#+attr_shortcode: :depth 999
 #+begin_index
 index
 #+end_index
@@ -170,11 +176,31 @@ ever again. By controlling the server from your workstation, you can
 manage the server in a clean fashion. You can even create a new server
 from scratch, in no time. All of the important configuration stays on
 your workstation (and are backed up in a git repository).
-
-
-* Register a domain name
+* Infrastructure
 :PROPERTIES:
-:EXPORT_FILE_NAME: register-a-domain-name
+:EXPORT_HUGO_SECTION_FRAG: infrastructure
+:END:
+
+** Infrastructure
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+A public internet Docker server needs several resources that you need
+to procure :
+
+ * A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet).
+ * An internet network connection (eg. DigitalOcean network).
+ * A domain name registrar (eg. Gandi.net).
+ * A domain name server (eg. DigitalOcean DNS).
+
+#+begin_index
+index
+#+end_index
+
+** Register a domain name
+:PROPERTIES:
+:EXPORT_FILE_NAME: register-a-domain-nameom
 :END:
 
 To host a web service, one of the first things you will need is to
@@ -193,7 +219,7 @@ remember to renew your domains for every year, lest they expire and no
 longer resolve to your services, and you lose control of the domain,
 possibly forever.
 
-** Domain names for private servers
+*** Domain names for private servers
 
 If your Docker server won't be a public server, (eg. running a private
 Docker server at home), it is still recommended that you use a valid
@@ -205,7 +231,7 @@ to make up your own fake domain name instead, and forgo TLS, or you
 can setup [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/step-ca#readme][Step-CA]] for off-grid TLS. In either case, you will still
 need to setup DNS, and this is explained in the next section.
 
-** Register an Internet domain name
+*** Register an Internet domain name
 
 You can buy (rent) a domain name from lots of places. For
 documentation purposes, we will use [[https://www.gandi.net][Gandi.net]], but these instructions
@@ -220,8 +246,7 @@ will be similar regardless of the domain provider you pick.
    =Dashboard=, under the =Domain= tab.
  * Leave this browser tab open, you will return to it in the next
    chapter.
-
-* Setup public DNS
+** Setup public DNS
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-dns
 :END:
@@ -251,7 +276,7 @@ DigitalOcean.com as your domain's public DNS server (and [[https://go-acme.githu
 is supported by go-lego]]), but these instructions will be similar
 regardless of the supported provider you pick.
 
-** Configure your domain's DNS server on Gandi.net
+*** Configure your domain's DNS server on Gandi.net
 
  * Login to your [[https://admin.gandi.net][gandi.net]] dashboard.
  * Click the =Domain= tab.
@@ -273,7 +298,7 @@ the =whois= command:
 The output shows a report for your domain registration, including the
 list of the new nameservers.
 
-** Setup public DNS on DigitalOcean.com
+*** Setup public DNS on DigitalOcean.com
 
  * Signup for an account at [[https://m.do.co/c/069af06b869e][DigitalOcean]], if you haven't already.
  * Login to the [[https://cloud.digitalocean.com/][cloud console]].
@@ -284,8 +309,7 @@ list of the new nameservers.
 DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
-
-* Create a public Docker server 
+** Create a public Docker server 
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
 :END:
@@ -295,7 +319,7 @@ using a DigitalOcean droplet as an example. In a similar fashion, you
 can install Docker on any cloud provider, or dedicated host that you
 prefer.
 
-** Choosing a VPS provider
+*** Choosing a VPS provider
 
 One of the most basic units of cloud computing is the Virtual Private
 Server (VPS). A VPS is a (Linux) virtual machine that is provisioned
@@ -313,7 +337,7 @@ layer has an integrated firewall, external to the droplet operating
 system. Having a firewall that is external (in front of) the VPS is
 one of the most important features to look for in a hosting provider.
 
-** Create a DigitalOcean account and setup your SSH key
+*** Create a DigitalOcean account and setup your SSH key
 
 If you have not yet setup an SSH key on your workstation, [[file:linux-workstation.org][read the
 Linux Workstation book]] and do that first.
@@ -329,7 +353,7 @@ Linux Workstation book]] and do that first.
    computer.
  * Finish adding the key, click =Add SSH Key=.
 
-** Create a DigitalOcean firewall template
+*** Create a DigitalOcean firewall template
 
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
@@ -360,7 +384,7 @@ Linux Workstation book]] and do that first.
      * Sources: All IPv4, All IPv6.
   * Click =Create Firewall=.
  
-** Creating a DigitalOcean droplet for a Docker server
+*** Creating a DigitalOcean droplet for a Docker server
 
 DigitalOcean provides a Docker image with which to create a droplet
 (DigitalOcean's name for their own VPS product).
@@ -389,7 +413,7 @@ DigitalOcean provides a Docker image with which to create a droplet
    URLs. For this example, we choose =prod=.
  * Verify everything's correct, and then click =Create Dropet=.
 
-** Apply the DigitalOcean droplet firewall
+*** Apply the DigitalOcean droplet firewall
 
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
@@ -398,7 +422,7 @@ DigitalOcean provides a Docker image with which to create a droplet
  * Click =Add Droplets= and search for the droplet you created and select it.
  * Click =Add Droplet= to add the firewall to the droplet.
 
-** Create wildcard DNS records for the droplet
+*** Create wildcard DNS records for the droplet
 
 For the purposes of documentation, assume you you own the domain
 =example.com= and you have created the Docker server named =prod=. You
@@ -448,7 +472,7 @@ server directly:
 
 : dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
 
-** Setup your local workstation
+*** Setup your local workstation
 
 Edit your SSH config file: =~/.ssh/config= (create it if necessary).
 Create a new config for a host named =prod= (or whatever you want),
@@ -480,7 +504,7 @@ host operating system:
 
 : Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
 
-** Install Docker
+*** Install Docker
 
 The droplet has Debian installed on it, but with only basic packages
 installed by default. To install the latest version of Docker, run the
@@ -490,7 +514,7 @@ provided by the Docker organization:
 : ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
 : ssh prod sh install-docker.sh
 
-** Setup Docker context
+*** Setup Docker context
 
 Now that Docker is installed, you won't be needing to use ssh directly
 again, except to do system maintainance.
@@ -511,21 +535,35 @@ Test that the context works:
 : ## From your workstation:
 : docker run hello-world
 
-** Congratulations
+*** Congratulations
 
 You have now finished installation of a remote Docker host server, on
 a Debian based droplet (VPS), and configured it on your workstation as
 a remote (SSH) docker context.
 
+* Workstation
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: workstation
+:END:
 
-* Install d.rymcg.tech tools
+** Setup your workstation
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Install d.rymcg.tech tools
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-d-rymcg-tech
 :END:
 
 Install d.rymcg.tech and its dependencies *on your workstation*.
 
-** Install dependencies
+*** Install dependencies
 
 : ## Fedora
 : dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools
@@ -536,7 +574,7 @@ Install d.rymcg.tech and its dependencies *on your workstation*.
 : ## Arch Linux
 : pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-tools
 
-** Clone d.rymcg.tech repository
+*** Clone d.rymcg.tech repository
 
 : git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
 :    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
@@ -544,7 +582,7 @@ Install d.rymcg.tech and its dependencies *on your workstation*.
 : cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 
 
-** Setup =d.rymcg.tech= command line tool
+*** Setup =d.rymcg.tech= command line tool
 
 You must edit your workstation user's =~/.bashrc= file, which modifies
 the Bash shell environment config:
@@ -557,23 +595,35 @@ the Bash shell environment config:
 
 Now close and restart your shell (terminal) to load the new config.
 
-* Main config for d.rymcg.tech
+** Main config for d.rymcg.tech
 :PROPERTIES:
 :EXPORT_FILE_NAME: main-config-for-d.rymcg.tech
 :END:
+
+#+begin_notice
+d context
+#+end_notice
+
+: ? Select the Docker context to use  
+: > deb
+:   default
+:   step-ca
+:   test-tmp
+: [↑↓ to move, enter to select, type to filter, ESC to cancel]
+
 
 Each Docker context has a separate config file (=.env_{CONTEXT}=),
 stored in the root d.rymcg.tech directory
 (=~/git/vendor/enigmacurry/d.rymcg.tech=).
 
-** Choose your current Docker context
+*** Choose your current Docker context
 
 : d context
 
 For continuing our example, choose the =prod= context, or whatever you
 named your context.
 
-** Configure current Docker context
+*** Configure current Docker context
 
 : d make - config
 
@@ -592,12 +642,12 @@ your Docker host.
 The root domain serves as the example root domain for all application
 default configs.
 
-* Install Traefik Proxy
+** Install Traefik Proxy
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-traefik-proxy
 :END:
 
-** Configure Traefik Proxy
+*** Configure Traefik Proxy
 
 Run on your workstation:
 
@@ -618,13 +668,13 @@ The configuration for Traefik is driven by a text wizard menu system.
 Use your arrow keys to select a menu item and press the =Enter= key.
 To cancel, press the =ESC= key.
 
-*** Create system user on Docker host
+**** Create system user on Docker host
 
 This option will create a new username on the Docker host, called
 =traefik=. This is necessary to reserve a unique UID for traefik to
 run as on the system. Run this first before anything else.
 
-*** Configure entrypoints
+**** Configure entrypoints
 
 Traefik uses various entrypoints to allow requests on certain TCP
 ports. By default, only port 80 and 443 are enabled. You can enable
@@ -635,7 +685,7 @@ application that doesn't use the standard =websecure= entrypoint (port
 By default, the Traefik Dashboard is not enabled. To enable it, you
 must select it via this menu option, and set a username / password.
 
-*** Configure Certificate Authorities (CA)
+**** Configure Certificate Authorities (CA)
 
 If you're planning on running a public server, using TLS certificates
 from Let's Encrypt, you can skip this option.
@@ -643,7 +693,7 @@ from Let's Encrypt, you can skip this option.
 You only need to run this if you wish to modify the TLS certificate
 trust store to accomodate a "self-signed" Step-CA authority.
 
-*** Configure ACME (Let's Encrypt or Step-CA)
+**** Configure ACME (Let's Encrypt or Step-CA)
 
 Choose this option to configure ACME, which makes requesting and
 renewing TLS certificates an easy and automatic process.
@@ -665,7 +715,7 @@ Let's Encrypt does.
 Finally, if you want to setup TLS certificates manually, you can
 choose =Disable ACME=.
 
-**** Configure Let's Encrypt environment
+***** Configure Let's Encrypt environment
 
 : ? Which LE environment do you want to use?  
 : > Production (recommended!)
@@ -675,7 +725,7 @@ Always choose the =Production= environment, unless you really know
 what you're doing. =Production= is the only environment that produces
 valid (trusted) TLS certificates.
 
-**** Choose type of ACME challenge
+***** Choose type of ACME challenge
 
 : ? Which type of ACME challenge should be used?  
 : > TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
@@ -688,13 +738,13 @@ If you want to use wildcard DNS records, you must choose the more
 advanced method =DNS-01=, and setup your DNS platform for programmatic
 access with an API token.
 
-**** Configure ACME email address (optional)
+***** Configure ACME email address (optional)
 
 You don't have to provide your email address, but if you do, Let's
 Encrypt can email you about configuration issues, like certitficates
 about to expire.
 
-*** Configure TLS certificates and domains
+**** Configure TLS certificates and domains
 
 d.rymcg.tech uses explicit certificate requests configured centrally,
 on the traefik project:
@@ -704,17 +754,17 @@ on the traefik project:
 :   Create a new certificate.
 :   Done / Go back
 
-**** Manage all certificates
+***** Manage all certificates
 
 This will show you all the certificate requests that have been defined
 and allow you to manage each one. It will be blank to start out with.
 
-**** Create a new certificate
+***** Create a new certificate
 
 Use this to define all the certificates you need for all your
 applications.
 
-***** Set certificate main domain (CN)
+****** Set certificate main domain (CN)
 
 Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.
@@ -725,6 +775,6 @@ Each certificate also may contain several other domain names, known as
 SANs (Subject Alternative Names). You can use this to list as many
 additional domain names that you want to allow for the certificate.
 
-*** Configure middleware
-*** Configure error page template
-*** Configure wireguard VPN
+**** Configure middleware
+**** Configure error page template
+**** Configure wireguard VPN
