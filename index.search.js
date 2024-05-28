@@ -233,7 +233,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
-    "content": "The base Debian image only has a few basic commands preinstalled. You must now install the Docker packages and enable the service:\nRun this on your Workstation Bash shell :: d install-docker Tip d install-docker will install Docker on the remote VPS, according to your current docker context.\nTest that the context works from your workstation Run this on your Workstation Bash shell :: docker run hello-world Run this on your Workstation Bash shell :: docker ps ",
+    "content": "The base Debian image only has a few basic commands preinstalled. You must now install the Docker packages and enable the service:\nChoose the active Docker context :: d context Run this on your Workstation Bash shell :: d install-docker Tip d install-docker will install Docker on the remote VPS, according to your current docker context.\nTest that the context works from your workstation Run this on your Workstation Bash shell :: docker run hello-world Run this on your Workstation Bash shell :: docker ps ",
     "description": "",
     "tags": null,
     "title": "Install Docker on your remote host",
