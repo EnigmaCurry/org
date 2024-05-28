@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /linux-workstation
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button index
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi
 #+STARTUP: align
 
 * Linux Workstation
@@ -118,8 +118,10 @@ You will need the following hardware:
 Assuming you are temporarily using another Linux workstation, write
 the .iso image to a USB drive (eg. replace ~/dev/sdX~ with your device name):
 
-: dd if=Fedora-Sericea-ostree-x86_64-39-1.5-respin2.iso \
-:    of=/dev/sdX bs=10M status=progress conv=sync
+#+begin_run
+dd if=Fedora-Sericea-ostree-x86_64-39-1.5-respin2.iso \
+   of=/dev/sdX bs=10M status=progress conv=sync
+#+end_run
 
 Boot the target workstation computer using the USB drive. You will
 boot into the Anaconda install wizard. Just follow the prompts to
@@ -147,12 +149,15 @@ image. You can both upgrade the image, as well as rollback the image
 
 To upgrade to the latest image:
 
-: sudo rpm-ostree upgrade
+#+begin_run
+sudo rpm-ostree upgrade
+#+end_run
 
 Let it finish downloading the new image, and then you must reboot:
 
-: sudo systemctl reboot
-
+#+begin_run
+sudo systemctl reboot
+#+end_run
 The boot manager lists the last several images, which are still
 available to choose from. The default is to boot the newly upgraded
 image.
@@ -182,19 +187,25 @@ My custom config replaces several of the default configuration files.
 So you must first get rid of these files, by renaming them with the
 suffix =.orig= for posterity:
 
-: mv ~/.config ~/.config.orig
-: mv ~/.bashrc ~/.bashrc.orig
-: mv ~/.bash_profile ~/.bash_profile.orig
+#+begin_run
+mv ~/.config ~/.config.orig
+mv ~/.bashrc ~/.bashrc.orig
+mv ~/.bash_profile ~/.bash_profile.orig
+#+end_run
 
 Next, install my [[https://github.com/enigmacurry/sway-home][customized sway config repository]] :
 
-: git clone https://github.com/enigmacurry/sway-home \
-:   ~/git/vendor/enigmacurry/sway-home
+#+begin_run
+git clone https://github.com/enigmacurry/sway-home \
+  ~/git/vendor/enigmacurry/sway-home
+#+end_Run
 
 Run the included setup script:
 
-: cd ~/git/vendor/enigmacurry/sway-home
-: ./setup.sh
+#+begin_run
+cd ~/git/vendor/enigmacurry/sway-home
+./setup.sh
+#+end_run
 
 The =setup.sh= script will make [[https://github.com/EnigmaCurry/sway-home/blob/master/setup.sh#L57-L61][symlinks]] to the repository files from
 the same original paths as the files you just moved. It also asks you
@@ -211,8 +222,10 @@ not include any GUI for setting it up, so another program called
 [[https://github.com/artizirk/wdisplays][wdisplays]] is useful, however it is not included in the base Atomic
 distribution, and you will have to install it via [[/linux-workstation/toolbox][toolbox]].
 
-: # install wdisplays inside of toolbox
-: sudo dnf install wdisplays
+#+attr_shortcode: :title install wdisplays inside of toolbox
+#+begin_run
+sudo dnf install wdisplays
+#+end_run
 
 You can configure all of your displays using the wdisplays GUI
 program, however, the configuration will not persist across login
@@ -235,10 +248,13 @@ DP-4:
 Open the Kanshi config file =~/.config/kanshi/config= and copy the
 information into the config file:
 
-: profile {
-:    output DP-3 enable mode 2560x1440 position 3840,0 scale 1 transform normal
-:    output DP-4 enable mode 3840x2160 position 1920,360 scale 2 transform normal
-: }
+#+attr_shortcode: :file ~/.config/kanshi/config
+#+begin_edit
+profile {
+   output DP-3 enable mode 2560x1440 position 3840,0 scale 1 transform normal
+   output DP-4 enable mode 3840x2160 position 1920,360 scale 2 transform normal
+}
+#+end_edit
 
 Check out =man 5 kanshi= for more config options. Kanshi is
 [[https://github.com/EnigmaCurry/sway-home/blob/9a7af6fbd60a671a7059ba7bd35f35c2ec3cbd1f/config/sway/config.d/autostart_applications#L2][automatically started]] when sway is, so you can test it by logging out
@@ -453,7 +469,9 @@ those directories, they are also affected the same way on the host.
 Let's create a toolbox to install some of the common development tools
 we will use on a daily basis.
 
-: toolbox create dev
+#+begin_run
+toolbox create dev
+#+end_run
 
 This will create a new toolbox container called =dev= based upon the
 same Fedora version as the host (the toolbox itself is not Atomic
@@ -461,13 +479,17 @@ though, but the normal Fedora Workstation version instead.)
 
 To enter the toolbox run:
 
-: toolbox enter dev
+#+begin_run
+toolbox enter dev
+#+end_run
 
 This will enter the toolbox container, and now you can install extra
 software:
 
-: sudo dnf install keychain htop
-: sudo dnf groupinstall "Development Tools" "Development Libraries"
+#+begin_run
+sudo dnf install keychain htop
+sudo dnf groupinstall "Development Tools" "Development Libraries"
+#+end_run
 
 ** Arch Linux toolbox
 
@@ -476,53 +498,69 @@ any container image you want, or even build your own from a
 =Dockerfile=. Here is a Dockerfile for Arch Linux you can use to build
 an Arch Linux toolbox container:
 
-: FROM docker.io/archlinux/archlinux:latest
-: ENV NAME=arch-toolbox VERSION=rolling
-: LABEL com.github.containers.toolbox="true" \
-:   name="$NAME" \
-:   version="$VERSION"
-: RUN pacman -Syu --noconfirm \
-:     && pacman  -S --noconfirm sudo inetutils less \
-:        git base-devel go \
-:        noto-fonts noto-fonts-cjk \
-:        noto-fonts-emoji noto-fonts-extra \
-:     && pacman -Scc --noconfirm \
-:     && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
-: RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
-:     && cd /tmp/yay \
-:     && sudo -u nobody makepkg -s \
-:     && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
-: CMD ["bash"]
+#+attr_shortcode: :file Dockerfile
+#+begin_edit
+FROM docker.io/archlinux/archlinux:latest
+ENV NAME=arch-toolbox VERSION=rolling
+LABEL com.github.containers.toolbox="true" \
+  name="$NAME" \
+  version="$VERSION"
+RUN pacman -Syu --noconfirm \
+    && pacman  -S --noconfirm sudo inetutils less \
+       git base-devel go \
+       noto-fonts noto-fonts-cjk \
+       noto-fonts-emoji noto-fonts-extra \
+    && pacman -Scc --noconfirm \
+    && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
+RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
+    && cd /tmp/yay \
+    && sudo -u nobody makepkg -s \
+    && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
+CMD ["bash"]
+#+end_edit
 
 Write this to a file named =Dockerfile= and open your host terminal to
 the same directory. Then run this command to build the container:
 
-: podman build -t arch .
+#+begin_run
+podman build -t arch .
+#+end_run
 
 Now you can create a new toolbox based on the new image (both called
 =arch=):
 
-: toolbox create --image arch arch
+#+begin_run
+toolbox create --image arch arch
+#+end_run
 
 To enter the Arch Linux container, run:
 
-: toolbox enter arch
+#+begin_run
+toolbox enter arch
+#+end_run
 
 Now that you're inside the toolbox, you can run any Arch Linux command
 (consult the [[http://wiki.archlinux.org/][Arch Wiki]]).
 
-: sudo pacman -Syu
-: sudo pacman -S keychain base-devel
+#+attr_shortcode: :title Run this inside the arch toolbox
+#+begin_run
+sudo pacman -Syu
+sudo pacman -S keychain base-devel
+#+end_run
 
 ** Managing toolbox containers
 
 You can list all of your toolboxes that you've created:
 
-: toolbox list
+#+begin_run
+toolbox list
+#+end_run
 
 You can remove existing toolboxes:
 
-: toolbox rm --force arch
+#+begin_run
+toolbox rm --force arch
+#+end_run
 
 (force is only required if the toolbox is currently running.)
 
@@ -544,16 +582,16 @@ Linux), which includes a custom build for Wayland (pgtk).
 
 To enable this, you need to be running your dev toolbox:
 
-: toolbox enter dev
-
-Once the toolbox is running, you may enable the COPR:
-
-: # This is no longer necessary on Fedora 40+
-: sudo dnf copr enable enigm-a/emacs-pgtk-nativecomp
+#+begin_run
+toolbox enter dev
+#+end_run
 
 Install Emacs:
 
-: sudo dnf install emacs
+#+attr_shortcode: :title run this inside the toolbox:
+#+begin_run
+sudo dnf install emacs
+#+end_run
 
 ** Create Emacs script
 
@@ -563,13 +601,16 @@ the host, you will need a little script installed on the host.
 You can create this script and put it in =/usr/local/bin/emacs=. Run
 this on the host (not in the toolbox), to create it as the root user:
 
-: cat <<EOF | sudo tee /usr/local/bin/emacs
-: #!/bin/bash
-: # Run Emacs in the dev toolbox and pass it any args:
-: toolbox run -c dev emacs $@
-: EOF
-:
-: sudo chmod a+x /usr/local/bin/emacs
+#+attr_shortcode: :file /usr/local/bin/emacs
+#+begin_edit
+#!/bin/bash
+## Run Emacs in the dev toolbox and pass it any args:
+toolbox run -c dev emacs $@
+#+end_edit
+
+#+begin_run
+sudo chmod a+x /usr/local/bin/emacs
+#+end_run
 
 Now you can run Emacs from the host, and it will run inside the
 Toolbox.
@@ -587,7 +628,10 @@ have some tools preinstalled:
 
 Install the dependencies inside the toolbox:
 
-: sudo dnf install cmake libtool
+#+attr_shortcode: :title run this inside the toolbox
+#+begin_run
+sudo dnf install cmake libtool
+#+end_run
 
 ** Remove any existing Emacs config
 
@@ -598,23 +642,27 @@ already, you may have a config and not even know it.
 
 Here's how to remove the existing Emacs config:
 
-: rm ~/.emacs ~/.emacs.d -rf
+#+begin_run
+rm ~/.emacs ~/.emacs.d -rf
+#+end_run
 
 ** Install my Emacs config
 
 [[https://github.com/EnigmaCurry/emacs][My Emacs config is on github]]. Install it with the following script:
 
-: REMOTE=git@github.com:EnigmaCurry/emacs.git
-: REPO=${HOME}/git/vendor/enigmacurry/emacs
-: BRANCH=straight
-: 
-: (set -e
-: test -d ~/.emacs.d && (echo "~/.emacs.d already exists. Aborting install." && exit 1)
-: test -d ${REPO} || git clone -b ${BRANCH} ${REMOTE} ${REPO}
-: mkdir ~/.emacs.d && ls -1 ${REPO}/*.el | xargs -iXX ln -s XX ~/.emacs.d
-: mkdir ~/.emacs.d/straight && ln -s ${REPO}/straight-versions ~/.emacs.d/straight/versions
-: ln -s ${REPO}/snippets ~/.emacs.d/snippets
-: )
+#+begin_run
+REMOTE=git@github.com:EnigmaCurry/emacs.git
+REPO=${HOME}/git/vendor/enigmacurry/emacs
+BRANCH=straight
+
+(set -e
+test -d ~/.emacs.d && (echo "~/.emacs.d already exists. Aborting install." && exit 1)
+test -d ${REPO} || git clone -b ${BRANCH} ${REMOTE} ${REPO}
+mkdir ~/.emacs.d && ls -1 ${REPO}/*.el | xargs -iXX ln -s XX ~/.emacs.d
+mkdir ~/.emacs.d/straight && ln -s ${REPO}/straight-versions ~/.emacs.d/straight/versions
+ln -s ${REPO}/snippets ~/.emacs.d/snippets
+)
+#+end_run
 
 ** Start Emacs to finish the installation
 
@@ -623,7 +671,9 @@ listed in the main config file =~/.emacs.d/init.el=.
 
 Run:
 
-: emacs
+#+begin_run
+emacs
+#+end_run
 
 Wait for everything to install. You may see a blank screen for up to
 10 minutes, but you should see some minimal information of the
@@ -633,7 +683,9 @@ If it gets stuck at any point, quit and restart it, and it should
 continue where it left off. If you get any error message, you may want
 to start Emacs again with debug mode turned on:
 
-: emacs --debug-init
+#+begin_run
+emacs --debug-init
+#+end_run
 
 This will usually give you a more verbose error message which can be
 helpful in debugging the startup.
@@ -693,8 +745,10 @@ Plug in your Solokey (or compatible hardware) to the USB port.
 
 Initialize the hardware with a new SSH key:
 
-: # You only need to do this one time per solokey!
-: ssh-keygen -t ed25519-sk -O resident -O verify-required
+#+begin_run
+## You only need to do this one time per solokey!
+ssh-keygen -t ed25519-sk -O resident -O verify-required
+#+end_run
 
 You will be required to create/enter a PIN for the Solokey.
 
@@ -725,11 +779,15 @@ same machine.
 
 Create the =rsa= key type:
 
-: ssh-keygen -t rsa -f ~/.ssh/id_rsa
+#+begin_run
+ssh-keygen -t rsa -f ~/.ssh/id_rsa
+#+end_run
 
 Create the =ed25519= key type:
 
-: ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+#+begin_run
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+#+end_run
 
 You will be prompted to enter an encryption passphrase for each file,
 which you should definitely not skip!
@@ -747,20 +805,29 @@ ssh-agent.)
 Keychain is a program that helps you setup the ssh-agent. Install
 =keychain=:
 
-: # On Fedora:
-: sudo dnf install keychain
-:
-: # On Debian / Ubuntu machines:
-: sudo apt install keychain
-:
-: # On Arch Linux machines:
-: sudo pacman -S keychain
+#+attr_shortcode: :title Run this on your Fedora workstations:
+#+begin_run
+sudo dnf install keychain
+#+end_run
+
+#+attr_shortcode: :title Run this on your Debian / Ubuntu workstations:
+#+begin_run
+sudo apt install keychain
+#+end_run
+
+#+attr_shortcode: :title Run this on your Arch Linux workstations:
+#+begin_run
+sudo pacman -S keychain
+#+end_run
 
 To configure keychain, edit your =~/.bashrc= file:
 
-: # Put this line in your ~/.bashrc:
-: # (If you're using my config, this is already in it.)
-: eval $(keychain --eval --quiet)
+#+attr_shortcode: :file ~/.bashrc
+#+begin_edit
+## Put this line in your ~/.bashrc:
+## (If you're using my config, this is already in it.)
+eval $(keychain --eval --quiet)
+#+end_edit
 
 Log out of your desktop session, and log back in. Open your terminal,
 and you should be automatically prompted to enter your SSH passphrase.
@@ -769,7 +836,10 @@ in memory until you log out.
 
 Double check that the key has been loaded, run:
 
-: ssh-add -L
+#+attr_shortcode: :title run this inside your toolbox
+#+begin_run
+ssh-add -L
+#+end_run
 
 The above should print your public key, loaded into the running
 =ssh-agent=. Now you should be able to use your key without entering a
@@ -784,8 +854,11 @@ Apparently, keychain does not yet know how to load the Solokey
 automatically. You must add the Solokey to the ssh-agent manually, one
 time, each time you boot your workstation:
 
-: # Do this to load your Solokey into the ssh-agent:
-: ssh-add -K
+#+attr_shortcode: :title run this inside your toolbox
+#+begin_run
+## Do this to load your Solokey into the ssh-agent:
+ssh-add -K
+#+end_run
 
 You will be prompted one time to enter your Solokey pin to unlock the
 key.
