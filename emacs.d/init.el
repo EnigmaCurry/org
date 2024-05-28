@@ -35,6 +35,8 @@
           ("mark" :trim-pre t :trim-post t)
           ("tikzjax" :raw t)
           ("video" :raw t)
+          ("run" :raw t)
+          ("stdout" :trim-pre t :trim-post t)
           ("math" :raw t)))
   )
 
