@@ -209,7 +209,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
-    "content": "Here are some example usage of the shortcodes provided by the Hugo Relearn theme. Shortcodes are a native feature of Hugo and Hugo themes. For use with Ox-Hugo, you need to set the #+hugo_paired_shortcodes (For examples, see Ox-hugo docs or the top of this source file).\nYou can only use the icon names from the “free” set provided by fontawesome.\nBadges 1.0.0\n99,999\n867-5309\nEmailme@example.com\nDocshttps://book.rymcg.tech\nDumpster Fire\nButtons d.rymcg.tech d.rymcg.tech Cancel ",
+    "content": "Here are some example usage of the shortcodes provided by the Hugo Relearn theme. Shortcodes are a native feature of Hugo and Hugo themes. For use with Ox-Hugo, you need to set the #+hugo_paired_shortcodes (For examples, see Ox-hugo docs or the top of this source file).\nYou can only use the icon names from the “free” set provided by fontawesome.\nBadges 1.0.0\n99,999\n867-5309\nEmailme@example.com\nDocshttps://book.rymcg.tech\nDumpster Fire\nButtons d.rymcg.tech d.rymcg.tech Cancel Math Math with MathJax:\n$$\\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\left( \\sum_{k=1}^n a_k^2 \\right) \\left( \\sum_{k=1}^n b_k^2 \\right)$$ ",
     "description": "",
     "tags": null,
     "title": "Example Shortcodes",
