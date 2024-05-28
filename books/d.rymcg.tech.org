@@ -323,7 +323,7 @@ list of the new nameservers.
 DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
-** Create a public Docker server 
+** Create a public server (VPS)
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
 :END:
@@ -495,67 +495,12 @@ server directly:
 dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
 #+end_run
 
-**** Setup your local workstation
-
-Edit your SSH config file: =~/.ssh/config= (create it if necessary).
-Create a new config for a host named =prod= (or whatever you want),
-and change it so that the domain name is one that you already created
-the DNS record for:
-
-#+attr_shortcode: :file ~/.ssh/config
-#+begin_edit
-Host prod
-    Hostname ssh.prod.example.com
-    User root
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath /tmp/ssh-%u-%r@%h:%p
-#+end_edit
-
-#+attr_shortcode: :title Notice
-#+begin_notice
-(The domain name =ssh.prod.example.com= should automatically point to
-your VPS if you setup the wildcard DNS entry (=*.prod.example.com=).
-The SSH config settings =ControlMaster=, =ControlPersist=, =ControlPath=
-adds SSH connection multi-plexing, and will make repeated
-logins/docker commands faster.)
-#+end_notice
-
-Now test that you can SSH to your droplet:
-
-#+begin_run
-ssh prod uname -a
-#+end_run
-
-The first time you login to your droplet, you need to confirm the SSH
-pubkey fingerprint; press Enter.
-
-If the connection worked, it should print information about the remote
-host operating system:
-
-#+begin_stdout
-Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
-#+end_stdout
-
-**** Install Docker
-
-The droplet has Debian installed on it, but with only basic packages
-installed by default. To install the latest version of Docker, run the
-installer script, which configures the upstream package repositories
-provided by the Docker organization:
-
-#+begin_run
-ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
-ssh prod sh install-docker.sh
-#+end_run
-
 **** Congratulations
 
-You have now finished installation of a remote Docker host server, on
-a Debian based droplet (VPS).
+You have now finished installation of a remote host running Debian.
 
-You must now configure your workstation to use your remote Docker
-context.
+You must now configure your workstation to remotely control your
+remote Docker context.
 
 * Workstation
 :PROPERTIES:
@@ -579,10 +524,39 @@ workstation setup.
 index
 #+end_index
 
-** Disable Docker daemon on your workstation
+** Install Docker client tools
 :PROPERTIES:
-:EXPORT_FILE_NAME: disable-workstation-docker-daemon
+:EXPORT_FILE_NAME: install-docker-command-line-tools
 :END:
+
+You need to install Docker Engine on your workstation
+
+*** Try your system package manager
+
+Some Linux distributions have decent packages for up-to-date Docker
+versions. Some other distributions lag behind by several versions, or
+may even introduce non-standard changes of their own. Your mileage may
+vary with different operating systems.
+
+If you're on Arch Linux, this is known to be a good configuration:
+
+#+attr_shortcode: :title Run this on your Arch Linux workstations:
+#+begin_run
+sudo pacman -S docker docker-compose docker-buildx
+#+end_run
+
+*** Use the generic Docker installer
+
+If your Linux distribution doesn't provide a Docker package, or you've
+decided its not good for your situation, you may be better off by running
+the generic installer script from the upstream Docker organization:
+
+#+begin_run
+curl -fsSL https://get.docker.com -o install-docker.sh
+sh install-docker.sh
+#+end_run
+
+*** Disable Docker daemon on your workstation
 
 Your workstation should only be the manager for other Docker hosts, so
 it should not run the Docker daemon itself.
@@ -613,20 +587,20 @@ Install d.rymcg.tech and its dependencies *on your workstation*.
 
 *** Install dependent packages
 
-#+attr_shortcode: :title Run this on your Fedora workstations as root
+#+attr_shortcode: :title If you run Fedora workstations, run this as root
 #+begin_run
 dnf install bash gettext openssl git xdg-utils jq sshfs curl \
             inotify-tools httpd-tools make wireguard-tools
 #+end_run
 
-#+attr_shortcode: :title Run this on your Debian workstations as root
+#+attr_shortcode: :title If you run Debian/Ubuntu workstations, run this as root
 #+begin_run
 apt-get install bash build-essential gettext git openssl \
         apache2-utils xdg-utils jq sshfs wireguard curl \
         inotify-tools
 #+end_run
 
-#+attr_shortcode: :title Run this on your Arch Linux workstations as root
+#+attr_shortcode: :title If you run Arch Linux workstations, run this as root
 #+begin_run
 pacman -S bash base-devel gettext git openssl apache xdg-utils \
           jq sshfs wireguard-tools curl inotify-tools
@@ -637,9 +611,17 @@ pacman -S bash base-devel gettext git openssl apache xdg-utils \
 #+begin_run
 git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
-
-cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 #+end_run
+
+#+attr_shortcode: :style warning
+#+begin_notice
+By convention, *you should not change the clone path*. It is
+intentionally placed in a vendor neutral path location for all to use.
+But if you're adamant to do so, it should still work, regardless of
+where you put it, but watch out, as this may make the commands in this
+documentation not work exactly as intended with your config, unless
+you change =ROOT_DIR= in all *external* project Makefiles accordingly.
+#+end_notice
 
 *** Setup =d.rymcg.tech= command line tool
 
@@ -654,7 +636,52 @@ eval "$(d.rymcg.tech completion bash)"
 ## Setup shorter alias for d.rymcg.tech as just 'd'
 __d.rymcg.tech_cli_alias d
 #+end_edit
-Now close and restart your shell (terminal) to load the new config.
+
+#+attr_shortcode: :style info :title Important
+#+begin_notice
+Close and restart your shell (terminal) to load the new config in a new session.
+#+end_notice
+
+*** Test the =d.rymcg.tech= aliases
+
+In your new shell session, you have the following aliases defined:
+
+ * =d.rymcg.tech=
+ * =d=
+
+These are both the same, but for brevity, the rest of this
+documentation will prefer the =d= alias, but they can be used
+interchangeably.
+
+#+begin_run
+d
+#+end_run
+
+#+begin_stdout
+Found ROOT_DIR=/var/home/ryan/git/vendor/enigmacurry/d.rymcg.tech
+
+\## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
+cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory
+create [PROJECT] [TEMPLATE]   Create a new external project from a template
+make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
+context                       View or set the current Docker context
+new-context                   Create a new Docker context
+ssh [COMMAND ...]             Run command or shell on active docker context SSH host
+completion                    Setup TAB completion in your shell
+
+\## Documentation sub-commands:
+help                          Show this help screen
+list                          List available d.rymcg.tech projects
+                              (not including external projects, unless you symlink them into ROOT_DIR)
+readme                        Open the main d.rymcg.tech README.md in your browser
+readme [PROJECT]              Open the README.md for the given project name
+readme digitalocean           Open root documentation file: DIGITALOCEAN.md
+readme security               Open root documentation file: SECURITY.md
+readme aws                    Open root documentation file: AWS.md
+readme license                Open root documentation file: LICENSE.txt
+readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
+readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
+#+end_stdout
 
 ** Create SSH config and Docker Context
 :PROPERTIES:
@@ -673,21 +700,35 @@ Both of these can be created automatically by running:
 d context new
 #+end_run
 
+This will prompt you if you really want to proceed:
+
 #+begin_stdout
 ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y
 #+end_stdout
+
+You can choose to create a new SSH config, or use an existing one:
+
 #+begin_stdout
 ? You must specify the SSH config entry to use  
   I already have an SSH host entry in ~/.ssh/config that I want to use
 > I want to make a new SSH host entry in ~/.ssh/config
 [↑↓ to move, enter to select, type to filter, ESC to cancel]
 #+end_stdout
+
+Enter the short one word name for the SSH Host entry:
+
 #+begin_stdout
 ? Enter the new SSH context name (short host name) : foo
 #+end_stdout
+
+Enter the fully qualified DNS name of the Docker host:
+
 #+begin_stdout
 ? Enter the fully qualified SSH Host DNS name : foo.example.com
 #+end_stdout
+
+It will propose to create a new SSH config entry that looks like this:
+
 #+begin_stdout
 ## Here is the new SSH config entry:
 Host foo
@@ -698,6 +739,10 @@ Host foo
      ControlPath /tmp/ssh-%u-%r@%h:%p
 ? Do you want to append this config to ~/.ssh/config? (y/N) y
 #+end_stdout
+
+It will ask you if you want to immediately switch the active Docker
+context:
+
 #+begin_stdout
 ? Do you want to switch to the new foo context now? (y/N) y
 foo
@@ -720,7 +765,25 @@ d context
 Current context is now "foo"
 #+end_stdout
 
-*** Test that the context works
+** Install Docker on your remote host
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-docker-on-remote-host
+:END:
+
+The base Debian image only has a few basic commands preinstalled. You
+must now install the Docker packages and enable the service:
+
+#+begin_run
+d install-docker
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+=d install-docker= will install Docker *on the remote VPS*, according
+to your current docker context.
+#+end_notice
+
+*** Test that the context works from your workstation
 
 #+begin_run
 docker run hello-world
@@ -729,6 +792,7 @@ docker run hello-world
 #+begin_run
 docker ps
 #+end_run
+
 
 
 ** Main config for d.rymcg.tech
