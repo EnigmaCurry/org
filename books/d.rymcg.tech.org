@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /d.rymcg.tech
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi
 #+STARTUP: align
 
 * Self-hosting Docker with d.rymcg.tech
@@ -476,6 +476,11 @@ Pick some random subdomain off your domain:
 dig laksdflkweieri.prod.example.com
 #+end_run
 
+#+begin_stdout
+;; ANSWER SECTION:
+laksdflkweieri.prod.example.com.    3600    IN      A       153.114.12.78
+#+end_stdout
+
 Since you created the wildcard record for =*.prod.example.com= dig
 should return your Docker server's IP address in the =ANSWER SECTION=
 of the output. You can test all your other records the same way.
@@ -597,34 +602,47 @@ Install d.rymcg.tech and its dependencies *on your workstation*.
 
 *** Install dependencies
 
-: ## Fedora
-: dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools
+#+attr_shortcode: :title Run this on your Fedora workstations as root
+#+begin_run
+dnf install bash gettext openssl git xdg-utils jq sshfs curl \
+            inotify-tools httpd-tools make wireguard-tools
+#+end_run
 
-: ## Debian
-: apt-get install bash build-essential gettext git openssl apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools
+#+attr_shortcode: :title Run this on your Debian workstations as root
+#+begin_run
+apt-get install bash build-essential gettext git openssl \
+        apache2-utils xdg-utils jq sshfs wireguard curl \
+        inotify-tools
+#+end_run
 
-: ## Arch Linux
-: pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-tools
+#+attr_shortcode: :title Run this on your Arch Linux workstations as root
+#+begin_run
+pacman -S bash base-devel gettext git openssl apache xdg-utils \
+          jq sshfs wireguard-tools curl inotify-tools
+#+end_run
 
 *** Clone d.rymcg.tech repository
 
-: git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
-:    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
-:
-: cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+#+begin_run
+git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
+   ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 
+cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+#+end_run
 
 *** Setup =d.rymcg.tech= command line tool
 
 You must edit your workstation user's =~/.bashrc= file, which modifies
 the Bash shell environment config:
 
-: # Put this in ~/.bashrc to enable d.rymcg.tech command line tools:
-: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
-: eval "$(d.rymcg.tech completion bash)"
-: # Setup shorter alias for d.rymcg.tech as just 'd'
-: __d.rymcg.tech_cli_alias d
-
+#+attr_shortcode: :file ~/.bashrc
+#+begin_edit
+## Put this in ~/.bashrc to enable d.rymcg.tech command line tools:
+export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
+eval "$(d.rymcg.tech completion bash)"
+## Setup shorter alias for d.rymcg.tech as just 'd'
+__d.rymcg.tech_cli_alias d
+#+end_edit
 Now close and restart your shell (terminal) to load the new config.
 
 ** Main config for d.rymcg.tech
@@ -684,19 +702,23 @@ default configs.
 
 Run on your workstation:
 
-: d make traefik config
+#+begin_run
+d make traefik config
+#+end_run
 
 The configuration for Traefik is driven by a text wizard menu system.
 
-: ? Traefik config main menu:  
-: > Create system user on Docker host
-:   Configure entrypoints (including dashboard)
-:   Configure Certificate Authorities (CA)
-:   Configure ACME (Let's Encrypt or Step-CA)
-:   Configure TLS certificates and domains (make certs)
-:   Configure middleware (including auth)
-: v Configure error page template
-: [↑↓ to move, enter to select, type to filter, ESC to cancel]
+#+begin_stdout
+? Traefik config main menu:  
+> Create system user on Docker host
+  Configure entrypoints (including dashboard)
+  Configure Certificate Authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates and domains (make certs)
+  Configure middleware (including auth)
+v Configure error page template
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+#+end_stdout
 
 Use your arrow keys to select a menu item and press the =Enter= key.
 To cancel, press the =ESC= key.
@@ -731,11 +753,13 @@ trust store to accomodate a "self-signed" Step-CA authority.
 Choose this option to configure ACME, which makes requesting and
 renewing TLS certificates an easy and automatic process.
 
-: ? Which ACME provider do you want to use?  
-: > Let's Encrypt (ACME)
-:   Step-CA (ACME)
-:   Disable ACME
-:   Cancel / Go back
+#+begin_stdout
+? Which ACME provider do you want to use?  
+> Let's Encrypt (ACME)
+  Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+#+end_stdout
 
 For most installs, you should choose =Let's Encrypt (ACME)=. This is
 the only option that will create valid TLS certificates for public
@@ -750,9 +774,11 @@ choose =Disable ACME=.
 
 ***** Configure Let's Encrypt environment
 
-: ? Which LE environment do you want to use?  
-: > Production (recommended!)
-:   Staging (untrusted / testing)
+#+begin_stdout
+? Which LE environment do you want to use?  
+> Production (recommended!)
+  Staging (untrusted / testing)
+#+end_stdout
 
 Always choose the =Production= environment, unless you really know
 what you're doing. =Production= is the only environment that produces
@@ -760,9 +786,11 @@ valid (trusted) TLS certificates.
 
 ***** Choose type of ACME challenge
 
-: ? Which type of ACME challenge should be used?  
-: > TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
-:   DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+#+begin_stdout
+? Which type of ACME challenge should be used?  
+> TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+  DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+#+end_stdout
 
 For your first install, choose =TLS-ALPN-01=, it is the easiest method
 to use for public servers.
@@ -782,10 +810,12 @@ about to expire.
 d.rymcg.tech uses explicit certificate requests configured centrally,
 on the traefik project:
 
-: ? Configure Traefik TLS certificates  
-: > Manage all certificates.
-:   Create a new certificate.
-:   Done / Go back
+#+begin_stdout
+? Configure Traefik TLS certificates  
+> Manage all certificates.
+  Create a new certificate.
+  Done / Go back
+#+end_stdout
 
 ***** Manage all certificates
 
