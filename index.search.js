@@ -1,7 +1,7 @@
 var relearn_search_index = [
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\n",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIntroduction Fedora Sway Atomic Requirements Installation Sway Firefox Toolbox Emacs SSH ",
     "description": "",
     "tags": null,
     "title": "Linux Workstation",
@@ -9,7 +9,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\n",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Introduction Register a domain name Setup public DNS Create a public Docker server Install d.rymcg.tech tools Main config for d.rymcg.tech Install Traefik Proxy ",
     "description": "",
     "tags": null,
     "title": "Self-hosting Docker with d.rymcg.tech",
@@ -17,7 +17,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\n",
+    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nDependencies Building locally Publishing with GitHub pages Publishing with SFTP Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Publishing with org-mode, ox-hugo, and literate programming.",
@@ -129,7 +129,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech",
-    "content": "Install d.rymcg.tech and its dependencies on your workstation.\nInstall dependencies ## Fedora dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools## Debian apt-get install bash build-essential gettext git openssl apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools## Arch Linux pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-toolsClone d.rymcg.tech repository git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \\ ${HOME}/git/vendor/enigmacurry/d.rymcg.tech cd ${HOME}/git/vendor/enigmacurry/d.rymcg.techSetup d.rymcg.tech command line tool You must edit your workstation user’s ~.bashrc file, which modifies the Bash shell environment config:\n# Put this in ~/.bashrc to enable d.rymcg.tech command line tools: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user eval \"$(d.rymcg.tech completion bash)\" # Setup shorter alias as just 'd' __d.rymcg.tech_cli_alias dNow close and restart your shell (terminal) to load the new config.\n",
+    "content": "Install d.rymcg.tech and its dependencies on your workstation.\nInstall dependencies ## Fedora dnf install bash gettext openssl git xdg-utils jq sshfs curl inotify-tools httpd-tools make wireguard-tools## Debian apt-get install bash build-essential gettext git openssl apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools## Arch Linux pacman -S bash base-devel gettext git openssl apache xdg-utils jq sshfs wireguard-tools curl inotify-toolsClone d.rymcg.tech repository git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \\ ${HOME}/git/vendor/enigmacurry/d.rymcg.tech cd ${HOME}/git/vendor/enigmacurry/d.rymcg.techSetup d.rymcg.tech command line tool You must edit your workstation user’s ~/.bashrc file, which modifies the Bash shell environment config:\n# Put this in ~/.bashrc to enable d.rymcg.tech command line tools: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user eval \"$(d.rymcg.tech completion bash)\" # Setup shorter alias for d.rymcg.tech as just 'd' __d.rymcg.tech_cli_alias dNow close and restart your shell (terminal) to load the new config.\n",
     "description": "",
     "tags": null,
     "title": "Install d.rymcg.tech tools",
@@ -153,7 +153,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech",
-    "content": "Each Docker context has a separate config file (.env_{CONTEXT}).\nConfigure current Docker context d make - configThis will create a config file for your current Docker context, and name it .env_{CONTEXT} (eg. .env_prod). You must run this for each new Docker context you create, so that each context has its own config file.\nThe interactive config will ask you to enter the ROOT_DOMAIN variable, which needs to be the root domain that you want to apply to your Docker host.\nROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com) : prod.example.comThe root domain serves as the example root domain for all application default configs.\n",
+    "content": "Each Docker context has a separate config file (.env_{CONTEXT}), stored in the root d.rymcg.tech directory (~/git/vendor/enigmacurry/d.rymcg.tech).\nChoose your current Docker context d contextFor continuing our example, choose the prod context, or whatever you named your context.\nNote hmm\nConfigure current Docker context d make - configThis will create a config file for your current Docker context, and name it .env_{CONTEXT} (eg. .env_prod). You must run this for each new Docker context you create, so that each context has its own config file.\nThe interactive config will ask you to enter the ROOT_DOMAIN variable, which needs to be the root domain that you want to apply to your Docker host.\nROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com) : prod.example.comThe root domain serves as the example root domain for all application default configs.\n",
     "description": "",
     "tags": null,
     "title": "Main config for d.rymcg.tech",
@@ -190,6 +190,70 @@ var relearn_search_index = [
     "tags": null,
     "title": "SSH",
     "uri": "/linux-workstation/ssh/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming.",
+    "content": "This chapter serves as an example of various shortcodes/markup for Ox-Hugo and the Hugo Relearn theme.\nThis chapter is broken into several sub-chapters to discuss the various Hugo related features.\nIndex Example Org Blocks Example Shortcodes Example of a deeply … ",
+    "description": "",
+    "tags": null,
+    "title": "Example Org / Hugo content",
+    "uri": "/publishing-with-org-mode/examples/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
+    "content": "A couple examples ripped from the ox-hugo docs.\nAsides This is a normal paragraph.\nThis is an aside note, which should wrap and stay close to the right hand side of the page. It is used to call out things in an editorial voice.\nThis is another normal paragraph.\nMarkers This paragraph has some highlighted words in it.\nDetails This section shows some hidden details:\nThis content is hidden by default.\nIt can contain any additional markup you want.\n",
+    "description": "",
+    "tags": null,
+    "title": "Example Org Blocks",
+    "uri": "/publishing-with-org-mode/examples/org-blocks/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
+    "content": "Here are some example usage of the shortcodes provided by the Hugo Relearn theme. Shortcodes are a native feature of Hugo and Hugo themes. For use with Ox-Hugo, you need to set the #+hugo_paired_shortcodes (For examples, see Ox-hugo docs or the top of this source file).\nYou can only use the icon names from the “free” set provided by fontawesome.\nBadges 1.0.0\n99,999\n867-5309\nEmailme@example.com\nDocshttps://book.rymcg.tech\nDumpster Fire\nButtons d.rymcg.tech d.rymcg.tech Cancel ",
+    "description": "",
+    "tags": null,
+    "title": "Example Shortcodes",
+    "uri": "/publishing-with-org-mode/examples/shortcodes/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
+    "content": " Nested … ",
+    "description": "",
+    "tags": null,
+    "title": "Example of a deeply …",
+    "uri": "/publishing-with-org-mode/examples/deeply/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply …",
+    "content": " Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "description": "",
+    "tags": null,
+    "title": "Nested …",
+    "uri": "/publishing-with-org-mode/examples/deeply/nested/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply … \u003e Nested …",
+    "content": "This is a deeply nested sub-chapter. Take a look at the Org source. It requires that you create several headings and create the index in a sub-heading of the same name. It is a strangeness about ox-hugo that this is required. If you make a strictly hierarchical outline, the content will be duplicated, however the structure we’re using hides the nested content on the index pages, leaving it for the nested page only.\n",
+    "description": "",
+    "tags": null,
+    "title": "Sub-chapter 1",
+    "uri": "/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter1/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply … \u003e Nested …",
+    "content": "This is another deeply nested sub-chapter as a sibling of the one before it.\n",
+    "description": "",
+    "tags": null,
+    "title": "Sub-chapter 2",
+    "uri": "/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter2/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply … \u003e Nested …",
+    "content": "This is another deeply nested sub-chapter as a sibling of the one before it.\n",
+    "description": "",
+    "tags": null,
+    "title": "Sub-chapter 3",
+    "uri": "/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter3/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech",
