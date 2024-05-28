@@ -25,7 +25,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public Docker server Setup your workstation Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech Install Traefik Proxy ",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public Docker server Setup your workstation Disable Docker daemon on your workstation Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech Install Traefik Proxy ",
     "description": "",
     "tags": null,
     "title": "Self-hosting Docker with d.rymcg.tech",
@@ -113,11 +113,19 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech",
-    "content": "You should dedicate the use a physical or virtual Linux machine to be used as your workstation.\nFollow the Linux Workstation book for details on basic workstation setup.\nIndex Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech ",
+    "content": "You should dedicate the use a physical or virtual Linux machine to be used as your workstation. A single workstation can manage several remote Docker contexts.\nFollow the Linux Workstation book for details on basic workstation setup.\nIndex Disable Docker daemon on your workstation Install d.rymcg.tech tools Create SSH config and Docker Context Main config for d.rymcg.tech ",
     "description": "",
     "tags": null,
     "title": "Setup your workstation",
     "uri": "/d.rymcg.tech/workstation/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
+    "content": "Your workstation should only be the manager for other Docker hosts, so it should not run the Docker daemon itself.\nRun the following commands to disable the Docker daemon:\nRun this on your Workstation Bash shell :: sudo systemctl disable --now docker sudo systemctl mask docker Tip There will always be a vestigal Docker context named “default”, and this was used to manage the Docker daemon of the local host. However, it will be of no use to you, since Docker is now completely disabled on the workstation. Furthermore, the “default” context cannot be deleted, so its best to just ignore it. In the next couple of steps, you’ll create new contexts that you’ll use instead.\n",
+    "description": "",
+    "tags": null,
+    "title": "Disable Docker daemon on your workstation",
+    "uri": "/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
@@ -136,14 +144,6 @@ var relearn_search_index = [
     "uri": "/linux-workstation/introduction/fedora-sway-atomic/index.html"
   },
   {
-    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
-    "content": "Install d.rymcg.tech and its dependencies on your workstation.\nInstall dependent packages Run this on your Fedora workstations as root :: dnf install bash gettext openssl git xdg-utils jq sshfs curl \\ inotify-tools httpd-tools make wireguard-tools Run this on your Debian workstations as root :: apt-get install bash build-essential gettext git openssl \\ apache2-utils xdg-utils jq sshfs wireguard curl \\ inotify-tools Run this on your Arch Linux workstations as root :: pacman -S bash base-devel gettext git openssl apache xdg-utils \\ jq sshfs wireguard-tools curl inotify-tools Clone d.rymcg.tech repository Run this on your Workstation Bash shell :: git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \\ ${HOME}/git/vendor/enigmacurry/d.rymcg.tech cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech Setup d.rymcg.tech command line tool You must edit your workstation user’s ~/.bashrc file, which modifies the Bash shell environment config:\nEdit this file: ~/.bashrc ## Put this in ~/.bashrc to enable d.rymcg.tech command line tools: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user eval \"$(d.rymcg.tech completion bash)\" ## Setup shorter alias for d.rymcg.tech as just 'd' __d.rymcg.tech_cli_alias d Now close and restart your shell (terminal) to load the new config.\n",
-    "description": "",
-    "tags": null,
-    "title": "Install d.rymcg.tech tools",
-    "uri": "/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html"
-  },
-  {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Required Infrastructure",
     "content": "To host a web service, one of the first things you will need is to register your domain name. This will be the domain name used for all of your service links, and it is what your users will need to type into their browsers (or click on) to visit your pages.\nDomain names are a scarce resource. Because of their scarcity, you must pay for your domain registrations, doing so in 1 year increments. If domain names were free, all the good ones would be taken by now, but because they cost money, there are still some good enough ones left to be had. In return for your fee, you receive exclusive use of your domain name for the period that you paid for. You can pre-pay for several years in advance, or for just one year at a time. You must remember to renew your domains for every year, lest they expire and no longer resolve to your services, and you lose control of the domain, possibly forever.\nDomain names for private servers If your Docker server won’t be a public server, (eg. running a private Docker server at home), it is still recommended that you use a valid internet domain name, with public DNS servers, because you will still need this in order to create valid TLS certificates from Let’s Encrypt. However, having valid working TLS is not required for development purposes (but certainly nice to have!), so you may choose to make up your own fake domain name instead, and forgo TLS, or you can setup Step-CA for off-grid TLS. In either case, you will still need to setup DNS, and this is explained in the next section.\nRegister an Internet domain name You can buy (rent) a domain name from lots of places. For documentation purposes, we will use Gandi.net, but these instructions will be similar regardless of the domain provider you pick.\nSign up for an account at Gandi.net Once signed in, from your dashboard, click Register. Search for any domain name you like, eg. your-name.com. Add your domain to the shopping cart, go to checkout, and complete your purchase. Once you have purchased the domain, it should show up in your Dashboard, under the Domain tab. Leave this browser tab open, you will return to it in the next chapter. ",
     "description": "",
@@ -160,14 +160,6 @@ var relearn_search_index = [
     "uri": "/linux-workstation/config/sway/index.html"
   },
   {
-    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
-    "content": "To remotely control your Docker host from your workstation, you need two additional configs:\nSSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:\nRun this on your Workstation Bash shell :: d context new (stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y (stdout) ? You must specify the SSH config entry to use I already have an SSH host entry in ~/.ssh/config that I want to use \u003e I want to make a new SSH host entry in ~/.ssh/config [↑↓ to move, enter to select, type to filter, ESC to cancel] (stdout) ? Enter the new SSH context name (short host name) : foo (stdout) ? Enter the fully qualified SSH Host DNS name : foo.example.com (stdout) ## Here is the new SSH config entry: Host foo Hostname foo.example.com User root ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p ? Do you want to append this config to ~/.ssh/config? (y/N) y (stdout) ? Do you want to switch to the new foo context now? (y/N) y foo Current context is now \"foo\" List all Docker contexts and switch the active one Run this on your Workstation Bash shell :: d context (stdout) ? Select the Docker context to use deb \u003e foo step-ca [↑↓ to move, enter to select, type to filter, ESC to cancel] Current context is now “foo” Test that the context works Run this on your Workstation Bash shell :: docker run hello-world Run this on your Workstation Bash shell :: docker ps ",
-    "description": "",
-    "tags": null,
-    "title": "Create SSH config and Docker Context",
-    "uri": "/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html"
-  },
-  {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
     "content": "Here are some example usage of the shortcodes provided by the Hugo Relearn theme. Shortcodes are a native feature of Hugo and Hugo themes. For use with Ox-Hugo, you need to set the #+hugo_paired_shortcodes (For examples, see Ox-hugo docs or the top of this source file).\nYou can only use the icon names from the “free” set provided by fontawesome.\nBadges 1.0.0 99,999 867-5309 Email me@example.com Docs Dumpster Fire Buttons d.rymcg.tech d.rymcg.tech Cancel Math Math with MathJax:\n$$\\left( \\sum_{k=1}^n a_k b_k \\right)^2 \\leq \\left( \\sum_{k=1}^n a_k^2 \\right) \\left( \\sum_{k=1}^n b_k^2 \\right)$$ Flowcharts --- title: Example Diagram --- graph LR; A[Hard edge] --\u0026gt;|Link text| B(Round edge) B --\u0026gt; C{\u0026lt;strong\u0026gt;Decision\u0026lt;/strong\u0026gt;} C --\u0026gt;|One| D[Result one] C --\u0026gt;|Two| E[Result two] Notices Notice This is a generic notice.\nThis is a bug notice.\nInfo This is an information box.\nTip This is a tip or pointer.\nWarning This is a warning.\nOpenAPI Visualize your API with swagger spec.\n",
     "description": "",
@@ -182,6 +174,14 @@ var relearn_search_index = [
     "tags": null,
     "title": "Firefox",
     "uri": "/linux-workstation/config/firefox/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
+    "content": "Install d.rymcg.tech and its dependencies on your workstation.\nInstall dependent packages Run this on your Fedora workstations as root :: dnf install bash gettext openssl git xdg-utils jq sshfs curl \\ inotify-tools httpd-tools make wireguard-tools Run this on your Debian workstations as root :: apt-get install bash build-essential gettext git openssl \\ apache2-utils xdg-utils jq sshfs wireguard curl \\ inotify-tools Run this on your Arch Linux workstations as root :: pacman -S bash base-devel gettext git openssl apache xdg-utils \\ jq sshfs wireguard-tools curl inotify-tools Clone d.rymcg.tech repository Run this on your Workstation Bash shell :: git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \\ ${HOME}/git/vendor/enigmacurry/d.rymcg.tech cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech Setup d.rymcg.tech command line tool You must edit your workstation user’s ~/.bashrc file, which modifies the Bash shell environment config:\nEdit this file: ~/.bashrc ## Put this in ~/.bashrc to enable d.rymcg.tech command line tools: export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user eval \"$(d.rymcg.tech completion bash)\" ## Setup shorter alias for d.rymcg.tech as just 'd' __d.rymcg.tech_cli_alias d Now close and restart your shell (terminal) to load the new config.\n",
+    "description": "",
+    "tags": null,
+    "title": "Install d.rymcg.tech tools",
+    "uri": "/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Introduction",
@@ -206,6 +206,14 @@ var relearn_search_index = [
     "tags": null,
     "title": "Create a public Docker server",
     "uri": "/d.rymcg.tech/required-infrastructure/public-docker-server/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker with d.rymcg.tech \u003e Setup your workstation",
+    "content": "To remotely control your Docker host from your workstation, you need two additional configs:\nSSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:\nRun this on your Workstation Bash shell :: d context new (stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y (stdout) ? You must specify the SSH config entry to use I already have an SSH host entry in ~/.ssh/config that I want to use \u003e I want to make a new SSH host entry in ~/.ssh/config [↑↓ to move, enter to select, type to filter, ESC to cancel] (stdout) ? Enter the new SSH context name (short host name) : foo (stdout) ? Enter the fully qualified SSH Host DNS name : foo.example.com (stdout) ## Here is the new SSH config entry: Host foo Hostname foo.example.com User root ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p ? Do you want to append this config to ~/.ssh/config? (y/N) y (stdout) ? Do you want to switch to the new foo context now? (y/N) y foo Current context is now \"foo\" List all Docker contexts and switch the active one Run this on your Workstation Bash shell :: d context (stdout) ? Select the Docker context to use deb \u003e foo step-ca [↑↓ to move, enter to select, type to filter, ESC to cancel] Current context is now “foo” Test that the context works Run this on your Workstation Bash shell :: docker run hello-world Run this on your Workstation Bash shell :: docker ps ",
+    "description": "",
+    "tags": null,
+    "title": "Create SSH config and Docker Context",
+    "uri": "/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Config",

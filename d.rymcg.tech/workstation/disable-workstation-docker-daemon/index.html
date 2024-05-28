@@ -8,17 +8,19 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Create a public Docker server :: book.rymcg.tech">
-    <meta name="twitter:description" content="This section will guide you to create your own public Docker server, using a DigitalOcean droplet as an example. In a similar fashion, you can install Docker on any cloud provider, or dedicated host that you prefer.
-Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.">
-    <meta property="og:title" content="Create a public Docker server :: book.rymcg.tech">
-    <meta property="og:description" content="This section will guide you to create your own public Docker server, using a DigitalOcean droplet as an example. In a similar fashion, you can install Docker on any cloud provider, or dedicated host that you prefer.
-Choosing a VPS provider One of the most basic units of cloud computing is the Virtual Private Server (VPS). A VPS is a (Linux) virtual machine that is provisioned by a cloud service, and you are given root access to fully administer it, to install whatever you want on it.">
+    <meta name="twitter:title" content="Disable Docker daemon on your workstation :: book.rymcg.tech">
+    <meta name="twitter:description" content="Your workstation should only be the manager for other Docker hosts, so it should not run the Docker daemon itself.
+Run the following commands to disable the Docker daemon:
+Run this on your Workstation Bash shell :: sudo systemctl disable --now docker sudo systemctl mask docker Tip There will always be a vestigal Docker context named &ldquo;default&rdquo;, and this was used to manage the Docker daemon of the local host. However, it will be of no use to you, since Docker is now completely disabled on the workstation.">
+    <meta property="og:title" content="Disable Docker daemon on your workstation :: book.rymcg.tech">
+    <meta property="og:description" content="Your workstation should only be the manager for other Docker hosts, so it should not run the Docker daemon itself.
+Run the following commands to disable the Docker daemon:
+Run this on your Workstation Bash shell :: sudo systemctl disable --now docker sudo systemctl mask docker Tip There will always be a vestigal Docker context named &ldquo;default&rdquo;, and this was used to manage the Docker daemon of the local host. However, it will be of no use to you, since Docker is now completely disabled on the workstation.">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">
-    <meta property="article:section" content="Required Infrastructure :: book.rymcg.tech">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html">
+    <meta property="article:section" content="Setup your workstation :: book.rymcg.tech">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <title>Create a public Docker server :: book.rymcg.tech</title>
+    <title>Disable Docker daemon on your workstation :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
     <link href="/css/fontawesome-all.min.css?1716925758" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716925758" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1716925758" rel="stylesheet">
@@ -56,7 +58,7 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">
+  <body class="mobile-support html" data-url="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -67,19 +69,7 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"><nav class="TableOfContents">
-  <ul>
-    <li><a href="#choosing-a-vps-provider">Choosing a VPS provider</a></li>
-    <li><a href="#create-a-digitalocean-account-and-setup-your-ssh-key">Create a DigitalOcean account and setup your SSH key</a></li>
-    <li><a href="#create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</a></li>
-    <li><a href="#creating-a-digitalocean-droplet-for-a-docker-server">Creating a DigitalOcean droplet for a Docker server</a></li>
-    <li><a href="#apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</a></li>
-    <li><a href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></li>
-    <li><a href="#setup-your-local-workstation">Setup your local workstation</a></li>
-    <li><a href="#install-docker">Install Docker</a></li>
-    <li><a href="#congratulations">Congratulations</a></li>
-  </ul>
-</nav>
+                <div class="topbar-content-wrapper"> 
                 </div>
               </div>
             </div>
@@ -87,13 +77,13 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker with d.rymcg.tech</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/required-infrastructure/index.html"><span itemprop="name">Required Infrastructure</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create a public Docker server</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/workstation/index.html"><span itemprop="name">Setup your workstation</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Disable Docker daemon on your workstation</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" title="Setup public DNS service (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/index.html" title="Setup your workstation (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/index.html" title="Setup your workstation (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" title="Install d.rymcg.tech tools (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -112,266 +102,33 @@ Choosing a VPS provider One of the most basic units of cloud computing is the Vi
           <article class="default">
             <header class="headline">
             </header>
-<h1 id="create-a-public-docker-server">Create a public Docker server</h1>
+<h1 id="disable-docker-daemon-on-your-workstation">Disable Docker daemon on your workstation</h1>
 
-<p>This section will guide you to create your own public Docker server,
-using a DigitalOcean droplet as an example. In a similar fashion, you
-can install Docker on any cloud provider, or dedicated host that you
-prefer.</p>
-<h2 id="choosing-a-vps-provider">Choosing a VPS provider</h2>
-<p>One of the most basic units of cloud computing is the Virtual Private
-Server (VPS). A VPS is a (Linux) virtual machine that is provisioned
-by a cloud service, and you are given root access to fully administer
-it, to install whatever you want on it. VPS generally come with a dedicated
-IP address and have a public internet connection, although some VPS
-only have NAT, but with dedicated port forwarding.</p>
-<p>In this guide you will create a VPS with a DigitalOcean droplet.</p>
-<p>You can install Docker on almost any Linux machine, but some are
-better than others. DigitalOcean droplets (VPS) are a good choice for
-experimenting, because they are billed hourly, and because the service
-layer has an integrated firewall, external to the droplet operating
-system. Having a firewall that is external (in front of) the VPS is
-one of the most important features to look for in a hosting provider.</p>
-<h2 id="create-a-digitalocean-account-and-setup-your-ssh-key">Create a DigitalOcean account and setup your SSH key</h2>
-<p>If you have not yet setup an SSH key on your workstation, <a href="/linux-workstation/">read the
-Linux Workstation book</a> and do that first.</p>
-<ul>
-<li>Signup for an account at <a href="https://m.do.co/c/069af06b869e" target="_blank">DigitalOcean</a>.</li>
-<li>Login to the <a href="https://cloud.digitalocean.com/" target="_blank">DigitalOcean cloud console</a>.</li>
-<li>Click <code>Settings</code> in the menu.</li>
-<li>Click on the <code>Security</code> tab.</li>
-<li>Click on the <code>Add SSH Key</code> button.</li>
-<li>Paste your public SSH key into the box. (copy your pub key from the
-output of <code>ssh-add -L</code>.)</li>
-<li>Enter a key name, I recommend this be the name of your workstation
-computer.</li>
-<li>Finish adding the key, click <code>Add SSH Key</code>.</li>
-</ul>
-<h2 id="create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</h2>
-<ul>
-<li>Login to the <a href="https://cloud.digitalocean.com/" target="_blank">DigitalOcean cloud console</a>.</li>
-<li>Click <code>Networking</code> in the menu.</li>
-<li>Click the <code>Firewalls</code> tab.</li>
-<li>Click <code>Create Firewall</code>.</li>
-<li>Enter the name, eg. <code>basic-docker-public-web</code>.</li>
-<li>Enter the following rules:
-<ul>
-<li>SSH:
-<ul>
-<li>Type: <code>SSH</code></li>
-<li>Protocol: <code>TCP</code></li>
-<li>Port Range: <code>22</code></li>
-<li>Sources: All IPv4, All IPv6, or a specific static IP address if
-you want to be more secure.</li>
-</ul>
-</li>
-<li>HTTP:
-<ul>
-<li>Type: <code>HTTP</code></li>
-<li>Protocol: <code>TCP</code></li>
-<li>Port Range: <code>80</code></li>
-<li>Sources: All IPv4, All IPv6.</li>
-</ul>
-</li>
-<li>HTTPS:
-<ul>
-<li>Type: <code>HTTP</code></li>
-<li>Protocol: <code>TCP</code></li>
-<li>Port Range: <code>443</code></li>
-<li>Sources: All IPv4, All IPv6.</li>
-</ul>
-</li>
-<li>Wireguard VPN (optional):
-<ul>
-<li>Type: <code>Custom</code></li>
-<li>Protocol: <code>UDP</code></li>
-<li>Port Range: <code>51820</code></li>
-<li>Sources: All IPv4, All IPv6.</li>
-</ul>
-</li>
-<li>Click <code>Create Firewall</code>.</li>
-</ul>
-</li>
-</ul>
-<h2 id="creating-a-digitalocean-droplet-for-a-docker-server">Creating a DigitalOcean droplet for a Docker server</h2>
-<p>DigitalOcean provides a Docker image with which to create a droplet
-(DigitalOcean&rsquo;s name for their own VPS product).</p>
-<ul>
-<li>Login to the <a href="https://cloud.digitalocean.com/" target="_blank">DigitalOcean cloud console</a>.</li>
-<li>Click <code>Droplets</code> in the menu.</li>
-<li>Click <code>Create Droplet</code>.</li>
-<li>Choose a Region (eg. New York), where the droplet will be created.</li>
-<li>Underneath the heading <code>Choose an image</code>, choose <code>Debian</code> (select
-the latest version).</li>
-<li>Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
-size production installs. (It is tested working on as little as
-512MB ram, <a href="https://blog.rymcg.tech/blog/linux/zram/" target="_blank">if you enable zram</a> and/or create a 1GB swapfile. Do not
-abuse swap space like this in production! However I think its fine
-for development use, but you may occasionally run into low memory
-issues if less than 1GB.)</li>
-<li>Optional: Add a block storage device, in order to store your Docker
-volumes. (This is useful to store data separate from the droplet
-lifecycle, or to have a larger amount of storage than the droplet
-size gives you for the root filesystem. If your basic droplet size
-is already sufficient, and you perform regular backups, this might
-not be needed.)</li>
-<li>Select your SSH key for the root user.</li>
-<li>Set the hostname for the docker server. The name should be short
-and typeable, as it will become a part of the canononical service
-URLs. For this example, we choose <code>prod</code>.</li>
-<li>Verify everything&rsquo;s correct, and then click <code>Create Dropet</code>.</li>
-</ul>
-<h2 id="apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</h2>
-<ul>
-<li>Login to the <a href="https://cloud.digitalocean.com/" target="_blank">DigitalOcean cloud console</a>.</li>
-<li>Click <code>Networking</code> in the menu.</li>
-<li>Find the firewall template you created, and click it.</li>
-<li>Click on the firewall&rsquo;s <code>Droplets</code> tab.</li>
-<li>Click <code>Add Droplets</code> and search for the droplet you created and select it.</li>
-<li>Click <code>Add Droplet</code> to add the firewall to the droplet.</li>
-</ul>
-<h2 id="create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</h2>
-<p>For the purposes of documentation, assume you you own the domain
-<code>example.com</code> and you have created the Docker server named <code>prod</code>. You
-should replace <code>example.com</code> with your actual domain name, and <code>prod</code>
-with your actual docker instance name/stage.</p>
-<ul>
-<li>Login to the <a href="https://cloud.digitalocean.com/" target="_blank">DigitalOcean cloud console</a>.</li>
-<li>Click <code>Networking</code> in the menu.</li>
-<li>Click the <code>Domains</code> tab.</li>
-<li>Find the domain you created earlier, and click it.</li>
-<li>Create an <code>A</code> record:
-<ul>
-<li>Hostname: enter the subdomain name without the domain part (eg.
-<code>prod</code>, the name of your docker server, without the
-<code>.example.com</code> suffix).</li>
-<li>Will direct to: select the droplet you created from the list.</li>
-<li>Click <code>Create Record</code>.</li>
-</ul>
-</li>
-<li>Create another <code>A</code> record, for the wildcard:
-<ul>
-<li>Hostname: enter the same name as before but prepend <code>*.</code> in front
-of it (eg. if the server is named <code>prod</code>, create a record for
-<code>*.prod</code>, without the <code>.example.com</code> suffix).</li>
-<li>Will direct to: select the same droplet as before.</li>
-<li>Click <code>Create Record</code>.</li>
-</ul>
-</li>
-<li>Optional: create additional records on the root domain. If you
-don&rsquo;t want the docker instance name in the subdomain you give to
-people (eg. <code>www.prod.example.com</code>), you could create additional
-(non-wildcard) records on the root domain now (eg.
-<code>www.example.com</code>, or even just <code>example.com</code>). However, it would
-be wasteful to put a wildcard record on the root domain
-(<code>*.example.com</code>) because then the domain could only be used with a
-single Docker instance, therefore all records on the root should be
-non-wildcard, and this means you must add them one by one.</li>
-</ul>
-<p>Test that your wildcard record actually works. Use the <code>dig</code> command
-(For Debian/Ubuntu install the <code>dnsutils</code> package. For Arch Linux
-install <code>bind-tools</code>. For Fedora install <code>bind-utils</code>.)</p>
-<p>Pick some random subdomain off your domain:</p>
+<p>Your workstation should only be the manager for other Docker hosts, so
+it should not run the Docker daemon itself.</p>
+<p>Run the following commands to disable the Docker daemon:</p>
 <div class="box notices cstyle run">
     <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
     <div class="box-content'">
         <pre>
-dig laksdflkweieri.prod.example.com
-</pre>
-    </div>
-</div>
-<div class="box notices cstyle stdout">
-    <div class="box-label">(stdout)</div>
-    <div class="box-content">
-        <pre>
-;; ANSWER SECTION:
-laksdflkweieri.prod.example.com.    3600    IN      A       153.114.12.78
-</pre>
-    </div>
-</div>
-<p>Since you created the wildcard record for <code>*.prod.example.com</code> dig
-should return your Docker server&rsquo;s IP address in the <code>ANSWER SECTION</code>
-of the output. You can test all your other records the same way.</p>
-<p>If you run into DNS caching problems, verify with the source DNS
-server directly:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
-</pre>
-    </div>
-</div>
-<h2 id="setup-your-local-workstation">Setup your local workstation</h2>
-<p>Edit your SSH config file: <code>~/.ssh/config</code> (create it if necessary).
-Create a new config for a host named <code>prod</code> (or whatever you want),
-and change it so that the domain name is one that you already created
-the DNS record for:</p>
-<div class="box notices cstyle tip edit">
-    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.ssh/config</div>
-    <div class="box-content">
-        <pre>
-Host prod
-    Hostname ssh.prod.example.com
-    User root
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath /tmp/ssh-%u-%r@%h:%p
+sudo systemctl disable --now docker
+sudo systemctl mask docker
 </pre>
     </div>
 </div>
 
-<div class="box notices cstyle default">
-  <div class="box-label">Notice</div>
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
   <div class="box-content">
 
-<p>(The domain name <code>ssh.prod.example.com</code> should automatically point to
-your VPS if you setup the wildcard DNS entry (<code>*.prod.example.com</code>).
-The SSH config settings <code>ControlMaster</code>, <code>ControlPersist</code>, <code>ControlPath</code>
-adds SSH connection multi-plexing, and will make repeated
-logins/docker commands faster.)</p>
+<p>There will always be a vestigal Docker context named &ldquo;default&rdquo;, and
+this was used to manage the Docker daemon of the local host. However, it
+will be of no use to you, since Docker is now completely disabled on
+the workstation. Furthermore, the &ldquo;default&rdquo; context cannot be deleted,
+so its best to just ignore it. In the next couple of steps, you&rsquo;ll
+create new contexts that you&rsquo;ll use instead.</p>
 </div>
 </div>
-<p>Now test that you can SSH to your droplet:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-ssh prod uname -a
-</pre>
-    </div>
-</div>
-<p>The first time you login to your droplet, you need to confirm the SSH
-pubkey fingerprint; press Enter.</p>
-<p>If the connection worked, it should print information about the remote
-host operating system:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label">(stdout)</div>
-    <div class="box-content">
-        <pre>
-Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
-</pre>
-    </div>
-</div>
-<h2 id="install-docker">Install Docker</h2>
-<p>The droplet has Debian installed on it, but with only basic packages
-installed by default. To install the latest version of Docker, run the
-installer script, which configures the upstream package repositories
-provided by the Docker organization:</p>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
-ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
-ssh prod sh install-docker.sh
-</pre>
-    </div>
-</div>
-<h2 id="congratulations">Congratulations</h2>
-<p>You have now finished installation of a remote Docker host server, on
-a Debian based droplet (VPS).</p>
-<p>You must now configure your workstation to use your remote Docker
-context.</p>
 
             <footer class="footline">
             </footer>
@@ -424,12 +181,12 @@ context.</p>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class="parent "><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
-          <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html">Setup public DNS service</a></li>
-          <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class="active"><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public Docker server</a></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
-          <li data-nav-id="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html">Disable Docker daemon on your workstation</a></li>
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public Docker server</a></li></ul></li>
+          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html" class="active"><a class="padding" href="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html">Disable Docker daemon on your workstation</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">Create SSH config and Docker Context</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html">Main config for d.rymcg.tech</a></li></ul></li>
@@ -462,7 +219,7 @@ context.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = baseUri + this.value;">
-                      <option id="R-en" value="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" lang="en-us" selected></option>
+                      <option id="R-en" value="/d.rymcg.tech/workstation/disable-workstation-docker-daemon/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
