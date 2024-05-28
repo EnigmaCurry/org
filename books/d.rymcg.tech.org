@@ -178,12 +178,12 @@ manage the server in a clean fashion. You can even create a new server
 from scratch, in no time. All of the important configuration stays on
 your workstation (and are backed up in a git repository).
 
-* Domain Infrastructure
+* Required Infrastructure
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: domain-infrastructure
+:EXPORT_HUGO_SECTION_FRAG: required-infrastructure
 :END:
 
-** Domain Infrastructure
+** Required Infrastructure
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 201
@@ -192,10 +192,10 @@ your workstation (and are backed up in a git repository).
 A public internet Docker server needs several resources that you need
 to procure :
 
- * A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet).
- * An internet network connection (eg. DigitalOcean network).
  * A domain name registrar (eg. Gandi.net).
  * A domain name server (eg. DigitalOcean DNS).
+ * A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet).
+ * An internet network connection (eg. DigitalOcean network).
 
 #+begin_index
 index
@@ -323,7 +323,7 @@ list of the new nameservers.
 DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
-* Create a public Docker server 
+** Create a public Docker server 
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
 :END:
@@ -333,7 +333,7 @@ using a DigitalOcean droplet as an example. In a similar fashion, you
 can install Docker on any cloud provider, or dedicated host that you
 prefer.
 
-*** Choosing a VPS provider
+**** Choosing a VPS provider
 
 One of the most basic units of cloud computing is the Virtual Private
 Server (VPS). A VPS is a (Linux) virtual machine that is provisioned
@@ -351,7 +351,7 @@ layer has an integrated firewall, external to the droplet operating
 system. Having a firewall that is external (in front of) the VPS is
 one of the most important features to look for in a hosting provider.
 
-*** Create a DigitalOcean account and setup your SSH key
+**** Create a DigitalOcean account and setup your SSH key
 
 If you have not yet setup an SSH key on your workstation, [[file:linux-workstation.org][read the
 Linux Workstation book]] and do that first.
@@ -367,7 +367,7 @@ Linux Workstation book]] and do that first.
    computer.
  * Finish adding the key, click =Add SSH Key=.
 
-*** Create a DigitalOcean firewall template
+**** Create a DigitalOcean firewall template
 
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
@@ -398,7 +398,7 @@ Linux Workstation book]] and do that first.
      * Sources: All IPv4, All IPv6.
   * Click =Create Firewall=.
  
-*** Creating a DigitalOcean droplet for a Docker server
+**** Creating a DigitalOcean droplet for a Docker server
 
 DigitalOcean provides a Docker image with which to create a droplet
 (DigitalOcean's name for their own VPS product).
@@ -427,7 +427,7 @@ DigitalOcean provides a Docker image with which to create a droplet
    URLs. For this example, we choose =prod=.
  * Verify everything's correct, and then click =Create Dropet=.
 
-*** Apply the DigitalOcean droplet firewall
+**** Apply the DigitalOcean droplet firewall
 
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
@@ -436,7 +436,7 @@ DigitalOcean provides a Docker image with which to create a droplet
  * Click =Add Droplets= and search for the droplet you created and select it.
  * Click =Add Droplet= to add the firewall to the droplet.
 
-*** Create wildcard DNS records for the droplet
+**** Create wildcard DNS records for the droplet
 
 For the purposes of documentation, assume you you own the domain
 =example.com= and you have created the Docker server named =prod=. You
@@ -495,7 +495,7 @@ server directly:
 dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
 #+end_run
 
-*** Setup your local workstation
+**** Setup your local workstation
 
 Edit your SSH config file: =~/.ssh/config= (create it if necessary).
 Create a new config for a host named =prod= (or whatever you want),
@@ -537,7 +537,7 @@ host operating system:
 Linux debian-dev 6.1.0-9-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.27-1 (2023-05-08) x86_64 GNU/Linux
 #+end_stdout
 
-*** Install Docker
+**** Install Docker
 
 The droplet has Debian installed on it, but with only basic packages
 installed by default. To install the latest version of Docker, run the
@@ -549,37 +549,13 @@ ssh prod curl -fsSL https://get.docker.com -o install-docker.sh
 ssh prod sh install-docker.sh
 #+end_run
 
-*** Setup Docker context
-
-Now that Docker is installed, you won't be needing to use ssh directly
-again, except to do system maintainance.
-
-Setup the Docker context on your workstation:
-
-#+begin_run
-docker context create prod --docker host=ssh://prod
-#+end_run
-
-Now you can switch to the new context:
-
-#+begin_run
-docker context use prod
-#+end_run
-
-With this context active, all =docker= commands you run from your
-workstation will take effect on the remote Docker host instead.
-
-Test that the context works:
-
-#+begin_run
-docker run hello-world
-#+end_run
-
-*** Congratulations
+**** Congratulations
 
 You have now finished installation of a remote Docker host server, on
-a Debian based droplet (VPS), and configured it on your workstation as
-a remote (SSH) docker context.
+a Debian based droplet (VPS).
+
+You must now configure your workstation to use your remote Docker
+context.
 
 * Workstation
 :PROPERTIES:
@@ -707,6 +683,17 @@ d context
 Current context is now "foo"
 #+end_stdout
 
+*** Test that the context works
+
+#+begin_run
+docker run hello-world
+#+end_run
+
+#+begin_run
+docker ps
+#+end_run
+
+
 ** Main config for d.rymcg.tech
 :PROPERTIES:
 :EXPORT_FILE_NAME: main-config-for-d.rymcg.tech
@@ -718,17 +705,6 @@ Current context is now "foo"
 #+begin_run
 d context
 #+end_run
-
-You can view, and select from, all of the configured Docker contexts on
-your workstation:
-
-#+begin_stdout
-? Select the Docker context to use  
-> prod
-  step-ca
-  test-tmp
-[↑↓ to move, enter to select, type to filter, ESC to cancel]
-#+end_stdout
 
 Each Docker context has a separate config file (=.env_{CONTEXT}=),
 stored in the root d.rymcg.tech directory
