@@ -1,7 +1,7 @@
 var relearn_search_index = [
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Installation Config Sway Firefox Toolbox Emacs SSH ",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Config Sway Firefox Toolbox Emacs SSH ",
     "description": "",
     "tags": null,
     "title": "Linux Workstation",
@@ -65,10 +65,10 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
-    "content": "Create USB installation media Download the Fedora Sway Atomic iso image. Assuming you are temporarily using another Linux workstation, write the .iso image to a USB drive (eg. replace /dev/sdX with your device name):\n[bash]: Run this on your workstation: dd if=Fedora-Sericea-ostree-x86_64-40-1.14.iso \\ of=/dev/sdX bs=10M status=progress conv=sync Boot the target workstation computer using the USB drive. You will boot into the Anaconda install wizard. Just follow the prompts to install it, it is exactly the same as any other Fedora / Redhat install.\nTips:\nEnable whole disk encryption and choose a secure passphrase. Especially for laptop computers that you may travel with, this an important thing to do to keep your files safe at rest. Use the entire disk for the install. Dual booting another operating system on the same workstation is not considered a safe/secure thing to do. If you want to run Windows or play games, use a separate computer for that. Once the installer finishes, reboot, remove the USB, and login to your new system.\nUpgrading As mentioned before, Fedora Atomic is distributed as a full system image. You can both upgrade the image, as well as rollback the image (in case you have any issues with the upgrade.)\nTo upgrade to the latest image:\n[bash]: Run this on your workstation: sudo rpm-ostree upgrade Let it finish downloading the new image, and then you must reboot:\n[bash]: Run this on your workstation: sudo systemctl reboot The boot manager lists the last several images, which are still available to choose from. The default is to boot the newly upgraded image.\n",
+    "content": "Create USB installation media Download the Fedora Sway Atomic iso image. Assuming you are temporarily using another Linux workstation, write the .iso image to a USB drive:\n[bash]: Run this on your workstation: dd if=Fedora-Sericea-ostree-x86_64-40-1.14.iso \\ of=/dev/sdX bs=10M status=progress conv=sync Info Replace /dev/sdX with your device name, and double check the .iso filename, it may have changed.\nBoot the target workstation computer using the USB drive. You will boot into the Anaconda install wizard. Just follow the prompts to install it, it is exactly the same as any other Fedora / Redhat install.\nTips:\nEnable whole disk encryption and choose a secure passphrase. Especially for laptop computers that you may travel with, this an important thing to do to keep your files safe at rest. Use the entire disk for the install. Dual booting another operating system on the same workstation is not considered a safe/secure thing to do. If you want to run Windows or play games, use a separate computer for that. Once the installer finishes, reboot, remove the USB, and login to your new system.\nUpgrading As mentioned before, Fedora Atomic is distributed as a full system image. You can both upgrade the image, as well as rollback the image (in case you have any issues with the upgrade.)\nTo upgrade to the latest image:\n[bash]: Run this on your workstation: sudo rpm-ostree upgrade Let it finish downloading the new image, and then you must reboot:\n[bash]: Run this on your workstation: sudo systemctl reboot The boot manager lists the last several images, which are still available to choose from. The default is to boot the newly upgraded image.\n",
     "description": "",
     "tags": null,
-    "title": "Installation",
+    "title": "Install Linux (Fedora Atomic)",
     "uri": "/linux-workstation/install/index.html"
   },
   {
