@@ -896,12 +896,14 @@ default configs.
 :EXPORT_HUGO_WEIGHT: 2020
 :END:
 
-Traefik Proxy is the central service that acts as a gateway for all of
-your applications, so that they can take advantage of automatic TLS
+Traefik Proxy is a core service that acts as a gateway for all of the
+other applications installed on your Docker host. Everything that is
+served behind Traefik Proxy can take advantage of automatic TLS
 certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP
-Basic), apply sentry authorization, and IP address filtering
-middlewares, and ultimately decides to route incoming requests to
-the backend service containers, or not.
+Basic), apply sentry authorization (user account filtering), and IP
+address filtering middlewares. Based on all of this criteria, Traefik
+Proxy ultimately decides whether to route incoming requests to the
+backend service containers, or to block it and return an error.
 
 ** Configure Traefik Proxy
 
@@ -911,9 +913,6 @@ d make traefik config
 
 This creates a config for Traefik on your active Docker context. The
 configuration is driven by a text wizard menu system.
-
-Once complete, it will have created and configured your
-=.env_{CONTEXT}= file for you.
 
 #+begin_stdout
 ? Traefik config main menu:  
@@ -929,6 +928,9 @@ v Configure error page template
 
 Use your arrow keys to select a menu item and press the =Enter= key.
 To cancel, press the =ESC= key.
+
+Once complete, it will have created and configured your
+=.env_{CONTEXT}= file for you.
 
 *** Create system user on Docker host
 
@@ -1044,7 +1046,7 @@ and allow you to manage each one. It will be blank to start out with.
 Use this to define all the certificates you need for all your
 applications.
 
-***** Set certificate main domain (CN)
+ * Set certificate main domain (CN)
 
 Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.
