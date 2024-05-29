@@ -9,34 +9,30 @@
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Install Traefik Proxy :: book.rymcg.tech">
-    <meta name="twitter:description" content="Configure Traefik Proxy Run on your workstation:
-Run this on your Workstation Bash shell :: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system.
-Once complete, it will have created and configured your .env_{CONTEXT} file for you.
-(stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
+    <meta name="twitter:description" content="Traefik Proxy is the central service that acts as a gateway for all of your applications, so that they can take advantage of automatic TLS certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP Basic), apply sentry authorization, and IP address filtering middlewares, and ultimately decides to route incoming requests to the backend service containers, or not.
+Configure Traefik Proxy Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context.">
     <meta property="og:title" content="Install Traefik Proxy :: book.rymcg.tech">
-    <meta property="og:description" content="Configure Traefik Proxy Run on your workstation:
-Run this on your Workstation Bash shell :: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system.
-Once complete, it will have created and configured your .env_{CONTEXT} file for you.
-(stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
+    <meta property="og:description" content="Traefik Proxy is the central service that acts as a gateway for all of your applications, so that they can take advantage of automatic TLS certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP Basic), apply sentry authorization, and IP address filtering middlewares, and ultimately decides to route incoming requests to the backend service containers, or not.
+Configure Traefik Proxy Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context.">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/install-traefik-proxy/index.html">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech :: book.rymcg.tech">
     <meta property="og:site_name" content="book.rymcg.tech">
     <title>Install Traefik Proxy :: book.rymcg.tech</title>
     <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1716930492" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716930492" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1716930492" rel="stylesheet">
-    <link href="/css/auto-complete.css?1716930492" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716930492" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1716930492" rel="stylesheet">
-    <link href="/css/fonts.css?1716930492" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716930492" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1716930492" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1716930492" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1716930492" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1716930492" rel="stylesheet">
-    <link href="/css/print.css?1716930492" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1716930492" rel="stylesheet">
-    <script src="/js/url.js?1716930492"></script>
-    <script src="/js/variant.js?1716930492"></script>
+    <link href="/css/fontawesome-all.min.css?1716953388" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1716953388" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1716953388" rel="stylesheet">
+    <link href="/css/auto-complete.css?1716953388" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1716953388" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1716953388" rel="stylesheet">
+    <link href="/css/fonts.css?1716953388" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1716953388" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1716953388" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1716953388" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1716953388" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1716953388" rel="stylesheet">
+    <link href="/css/print.css?1716953388" rel="stylesheet" media="print">
+    <link href="/css/ie.css?1716953388" rel="stylesheet">
+    <script src="/js/url.js?1716953388"></script>
+    <script src="/js/variant.js?1716953388"></script>
     <script>
       // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
       // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
@@ -121,14 +117,19 @@ Once complete, it will have created and configured your .env_{CONTEXT} file for 
             </header>
 <h1 id="install-traefik-proxy">Install Traefik Proxy</h1>
 
+<p>Traefik Proxy is the central service that acts as a gateway for all of
+your applications, so that they can take advantage of automatic TLS
+certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP
+Basic), apply sentry authorization, and IP address filtering
+middlewares, and ultimately decides to route incoming requests to
+the backend service containers, or not.</p>
 <h2 id="configure-traefik-proxy">Configure Traefik Proxy</h2>
-<p>Run on your workstation:</p>
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
 d make traefik config
-</pre>
+</pre></code>
     </div>
 </div>
 <p>This creates a config for Traefik on your active Docker context. The
@@ -164,7 +165,10 @@ extra entrypoints through this menu, which may be necessary for any
 application that doesn&rsquo;t use the standard <code>websecure</code> entrypoint (port
 443).</p>
 <p>By default, the Traefik Dashboard is not enabled. To enable it, you
-must select it via this menu option, and set a username / password.</p>
+must select it via this menu option, and set a username / password. It
+is only ever exposed to localhost, or through an SSH tunnel, never to
+the public network, but it is still best to leave it turned off if you
+don&rsquo;t need it.</p>
 <h3 id="configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</h3>
 <p>If you&rsquo;re planning on running a public server, using TLS certificates
 from Let&rsquo;s Encrypt, you can skip this option.</p>
@@ -204,9 +208,16 @@ choose <code>Disable ACME</code>.</p>
 </pre>
     </div>
 </div>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
 <p>Always choose the <code>Production</code> environment, unless you really know
 what you&rsquo;re doing. <code>Production</code> is the only environment that produces
 valid (trusted) TLS certificates.</p>
+</div>
+</div>
 <h4 id="choose-type-of-acme-challenge">Choose type of ACME challenge</h4>
 <div class="box notices cstyle stdout">
     <div class="box-label">(stdout)</div>
@@ -218,11 +229,18 @@ valid (trusted) TLS certificates.</p>
 </pre>
     </div>
 </div>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
 <p>For your first install, choose <code>TLS-ALPN-01</code>, it is the easiest method
 to use for public servers.</p>
 <p>If you want to use wildcard DNS records, you must choose the more
 advanced method <code>DNS-01</code>, and setup your DNS platform for programmatic
 access with an API token.</p>
+</div>
+</div>
 <h4 id="configure-acme-email-address--optional">Configure ACME email address (optional)</h4>
 <p>You don&rsquo;t have to provide your email address, but if you do, Let&rsquo;s
 Encrypt can email you about configuration issues, like certitficates
@@ -253,9 +271,17 @@ applications.</p>
 <p>Set certificate main domain (CN)</p>
 <p>Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.</p>
-<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>prod.example.com</span></span></code></pre></div><p>Each certificate also may contain several other domain names, known as
+<div class="wrap-code highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>prod.example.com</span></span></code></pre></div>
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<pre><code>Each certificate also may contain several other domain names, known as
 SANs (Subject Alternative Names). You can use this to list as many
-additional domain names that you want to allow for the certificate.</p>
+additional domain names that you want to allow for the certificate.
+</code></pre>
+</div>
+</div>
 </li>
 </ul>
 <h3 id="configure-middleware">Configure middleware</h3>
@@ -266,11 +292,11 @@ additional domain names that you want to allow for the certificate.</p>
 choose the <code>Reinstall Traefik</code> option in the menu, or you can run that
 step all by itself from the command line at any time:</p>
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your Workstation Bash shell ::</div>
-    <div class="box-content'">
-        <pre>
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
 d make traefik install
-</pre>
+</pre></code>
     </div>
 </div>
 <p>You should always reinstall Traefik after changing any configuration
@@ -298,12 +324,12 @@ setting.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1716930492" defer></script>
-        <script src="/js/lunr/lunr.min.js?1716930492" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1716930492" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1716930492" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1716930492" defer></script>
-        <script src="/js/search.js?1716930492" defer></script>
+        <script src="/js/auto-complete.js?1716953388" defer></script>
+        <script src="/js/lunr/lunr.min.js?1716953388" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1716953388" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1716953388" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1716953388" defer></script>
+        <script src="/js/search.js?1716953388" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -409,14 +435,14 @@ setting.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 28, 2024 at 9:08pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 29, 2024 at 3:29am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1716930492" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1716930492" defer></script>
-    <script src="/js/theme.js?1716930492" defer></script>
+    <script src="/js/clipboard.min.js?1716953388" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1716953388" defer></script>
+    <script src="/js/theme.js?1716953388" defer></script>
   </body>
 </html>
