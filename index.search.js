@@ -97,7 +97,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
-    "content": "Index Sway Firefox Toolbox Emacs SSH ",
+    "content": " Index Sway Firefox Toolbox Emacs SSH ",
     "description": "",
     "tags": null,
     "title": "Config",
@@ -265,7 +265,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content",
-    "content": "Index Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "content": " Index Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Example of a deeply …",
@@ -273,7 +273,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode, ox-hugo, and literate programming. \u003e Example Org / Hugo content \u003e Example of a deeply …",
-    "content": "Index Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "content": " Index Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": "",
     "tags": null,
     "title": "Nested …",
