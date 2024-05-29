@@ -211,28 +211,36 @@ register your domain name. This will be the domain name used for all
 of your service links, and it is what your users will need to type
 into their browsers (or click on) to visit your pages.
 
-Domain names are a scarce resource. Because of their scarcity, you
-must pay for your domain registrations, doing so in 1 year increments.
-If domain names were free, all the good ones would be taken by now, but
-because they cost money, there are still some good enough ones left to
-be had. In return for your fee, you receive exclusive use of your
-domain name for the period that you paid for. You can pre-pay for
-several years in advance, or for just one year at a time. You must
-remember to renew your domains for every year, lest they expire and no
-longer resolve to your services, and you lose control of the domain,
-possibly forever.
+Public domain names are a scarce resource. Because of their scarcity,
+you must pay for your domain registrations, doing so in 1 year
+increments. If domain names were free, all the good ones would be
+taken by now, but because they cost money, there are still some good
+enough ones left to be had. In return for your fee, you receive
+exclusive use of your domain name for the period that you paid for.
+You "own" the domain name, and its configuration, but you need to keep
+paying a registrar to keep the record active (so its more like
+renting). You can pre-pay for several years in advance, or for just
+pay one year at a time. If you stop paying, and the records expire,
+they will no longer resolve to your services, and you may lose control
+of the domain, possibly forever.
 
 *** Domain names for private servers
 
-If your Docker server won't be a public server, (eg. running a private
-Docker server at home), it is still recommended that you use a valid
-internet domain name, with public DNS servers, because you will still
-need this in order to create valid TLS certificates from [[https://letsencrypt.org/][Let's
-Encrypt]]. However, having valid working TLS is not /required/ for
-development purposes (but certainly nice to have!), so you may choose
-to make up your own fake domain name instead, and forgo TLS, or you
-can setup [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/step-ca#readme][Step-CA]] for off-grid TLS. In either case, you will still
-need to setup DNS, and this is explained in the next section.
+If you control your own DNS servers, you could use completely made up
+domain names under the =.internal= domain, which are [[https://www.icann.org/en/public-comment/proceeding/proposed-top-level-domain-string-for-private-use-24-01-2024][RFC recoginized
+for private usage]]. But for most public servers, where most clients
+use different DNS servers, you will want to register a "real" domain
+instead.
+
+For private servers, (eg. running a private Docker server at home),
+it is still recommended that you use a valid internet domain name,
+using public DNS servers, because you will still need this in order to
+create valid TLS certificates from [[https://letsencrypt.org/][Let's Encrypt]]. However, having
+valid working TLS is not /required/ for development purposes (but
+certainly nice to have!), so you may choose to make up your own fake
+domain name instead, and forgo TLS, or you can setup [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/step-ca#readme][Step-CA]] for
+off-grid TLS. In either case, you will still need to setup DNS, and
+this is explained in the next section.
 
 *** Register an Internet domain name
 
@@ -254,10 +262,14 @@ will be similar regardless of the domain provider you pick.
 :EXPORT_FILE_NAME: setup-dns
 :END:
 
-A DNS server maps your domain (and subdomain) names to the various IP
-addresses of your servers. DNS is required for your users to be able
-to type your domain name =prod.example.com= and have it resolve to the
-IP address that is required to contact your Docker server.
+A DNS server maps your domain (and all subdomain) names to the various
+IP addresses of your servers. DNS is required for your users to be
+able to type (or click on) your domain name =prod.example.com= and
+have it resolve to the IP address that is required to contact your
+Docker server (=prod=). Beyond this, DNS is also a means of proving to
+a third party that you are the owner (controller) of your own domain,
+which is used as a part of the ACME challenge that Let's Encrypt (or
+Step-CA) uses when signing your TLS certificates.
 
 Now that you have registered a domain name, you need to tell your
 registrar where your DNS server is. Usually you will use the DNS
@@ -293,15 +305,15 @@ regardless of the supported provider you pick.
    * =ns2.digitalocean.com=
    * =ns3.digitalocean.com=
 
-Once changed, you can verify the setting from your workstation, using
-the =whois= command:
+Wait a few minutes for the change to take effect, then you can verify
+the setting from your workstation, using the =whois= command:
 
 #+begin_run
-whois your-domain.com
+whois example.com
 #+end_run
 
 #+begin_stdout
-Domain Name: your-domain.com
+Domain Name: example.com
 Registrar WHOIS Server: whois.gandi.net
 Name Server: DNS1.EXAMPLE.NET
 Name Server: DNS2.EXAMPLE.NET
@@ -351,12 +363,11 @@ layer has an integrated firewall, external to the droplet operating
 system. Having a firewall that is external (in front of) the VPS is
 one of the most important features to look for in a hosting provider.
 
-**** Create a DigitalOcean account and setup your SSH key
+**** Setup your SSH key on DigitalOcean
 
 If you have not yet setup an SSH key on your workstation, [[file:linux-workstation.org][read the
 Linux Workstation book]] and do that first.
 
- * Signup for an account at [[https://m.do.co/c/069af06b869e][DigitalOcean]].
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Settings= in the menu.
  * Click on the =Security= tab.
@@ -529,9 +540,11 @@ index
 :EXPORT_FILE_NAME: install-docker-command-line-tools
 :END:
 
-You need to install Docker Engine on your workstation
+You need to install Docker Engine (not Docker Desktop!) on your
+workstation.
 
-*** Try your system package manager
+*** Various ways to install Docker Engine
+**** Try your system package manager
 
 Some Linux distributions have decent packages for up-to-date Docker
 versions. Some other distributions lag behind by several versions, or
@@ -545,7 +558,7 @@ If you're on Arch Linux, this is known to be a good configuration:
 sudo pacman -S docker docker-compose docker-buildx
 #+end_run
 
-*** Use the generic Docker installer
+**** Use the generic Docker installer to install the latest version
 
 If your Linux distribution doesn't provide a Docker package, or you've
 decided its not good for your situation, you may be better off by running
@@ -553,8 +566,26 @@ the generic installer script from the upstream Docker organization:
 
 #+begin_run
 curl -fsSL https://get.docker.com -o install-docker.sh
-sh install-docker.sh
+sudo sh install-docker.sh
 #+end_run
+
+**** Install from custom package repository
+
+Use the guides from Docker.com.
+
+ * [[https://docs.docker.com/engine/install/debian/][Debian]]
+ * [[https://docs.docker.com/engine/install/ubuntu/][Ubuntu]]
+ * [[https://docs.docker.com/engine/install/fedora/][Fedora]]
+
+**** DON'T install Docker Desktop!
+
+ 1. Docker Desktop isn't open source. 
+ 2. Docker Desktop runs a VM to run Docker on localhost. (we don't
+    want that, since we will use a remote Docker context instead.)
+
+Always prefer installing Docker Engine instead of Docker Desktop. We
+won't need to run the Docker Daemon anyway, so we only need to install
+it for the CLI tools it provides (eg. the =docker= command).
 
 *** Disable Docker daemon on your workstation
 
@@ -618,9 +649,8 @@ git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
 By convention, *you should not change the clone path*. It is
 intentionally placed in a vendor neutral path location for all to use.
 But if you're adamant to do so, it should still work, regardless of
-where you put it, but watch out, as this may make the commands in this
-documentation not work exactly as intended with your config, unless
-you change =ROOT_DIR= in all *external* project Makefiles accordingly.
+where you put it. But watch out, as this may break external projects
+that assume =ROOT_DIR= is using the conventional path.
 #+end_notice
 
 *** Setup =d.rymcg.tech= command line tool
@@ -785,7 +815,7 @@ d install-docker
 #+attr_shortcode: :style tip
 #+begin_notice
 =d install-docker= will install Docker *on the remote VPS*, according
-to your current docker context.
+to your active docker context.
 #+end_notice
 
 *** Test that the context works from your workstation
@@ -844,9 +874,14 @@ default configs.
 :EXPORT_HUGO_WEIGHT: 2020
 :END:
 
-** Configure Traefik Proxy
+Traefik Proxy is the central service that acts as a gateway for all of
+your applications, so that they can take advantage of automatic TLS
+certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP
+Basic), apply sentry authorization, and IP address filtering
+middlewares, and ultimately decides to route incoming requests to
+the backend service containers, or not.
 
-Run on your workstation:
+** Configure Traefik Proxy
 
 #+begin_run
 d make traefik config
@@ -888,7 +923,10 @@ application that doesn't use the standard =websecure= entrypoint (port
 443).
 
 By default, the Traefik Dashboard is not enabled. To enable it, you
-must select it via this menu option, and set a username / password.
+must select it via this menu option, and set a username / password. It
+is only ever exposed to localhost, or through an SSH tunnel, never to
+the public network, but it is still best to leave it turned off if you
+don't need it.
 
 *** Configure Certificate Authorities (CA)
 
@@ -930,9 +968,12 @@ choose =Disable ACME=.
   Staging (untrusted / testing)
 #+end_stdout
 
+#+attr_shortcode: :style tip
+#+begin_notice
 Always choose the =Production= environment, unless you really know
 what you're doing. =Production= is the only environment that produces
 valid (trusted) TLS certificates.
+#+end_notice
 
 **** Choose type of ACME challenge
 
@@ -942,12 +983,16 @@ valid (trusted) TLS certificates.
   DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
 #+end_stdout
 
+#+attr_shortcode: :style tip
+#+begin_notice
 For your first install, choose =TLS-ALPN-01=, it is the easiest method
 to use for public servers.
 
 If you want to use wildcard DNS records, you must choose the more
 advanced method =DNS-01=, and setup your DNS platform for programmatic
 access with an API token.
+#+end_notice
+
 
 **** Configure ACME email address (optional)
 
@@ -984,9 +1029,12 @@ domain name of the certificate.
 
 : prod.example.com
 
+#+attr_shortcode: :style info
+#+begin_notice
 Each certificate also may contain several other domain names, known as
 SANs (Subject Alternative Names). You can use this to list as many
 additional domain names that you want to allow for the certificate.
+#+end_notice
 
 *** Configure middleware
 *** Configure error page template
