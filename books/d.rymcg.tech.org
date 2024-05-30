@@ -1084,19 +1084,60 @@ setting.
 :END:
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/whoami#readme][Whoami]] is a very simple application, but you can learn a lot from it.
-It should be the very first application you install after Traefik. You
-will see later on that all of the applications provided by
-d.rymcg.tech are configured and managed similar to this one. Use this
-as a learning experience. If you can accomplish gettting whoami
-installed, you'll be able to install anything.
+After Traefik, it should be the very first application that you
+install. It can help you test whether or not your Traefik installation
+is functioning properly.
+
+Later on, you will come to realize how similar all of the other
+applications provided by d.rymcg.tech are to whoami, by the common
+methods that they are configured and managed. *You should study the
+configuration of whoami.* Because of its simplicity, it reduces the
+complexity of its core components. Whoami can be a good base template
+for creating your own d.rymcg.tech enabled applications.
+
+Use this as a learning experience. If you can accomplish gettting
+whoami installed, you'll be able to install any of the other
+applications provided by d.rymcg.tech. If you learn how it works,
+you'll be able to use this template to make your own d.rymcg.tech
+apps.
 
 ** What is Whoami?
 
-Whoami is a web application useful for testing that Traefik is working
-as expected. Its sole purpose is to show a web page that prints the
-HTTP headers that were sent to it. This can be useful to verify that
-the application is capable of serving requests, and that all of the
+Whoami is a web application that simply outputs the request headers it
+receives. It useful for end-to-end testing that Traefik is working as
+expected. Its sole purpose is to show a web page that prints the HTTP
+headers that were sent to it. This can be useful to verify that the
+application is capable of serving requests, and that all of the
 configuration is correct.
+
+#+begin_run
+## Use your own whoami URL here once you install it:
+curl https://whoami.example.com
+#+end_run
+
+#+begin_stdout
+Name: default
+Hostname: 38704012c4b3
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:34610
+GET / HTTP/1.1
+Host: whoami.example.com
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 10.93.23.114
+X-Forwarded-Host: whoami.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: docker
+X-Real-Ip: 10.93.23.114
+#+end_stdout
+
+** Features
+
+[[https://github.com/traefik/whoami?tab=readme-ov-file#whoami][See the upstream whoami documentation here.]]
 
 ** Default config file (.env-dist)
 
@@ -1151,9 +1192,9 @@ its URL:
 
 #+begin_stdout
 WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
-: whoami.prod.rymcg.tech
+​: whoami.prod.rymcg.tech
 #+end_stdout
-
+﻿
 The default name uses the =ROOT_DOMAIN= variable you set as part of the
 main d.rymcg.tech config, which is also named after our current Docker
 context (=prod=). Realistically, the =WHOAMI_TRAEFIK_HOST= may be set
