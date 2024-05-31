@@ -184,6 +184,24 @@ The boot manager lists the last several images, which are still
 available to choose from. The default is to boot the newly upgraded
 image.
 
+The above will /not/ upgrade to a new release version, eg. Fedora 39
+to Fedora 40. It will only update the packages for the currently
+installed release.
+
+To find the list of all released versions, run :
+
+#+begin_run
+ostree remote refs fedora | grep "$(uname -m)/silverblue$"
+#+end_run
+
+Upgrade to the new release (eg. 40):
+
+#+begin_run
+rpm-ostree rebase fedora:fedora/40/x86_64/silverblue
+#+end_run
+
+Let it finish downloading the new image, and then reboot again.
+
 * Config
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: config
