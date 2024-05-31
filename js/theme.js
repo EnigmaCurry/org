@@ -1,15 +1,6 @@
 window.relearn = window.relearn || {};
 
 var theme = true;
-var isIE = /*@cc_on!@*/false || !!document.documentMode;
-if( isIE ){
-    // we don't support sidebar flyout in IE
-    document.querySelector( 'body' ).classList.remove( 'mobile-support' );
-}
-else{
-    document.querySelector( 'body' ).classList.add( 'mobile-support' );
-}
-
 var isPrint = document.querySelector( 'body' ).classList.contains( 'print' );
 
 var isRtl = document.querySelector( 'html' ).getAttribute( 'dir' ) == 'rtl';
@@ -19,7 +10,7 @@ var dir_padding_end = 'padding-right';
 var dir_key_start = 37;
 var dir_key_end = 39;
 var dir_scroll = 1;
-if( isRtl && !isIE ){
+if( isRtl ){
     dir_padding_start = 'padding-right';
     dir_padding_end = 'padding-left';
     dir_key_start = 39;
@@ -127,21 +118,21 @@ function switchTab(tabGroup, tabId) {
 
       // Store the selection to make it persistent
       if(window.localStorage){
-          var selectionsJSON = window.localStorage.getItem(window.relearn.baseUriFull+"tab-selections");
+          var selectionsJSON = window.localStorage.getItem(window.relearn.absBaseUri+"/tab-selections");
           if(selectionsJSON){
             var tabSelections = JSON.parse(selectionsJSON);
           }else{
             var tabSelections = {};
           }
           tabSelections[tabGroup] = tabId;
-          window.localStorage.setItem(window.relearn.baseUriFull+"tab-selections", JSON.stringify(tabSelections));
+          window.localStorage.setItem(window.relearn.absBaseUri+"/tab-selections", JSON.stringify(tabSelections));
       }
     }
 }
 
 function restoreTabSelections() {
     if(window.localStorage){
-        var selectionsJSON = window.localStorage.getItem(window.relearn.baseUriFull+"tab-selections");
+        var selectionsJSON = window.localStorage.getItem(window.relearn.absBaseUri+"/tab-selections");
         if(selectionsJSON){
           var tabSelections = JSON.parse(selectionsJSON);
         }else{
@@ -217,23 +208,18 @@ function initMermaid( update, attrs ) {
             is_initialized = true;
 
             var graph = serializeGraph( parse );
+            var new_element = document.createElement( 'div' );
+            Array.from( element.attributes ).forEach( function( attr ){
+                new_element.setAttribute( attr.name, attr.value );
+                element.removeAttribute( attr.name );
+            });
+            new_element.classList.add( 'mermaid-container' );
+            new_element.classList.remove( 'mermaid' );
+            element.classList.add( 'mermaid' );
+
             element.innerHTML = graph;
             if( element.offsetParent !== null ){
                 element.classList.add( 'mermaid-render' );
-            }
-            var new_element = document.createElement( 'div' );
-            new_element.classList.add( 'mermaid-container' );
-            if( element.classList.contains( 'align-right' ) ){
-                new_element.classList.add( 'align-right' );
-                element.classList.remove( 'align-right' );
-            }
-            if( element.classList.contains( 'align-center' ) ){
-                new_element.classList.add( 'align-center' );
-                element.classList.remove( 'align-center' );
-            }
-            if( element.classList.contains( 'align-left' ) ){
-                new_element.classList.add( 'align-left' );
-                element.classList.remove( 'align-left' );
             }
             new_element.innerHTML = '<div class="mermaid-code">' + graph + '</div>' + element.outerHTML;
             element.parentNode.replaceChild( new_element, element );
@@ -292,10 +278,10 @@ function initMermaid( update, attrs ) {
             initMermaid( true, {
                 'theme': variants.getColorValue( 'PRINT-MERMAID-theme' ),
             });
-		}.bind( this ) );
-		window.addEventListener( 'afterprint', function(){
+        }.bind( this ) );
+        window.addEventListener( 'afterprint', function(){
             initMermaid( true );
-		}.bind( this ) );
+        }.bind( this ) );
     }
 
     attrs = attrs || {
@@ -304,7 +290,7 @@ function initMermaid( update, attrs ) {
 
     var search;
     if( update ){
-        search = sessionStorage.getItem( window.relearn.baseUriFull+'search-value' );
+        search = sessionStorage.getItem( window.relearn.absBaseUri+'/search-value' );
         unmark();
     }
     var is_initialized = ( update ? update_func( attrs ) : init_func( attrs ) );
@@ -314,7 +300,7 @@ function initMermaid( update, attrs ) {
             postRenderCallback: function( id ){
                 // zoom for Mermaid
                 // https://github.com/mermaid-js/mermaid/issues/1860#issuecomment-1345440607
-                var svgs = d3.selectAll( 'body:not(.print) .mermaid.zoomable > #' + id );
+                var svgs = d3.selectAll( 'body:not(.print) .mermaid-container.zoomable > .mermaid > #' + id );
                 svgs.each( function(){
                     var parent = this.parentElement;
                     // we need to copy the maxWidth, otherwise our reset button will not align in the upper right
@@ -328,7 +314,7 @@ function initMermaid( update, attrs ) {
                     var button = parent.querySelector( '.svg-reset-button' );
                     var zoom = d3.zoom().on( 'zoom', function( e ){
                         inner.attr( 'transform', e.transform );
-                        if( e.transform.k == 1 ){
+                        if( e.transform.k == 1 && e.transform.x == 0 && e.transform.y == 0 ){
                             button.classList.remove( 'zoomed' );
                         }
                         else{
@@ -356,16 +342,12 @@ function initMermaid( update, attrs ) {
         });
     }
     if( update && search && search.length ){
-        sessionStorage.setItem( window.relearn.baseUriFull+'search-value', search );
+        sessionStorage.setItem( window.relearn.absBaseUri+'/search-value', search );
         mark();
     }
 }
 
 function initOpenapi( update, attrs ){
-    if( isIE ){
-        return;
-    }
-
     var state = this;
     if( update && !state.is_initialized ){
         return;
@@ -395,10 +377,10 @@ function initOpenapi( update, attrs ){
 
     }
     function renderOpenAPI(oc) {
-        var mod = window.relearn.themeVariantModifier;
+        var relBasePath = window.relearn.relBasePath;
         var buster = window.themeUseOpenapi.assetsBuster ? '?' + window.themeUseOpenapi.assetsBuster : '';
         var print = isPrint || attrs.isPrintPreview ? "PRINT-" : "";
-		var theme = print ? `${baseUri}/css/theme-relearn-light${mod}.css${buster}` : document.querySelector( '#R-variant-style' ).attributes.href.value
+        var theme = print ? `${relBasePath}/css/theme-relearn-light.css${buster}` : document.querySelector( '#R-variant-style' ).attributes.href.value
         var swagger_theme = variants.getColorValue( print + 'OPENAPI-theme' );
         var swagger_code_theme = variants.getColorValue( print + 'OPENAPI-CODE-theme' );
 
@@ -422,8 +404,8 @@ function initOpenapi( update, attrs ){
                 '<head>' +
                     '<link rel="stylesheet" href="' + window.themeUseOpenapi.css + '">' +
                     '<link rel="stylesheet" href="' + theme + '">' +
-                    '<link rel="stylesheet" href="' + baseUri + '/css/swagger.css' + buster + '">' +
-                    '<link rel="stylesheet" href="' + baseUri + '/css/swagger-' + swagger_theme + '.css' + buster + '">' +
+                    '<link rel="stylesheet" href="' + relBasePath + '/css/swagger.css' + buster + '">' +
+                    '<link rel="stylesheet" href="' + relBasePath + '/css/swagger-' + swagger_theme + '.css' + buster + '">' +
                 '</head>' +
                 '<body>' +
                     '<a class="relearn-expander" href="" onclick="return relearn_collapse_all()">Collapse all</a>' +
@@ -450,7 +432,7 @@ function initOpenapi( update, attrs ){
             const openapiPromise = new Promise( function(resolve){ resolve() });
             openapiPromise
                 .then( function(){
-                    SwaggerUIBundle({
+                    var options = {
                         defaultModelsExpandDepth: 2,
                         defaultModelExpandDepth: 2,
                         docExpansion: isPrint || attrs.isPrintPreview ? 'full' : 'list',
@@ -474,9 +456,23 @@ function initOpenapi( update, attrs ){
                             activated: true,
                             theme: swagger_code_theme,
                         },
-                        url: oc.dataset.openapiUrl,
                         validatorUrl: 'none',
-                    });
+                    };
+                    if( oc.dataset.openapiSpec ){
+                        try{
+                            Object.assign( options, { spec: JSON.parse( oc.dataset.openapiSpec ) });
+                        } catch( err ){
+                            try{
+                                Object.assign( options, { spec: jsyaml.load( oc.dataset.openapiSpec ) });
+                            } catch( err ){
+                                console.error( 'OpenAPI: file "' + oc.dataset.openapiUrl + '" could not be parsed as JSON or YAML');
+                            }
+                        }
+                    }
+                    else{
+                        Object.assign( options, { url: oc.dataset.openapiUrl });
+                    }
+                    SwaggerUIBundle( options );
                 })
                 .then( function(){
                     let observerCallback = function () {
@@ -556,6 +552,8 @@ function initAnchorClipboard(){
         e.clearSelection();
         e.trigger.setAttribute( 'aria-label', window.T_Link_copied_to_clipboard );
         e.trigger.classList.add( 'tooltipped', 'tooltipped-s'+(isRtl?'e':'w') );
+        history.replaceState({},"",e.text);
+        e.trigger.scrollIntoView({behavior: "smooth"});
     });
 }
 
@@ -589,12 +587,13 @@ function initCodeClipboard(){
     }
 
     var codeElements = document.querySelectorAll( 'code' );
-	for( var i = 0; i < codeElements.length; i++ ){
+    for( var i = 0; i < codeElements.length; i++ ){
         var code = codeElements[i];
         var text = getCodeText( code );
         var inPre = code.parentNode.tagName.toLowerCase() == 'pre';
         var inTable = inPre &&
-            code.parentNode.parentNode.tagName.toLowerCase() == 'td';
+            code.parentNode.parentNode.tagName.toLowerCase() == 'td' &&
+            code.parentNode.parentNode.classList.contains('lntd');
         // avoid copy-to-clipboard for highlight shortcode in table lineno mode
         var isFirstLineCell = inTable &&
             code.parentNode.parentNode.parentNode.querySelector( 'td:first-child > pre > code' ) == code;
@@ -623,12 +622,12 @@ function initCodeClipboard(){
             });
             if( inTable ){
                 var table = code.parentNode.parentNode.parentNode.parentNode.parentNode;
-                table.dataset[ 'code' ] = text;
+                table.dataset.code = text;
                 table.parentNode.insertBefore( button, table.nextSibling );
             }
             else if( inPre ){
                 var pre = code.parentNode;
-                pre.dataset[ 'code' ] = text;
+                pre.dataset.code = text;
                 var p = pre.parentNode;
                 // indented code blocks are missing the div
                 while( p != document && ( p.tagName.toLowerCase() != 'div' || !p.classList.contains( 'highlight' ) ) ){
@@ -645,7 +644,7 @@ function initCodeClipboard(){
                 pre.parentNode.insertBefore( button, pre.nextSibling );
             }
             else{
-                code.dataset[ 'code' ] = text;
+                code.dataset.code = text;
                 code.parentNode.insertBefore( button, code.nextSibling );
             }
         }
@@ -688,11 +687,61 @@ function initChroma( update ){
     var chroma = variants.getColorValue( 'CODE-theme' );
     var link = document.querySelector( '#R-variant-chroma-style' );
     var old_path = link.getAttribute( 'href' );
-	var new_path = old_path.replace( /^(.*\/chroma-).*?(\.css.*)$/, '$1' + chroma + '$2' );
+    var new_path = old_path.replace( /^(.*\/chroma-).*?(\.css.*)$/, '$1' + chroma + '$2' );
     link.setAttribute( 'href', new_path );
 }
 
-function initArrowNav(){
+function initArrowVerticalNav(){
+    var topMain = 0;
+    if( !isPrint ){
+        topMain = document.querySelector("main").getClientRects()[0].top;
+    }
+
+    document.addEventListener('keydown', function(event){
+        var elems = Array.from( document.querySelectorAll( `main :not(.include.hide-first-heading) > :where(
+                .article-subheading,
+                :not(.article-subheading) + h1:not(.a11y-only),
+                h1:not(.a11y-only):first-child,
+                h2, h3, h4, h5, h6
+            ),
+            main .include.hide-first-heading > :where( h1, h2, h3, h4, h5, h6 ) ~ :where( h1, h2, h3, h4, h5, h6 )
+        ` ));
+        if( !event.shiftKey && !event.ctrlKey && event.altKey && !event.metaKey ){
+            if( event.which == 38 ){ // up
+                var target = isPrint ? document.querySelector( '#R-body' ) : document.querySelector( '.flex-block-wrapper' );
+                elems.some( function( elem, i ){
+                    var top = elem.getBoundingClientRect().top;
+                    var topBoundary = top - topMain;
+                    if( topBoundary > -1 ){
+                        target.scrollIntoView();
+                        return true;
+                    }
+                    target = elem
+                })
+            }
+            else if( event.which == 40 ){ // down
+                elems.some( function( elem, i ){
+                    var top = elem.getBoundingClientRect().top;
+                    var topBoundary = top - topMain;
+                    if( topBoundary > -1 && topBoundary < 1 ){
+                        if( i+1 < elems.length ){
+                            var target = elems[ i+1 ];
+                            target.scrollIntoView();
+                        }
+                        return true;
+                    }
+                    if( topBoundary >= 1 ){
+                        var target = elem;
+                        target.scrollIntoView();
+                        return true;
+                    }
+                })
+            }
+        }
+    });
+}
+
+function initArrowHorizontalNav(){
     if( isPrint ){
         return;
     }
@@ -810,13 +859,13 @@ function initMenuScrollbar(){
     // that need to be executed inbetween our own handlers
     // PSC removed for #242 #243 #244
     // psc = elc && new PerfectScrollbar('#R-body-inner');
-    psm = elm && new PerfectScrollbar('#R-content-wrapper');
+    psm = elm && new PerfectScrollbar('#R-content-wrapper', { scrollingThreshold: 2000, swipeEasing: false, wheelPropagation: false });
     document.querySelectorAll('.topbar-button .topbar-content-wrapper').forEach( function( e ){
         var button = getTopbarButtonParent( e );
         if( !button ){
             return;
         }
-        pst.set( button, new PerfectScrollbar( e ) );
+        pst.set( button, new PerfectScrollbar( e, { scrollingThreshold: 2000, swipeEasing: false, wheelPropagation: false }) );
         e.addEventListener( 'click', toggleTopbarFlyoutEvent );
     });
 
@@ -1131,7 +1180,7 @@ function initExpand(){
 }
 
 function clearHistory() {
-    var visitedItem = window.relearn.baseUriFull + 'visited-url/'
+    var visitedItem = window.relearn.absBaseUri + '/visited-url/'
     for( var item in sessionStorage ){
         if( item.substring( 0, visitedItem.length ) === visitedItem ){
             sessionStorage.removeItem( item );
@@ -1147,7 +1196,7 @@ function clearHistory() {
 }
 
 function initHistory() {
-    var visitedItem = window.relearn.baseUriFull + 'visited-url/'
+    var visitedItem = window.relearn.absBaseUri + '/visited-url/'
     sessionStorage.setItem( visitedItem+document.querySelector( 'body' ).dataset.url, 1);
 
     // loop through the sessionStorage and see if something should be marked as visited
@@ -1171,7 +1220,19 @@ function initScrollPositionSaver(){
         state.contentScrollTop = +elc.scrollTop;
         window.history.replaceState( state, '', window.location );
     };
-    window.addEventListener( 'pagehide', savePosition );
+
+    var ticking = false;
+    elc.addEventListener( 'scroll', function( event ){
+        if( !ticking ){
+            window.requestAnimationFrame( function(){
+                savePosition();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+
+    document.addEventListener( "click", savePosition );
 }
 
 function scrollToPositions() {
@@ -1202,7 +1263,7 @@ function scrollToPositions() {
         return;
     }
 
-    var search = sessionStorage.getItem( window.relearn.baseUriFull+'search-value' );
+    var search = sessionStorage.getItem( window.relearn.absBaseUri+'/search-value' );
     if( search && search.length ){
         search = regexEscape( search );
         var found = elementContains( search, elc );
@@ -1232,40 +1293,49 @@ function scrollToPositions() {
     }
 }
 
+window.addEventListener( 'popstate', function ( event ){
+    scrollToPositions();
+});
+
+const observer = new PerformanceObserver( function(){
+    scrollToPositions();
+});
+observer.observe({ type: "navigation" });
+
 function mark() {
-	// mark some additional stuff as searchable
-	var bodyInnerLinks = document.querySelectorAll( '#R-body-inner a:not(.lightbox-link):not(.btn):not(.lightbox-back)' );
-	for( var i = 0; i < bodyInnerLinks.length; i++ ){
-		bodyInnerLinks[i].classList.add( 'highlight' );
-	}
+    // mark some additional stuff as searchable
+    var bodyInnerLinks = document.querySelectorAll( '#R-body-inner a:not(.lightbox-link):not(.btn):not(.lightbox-back)' );
+    for( var i = 0; i < bodyInnerLinks.length; i++ ){
+        bodyInnerLinks[i].classList.add( 'highlight' );
+    }
 
-	var value = sessionStorage.getItem( window.relearn.baseUriFull + 'search-value' );
+    var value = sessionStorage.getItem( window.relearn.absBaseUri + '/search-value' );
     var highlightableElements = document.querySelectorAll( '.highlightable' );
-    highlight( highlightableElements, value, { element: 'mark' } );
+    highlight( highlightableElements, value, { element: 'mark', className: 'search' } );
 
-	var markedElements = document.querySelectorAll( 'mark' );
-	for( var i = 0; i < markedElements.length; i++ ){
-		var parent = markedElements[i].parentNode;
-		while( parent && parent.classList ){
-			if( parent.classList.contains( 'expand' ) ){
-				var expandInputs = parent.querySelectorAll( 'input:not(.expand-marked)' );
-				if( expandInputs.length ){
-					expandInputs[0].classList.add( 'expand-marked' );
-					expandInputs[0].dataset.checked = expandInputs[0].checked ? 'true' : 'false';
-					expandInputs[0].checked = true;
-				}
-			}
-			if( parent.tagName.toLowerCase() === 'li' && parent.parentNode && parent.parentNode.tagName.toLowerCase() === 'ul' && parent.parentNode.classList.contains( 'collapsible-menu' )){
-				var toggleInputs = parent.querySelectorAll( 'input:not(.menu-marked)' );
-				if( toggleInputs.length ){
-					toggleInputs[0].classList.add( 'menu-marked' );
-					toggleInputs[0].dataset.checked = toggleInputs[0].checked ? 'true' : 'false';
-					toggleInputs[0].checked = true;
-				}
-			}
-			parent = parent.parentNode;
-		}
-	}
+    var markedElements = document.querySelectorAll( 'mark.search' );
+    for( var i = 0; i < markedElements.length; i++ ){
+        var parent = markedElements[i].parentNode;
+        while( parent && parent.classList ){
+            if( parent.classList.contains( 'expand' ) ){
+                var expandInputs = parent.querySelectorAll( 'input:not(.expand-marked)' );
+                if( expandInputs.length ){
+                    expandInputs[0].classList.add( 'expand-marked' );
+                    expandInputs[0].dataset.checked = expandInputs[0].checked ? 'true' : 'false';
+                    expandInputs[0].checked = true;
+                }
+            }
+            if( parent.tagName.toLowerCase() === 'li' && parent.parentNode && parent.parentNode.tagName.toLowerCase() === 'ul' && parent.parentNode.classList.contains( 'collapsible-menu' )){
+                var toggleInputs = parent.querySelectorAll( 'input:not(.menu-marked)' );
+                if( toggleInputs.length ){
+                    toggleInputs[0].classList.add( 'menu-marked' );
+                    toggleInputs[0].dataset.checked = toggleInputs[0].checked ? 'true' : 'false';
+                    toggleInputs[0].checked = true;
+                }
+            }
+            parent = parent.parentNode;
+        }
+    }
     psm && setTimeout( function(){ psm.update(); }, 10 );
 }
 window.relearn.markSearch = mark;
@@ -1298,9 +1368,9 @@ function highlight( es, words, options ){
     }
     var re = new RegExp( pattern, flag );
 
-	for( var i = 0; i < es.length; i++ ){
+    for( var i = 0; i < es.length; i++ ){
         highlightNode( es[i], re, settings.element, settings.className );
-	}
+    }
 };
 
 function highlightNode( node, re, nodeName, className ){
@@ -1327,33 +1397,33 @@ function highlightNode( node, re, nodeName, className ){
 };
 
 function unmark() {
-	sessionStorage.removeItem( window.relearn.baseUriFull + 'search-value' );
-	var markedElements = document.querySelectorAll( 'mark' );
-	for( var i = 0; i < markedElements.length; i++ ){
-		var parent = markedElements[i].parentNode;
-		while( parent && parent.classList ){
-			if( parent.tagName.toLowerCase() === 'li' && parent.parentNode && parent.parentNode.tagName.toLowerCase() === 'ul' && parent.parentNode.classList.contains( 'collapsible-menu' )){
-				var toggleInputs = parent.querySelectorAll( 'input.menu-marked' );
-				if( toggleInputs.length ){
-					toggleInputs[0].checked = toggleInputs[0].dataset.checked === 'true';
-					toggleInputs[0].dataset.checked = null;
-					toggleInputs[0].classList.remove( 'menu-marked' );
-				}
-			}
-			if( parent.classList.contains( 'expand' ) ){
-				var expandInputs = parent.querySelectorAll( 'input.expand-marked' );
-				if( expandInputs.length ){
-					expandInputs[0].checked = expandInputs[0].dataset.checked === 'true';
-					expandInputs[0].dataset.checked = null;
-					expandInputs[0].classList.remove( 'expand-marked' );
-				}
-			}
-			parent = parent.parentNode;
-		}
-	}
+    sessionStorage.removeItem( window.relearn.absBaseUri + '/search-value' );
+    var markedElements = document.querySelectorAll( 'mark.search' );
+    for( var i = 0; i < markedElements.length; i++ ){
+        var parent = markedElements[i].parentNode;
+        while( parent && parent.classList ){
+            if( parent.tagName.toLowerCase() === 'li' && parent.parentNode && parent.parentNode.tagName.toLowerCase() === 'ul' && parent.parentNode.classList.contains( 'collapsible-menu' )){
+                var toggleInputs = parent.querySelectorAll( 'input.menu-marked' );
+                if( toggleInputs.length ){
+                    toggleInputs[0].checked = toggleInputs[0].dataset.checked === 'true';
+                    toggleInputs[0].dataset.checked = null;
+                    toggleInputs[0].classList.remove( 'menu-marked' );
+                }
+            }
+            if( parent.classList.contains( 'expand' ) ){
+                var expandInputs = parent.querySelectorAll( 'input.expand-marked' );
+                if( expandInputs.length ){
+                    expandInputs[0].checked = expandInputs[0].dataset.checked === 'true';
+                    expandInputs[0].dataset.checked = null;
+                    expandInputs[0].classList.remove( 'expand-marked' );
+                }
+            }
+            parent = parent.parentNode;
+        }
+    }
 
-	var highlighted = document.querySelectorAll( '.highlightable' );
-    unhighlight( highlighted, { element: 'mark' } );
+    var highlighted = document.querySelectorAll( '.highlightable' );
+    unhighlight( highlighted, { element: 'mark', className: 'search' } );
     psm && setTimeout( function(){ psm.update(); }, 10 );
 }
 
@@ -1364,14 +1434,14 @@ function unhighlight( es, options ){
     };
     Object.assign( settings, options );
 
-	for( var i = 0; i < es.length; i++ ){
+    for( var i = 0; i < es.length; i++ ){
         var highlightedElements = es[i].querySelectorAll( settings.element + '.' + settings.className );
         for( var j = 0; j < highlightedElements.length; j++ ){
             var parent = highlightedElements[j].parentNode;
             parent.replaceChild( highlightedElements[j].firstChild, highlightedElements[j] );
             parent.normalize();
         }
-	}
+    }
 };
 
 // replace jQuery.createPseudo with https://stackoverflow.com/a/66318392
@@ -1393,7 +1463,7 @@ function elementContains( txt, e ){
 function searchInputHandler( value ){
     unmark();
     if( value.length ){
-        sessionStorage.setItem( window.relearn.baseUriFull+'search-value', value );
+        sessionStorage.setItem( window.relearn.absBaseUri+'/search-value', value );
         mark();
     }
 }
@@ -1405,7 +1475,7 @@ function initSearch() {
         e.addEventListener( 'keydown', function( event ){
             if( event.key == 'Escape' ){
                 var input = event.target;
-                var search = sessionStorage.getItem( window.relearn.baseUriFull+'search-value' );
+                var search = sessionStorage.getItem( window.relearn.absBaseUri+'/search-value' );
                 if( !search || !search.length ){
                     input.blur();
                 }
@@ -1445,13 +1515,13 @@ function initSearch() {
     var urlParams = new URLSearchParams( window.location.search );
     var value = urlParams.get( 'search-by' );
     if( value ){
-        sessionStorage.setItem( window.relearn.baseUriFull+'search-value', value );
+        sessionStorage.setItem( window.relearn.absBaseUri+'/search-value', value );
     }
     mark();
 
     // set initial search value for inputs on page load
-    if( sessionStorage.getItem( window.relearn.baseUriFull+'search-value' ) ){
-        var search = sessionStorage.getItem( window.relearn.baseUriFull+'search-value' );
+    if( sessionStorage.getItem( window.relearn.absBaseUri+'/search-value' ) ){
+        var search = sessionStorage.getItem( window.relearn.absBaseUri+'/search-value' );
         inputs.forEach( function( e ){
             e.value = search;
             var event = document.createEvent( 'Event' );
@@ -1487,10 +1557,6 @@ function updateTheme( detail ){
 })();
 
 function useMermaid( config ){
-    if( !Object.assign ){
-        // We don't support Mermaid for IE11 anyways, so bail out early
-        return;
-    }
     window.relearn.mermaidConfig = config;
     if (typeof mermaid != 'undefined' && typeof mermaid.mermaidAPI != 'undefined') {
         mermaid.initialize( Object.assign( { "securityLevel": "antiscript", "startOnLoad": false }, config ) );
@@ -1505,8 +1571,8 @@ if( window.themeUseMermaid ){
 }
 
 function useOpenapi( config ){
-    if( config.css && config.css.startsWith( '/' ) ){
-        config.css = baseUri + config.css;
+    if( config.css && config.cssInProject ){
+        config.css = window.relearn.relBasePath + config.css;
     }
 }
 if( window.themeUseOpenapi ){
@@ -1514,7 +1580,8 @@ if( window.themeUseOpenapi ){
 }
 
 ready( function(){
-    initArrowNav();
+    initArrowVerticalNav();
+    initArrowHorizontalNav();
     initMermaid();
     initOpenapi();
     initMenuScrollbar();
@@ -1529,7 +1596,6 @@ ready( function(){
     initImage();
     initExpand();
     initScrollPositionSaver();
-    scrollToPositions();
 });
 
 (function(){
@@ -1605,9 +1671,9 @@ ready( function(){
         });
     }
     function moveTopbarButtons(){
-        var isS = body.classList.contains( 'width-s' );
-        var isM = body.classList.contains( 'width-m' );
-        var isL = body.classList.contains( 'width-l' );
+        var isS = body.classList.contains( 'menu-width-s' );
+        var isM = body.classList.contains( 'menu-width-m' );
+        var isL = body.classList.contains( 'menu-width-l' );
         // move buttons once, width has a distinct value
         if( isS && !isM && !isL ){
             moveAreaTopbarButtons( 's' )
@@ -1651,9 +1717,9 @@ ready( function(){
             }
         })
     }
-    function setWidthS(e){ body.classList[ e.matches ? "add" : "remove" ]( 'width-s' ); }
-    function setWidthM(e){ body.classList[ e.matches ? "add" : "remove" ]( 'width-m' ); }
-    function setWidthL(e){ body.classList[ e.matches ? "add" : "remove" ]( 'width-l' ); }
+    function setWidthS(e){ body.classList[ e.matches ? "add" : "remove" ]( 'menu-width-s' ); }
+    function setWidthM(e){ body.classList[ e.matches ? "add" : "remove" ]( 'menu-width-m' ); }
+    function setWidthL(e){ body.classList[ e.matches ? "add" : "remove" ]( 'menu-width-l' ); }
     function onWidthChange( setWidth, e ){
         setWidth( e );
         moveTopbarButtons();
@@ -1672,4 +1738,16 @@ ready( function(){
     setWidthL( mql );
     moveTopbarButtons();
     adjustEmptyTopbarContents();
+})();
+
+(function(){
+    var body = document.querySelector( 'body' );
+    function setWidth(e){ body.classList[ e.matches ? "add" : "remove" ]( 'main-width-max' ); }
+    function onWidthChange( setWidth, e ){
+        setWidth( e );
+    }
+    var width = variants.getColorValue( 'MAIN-WIDTH-MAX' );
+    var mqm = window.matchMedia( 'screen and ( min-width: ' + width + ')' );
+    mqm.addEventListener( 'change', onWidthChange.bind( null, setWidth ) );
+    setWidth( mqm );
 })();

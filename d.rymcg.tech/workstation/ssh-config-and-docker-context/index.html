@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en-us" dir="ltr">
+<html lang="en-us" dir="ltr" itemscope itemtype="http://schema.org/Article">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
-    <meta name="generator" content="Relearn 5.23.2+tip">
-    <meta name="description" content="">
+    <meta name="generator" content="Relearn 6.0.0+tip">
+    <meta name="description" content="To remotely control your Docker host from your workstation, you need two additional configs:
+SSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:
+[bash]: Run this on your workstation: d context new This will prompt you if you really want to proceed:
+(stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y You can choose to create a new SSH config, or use an existing one:">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Create SSH config and Docker Context :: book.rymcg.tech">
@@ -13,40 +16,41 @@
 SSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:
 [bash]: Run this on your workstation: d context new This will prompt you if you really want to proceed:
 (stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y You can choose to create a new SSH config, or use an existing one:">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">
+    <meta property="og:site_name" content="book.rymcg.tech">
     <meta property="og:title" content="Create SSH config and Docker Context :: book.rymcg.tech">
     <meta property="og:description" content="To remotely control your Docker host from your workstation, you need two additional configs:
 SSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:
 [bash]: Run this on your workstation: d context new This will prompt you if you really want to proceed:
 (stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y You can choose to create a new SSH config, or use an existing one:">
+    <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">
-    <meta property="article:section" content="Setup your workstation :: book.rymcg.tech">
-    <meta property="og:site_name" content="book.rymcg.tech">
+    <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
+    <meta itemprop="name" content="Create SSH config and Docker Context :: book.rymcg.tech">
+    <meta itemprop="description" content="To remotely control your Docker host from your workstation, you need two additional configs:
+SSH Host config in ~/.ssh/config. Docker Context config via docker context create .... Both of these can be created automatically by running:
+[bash]: Run this on your workstation: d context new This will prompt you if you really want to proceed:
+(stdout) ? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y You can choose to create a new SSH config, or use an existing one:">
+    <meta itemprop="wordCount" content="309">
     <title>Create SSH config and Docker Context :: book.rymcg.tech</title>
-    <!-- https://github.com/filamentgroup/loadCSS/blob/master/README.md#how-to-use -->
-    <link href="/css/fontawesome-all.min.css?1717103880" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717103880" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717103880" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717103880" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717103880" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717103880" rel="stylesheet">
-    <link href="/css/fonts.css?1717103880" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717103880" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717103880" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717103881" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717103881" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717103881" rel="stylesheet">
-    <link href="/css/print.css?1717103881" rel="stylesheet" media="print">
-    <link href="/css/ie.css?1717103881" rel="stylesheet">
-    <script src="/js/url.js?1717103881"></script>
-    <script src="/js/variant.js?1717103881"></script>
+    <link href="/css/fontawesome-all.min.css?1717120449" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717120449" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717120449" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717120449" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717120449" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717120449" rel="stylesheet">
+    <link href="/css/fonts.css?1717120449" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717120449" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717120449" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717120449" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717120449" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717120449" rel="stylesheet">
+    <link href="/css/print.css?1717120449" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717120449"></script>
     <script>
-      // hack to let hugo tell us how to get to the root when using relativeURLs, it needs to be called *url= for it to do its magic:
-      // https://github.com/gohugoio/hugo/blob/145b3fcce35fbac25c7033c91c1b7ae6d1179da8/transform/urlreplacers/absurlreplacer.go#L72
-      window.index_js_url="/index.search.js";
-      var root_url="/";
-      var baseUri=root_url.replace(/\/$/, '');
       window.relearn = window.relearn || {};
-      window.relearn.baseUriFull='https:\/\/book.rymcg.tech/';
+      window.relearn.relBasePath='..\/..\/..';
+      window.relearn.relBaseUri='..\/..\/..';
+      window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
+      window.index_js_url="/index.search.js";
       // variant stuff
-      window.relearn.themeVariantModifier='';
       window.variants && variants.init( [ 'zen-auto', 'zen-light', 'zen-dark', 'relearn-auto', 'relearn-light', 'relearn-dark', 'relearn-bright', 'neon', 'learn', 'blue', 'green', 'red' ] );
       // translations
       window.T_Copy_to_clipboard = `Copy to clipboard`;
@@ -82,7 +86,7 @@ SSH Host config in ~/.ssh/config. Docker Context config via docker context creat
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker with d.rymcg.tech</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/workstation/index.html"><span itemprop="name">Setup your workstation</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create SSH config and Docker Context</span><meta itemprop="position" content="4"></li>
           </ol>
@@ -108,6 +112,7 @@ SSH Host config in ~/.ssh/config. Docker Context config via docker context creat
           <article class="default">
             <header class="headline">
             </header>
+
 <h1 id="create-ssh-config-and-docker-context">Create SSH config and Docker Context</h1>
 
 <p>To remotely control your Docker host from your workstation, you need
@@ -228,25 +233,28 @@ d context
 <img src="/img/logo.jpg" class="logo" />
 
         </div>
-        <form action="/search.html" method="get"><div class="searchbox default-animation">
-          <button class="search-detail" type="submit" title="Search (CTRL+ALT+f)"><i class="fas fa-search"></i></button>
-          <label class="a11y-only" for="R-search-by">Search</label>
-          <input data-search-input id="R-search-by" name="search-by" class="search-by" type="search" placeholder="Search...">
-          <button class="search-clear" type="button" data-search-clear="" title="Clear search"><i class="fas fa-times" title="Clear search"></i></button>
-        </div></form>
+
+        <search><form action="/search.html" method="get">
+          <div class="searchbox default-animation">
+            <button class="search-detail" type="submit" title="Search (CTRL+ALT+f)"><i class="fas fa-search"></i></button>
+            <label class="a11y-only" for="R-search-by">Search</label>
+            <input data-search-input id="R-search-by" name="search-by" class="search-by" type="search" placeholder="Search...">
+            <button class="search-clear" type="button" data-search-clear="" title="Clear search"><i class="fas fa-times" title="Clear search"></i></button>
+          </div>
+        </form></search>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717103881" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717103881" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717103881" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717103881" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717103881" defer></script>
-        <script src="/js/search.js?1717103881" defer></script>
+        <script src="/js/auto-complete.js?1717120449" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717120449" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717120449" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717120449" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717120449" defer></script>
+        <script src="/js/search.js?1717120449" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
-          <li><a class="padding" href="/index.html"><i class="fas fa-home"></i> Home</a></li>
+          <li><a class="padding" href="/index.html"><i class="fa-fw fas fa-home"></i> Home</a></li>
         </ul>
         <hr class="padding">
       </div>
@@ -301,12 +309,12 @@ d context
             <ul>
               <li id="R-select-language-container" class="footerLangSwitch">
                 <div class="padding menu-control">
-                  <i class="fas fa-language fa-fw"></i>
+                  <i class="fa-fw fas fa-language"></i>
                   <span>&nbsp;</span>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
-                    <select id="R-select-language" onchange="location = baseUri + this.value;">
-                      <option id="R-en" value="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" lang="en-us" selected></option>
+                    <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -314,23 +322,23 @@ d context
               </li>
               <li id="R-select-variant-container" class="footerVariantSwitch showVariantSwitch">
                 <div class="padding menu-control">
-                  <i class="fas fa-paint-brush fa-fw"></i>
+                  <i class="fa-fw fas fa-paint-brush"></i>
                   <span>&nbsp;</span>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-variant">Theme</label>
                     <select id="R-select-variant" onchange="window.variants && variants.changeVariant( this.value );">
-                      <option id="R-zen-auto" value="zen-auto" selected>Zen Light/Dark</option>
-                      <option id="R-zen-light" value="zen-light">Zen Light</option>
-                      <option id="R-zen-dark" value="zen-dark">Zen Dark</option>
-                      <option id="R-relearn-auto" value="relearn-auto">Relearn Light/Dark</option>
-                      <option id="R-relearn-light" value="relearn-light">Relearn Light</option>
-                      <option id="R-relearn-dark" value="relearn-dark">Relearn Dark</option>
-                      <option id="R-relearn-bright" value="relearn-bright">Relearn Bright</option>
-                      <option id="R-neon" value="neon">Neon</option>
-                      <option id="R-learn" value="learn">Learn</option>
-                      <option id="R-blue" value="blue">Blue</option>
-                      <option id="R-green" value="green">Green</option>
-                      <option id="R-red" value="red">Red</option>
+                      <option id="R-select-variant-zen-auto" value="zen-auto" selected>Zen Light/Dark</option>
+                      <option id="R-select-variant-zen-light" value="zen-light">Zen Light</option>
+                      <option id="R-select-variant-zen-dark" value="zen-dark">Zen Dark</option>
+                      <option id="R-select-variant-relearn-auto" value="relearn-auto">Relearn Light/Dark</option>
+                      <option id="R-select-variant-relearn-light" value="relearn-light">Relearn Light</option>
+                      <option id="R-select-variant-relearn-dark" value="relearn-dark">Relearn Dark</option>
+                      <option id="R-select-variant-relearn-bright" value="relearn-bright">Relearn Bright</option>
+                      <option id="R-select-variant-neon" value="neon">Neon</option>
+                      <option id="R-select-variant-learn" value="learn">Learn</option>
+                      <option id="R-select-variant-blue" value="blue">Blue</option>
+                      <option id="R-select-variant-green" value="green">Green</option>
+                      <option id="R-select-variant-red" value="red">Red</option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -339,7 +347,7 @@ d context
               </li>
               <li class="footerVisitedLinks">
                 <div class="padding menu-control">
-                  <i class="fas fa-history fa-fw"></i>
+                  <i class="fa-fw fas fa-history"></i>
                   <span>&nbsp;</span>
                   <div class="control-style">
                     <button onclick="clearHistory();">Clear History</button>
@@ -349,14 +357,14 @@ d context
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: May 30, 2024 at 9:18pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: May 31, 2024 at 1:54am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717103881" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717103881" defer></script>
-    <script src="/js/theme.js?1717103881" defer></script>
+    <script src="/js/clipboard.min.js?1717120449" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717120449" defer></script>
+    <script src="/js/theme.js?1717120449" defer></script>
   </body>
 </html>

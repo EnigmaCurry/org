@@ -71,7 +71,7 @@ function triggerSearch(){
 }
 
 window.addEventListener( 'popstate', function ( event ){
-    // restart search if browsed thru history
+    // restart search if browsed through history
     if( event.state ){
         var state = window.history.state || {};
         state = Object.assign( {}, ( typeof state === 'object' ) ? state : {} );
@@ -107,30 +107,6 @@ if( input ){
             setTimeout( function(){ input.focus(); }, 0 );
         }
     });
-}
-
-function initLunrJson() {
-    // old way to load the search index via XHR;
-    // this does not work if pages are served via
-    // file:// protocol; this is only left for
-    // backward compatiblity if the user did not
-    // define the SEARCH output format for the homepage
-    if( window.index_json_url && !window.index_js_url ){
-        xhr = new XMLHttpRequest;
-        xhr.onreadystatechange = function(){
-            if( xhr.readyState == 4 ){
-                if( xhr.status == 200 ){
-                    initLunrIndex( JSON.parse( xhr.responseText ) );
-                }
-                else{
-                    var err = xhr.status;
-                    console.error( 'Error getting Hugo index file: ', err );
-                }
-            }
-        }
-        xhr.open( 'GET', index_json_url );
-        xhr.send();
-    }
 }
 
 function initLunrJs() {
@@ -217,7 +193,7 @@ function searchDetail( value ) {
             divsuggestion.className = 'autocomplete-suggestion';
             divsuggestion.setAttribute('data-term', value);
             divsuggestion.setAttribute('data-title', page.title);
-            divsuggestion.setAttribute('href', baseUri + page.uri);
+            divsuggestion.setAttribute('href', window.relearn.relBaseUri + page.uri);
             divsuggestion.setAttribute('data-context', context);
             var divtitle = document.createElement('div');
             divtitle.className = 'title';
@@ -257,7 +233,6 @@ function searchDetail( value ) {
     }
 }
 
-initLunrJson();
 initLunrJs();
 
 function startSearch(){
@@ -271,7 +246,7 @@ function startSearch(){
 
     var searchList = new autoComplete({
         /* selector for the search box element */
-        selectorToInsert: '#R-header-wrapper',
+        selectorToInsert: 'search:has(.searchbox)',
         selector: '#R-search-by',
         /* source is the callback to perform the search */
         source: function(term, response) {
@@ -289,7 +264,7 @@ function startSearch(){
             divsuggestion.className = 'autocomplete-suggestion';
             divsuggestion.setAttribute('data-term', term);
             divsuggestion.setAttribute('data-title', page.title);
-            divsuggestion.setAttribute('data-uri', baseUri + page.uri);
+            divsuggestion.setAttribute('data-uri', window.relearn.relBaseUri + page.uri);
             divsuggestion.setAttribute('data-context', context);
             var divtitle = document.createElement('div');
             divtitle.className = 'title';
