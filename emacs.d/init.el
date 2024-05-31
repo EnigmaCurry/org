@@ -38,6 +38,7 @@
           ("run" :raw t)
           ("stdout" :raw t)
           ("edit" :raw t)
+          ("env" :raw t)
           ("math" :raw t)))
   )
 

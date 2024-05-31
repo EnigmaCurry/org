@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /linux-workstation
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi %env
 #+STARTUP: align
 
 * Linux Workstation
@@ -163,7 +163,10 @@ Tips:
 Once the installer finishes, reboot, remove the USB, and login to your
 new system.
 
-*** Upgrading
+* Upgrading
+:PROPERTIES:
+:EXPORT_FILE_NAME: upgrading
+:END:
 
 As mentioned before, Fedora Atomic is distributed as a full system
 image. You can both upgrade the image, as well as rollback the image
@@ -201,6 +204,36 @@ rpm-ostree rebase fedora:fedora/40/x86_64/sericea
 #+end_run
 
 Let it finish downloading the new image, and then reboot again.
+
+* Layering packages
+:PROPERTIES:
+:EXPORT_FILE_NAME: layering-packages
+:END:
+
+See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]]
+
+To create efficient layers, you should try to install everything you
+want into as few layers as possible.
+
+Here is a list of packages you might want to add all together as one
+layer:
+
+#+begin_run
+sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \
+     virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
+     libguestfs-tools python3-libguestfs virt-top \
+     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp
+#+end_run
+
+Check the list of layers:
+
+#+begin_run
+sudo rpm-ostree status
+#+end_run
+
+The top layer should list the =LayeredPackages= in your new layer.
+
+Reboot.
 
 * Config
 :PROPERTIES:
@@ -917,3 +950,217 @@ ssh-add -K
 
 You will be prompted one time to enter your Solokey pin to unlock the
 key.
+
+** KVM / libvirt
+:PROPERTIES:
+:EXPORT_FILE_NAME: kvm-virt-manager
+:END:
+
+You can bend the workstation rules a bit, and run some servers in
+virtual machines (VM). Keeping your servers in isolated VMs will keep
+your workstation clean and server free. You can treat VMs just like
+any remote Linux host, and access them over SSH.
+
+*** Enable libvirtd
+
+#+begin_run
+sudo systemctl enable --now libvirtd
+#+end_run
+
+Add the existing =libvirt= group to =/etc/group= :
+
+#+begin_run
+sudo bash -c "getent group libvirt >> /etc/group"
+#+end_run
+
+(I'm not sure why
+Fedora Atomic doesn't do this automatically)
+
+*** Create dedicated user account as VM admin
+
+#+begin_run
+VM_ADMIN=libvirt-admin
+sudo useradd ${VM_ADMIN} -G libvirt
+#+end_run
+
+*** Copy your public SSH key into the libvirt-admin home directory
+
+#+begin_run
+SSH_KEY=~/.ssh/id_ed25519.pub
+TMP_SSH=$(mktemp)
+cat ${SSH_KEY} > ${TMP_SSH}
+chmod a+r ${TMP_SSH}
+sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
+#+end_run
+
+*** Run the rest of these commands as the libvirt-admin user
+
+#+attr_shortcode: :style info
+#+begin_notice
+*You need to run the rest of the commands in this chapter running as
+the =libvirt-admin= this user.*
+
+Login to the shell account of  =libvirt-admin=:
+
+#+begin_run
+sudo su -l ${VM_ADMIN:-libvirt-admin}
+#+end_run
+#+end_notice
+
+*** Create server VM from cloud image
+
+**** Configure temporary variables for a Debian VM config:
+
+#+begin_env
+CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
+NAME=debian
+OS_VARIANT=debian12
+MEMORY=1024
+CPUS=2
+DISK_SIZE=50
+MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256])
+USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
+#+end_env
+
+**** Create directories to hold our VM disks and config files:
+
+#+begin_run
+mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
+#+end_run
+
+**** Create the cloud-init config file:
+
+#+begin_run
+cat << EOF | sed 's/\xe2\x80\x8b//g' > ${USER_DATA}
+#cloud-config
+users:
+​  - name: debian
+​    shell: /bin/bash
+​password: password
+EOF
+#+end_run
+
+**** Download the cloud image:
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You only need to download each CLOUD_IMAGE once, they will be cached
+in =~/libvirt/cloud-images=, so they can be be reused.
+#+end_notice
+
+#+begin_run
+(cd ~/libvirt/cloud-images; curl -LO ${CLOUD_IMAGE})
+chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
+#+end_run
+
+**** Clean up old VMs with the same name:
+#+attr_shortcode: :style warning
+#+begin_notice
+If you already have a VM with the same name, and you want to start
+again from scratch, you need to clean up from the previous install
+first:
+#+begin_run
+\# To cleanup up and REMOVE an old VM named debian:
+virsh destroy debian
+virsh undefine debian
+#+end_run
+#+end_notice
+
+**** Create the disk image for the new VM:
+#+attr_shortcode: :style warning
+#+begin_notice
+This is destructive of the existing disk file!
+#+end_notice
+
+
+#+begin_run
+(set -e
+cp ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*") \
+   ~/libvirt/disks/${NAME}.qcow2
+chmod u+w ~/libvirt/disks/${NAME}.qcow2
+qemu-img resize ~/libvirt/disks/${NAME}.qcow2 +${DISK_SIZE}G
+echo Created ~/libvirt/disks/${NAME}.qcow2
+)
+#+end_run
+
+**** Create the VM:
+
+#+attr_shortcode: :title Create VM using cloud image:
+#+begin_run
+virt-install \
+  --name ${NAME} \
+  --os-variant ${OS_VARIANT} \
+  --virt-type kvm \
+  --graphics none \
+  --console pty,target_type=serial \
+  --cpu host \
+  --vcpus ${CPUS} \
+  --memory ${MEMORY} \
+  --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
+  --cloud-init user-data=${USER_DATA} \
+  --import \
+  --disk ~/libvirt/disks/${NAME}.qcow2
+#+end_run
+
+This will boot the VM with an interactive console. You need to watch
+the log output to find the private IP address of the VM, as well as to see if
+cloud-init had any errors.
+
+The private IP address listed as the first interface =enp1s0=:
+
+#+begin_stdout
+​++++++++++++++++++++++++++++++++++++++Net device info+++++++++++++++++++++++++++++++++++++++
+​+--------+------+-----------------------------+---------------+--------+-------------------+
+​| Device |  Up  |           Address           |      Mask     | Scope  |     Hw-Address    |
+​+--------+------+-----------------------------+---------------+--------+-------------------+
+​| enp1s0 | True |        192.168.122.9        | 255.255.255.0 | global | 00:60:2f:18:c4:00 |
+#+end_stdout
+
+If cloud-init was successful, you should see your SSH key added near
+the bottom of the log:
+
+
+Close the console by pressing the key sequence =Ctrl+]= (Control and Right Square Bracket keys).
+
+*** VM Management
+**** List all defined VMs
+#+begin_run
+virsh list -all
+#+end_run
+
+#+begin_stdout
+​ Id   Name     State
+​------------------------
+​ 5    debian   running
+#+end_stdout
+
+**** Start VM (named debian)
+#+begin_run
+virsh start debian
+#+end_run
+
+**** Find DHCP lease for the given MAC address
+#+attr_shortcode: :style tip
+#+begin_notice
+This must be done as root, because only root can manage the =default= network.
+#+end_notice
+#+begin_run
+sudo virsh net-dhcp-leases default | grep ${MAC_ADDRESS,,}
+#+end_run
+
+**** Stop VM (named debian)
+#+begin_run
+​# destroy actually just means stop, not delete
+virsh destroy debian
+#+end_run
+**** Undefine VM (named debian)
+#+begin_run
+​# undefine removes the VM configuration
+virsh undefine debian
+#+end_run
+**** Serial console of VM (named debian)
+#+begin_run
+virsh console debian
+#+end_run
+
+To exit the console, press =Ctrl-]=. (Control + right square bracket).
