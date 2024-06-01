@@ -25,17 +25,17 @@ Access to a server’s console shell, remotely. Transfer files between the serve
 Access to a server’s console shell, remotely. Transfer files between the server and client (using rsync, scp, or sftp). Create network tunnels to access private servers, in both directions, either on the server, or on the client.">
     <meta itemprop="wordCount" content="937">
     <title>SSH :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717254957" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717254957" rel="stylesheet">
-    <link href="/css/fonts.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717254957" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717254957" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717254957" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717254957" rel="stylesheet">
-    <link href="/css/print.css?1717254957" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717254957"></script>
+    <link href="/css/fontawesome-all.min.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717263913" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717263913" rel="stylesheet">
+    <link href="/css/fonts.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717263913" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717263913" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717263913" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717263913" rel="stylesheet">
+    <link href="/css/print.css?1717263913" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717263913"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -153,8 +153,11 @@ deprecated and should <strong>never</strong> be used.</p>
 <h3 id="setup-solokey--fido2--hardware-authentication">Setup Solokey (FIDO2) hardware authentication</h3>
 <p>Plug in your Solokey (or compatible hardware) to the USB port.</p>
 <p>Initialize the hardware with a new SSH key:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 ## You only need to do this one time per solokey!
@@ -162,6 +165,8 @@ ssh-keygen -t ed25519-sk -O resident -O verify-required
 </pre></code>
     </div>
 </div>
+
+
 <p>You will be required to create/enter a PIN for the Solokey.</p>
 <h3 id="traditional-ssh-keyfiles">Traditional SSH keyfiles</h3>
 <p>The Solokey still has some drawbacks, and cannot be used in all cases.
@@ -182,23 +187,33 @@ in a different file, so its OK to have multiple types installed on the
 same machine.</p>
 <h4 id="create-the-new-ssh-keys">Create the new SSH keys</h4>
 <p>Create the <code>rsa</code> key type:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 ssh-keygen -t rsa -f ~/.ssh/id_rsa
 </pre></code>
     </div>
 </div>
+
+
 <p>Create the <code>ed25519</code> key type:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
 </pre></code>
     </div>
 </div>
+
+
 <p>You will be prompted to enter an encryption passphrase for each file,
 which you should definitely not skip!</p>
 <h2 id="setup-the-ssh-agent">Setup the ssh-agent</h2>
@@ -211,30 +226,45 @@ memory, but you still need to hold the identity of it in the
 ssh-agent.)</p>
 <p>Keychain is a program that helps you setup the ssh-agent. Install
 <code>keychain</code>:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> Run this on your Fedora workstations: </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Fedora workstations:</div>
     <div class="box-content">
         <code><pre>
 sudo dnf install keychain
 </pre></code>
     </div>
 </div>
+
+
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> Run this on your Debian / Ubuntu workstations: </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Debian / Ubuntu workstations:</div>
     <div class="box-content">
         <code><pre>
 sudo apt install keychain
 </pre></code>
     </div>
 </div>
+
+
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> Run this on your Arch Linux workstations: </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Arch Linux workstations:</div>
     <div class="box-content">
         <code><pre>
 sudo pacman -S keychain
 </pre></code>
     </div>
 </div>
+
+
 <p>To configure keychain, edit your <code>~/.bashrc</code> file:</p>
 <div class="box notices cstyle edit">
     <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.bashrc</div>
@@ -246,19 +276,25 @@ eval $(keychain --eval --quiet)
 </pre></code>
     </div>
 </div>
+
 <p>Log out of your desktop session, and log back in. Open your terminal,
 and you should be automatically prompted to enter your SSH passphrase.
 Once you have entered the passphrase, the SSH key will remain resident
 in memory until you log out.</p>
 <p>Double check that the key has been loaded, run:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> run this inside your toolbox </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>run this inside your toolbox</div>
     <div class="box-content">
         <code><pre>
 ssh-add -L
 </pre></code>
     </div>
 </div>
+
+
 <p>The above should print your public key, loaded into the running
 <code>ssh-agent</code>. Now you should be able to use your key without entering a
 passphrase. Copy the output and upload it to your services as your
@@ -269,8 +305,11 @@ key into your SSH settings page.</p>
 <p>Apparently, keychain does not yet know how to load the Solokey
 automatically. You must add the Solokey to the ssh-agent manually, one
 time, each time you boot your workstation:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> run this inside your toolbox </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>run this inside your toolbox</div>
     <div class="box-content">
         <code><pre>
 ## Do this to load your Solokey into the ssh-agent:
@@ -278,6 +317,8 @@ ssh-add -K
 </pre></code>
     </div>
 </div>
+
+
 <p>You will be prompted one time to enter your Solokey pin to unlock the
 key.</p>
 
@@ -306,12 +347,12 @@ key.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717254957" defer></script>
-        <script src="/js/search.js?1717254957" defer></script>
+        <script src="/js/auto-complete.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717263913" defer></script>
+        <script src="/js/search.js?1717263913" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -421,14 +462,14 @@ key.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 3:15pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 5:45pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717254957" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717254957" defer></script>
-    <script src="/js/theme.js?1717254957" defer></script>
+    <script src="/js/clipboard.min.js?1717263913" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717263913" defer></script>
+    <script src="/js/theme.js?1717263913" defer></script>
   </body>
 </html>

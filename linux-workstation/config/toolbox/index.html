@@ -21,17 +21,17 @@
     <meta itemprop="description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
     <meta itemprop="wordCount" content="623">
     <title>Toolbox :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717254957" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717254957" rel="stylesheet">
-    <link href="/css/fonts.css?1717254957" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717254957" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717254957" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717254957" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717254957" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717254957" rel="stylesheet">
-    <link href="/css/print.css?1717254957" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717254957"></script>
+    <link href="/css/fontawesome-all.min.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717263913" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717263913" rel="stylesheet">
+    <link href="/css/fonts.css?1717263913" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717263913" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717263913" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717263913" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717263913" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717263913" rel="stylesheet">
+    <link href="/css/print.css?1717263913" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717263913"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -129,30 +129,43 @@ those directories, they are also affected the same way on the host.</p>
 <h2 id="dev-toolbox--fedora">Dev toolbox (Fedora)</h2>
 <p>Let&rsquo;s create a toolbox to install some of the common development tools
 we will use on a daily basis.</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox create dev
 </pre></code>
     </div>
 </div>
+
+
 <p>This will create a new toolbox container called <code>dev</code> based upon the
 same Fedora version as the host (the toolbox itself is not Atomic
 though, but the normal Fedora Workstation version instead.)</p>
 <p>To enter the toolbox run:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox enter dev
 </pre></code>
     </div>
 </div>
+
+
 <p>This will enter the toolbox container, and now you can install extra
 software:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 sudo dnf install keychain htop
@@ -160,6 +173,8 @@ sudo dnf groupinstall "Development Tools" "Development Libraries"
 </pre></code>
     </div>
 </div>
+
+
 <h2 id="arch-linux-toolbox">Arch Linux toolbox</h2>
 <p>You are not limited to running Fedora toolboxes, in fact you can run
 any container image you want, or even build your own from a
@@ -189,39 +204,58 @@ CMD ["bash"]
 </pre></code>
     </div>
 </div>
+
 <p>Write this to a file named <code>Dockerfile</code> and open your host terminal to
 the same directory. Then run this command to build the container:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 podman build -t arch .
 </pre></code>
     </div>
 </div>
+
+
 <p>Now you can create a new toolbox based on the new image (both called
 <code>arch</code>):</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox create --image arch arch
 </pre></code>
     </div>
 </div>
+
+
 <p>To enter the Arch Linux container, run:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox enter arch
 </pre></code>
     </div>
 </div>
+
+
 <p>Now that you&rsquo;re inside the toolbox, you can run any Arch Linux command
 (consult the <a href="http://wiki.archlinux.org/" rel="external" target="_blank">Arch Wiki</a>).</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> Run this inside the arch toolbox </div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this inside the arch toolbox</div>
     <div class="box-content">
         <code><pre>
 sudo pacman -Syu
@@ -229,25 +263,37 @@ sudo pacman -S keychain base-devel
 </pre></code>
     </div>
 </div>
+
+
 <h2 id="managing-toolbox-containers">Managing toolbox containers</h2>
 <p>You can list all of your toolboxes that you&rsquo;ve created:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox list
 </pre></code>
     </div>
 </div>
+
+
 <p>You can remove existing toolboxes:</p>
+
+
 <div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
 toolbox rm --force arch
 </pre></code>
     </div>
 </div>
+
+
 <p>(force is only required if the toolbox is currently running.)</p>
 
             <footer class="footline">
@@ -275,12 +321,12 @@ toolbox rm --force arch
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717254957" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717254957" defer></script>
-        <script src="/js/search.js?1717254957" defer></script>
+        <script src="/js/auto-complete.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717263913" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717263913" defer></script>
+        <script src="/js/search.js?1717263913" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -390,14 +436,14 @@ toolbox rm --force arch
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 3:15pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 5:45pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717254957" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717254957" defer></script>
-    <script src="/js/theme.js?1717254957" defer></script>
+    <script src="/js/clipboard.min.js?1717263913" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717263913" defer></script>
+    <script src="/js/theme.js?1717263913" defer></script>
   </body>
 </html>
