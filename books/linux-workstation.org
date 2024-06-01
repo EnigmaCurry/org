@@ -992,6 +992,8 @@ Fedora Atomic doesn't do this automatically)
 VM_ADMIN=libvirt-admin
 sudo useradd ${VM_ADMIN} -G libvirt
 sudo loginctl enable-linger ${VM_ADMIN}
+sudo su ${VM_ADMIN} -c "mkdir -p ~/.bashrc.d"
+sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bashrc.d/xdg"
 #+end_run
 
 *** Copy your public SSH key into the libvirt-admin home directory
@@ -1010,8 +1012,7 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/lib
 
 #+attr_shortcode: :style info
 #+begin_notice
-*For this entire section you need to perform the VM config as the
-=libvirt-admin= user.*
+*For this entire section you need to perform the VM config as the =libvirt-admin= user.*
 
 Login to the shell account of  =libvirt-admin=:
 
@@ -1127,7 +1128,7 @@ MAC_ADDRESS=$(virsh domiflist ${NAME} | grep virbr0 | grep -Po ".* \K.*$")
 arp -n | grep $MAC_ADDRESS | cut -d " " -f 1
 #+end_run
 
-**** TODO Enable auto start on boot
+**** Enable auto start on boot
 
 #+begin_run
 NAME=debian
