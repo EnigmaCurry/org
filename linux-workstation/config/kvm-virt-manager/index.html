@@ -5,26 +5,26 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Install d.rymcg.tech and its dependencies on your workstation.
-Install dependent packages If you run Fedora workstations, run this as root dnf install bash gettext openssl git xdg-utils jq sshfs curl \ inotify-tools httpd-tools make wireguard-tools If you run Debian/Ubuntu workstations, run this as root apt-get install bash build-essential gettext git openssl \ apache2-utils xdg-utils jq sshfs wireguard curl \ inotify-tools If you run Arch Linux workstations, run this as root pacman -S bash base-devel gettext git openssl apache xdg-utils \ jq sshfs wireguard-tools curl inotify-tools Clone d.">
+    <meta name="description" content="You can bend the workstation “no server” rule a bit, by hosting some development servers inside of virtual machines (VM). Keeping your servers in isolated VMs will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Install d.rymcg.tech tools :: book.rymcg.tech">
-    <meta name="twitter:description" content="Install d.rymcg.tech and its dependencies on your workstation.
-Install dependent packages If you run Fedora workstations, run this as root dnf install bash gettext openssl git xdg-utils jq sshfs curl \ inotify-tools httpd-tools make wireguard-tools If you run Debian/Ubuntu workstations, run this as root apt-get install bash build-essential gettext git openssl \ apache2-utils xdg-utils jq sshfs wireguard curl \ inotify-tools If you run Arch Linux workstations, run this as root pacman -S bash base-devel gettext git openssl apache xdg-utils \ jq sshfs wireguard-tools curl inotify-tools Clone d.">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">
+    <meta name="twitter:title" content="KVM / libvirt :: book.rymcg.tech">
+    <meta name="twitter:description" content="You can bend the workstation “no server” rule a bit, by hosting some development servers inside of virtual machines (VM). Keeping your servers in isolated VMs will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/config/kvm-virt-manager/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Install d.rymcg.tech tools :: book.rymcg.tech">
-    <meta property="og:description" content="Install d.rymcg.tech and its dependencies on your workstation.
-Install dependent packages If you run Fedora workstations, run this as root dnf install bash gettext openssl git xdg-utils jq sshfs curl \ inotify-tools httpd-tools make wireguard-tools If you run Debian/Ubuntu workstations, run this as root apt-get install bash build-essential gettext git openssl \ apache2-utils xdg-utils jq sshfs wireguard curl \ inotify-tools If you run Arch Linux workstations, run this as root pacman -S bash base-devel gettext git openssl apache xdg-utils \ jq sshfs wireguard-tools curl inotify-tools Clone d.">
+    <meta property="og:title" content="KVM / libvirt :: book.rymcg.tech">
+    <meta property="og:description" content="You can bend the workstation “no server” rule a bit, by hosting some development servers inside of virtual machines (VM). Keeping your servers in isolated VMs will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
-    <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
-    <meta itemprop="name" content="Install d.rymcg.tech tools :: book.rymcg.tech">
-    <meta itemprop="description" content="Install d.rymcg.tech and its dependencies on your workstation.
-Install dependent packages If you run Fedora workstations, run this as root dnf install bash gettext openssl git xdg-utils jq sshfs curl \ inotify-tools httpd-tools make wireguard-tools If you run Debian/Ubuntu workstations, run this as root apt-get install bash build-essential gettext git openssl \ apache2-utils xdg-utils jq sshfs wireguard curl \ inotify-tools If you run Arch Linux workstations, run this as root pacman -S bash base-devel gettext git openssl apache xdg-utils \ jq sshfs wireguard-tools curl inotify-tools Clone d.">
-    <meta itemprop="wordCount" content="461">
-    <title>Install d.rymcg.tech tools :: book.rymcg.tech</title>
+    <meta property="article:section" content="Linux Workstation">
+    <meta itemprop="name" content="KVM / libvirt :: book.rymcg.tech">
+    <meta itemprop="description" content="You can bend the workstation “no server” rule a bit, by hosting some development servers inside of virtual machines (VM). Keeping your servers in isolated VMs will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
+    <meta itemprop="wordCount" content="860">
+    <title>KVM / libvirt :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1717202086" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717202086" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717202086" rel="stylesheet">
     <link href="/css/auto-complete.css?1717202086" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717202086" rel="stylesheet"></noscript>
@@ -56,7 +56,7 @@ Install dependent packages If you run Fedora workstations, run this as root dnf 
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/config/kvm-virt-manager/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -69,10 +69,31 @@ Install dependent packages If you run Fedora workstations, run this as root dnf 
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#install-dependent-packages">Install dependent packages</a></li>
-    <li><a href="#clone-d-dot-rymcg-dot-tech-repository">Clone d.rymcg.tech repository</a></li>
-    <li><a href="#setup-d-dot-rymcg-dot-tech-command-line-tool">Setup <code>d.rymcg.tech</code> command line tool</a></li>
-    <li><a href="#test-the-d-dot-rymcg-dot-tech-aliases">Test the <code>d.rymcg.tech</code> aliases</a></li>
+    <li><a href="#enable-libvirtd">Enable libvirtd</a></li>
+    <li><a href="#create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</a></li>
+    <li><a href="#copy-your-public-ssh-key-into-the-libvirt-admin-home-directory">Copy your public SSH key into the libvirt-admin home directory</a></li>
+    <li><a href="#create-vm-with-the-libvirt-admin-user">Create VM with the libvirt-admin user</a>
+      <ul>
+        <li><a href="#run-the-commands-in-this-section-with-the-libvirt-admin-user">Run the commands in this section with the libvirt-admin user</a></li>
+        <li><a href="#configure-temporary-variables-for-a-debian-vm-config">Configure temporary variables for a Debian VM config:</a></li>
+        <li><a href="#create-directories-to-hold-our-vm-disks-and-config-files">Create directories to hold our VM disks and config files:</a></li>
+        <li><a href="#create-the-cloud-init-config-file">Create the cloud-init config file:</a></li>
+        <li><a href="#download-the-cloud-image">Download the cloud image:</a></li>
+        <li><a href="#clean-up-old-vms-with-the-same-name">Clean up old VMs with the same name:</a></li>
+        <li><a href="#create-the-disk-image-for-the-new-vm">Create the disk image for the new VM:</a></li>
+        <li><a href="#create-the-vm">Create the VM:</a></li>
+      </ul>
+    </li>
+    <li><a href="#vm-management">VM Management</a>
+      <ul>
+        <li><a href="#list-all-defined-vms">List all defined VMs</a></li>
+        <li><a href="#start-vm--named-debian">Start VM (named debian)</a></li>
+        <li><a href="#find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</a></li>
+        <li><a href="#stop-vm--named-debian">Stop VM (named debian)</a></li>
+        <li><a href="#undefine-vm--named-debian">Undefine VM (named debian)</a></li>
+        <li><a href="#serial-console-of-vm--named-debian">Serial console of VM (named debian)</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
                 </div>
@@ -81,14 +102,14 @@ Install dependent packages If you run Fedora workstations, run this as root dnf 
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/workstation/index.html"><span itemprop="name">Setup your workstation</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Install d.rymcg.tech tools</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/config/index.html"><span itemprop="name">Config</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">KVM / libvirt</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" title="Install Docker client tools (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/ssh/index.html" title="SSH (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" title="Create SSH config and Docker Context (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/index.html" title="Self-hosting Docker with d.rymcg.tech (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -108,100 +129,262 @@ Install dependent packages If you run Fedora workstations, run this as root dnf 
             <header class="headline">
             </header>
 
-<h1 id="install-drymcgtech-tools">Install d.rymcg.tech tools</h1>
+<h1 id="kvm--libvirt">KVM / libvirt</h1>
 
-<p>Install <a href="https://github.com/EnigmaCurry/d.rymcg.tech#readme" rel="external" target="_blank">d.rymcg.tech</a> and its dependencies on your workstation.</p>
-<h2 id="install-dependent-packages">Install dependent packages</h2>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> If you run Fedora workstations, run this as root </div>
-    <div class="box-content">
-        <code><pre>
-dnf install bash gettext openssl git xdg-utils jq sshfs curl \
-            inotify-tools httpd-tools make wireguard-tools
-</pre></code>
-    </div>
-</div>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> If you run Debian/Ubuntu workstations, run this as root </div>
-    <div class="box-content">
-        <code><pre>
-apt-get install bash build-essential gettext git openssl \
-        apache2-utils xdg-utils jq sshfs wireguard curl \
-        inotify-tools
-</pre></code>
-    </div>
-</div>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> If you run Arch Linux workstations, run this as root </div>
-    <div class="box-content">
-        <code><pre>
-pacman -S bash base-devel gettext git openssl apache xdg-utils \
-          jq sshfs wireguard-tools curl inotify-tools
-</pre></code>
-    </div>
-</div>
-<h2 id="clone-d-dot-rymcg-dot-tech-repository">Clone d.rymcg.tech repository</h2>
+<p>You can bend the workstation &ldquo;no server&rdquo; rule a bit, by hosting some
+development servers inside of virtual machines (VM). Keeping your
+servers in isolated VMs will keep your workstation clean. You can
+treat these VMs just like any other remote Linux host, and access them
+over SSH.</p>
+<p>These instructions will install a barebones Debian server in a VM,
+with NAT networking (private IP address, no public ports open), for
+local development/testing purposes only.</p>
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#enable-libvirtd">Enable libvirtd</a></li>
+    <li><a href="#create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</a></li>
+    <li><a href="#copy-your-public-ssh-key-into-the-libvirt-admin-home-directory">Copy your public SSH key into the libvirt-admin home directory</a></li>
+    <li><a href="#create-vm-with-the-libvirt-admin-user">Create VM with the libvirt-admin user</a>
+      <ul>
+        <li><a href="#run-the-commands-in-this-section-with-the-libvirt-admin-user">Run the commands in this section with the libvirt-admin user</a></li>
+        <li><a href="#configure-temporary-variables-for-a-debian-vm-config">Configure temporary variables for a Debian VM config:</a></li>
+        <li><a href="#create-directories-to-hold-our-vm-disks-and-config-files">Create directories to hold our VM disks and config files:</a></li>
+        <li><a href="#create-the-cloud-init-config-file">Create the cloud-init config file:</a></li>
+        <li><a href="#download-the-cloud-image">Download the cloud image:</a></li>
+        <li><a href="#clean-up-old-vms-with-the-same-name">Clean up old VMs with the same name:</a></li>
+        <li><a href="#create-the-disk-image-for-the-new-vm">Create the disk image for the new VM:</a></li>
+        <li><a href="#create-the-vm">Create the VM:</a></li>
+      </ul>
+    </li>
+    <li><a href="#vm-management">VM Management</a>
+      <ul>
+        <li><a href="#list-all-defined-vms">List all defined VMs</a></li>
+        <li><a href="#start-vm--named-debian">Start VM (named debian)</a></li>
+        <li><a href="#find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</a></li>
+        <li><a href="#stop-vm--named-debian">Stop VM (named debian)</a></li>
+        <li><a href="#undefine-vm--named-debian">Undefine VM (named debian)</a></li>
+        <li><a href="#serial-console-of-vm--named-debian">Serial console of VM (named debian)</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+<h2 id="enable-libvirtd">Enable libvirtd</h2>
 <div class="box notices cstyle run">
     <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
-   ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+sudo systemctl enable --now libvirtd
 </pre></code>
     </div>
 </div>
+<p>Add the existing <code>libvirt</code> group to <code>/etc/group</code> :</p>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo bash -c "getent group libvirt >> /etc/group"
+</pre></code>
+    </div>
+</div>
+<p>(I&rsquo;m not sure why
+Fedora Atomic doesn&rsquo;t do this automatically)</p>
+<h2 id="create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</h2>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+VM_ADMIN=libvirt-admin
+sudo useradd ${VM_ADMIN} -G libvirt
+</pre></code>
+    </div>
+</div>
+<h2 id="copy-your-public-ssh-key-into-the-libvirt-admin-home-directory">Copy your public SSH key into the libvirt-admin home directory</h2>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+SSH_KEY=~/.ssh/id_ed25519.pub
+TMP_SSH=$(mktemp)
+cat ${SSH_KEY} > ${TMP_SSH}
+chmod a+r ${TMP_SSH}
+sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
+</pre></code>
+    </div>
+</div>
+<h2 id="create-vm-with-the-libvirt-admin-user">Create VM with the libvirt-admin user</h2>
+<h3 id="run-the-commands-in-this-section-with-the-libvirt-admin-user">Run the commands in this section with the libvirt-admin user</h3>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<p><strong>For this entire section you need to perform the VM config as the
+<code>libvirt-admin</code> user.</strong></p>
+<p>Login to the shell account of  <code>libvirt-admin</code>:</p>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre><p>sudo su -l ${VM_ADMIN:-libvirt-admin}</p>
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+<h3 id="configure-temporary-variables-for-a-debian-vm-config">Configure temporary variables for a Debian VM config:</h3>
+<div class="box notices cstyle edit env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>[bash]: Customize and set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
+NAME=debian
+OS_VARIANT=debian12
+MEMORY=1024
+CPUS=2
+DISK_SIZE=50
+MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256])
+USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
+</pre></code>
+    </div>
+</div>
+<h3 id="create-directories-to-hold-our-vm-disks-and-config-files">Create directories to hold our VM disks and config files:</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
+</pre></code>
+    </div>
+</div>
+<h3 id="create-the-cloud-init-config-file">Create the cloud-init config file:</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+cat << EOF | sed 's/\xe2\x80\x8b//g' > ${USER_DATA}
+#cloud-config
+hostname: ${NAME}
+users:
+​  - name: admin
+    ssh_authorized_keys:
+​      - $(cat ~/libvirt/user-ssh.pub)
+    sudo: ALL=(ALL) NOPASSWD:ALL
+EOF
+</pre></code>
+    </div>
+</div>
+<h3 id="download-the-cloud-image">Download the cloud image:</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>You only need to download each CLOUD_IMAGE once, they will be cached
+in <code>~/libvirt/cloud-images</code>, so they can be be reused.</p>
+</div>
+</div>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+(cd ~/libvirt/cloud-images; curl -LO ${CLOUD_IMAGE})
+chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
+</pre></code>
+    </div>
+</div>
+<h3 id="clean-up-old-vms-with-the-same-name">Clean up old VMs with the same name:</h3>
 
 <div class="box notices cstyle warning">
   <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
   <div class="box-content">
 
-<p>By convention, <strong>you should not change the clone path</strong>. It is
-intentionally placed in a vendor neutral path location for all to use.
-But if you&rsquo;re adamant to do so, it should still work, regardless of
-where you put it. But watch out, as this may break documentation, and
-for some external projects that assume <code>ROOT_DIR</code> is using the
-conventional path. For compatability reasons, consider making a
-symlink from <code>${HOME}/git/vendor/enigmacurry/d.rymcg.tech</code> pointing to
-your actual clone path.</p>
-</div>
-</div>
-<h2 id="setup-d-dot-rymcg-dot-tech-command-line-tool">Setup <code>d.rymcg.tech</code> command line tool</h2>
-<p>You must edit your workstation user&rsquo;s <code>~/.bashrc</code> file, which modifies
-the Bash shell environment config:</p>
-<div class="box notices cstyle edit">
-    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.bashrc</div>
+<p>If you already have a VM with the same name, and you want to start
+again from scratch, you need to clean up from the previous install
+first:</p>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
     <div class="box-content">
-        <code><pre>
-## Put this in ~/.bashrc to enable d.rymcg.tech command line tools:
-export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
-eval "$(d.rymcg.tech completion bash)"
-## Setup shorter alias for d.rymcg.tech as just 'd'
-__d.rymcg.tech_cli_alias d
+        <code><pre><p># To cleanup up and REMOVE an old VM named debian:
+virsh destroy debian
+virsh undefine debian</p>
 </pre></code>
     </div>
 </div>
+</div>
+</div>
+<h3 id="create-the-disk-image-for-the-new-vm">Create the disk image for the new VM:</h3>
 
-<div class="box notices cstyle info">
-  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Important</div>
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
   <div class="box-content">
 
-<p>Close and restart your shell (terminal) to load the new config in a new session.</p>
+<p>This is destructive of the existing disk file!</p>
 </div>
 </div>
-<h2 id="test-the-d-dot-rymcg-dot-tech-aliases">Test the <code>d.rymcg.tech</code> aliases</h2>
-<p>In your new shell session, you have the following aliases defined:</p>
-<ul>
-<li><code>d.rymcg.tech</code></li>
-<li><code>d</code></li>
-</ul>
-<p>These are both the same, but for brevity, the rest of this
-documentation will prefer the <code>d</code> alias, but they can be used
-interchangeably.</p>
 <div class="box notices cstyle run">
     <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-d
+(set -e
+cp ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*") \
+   ~/libvirt/disks/${NAME}.qcow2
+chmod u+w ~/libvirt/disks/${NAME}.qcow2
+qemu-img resize ~/libvirt/disks/${NAME}.qcow2 +${DISK_SIZE}G
+echo Created ~/libvirt/disks/${NAME}.qcow2
+)
+</pre></code>
+    </div>
+</div>
+<h3 id="create-the-vm">Create the VM:</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i> Create VM using cloud image: </div>
+    <div class="box-content">
+        <code><pre>
+virt-install \
+  --name ${NAME} \
+  --os-variant ${OS_VARIANT} \
+  --virt-type kvm \
+  --graphics none \
+  --console pty,target_type=serial \
+  --cpu host \
+  --vcpus ${CPUS} \
+  --memory ${MEMORY} \
+  --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
+  --cloud-init user-data=${USER_DATA} \
+  --import \
+  --disk ~/libvirt/disks/${NAME}.qcow2
+</pre></code>
+    </div>
+</div>
+<p>This will boot the VM with an interactive console. You need to watch
+the log output to find the private IP address of the VM, as well as to see if
+cloud-init had any errors.</p>
+<p>The private IP address listed as the first interface <code>enp1s0</code>:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+​++++++++++++++++++++++++++++++++++++++Net device info+++++++++++++++++++++++++++++++++++++++
+​+--------+------+-----------------------------+---------------+--------+-------------------+
+​| Device |  Up  |           Address           |      Mask     | Scope  |     Hw-Address    |
+​+--------+------+-----------------------------+---------------+--------+-------------------+
+​| enp1s0 | True |        192.168.122.9        | 255.255.255.0 | global | 00:60:2f:18:c4:00 |
+</pre>
+    </div>
+</div>
+<p>If cloud-init was successful, you should see your SSH key added near
+the bottom of the log:</p>
+<p>Close the console by pressing the key sequence <code>Ctrl+]</code> (Control and Right Square Bracket keys).</p>
+<h2 id="vm-management">VM Management</h2>
+<h3 id="list-all-defined-vms">List all defined VMs</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+virsh list -all
 </pre></code>
     </div>
 </div>
@@ -209,30 +392,68 @@ d
     <div class="box-label">(stdout)</div>
     <div class="box-content">
         <pre>
-Found ROOT_DIR=/var/home/ryan/git/vendor/enigmacurry/d.rymcg.tech
-<p>## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
-cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory
-create [PROJECT] [TEMPLATE]   Create a new external project from a template
-make [PROJECT] [ARGS &hellip;]     Run a <code>make</code> command for the given d.rymcg.tech project name
-context                       View or set the current Docker context
-new-context                   Create a new Docker context
-ssh [COMMAND &hellip;]             Run command or shell on active docker context SSH host
-completion                    Setup TAB completion in your shell</p>
-<p>## Documentation sub-commands:
-help                          Show this help screen
-list                          List available d.rymcg.tech projects
-(not including external projects, unless you symlink them into ROOT_DIR)
-readme                        Open the main d.rymcg.tech README.md in your browser
-readme [PROJECT]              Open the README.md for the given project name
-readme digitalocean           Open root documentation file: DIGITALOCEAN.md
-readme security               Open root documentation file: SECURITY.md
-readme aws                    Open root documentation file: AWS.md
-readme license                Open root documentation file: LICENSE.txt
-readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
-readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
+​ Id   Name     State
+​------------------------
+​ 5    debian   running
 </pre>
-</div></p>
+    </div>
 </div>
+<h3 id="start-vm--named-debian">Start VM (named debian)</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+virsh start debian
+</pre></code>
+    </div>
+</div>
+<h3 id="find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>This must be done as root, because only root can manage the <code>default</code> network.</p>
+</div>
+</div>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo virsh net-dhcp-leases default | grep ${MAC_ADDRESS,,}
+</pre></code>
+    </div>
+</div>
+<h3 id="stop-vm--named-debian">Stop VM (named debian)</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+​# destroy actually just means stop, not delete
+virsh destroy debian
+</pre></code>
+    </div>
+</div>
+<h3 id="undefine-vm--named-debian">Undefine VM (named debian)</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+​# undefine removes the VM configuration
+virsh undefine debian
+</pre></code>
+    </div>
+</div>
+<h3 id="serial-console-of-vm--named-debian">Serial console of VM (named debian)</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+virsh console debian
+</pre></code>
+    </div>
+</div>
+<p>To exit the console, press <code>Ctrl-]</code>. (Control + right square bracket).</p>
 
             <footer class="footline">
             </footer>
@@ -275,29 +496,29 @@ readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
       <div id="R-content-wrapper" class="highlightable">
         <div id="R-topics">
           <ul class="enlarge morespace collapsible-menu">
-          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class="parent "><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a><ul id="R-subsections-247caeb1441bcea844a3ccf766ca4471" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/introduction/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
           <li data-nav-id="/linux-workstation/introduction/requirements/index.html" class=""><a class="padding" href="/linux-workstation/introduction/requirements/index.html">Requirements</a></li></ul></li>
           <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Install Linux (Fedora Atomic)</a></li>
           <li data-nav-id="/linux-workstation/upgrading/index.html" class=""><a class="padding" href="/linux-workstation/upgrading/index.html">Upgrading</a></li>
           <li data-nav-id="/linux-workstation/layering-packages/index.html" class=""><a class="padding" href="/linux-workstation/layering-packages/index.html">Layering packages</a></li>
-          <li data-nav-id="/linux-workstation/config/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/config/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/config/sway/index.html" class=""><a class="padding" href="/linux-workstation/config/sway/index.html">Sway</a></li>
           <li data-nav-id="/linux-workstation/config/firefox/index.html" class=""><a class="padding" href="/linux-workstation/config/firefox/index.html">Firefox</a></li>
           <li data-nav-id="/linux-workstation/config/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
           <li data-nav-id="/linux-workstation/config/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/config/emacs-on-fedora/index.html">Emacs</a></li>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li>
-          <li data-nav-id="/linux-workstation/config/kvm-virt-manager/index.html" class=""><a class="padding" href="/linux-workstation/config/kvm-virt-manager/index.html">KVM / libvirt</a></li></ul></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/index.html" class="parent "><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/config/kvm-virt-manager/index.html" class="active"><a class="padding" href="/linux-workstation/config/kvm-virt-manager/index.html">KVM / libvirt</a></li></ul></li></ul></li>
+          <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html">Setup public DNS service</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public server (VPS)</a></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">Install Docker client tools</a></li>
-          <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class="active"><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
+          <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">Create SSH config and Docker Context</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/install-docker-on-remote-host/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-docker-on-remote-host/index.html">Install Docker on your remote host</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html">Main config for d.rymcg.tech</a></li></ul></li>
@@ -331,7 +552,7 @@ readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/config/kvm-virt-manager/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
