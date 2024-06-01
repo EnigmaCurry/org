@@ -991,6 +991,7 @@ Fedora Atomic doesn't do this automatically)
 #+begin_run
 VM_ADMIN=libvirt-admin
 sudo useradd ${VM_ADMIN} -G libvirt
+sudo loginctl enable-linger ${VM_ADMIN}
 #+end_run
 
 *** Copy your public SSH key into the libvirt-admin home directory
@@ -1116,7 +1117,7 @@ virt-install \
 #+end_run
 
  * Wait a minute for the VM to boot and bring up its network interface.
-
+ 
 **** Find the IP address of the VM (named debian)
 
 #+attr_shortcode: :style tip
@@ -1126,6 +1127,12 @@ MAC_ADDRESS=$(virsh domiflist ${NAME} | grep virbr0 | grep -Po ".* \K.*$")
 arp -n | grep $MAC_ADDRESS | cut -d " " -f 1
 #+end_run
 
+**** TODO Enable auto start on boot
+
+#+begin_run
+NAME=debian
+virsh autostart ${NAME}
+#+end_run
 
 *** VM Management
 **** List all defined VMs
