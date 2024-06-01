@@ -221,7 +221,7 @@ layer:
 #+begin_run
 sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \
      virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
-     libguestfs-tools python3-libguestfs virt-top \
+     libguestfs-tools python3-libguestfs virt-top net-tools \
      gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp
 #+end_run
 
@@ -986,7 +986,7 @@ sudo bash -c "getent group libvirt >> /etc/group"
 (I'm not sure why
 Fedora Atomic doesn't do this automatically)
 
-*** Create dedicated user account as VM admin
+*** Create a dedicated user account for VM management
 
 #+begin_run
 VM_ADMIN=libvirt-admin
@@ -1105,6 +1105,7 @@ virt-install \
   --virt-type kvm \
   --graphics none \
   --console pty,target_type=serial \
+  --noautoconsole \
   --cpu host \
   --vcpus ${CPUS} \
   --memory ${MEMORY} \
@@ -1114,25 +1115,17 @@ virt-install \
   --disk ~/libvirt/disks/${NAME}.qcow2
 #+end_run
 
-This will boot the VM with an interactive console. You need to watch
-the log output to find the private IP address of the VM, as well as to see if
-cloud-init had any errors.
+ * Wait a minute for the VM to boot and bring up its network interface.
 
-The private IP address listed as the first interface =enp1s0=:
+**** Find the IP address of the VM (named debian)
 
-#+begin_stdout
-​++++++++++++++++++++++++++++++++++++++Net device info+++++++++++++++++++++++++++++++++++++++
-​+--------+------+-----------------------------+---------------+--------+-------------------+
-​| Device |  Up  |           Address           |      Mask     | Scope  |     Hw-Address    |
-​+--------+------+-----------------------------+---------------+--------+-------------------+
-​| enp1s0 | True |        192.168.122.9        | 255.255.255.0 | global | 00:60:2f:18:c4:00 |
-#+end_stdout
+#+attr_shortcode: :style tip
+#+begin_run
+NAME=debian
+MAC_ADDRESS=$(virsh domiflist ${NAME} | grep virbr0 | grep -Po ".* \K.*$")
+arp -n | grep $MAC_ADDRESS | cut -d " " -f 1
+#+end_run
 
-If cloud-init was successful, you should see your SSH key added near
-the bottom of the log:
-
-
-Close the console by pressing the key sequence =Ctrl+]= (Control and Right Square Bracket keys).
 
 *** VM Management
 **** List all defined VMs
@@ -1151,15 +1144,6 @@ virsh list -all
 virsh start debian
 #+end_run
 
-**** Find DHCP lease for the given MAC address
-#+attr_shortcode: :style tip
-#+begin_notice
-This must be done as root, because only root can manage the =default= network.
-#+end_notice
-#+begin_run
-sudo virsh net-dhcp-leases default | grep ${MAC_ADDRESS,,}
-#+end_run
-
 **** Stop VM (named debian)
 #+begin_run
 ​# destroy actually just means stop, not delete
@@ -1176,3 +1160,31 @@ virsh console debian
 #+end_run
 
 To exit the console, press =Ctrl-]=. (Control + right square bracket).
+
+*** Setup your normal workstation user for SSH access to VM
+
+#+attr_shortcode: :style info
+#+begin_notice
+*For this section, you are back to using your normal workstation user.*
+#+end_notice
+
+Edit your =~/.ssh/config= and create a new config entry for the VM:
+
+#+attr_shortcode: :file ~/.ssh/config
+#+begin_edit
+Host debian
+    Hostname 192.168.122.42
+    User admin
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+#+end_edit
+
+With this config, you can now use SSH to control the VM:
+
+#+begin_run
+ssh debian whoami
+#+end_run
+
+It is recommended to install Docker on your Debian VM. Please read the
+other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]]
