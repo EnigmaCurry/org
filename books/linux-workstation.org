@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /linux-workstation
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi %env
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi %env toc
 #+STARTUP: align
 
 * Linux Workstation
@@ -956,10 +956,20 @@ key.
 :EXPORT_FILE_NAME: kvm-virt-manager
 :END:
 
-You can bend the workstation rules a bit, and run some servers in
-virtual machines (VM). Keeping your servers in isolated VMs will keep
-your workstation clean and server free. You can treat VMs just like
-any remote Linux host, and access them over SSH.
+You can bend the workstation "no server" rule a bit, by hosting some
+development servers inside of virtual machines (VM). Keeping your
+servers in isolated VMs will keep your workstation clean. You can
+treat these VMs just like any other remote Linux host, and access them
+over SSH.
+
+These instructions will install a barebones Debian server in a VM,
+with NAT networking (private IP address, no public ports open), for
+local development/testing purposes only.
+
+#+attr_shortcode:
+#+begin_toc
+table of contents
+#+end_toc
 
 *** Enable libvirtd
 
@@ -993,12 +1003,14 @@ chmod a+r ${TMP_SSH}
 sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
 #+end_run
 
-*** Run the rest of these commands as the libvirt-admin user
+*** Create VM with the libvirt-admin user
+
+**** Run the commands in this section with the libvirt-admin user
 
 #+attr_shortcode: :style info
 #+begin_notice
-*You need to run the rest of the commands in this chapter running as
-the =libvirt-admin= this user.*
+*For this entire section you need to perform the VM config as the
+=libvirt-admin= user.*
 
 Login to the shell account of  =libvirt-admin=:
 
@@ -1007,12 +1019,10 @@ sudo su -l ${VM_ADMIN:-libvirt-admin}
 #+end_run
 #+end_notice
 
-*** Create server VM from cloud image
-
 **** Configure temporary variables for a Debian VM config:
 
 #+begin_env
-CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
+CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
 NAME=debian
 OS_VARIANT=debian12
 MEMORY=1024
@@ -1033,10 +1043,12 @@ mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
 #+begin_run
 cat << EOF | sed 's/\xe2\x80\x8b//g' > ${USER_DATA}
 #cloud-config
+hostname: ${NAME}
 users:
-​  - name: debian
-​    shell: /bin/bash
-​password: password
+​  - name: admin
+    ssh_authorized_keys:
+​      - $(cat ~/libvirt/user-ssh.pub)
+    sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
 #+end_run
 
