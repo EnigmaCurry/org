@@ -23,19 +23,19 @@ These instructions will install a barebones Debian server in a VM, with NAT netw
     <meta itemprop="name" content="KVM / libvirt :: book.rymcg.tech">
     <meta itemprop="description" content="You can bend the workstation “no server” rule a bit, by hosting some development servers inside of virtual machines (VM). Keeping your servers in isolated VMs will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH.
 These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
-    <meta itemprop="wordCount" content="860">
+    <meta itemprop="wordCount" content="879">
     <title>KVM / libvirt :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717202086" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717202086" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717202086" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717202086" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717202086" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717202086" rel="stylesheet">
-    <link href="/css/fonts.css?1717202086" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717202086" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717202086" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717202086" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717202086" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717202086" rel="stylesheet">
-    <link href="/css/print.css?1717202086" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717202086"></script>
+    <link href="/css/fontawesome-all.min.css?1717204688" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717204688" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717204688" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717204688" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717204688" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717204688" rel="stylesheet">
+    <link href="/css/fonts.css?1717204688" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717204688" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717204688" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717204688" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717204688" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717204688" rel="stylesheet">
+    <link href="/css/print.css?1717204688" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717204688"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -70,7 +70,7 @@ These instructions will install a barebones Debian server in a VM, with NAT netw
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
     <li><a href="#enable-libvirtd">Enable libvirtd</a></li>
-    <li><a href="#create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</a></li>
+    <li><a href="#create-a-dedicated-user-account-for-vm-management">Create a dedicated user account for VM management</a></li>
     <li><a href="#copy-your-public-ssh-key-into-the-libvirt-admin-home-directory">Copy your public SSH key into the libvirt-admin home directory</a></li>
     <li><a href="#create-vm-with-the-libvirt-admin-user">Create VM with the libvirt-admin user</a>
       <ul>
@@ -82,18 +82,19 @@ These instructions will install a barebones Debian server in a VM, with NAT netw
         <li><a href="#clean-up-old-vms-with-the-same-name">Clean up old VMs with the same name:</a></li>
         <li><a href="#create-the-disk-image-for-the-new-vm">Create the disk image for the new VM:</a></li>
         <li><a href="#create-the-vm">Create the VM:</a></li>
+        <li><a href="#find-the-ip-address-of-the-vm--named-debian">Find the IP address of the VM (named debian)</a></li>
       </ul>
     </li>
     <li><a href="#vm-management">VM Management</a>
       <ul>
         <li><a href="#list-all-defined-vms">List all defined VMs</a></li>
         <li><a href="#start-vm--named-debian">Start VM (named debian)</a></li>
-        <li><a href="#find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</a></li>
         <li><a href="#stop-vm--named-debian">Stop VM (named debian)</a></li>
         <li><a href="#undefine-vm--named-debian">Undefine VM (named debian)</a></li>
         <li><a href="#serial-console-of-vm--named-debian">Serial console of VM (named debian)</a></li>
       </ul>
     </li>
+    <li><a href="#setup-your-normal-workstation-user-for-ssh-access-to-vm">Setup your normal workstation user for SSH access to VM</a></li>
   </ul>
 </nav>
                 </div>
@@ -143,7 +144,7 @@ local development/testing purposes only.</p>
 <nav id="TableOfContents">
   <ul>
     <li><a href="#enable-libvirtd">Enable libvirtd</a></li>
-    <li><a href="#create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</a></li>
+    <li><a href="#create-a-dedicated-user-account-for-vm-management">Create a dedicated user account for VM management</a></li>
     <li><a href="#copy-your-public-ssh-key-into-the-libvirt-admin-home-directory">Copy your public SSH key into the libvirt-admin home directory</a></li>
     <li><a href="#create-vm-with-the-libvirt-admin-user">Create VM with the libvirt-admin user</a>
       <ul>
@@ -155,18 +156,19 @@ local development/testing purposes only.</p>
         <li><a href="#clean-up-old-vms-with-the-same-name">Clean up old VMs with the same name:</a></li>
         <li><a href="#create-the-disk-image-for-the-new-vm">Create the disk image for the new VM:</a></li>
         <li><a href="#create-the-vm">Create the VM:</a></li>
+        <li><a href="#find-the-ip-address-of-the-vm--named-debian">Find the IP address of the VM (named debian)</a></li>
       </ul>
     </li>
     <li><a href="#vm-management">VM Management</a>
       <ul>
         <li><a href="#list-all-defined-vms">List all defined VMs</a></li>
         <li><a href="#start-vm--named-debian">Start VM (named debian)</a></li>
-        <li><a href="#find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</a></li>
         <li><a href="#stop-vm--named-debian">Stop VM (named debian)</a></li>
         <li><a href="#undefine-vm--named-debian">Undefine VM (named debian)</a></li>
         <li><a href="#serial-console-of-vm--named-debian">Serial console of VM (named debian)</a></li>
       </ul>
     </li>
+    <li><a href="#setup-your-normal-workstation-user-for-ssh-access-to-vm">Setup your normal workstation user for SSH access to VM</a></li>
   </ul>
 </nav>
 
@@ -192,7 +194,7 @@ sudo bash -c "getent group libvirt >> /etc/group"
 </div>
 <p>(I&rsquo;m not sure why
 Fedora Atomic doesn&rsquo;t do this automatically)</p>
-<h2 id="create-dedicated-user-account-as-vm-admin">Create dedicated user account as VM admin</h2>
+<h2 id="create-a-dedicated-user-account-for-vm-management">Create a dedicated user account for VM management</h2>
 <div class="box notices cstyle run">
     <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
     <div class="box-content">
@@ -349,6 +351,7 @@ virt-install \
   --virt-type kvm \
   --graphics none \
   --console pty,target_type=serial \
+  --noautoconsole \
   --cpu host \
   --vcpus ${CPUS} \
   --memory ${MEMORY} \
@@ -359,25 +362,20 @@ virt-install \
 </pre></code>
     </div>
 </div>
-<p>This will boot the VM with an interactive console. You need to watch
-the log output to find the private IP address of the VM, as well as to see if
-cloud-init had any errors.</p>
-<p>The private IP address listed as the first interface <code>enp1s0</code>:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label">(stdout)</div>
+<ul>
+<li>Wait a minute for the VM to boot and bring up its network interface.</li>
+</ul>
+<h3 id="find-the-ip-address-of-the-vm--named-debian">Find the IP address of the VM (named debian)</h3>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
     <div class="box-content">
-        <pre>
-​++++++++++++++++++++++++++++++++++++++Net device info+++++++++++++++++++++++++++++++++++++++
-​+--------+------+-----------------------------+---------------+--------+-------------------+
-​| Device |  Up  |           Address           |      Mask     | Scope  |     Hw-Address    |
-​+--------+------+-----------------------------+---------------+--------+-------------------+
-​| enp1s0 | True |        192.168.122.9        | 255.255.255.0 | global | 00:60:2f:18:c4:00 |
-</pre>
+        <code><pre>
+NAME=debian
+MAC_ADDRESS=$(virsh domiflist ${NAME} | grep virbr0 | grep -Po ".* \K.*$")
+arp -n | grep $MAC_ADDRESS | cut -d " " -f 1
+</pre></code>
     </div>
 </div>
-<p>If cloud-init was successful, you should see your SSH key added near
-the bottom of the log:</p>
-<p>Close the console by pressing the key sequence <code>Ctrl+]</code> (Control and Right Square Bracket keys).</p>
 <h2 id="vm-management">VM Management</h2>
 <h3 id="list-all-defined-vms">List all defined VMs</h3>
 <div class="box notices cstyle run">
@@ -404,23 +402,6 @@ virsh list -all
     <div class="box-content">
         <code><pre>
 virsh start debian
-</pre></code>
-    </div>
-</div>
-<h3 id="find-dhcp-lease-for-the-given-mac-address">Find DHCP lease for the given MAC address</h3>
-
-<div class="box notices cstyle tip">
-  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
-  <div class="box-content">
-
-<p>This must be done as root, because only root can manage the <code>default</code> network.</p>
-</div>
-</div>
-<div class="box notices cstyle run">
-    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-sudo virsh net-dhcp-leases default | grep ${MAC_ADDRESS,,}
 </pre></code>
     </div>
 </div>
@@ -454,6 +435,40 @@ virsh console debian
     </div>
 </div>
 <p>To exit the console, press <code>Ctrl-]</code>. (Control + right square bracket).</p>
+<h2 id="setup-your-normal-workstation-user-for-ssh-access-to-vm">Setup your normal workstation user for SSH access to VM</h2>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<p><strong>For this section, you are back to using your normal workstation user.</strong></p>
+</div>
+</div>
+<p>Edit your <code>~/.ssh/config</code> and create a new config entry for the VM:</p>
+<div class="box notices cstyle edit">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.ssh/config</div>
+    <div class="box-content">
+        <code><pre>
+Host debian
+    Hostname 192.168.122.42
+    User admin
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+</pre></code>
+    </div>
+</div>
+<p>With this config, you can now use SSH to control the VM:</p>
+<div class="box notices cstyle run">
+    <div class="box-label"><i class="fa-fw fas fa-dollar-sign"></i>  [bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh debian whoami
+</pre></code>
+    </div>
+</div>
+<p>It is recommended to install Docker on your Debian VM. Please read the
+other book on <a href="/d.rymcg.tech/index.html">Self-hosting Docker</a>, and the chapter on <a href="/d.rymcg.tech/workstation/install-docker-on-remote-host/index.html">installing Docker</a></p>
 
             <footer class="footline">
             </footer>
@@ -480,12 +495,12 @@ virsh console debian
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717202086" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717202086" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717202086" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717202086" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717202086" defer></script>
-        <script src="/js/search.js?1717202086" defer></script>
+        <script src="/js/auto-complete.js?1717204688" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717204688" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717204688" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717204688" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717204688" defer></script>
+        <script src="/js/search.js?1717204688" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -595,14 +610,14 @@ virsh console debian
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 12:34am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 1, 2024 at 1:18am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717202086" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717202086" defer></script>
-    <script src="/js/theme.js?1717202086" defer></script>
+    <script src="/js/clipboard.min.js?1717204688" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717204688" defer></script>
+    <script src="/js/theme.js?1717204688" defer></script>
   </body>
 </html>
