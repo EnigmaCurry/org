@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /linux-workstation
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi %env toc
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi %env toc
 #+STARTUP: align
 
 * Linux Workstation
@@ -210,22 +210,45 @@ Let it finish downloading the new image, and then reboot again.
 :EXPORT_FILE_NAME: layering-packages
 :END:
 
-See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]]
+See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]]. For most packages,
+you should not install them this way, but you should prefer installing
+them inside of a toolbox / distrobox container instead. On the Fedora
+Atomic host, you should install (layer) only those packages that
+cannot be run from a container (or you really just want to run them
+natively for some reason).
 
-To create efficient layers, you should try to install everything you
-want into as few layers as possible.
-
-Here is a list of packages you might want to add all together as one
-layer:
+To create efficient layers, *you should try to install everything in
+one go*, using as few layers as possible. Here is a list of packages
+you might want to add all together as one layer:
 
 #+begin_run
 sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \
      virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
      libguestfs-tools python3-libguestfs virt-top net-tools \
-     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp
+     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp \
+     distrobox file-roller thunar-volman
 #+end_run
 
-Check the list of layers:
+[[https://fedoraproject.org/atomic-desktops/sway/][Fedora Atomic Sway edition (Sericea) already includes a lot of
+packages layered on top of the core Fedora Atomic.]] So before you
+install new things, check what comes preinstalled.
+
+** Examples of applications you might want to layer
+
+ * File explorer (thunar) plugins for archives and removeable drives.
+ * Virtual filesystem plugins (gvfs).
+ * Container tools (Distrobox).
+ * Virtual Machine tools (Qemu and libvirt).
+ * Basic network tools (net-tools arp)
+
+Web browsers are fickle. Although they mostly work inside toolbx
+containers just fine, Sericea includes Firefox in its base layer as a
+native app, and that seems to work great. However, I have also tested
+Chromium inside of a toolbx container without issue. For use cases
+where Chromium needs to have native USB access, you might not want to
+run it in a container.
+
+** Check the list of layers:
 
 #+begin_run
 sudo rpm-ostree status
@@ -234,6 +257,25 @@ sudo rpm-ostree status
 The top layer should list the =LayeredPackages= in your new layer.
 
 Reboot.
+
+** Reset all layers back to stock
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This will reset all the layered packages back to the stock image. This
+may be useful if you are trying to clean up from lots of testing.
+
+*All package layers will be destroyed!*
+
+Your user home directories (=/var/home/=) and system configuration
+(=/etc/=) are not affected.
+
+#+begin_run
+sudo rpm-ostree reset
+sudo rpm-ostree cleanup -r
+#+end_run
+#+end_notice
+
 
 * Config
 :PROPERTIES:
@@ -956,11 +998,13 @@ key.
 :EXPORT_FILE_NAME: kvm-virt-manager
 :END:
 
-You can bend the workstation "no server" rule a bit, by hosting some
-development servers inside of virtual machines (VM). Keeping your
-servers in isolated VMs will keep your workstation clean. You can
-treat these VMs just like any other remote Linux host, and access them
-over SSH.
+You can bend the "no servers on workstations" rule, a bit, by hosting
+some development servers inside of virtual machines (VM) on your
+workstation. Keeping your development servers in isolated VMs, running
+under a dedicated VM user account, will keep your workstation clean.
+You can treat these VMs just like any other remote Linux host, and
+access them over SSH, and have them automatically start when your
+workstation boots.
 
 These instructions will install a barebones Debian server in a VM,
 with NAT networking (private IP address, no public ports open), for
@@ -973,8 +1017,14 @@ table of contents
 
 *** Enable libvirtd
 
+#+attr_shortcode: :style tip
+#+begin_notice
+This depends on the libvirt packages installed in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
+#+end_notice
+
 #+begin_run
 sudo systemctl enable --now libvirtd
+sudo systemctl status libvirtd
 #+end_run
 
 Add the existing =libvirt= group to =/etc/group= :
@@ -983,14 +1033,22 @@ Add the existing =libvirt= group to =/etc/group= :
 sudo bash -c "getent group libvirt >> /etc/group"
 #+end_run
 
-(I'm not sure why
-Fedora Atomic doesn't do this automatically)
+#+begin_aside
+(I'm not sure why Fedora Atomic doesn't do this automatically. The
+group and GID exists, it just isn't added to =/etc/group=
+automatically.)
+#+end_aside
 
 *** Create a dedicated user account for VM management
 
 #+begin_run
 VM_ADMIN=libvirt-admin
 sudo useradd ${VM_ADMIN} -G libvirt
+#+end_run
+
+*** Configure systemd for the libvirt-admin user
+
+#+begin_run
 sudo loginctl enable-linger ${VM_ADMIN}
 sudo su ${VM_ADMIN} -c "mkdir -p ~/.bashrc.d"
 sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bashrc.d/xdg"
@@ -1036,12 +1094,14 @@ USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
 
 **** Create directories to hold our VM disks and config files:
 
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
 #+end_run
 
 **** Create the cloud-init config file:
 
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 cat << EOF | sed 's/\xe2\x80\x8b//g' > ${USER_DATA}
 #cloud-config
@@ -1062,6 +1122,7 @@ You only need to download each CLOUD_IMAGE once, they will be cached
 in =~/libvirt/cloud-images=, so they can be be reused.
 #+end_notice
 
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 (cd ~/libvirt/cloud-images; curl -LO ${CLOUD_IMAGE})
 chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
@@ -1073,9 +1134,11 @@ chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
 If you already have a VM with the same name, and you want to start
 again from scratch, you need to clean up from the previous install
 first:
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 \# To cleanup up and REMOVE an old VM named debian:
 virsh destroy debian
+virsh managedsave-remove debian
 virsh undefine debian
 #+end_run
 #+end_notice
@@ -1087,6 +1150,7 @@ This is destructive of the existing disk file!
 #+end_notice
 
 
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 (set -e
 cp ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*") \
@@ -1099,7 +1163,7 @@ echo Created ~/libvirt/disks/${NAME}.qcow2
 
 **** Create the VM:
 
-#+attr_shortcode: :title Create VM using cloud image:
+#+attr_shortcode: 
 #+begin_run
 virt-install \
   --name ${NAME} \
