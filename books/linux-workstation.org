@@ -1075,7 +1075,7 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/lib
 Login to the shell account of  =libvirt-admin=:
 
 #+begin_run
-sudo su -l ${VM_ADMIN:-libvirt-admin}
+sudo -u libvirt-admin /bin/bash
 #+end_run
 #+end_notice
 
@@ -1083,7 +1083,7 @@ sudo su -l ${VM_ADMIN:-libvirt-admin}
 
 #+begin_env
 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
-NAME=debian
+NAME=debian-dev
 OS_VARIANT=debian12
 MEMORY=1024
 CPUS=2
@@ -1136,11 +1136,12 @@ again from scratch, you need to clean up from the previous install
 first:
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-\# To cleanup up and REMOVE an old VM named debian:
-virsh destroy debian
-virsh managedsave-remove debian
-virsh undefine debian
+## To cleanup and REMOVE an old VM named debian-dev:
+virsh destroy debian-dev
+virsh managedsave-remove debian-dev
+virsh undefine debian-dev
 #+end_run
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+end_notice
 
 **** Create the disk image for the new VM:
@@ -1163,7 +1164,7 @@ echo Created ~/libvirt/disks/${NAME}.qcow2
 
 **** Create the VM:
 
-#+attr_shortcode: 
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virt-install \
   --name ${NAME} \
@@ -1183,55 +1184,80 @@ virt-install \
 
  * Wait a minute for the VM to boot and bring up its network interface.
  
-**** Find the IP address of the VM (named debian)
+**** Find the IP address of the VM (named debian-dev)
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+MAC_ADDRESS=$(virsh domiflist ${NAME:-debian-dev} | grep virbr0 | grep -Po ".* \K.*$")
+IP_ADDRESS=$(arp -n | grep $MAC_ADDRESS | cut -d " " -f 1)
+echo ""
+echo ${MAC_ADDRESS}
+echo ${IP_ADDRESS}
+echo ""
+echo "# Copy this comamnd and run it as root to make a static DHCP lease:"
+echo "sudo virsh net-update default add ip-dhcp-host \"&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;\" --live --config"
+#+end_run
 
 #+attr_shortcode: :style tip
+#+begin_notice
+The final =echo= command prints the command that you need to run as
+*root* (sudo) to add the static DHCP lease:
+
 #+begin_run
-NAME=debian
-MAC_ADDRESS=$(virsh domiflist ${NAME} | grep virbr0 | grep -Po ".* \K.*$")
-arp -n | grep $MAC_ADDRESS | cut -d " " -f 1
+## Adds static DHCP lease to libvirt dnsmasq:
+## Change the NAME, MAC, and IP addresses to suit your VM!
+sudo virsh net-update default add ip-dhcp-host \
+  "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" \
+  --live --config
 #+end_run
 
-**** Enable auto start on boot
+This can also be done by editing the config file manually:
 
 #+begin_run
-NAME=debian
-virsh autostart ${NAME}
-#+end_run
-
-*** VM Management
-**** List all defined VMs
-#+begin_run
-virsh list -all
+sudo virsh net-edit default
 #+end_run
 
 #+begin_stdout
-​ Id   Name     State
-​------------------------
-​ 5    debian   running
+&lt;network&gt;
+  &lt;name&gt;default&lt;/name&gt;
+  &lt;uuid&gt;bcffa07e-02de-4b64-8820-783b92c80a6a&lt;/uuid&gt;
+&lt;network&gt;
+  &lt;name&gt;default&lt;/name&gt;
+  &lt;uuid&gt;bcffa07e-02de-4b64-8820-783b92c80a6a&lt;/uuid&gt;
+  &lt;forward mode='nat'/&gt;
+  &lt;bridge name='virbr0' stp='on' delay='0'/&gt;
+  &lt;mac address='52:54:00:82:1d:f8'/&gt;
+  &lt;ip address='192.168.122.1' netmask='255.255.255.0'&gt;
+    &lt;dhcp&gt;
+      &lt;range start='192.168.122.2' end='192.168.122.254'/&gt;
+      &lt;host mac='00:60:2f:39:8e:5f' name='debian-dev' ip='192.168.122.165'/&gt;
+    &lt;/dhcp&gt;
+  &lt;/ip&gt;
+&lt;/network&gt;
 #+end_stdout
+#+end_notice
 
-**** Start VM (named debian)
-#+begin_run
-virsh start debian
-#+end_run
+**** Shutdown the VM
 
-**** Stop VM (named debian)
+#+attr_shortcode: :style info
+#+begin_notice
+It is important to shut down the VM the first time after install,
+otherwise you will get an error about the unejected cloud-init ISO.
+#+end_notice
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-​# destroy actually just means stop, not delete
-virsh destroy debian
-#+end_run
-**** Undefine VM (named debian)
-#+begin_run
-​# undefine removes the VM configuration
-virsh undefine debian
-#+end_run
-**** Serial console of VM (named debian)
-#+begin_run
-virsh console debian
+## Destroy just means to stop:
+virsh destroy ${NAME}
 #+end_run
 
-To exit the console, press =Ctrl-]=. (Control + right square bracket).
+
+**** Enable auto start on boot
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virsh autostart ${NAME}
+#+end_run
 
 *** Setup your normal workstation user for SSH access to VM
 
@@ -1240,11 +1266,11 @@ To exit the console, press =Ctrl-]=. (Control + right square bracket).
 *For this section, you are back to using your normal workstation user.*
 #+end_notice
 
-Edit your =~/.ssh/config= and create a new config entry for the VM:
+Append a new host config into your SSH config (=~/.ssh/config=):
 
 #+attr_shortcode: :file ~/.ssh/config
 #+begin_edit
-Host debian
+Host debian-dev
     Hostname 192.168.122.42
     User admin
     ControlMaster auto
@@ -1252,11 +1278,62 @@ Host debian
     ControlPath /tmp/ssh-%u-%r@%h:%p
 #+end_edit
 
+#+attr_shortcode: :style info
+#+begin_notice
+*Make sure =Hostname= is set to the IP address you retrieved above.*
+#+end_notice
+
+
 With this config, you can now use SSH to control the VM:
 
 #+begin_run
-ssh debian whoami
+ssh debian-dev whoami
 #+end_run
 
 It is recommended to install Docker on your Debian VM. Please read the
 other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]]
+
+*** VM Management
+#+attr_shortcode: :style tip
+#+begin_notice
+The rest of these commands (greyed out) are *examples* only, you don't need to run them now.
+#+end_notice
+
+**** List all defined VMs
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+virsh list --all
+#+end_run
+
+#+begin_stdout
+​ Id   Name         State
+​---------------------------
+​ 5    debian-dev   running
+#+end_stdout
+
+**** Start VM (named debian-dev)
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+virsh start debian-dev
+#+end_run
+
+**** Stop VM (named debian-dev)
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+​# destroy actually just means stop, not delete
+virsh destroy debian-dev
+#+end_run
+**** Undefine VM (named debian-dev)
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+​# undefine removes the VM configuration
+virsh undefine debian-dev
+#+end_run
+**** Serial console of VM (named debian-dev)
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+virsh console debian-dev
+#+end_run
+
+To exit the console, press =Ctrl-]=. (Control + right square bracket).
+
