@@ -1174,10 +1174,9 @@ cat << EOF | sed 's/\xe2\x80\x8b//g' > ${USER_DATA}
 #cloud-config
 hostname: ${NAME}
 users:
-​  - name: admin
+​  - name: root
     ssh_authorized_keys:
 ​      - $(cat ~/libvirt/user-ssh.pub)
-    sudo: ALL=(ALL) NOPASSWD:ALL
 EOF
 #+end_run
 
@@ -1305,7 +1304,7 @@ Append a new host config into your SSH config (=~/.ssh/config=):
 #+begin_edit
 Host debian-dev
     Hostname 192.168.122.2
-    User admin
+    User root
     ControlMaster auto
     ControlPersist yes
     ControlPath /tmp/ssh-%u-%r@%h:%p
@@ -1323,7 +1322,7 @@ ssh debian-dev whoami
 #+end_run
 
 #+begin_stdout
-admin
+root
 #+end_stdout
 
 **** Install Docker or something else
