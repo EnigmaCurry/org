@@ -1101,11 +1101,11 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/lib
 *** Choose hardware sizes
 
 #+attr_shortcode:
-#+begin_run
+#+begin_env
 MEMORY=1024
 CPUS=2
 DISK_SIZE=50
-#+end_run
+#+end_env
 
 *** Choose cloud image
 
@@ -1114,18 +1114,18 @@ You can choose any standard cloud image that supports cloud-init.
 **** Debian 12
 
 #+attr_shortcode:
-#+begin_run
+#+begin_env
 OS_VARIANT=debian12
 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
-#+end_run
+#+end_env
 
 **** Fedora 40
 
 #+attr_shortcode:
-#+begin_run
+#+begin_env
 OS_VARIANT=fedora40
 CLOUD_IMAGE=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2
-#+end_run
+#+end_env
 
 *** Find the default subnet (=virbr0=)
 #+attr_shortcode:
@@ -1137,22 +1137,30 @@ ip route | grep virbr0 | cut -d " " -f 1
 #+end_stdout
 
 
-*** Create static DHCP lease
+*** Configure Hostname, IP Address, and MAC address
 
-#+attr_shortcode:
-#+begin_run
+#+begin_env
 NAME=debian-dev
 IP_ADDRESS=192.168.122.2
 MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | tr '[:upper:]' '[:lower:]')
-sudo virsh net-update default add-last ip-dhcp-host "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" --live --config --parent-index 0
-#+end_run
+#+end_env
 
 #+attr_shortcode: :style tip
 #+begin_notice
 You need to choose a valid IP_ADDRESS in the range of your subnet. The
 Gateway should be the same subnet with the address ending in =.1=. The
 MAC address will be random.
+#+end_notice
 
+*** Create static DHCP lease
+
+#+attr_shortcode:
+#+begin_run
+sudo virsh net-update default add-last ip-dhcp-host "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" --live --config --parent-index 0
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
 You can edit the file manually to do more cleanup. After editing, you
 must stop (destroy) and restart the network.
 
@@ -1211,7 +1219,7 @@ Now, and anytime you come back later to work on the same VM, source the config f
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-source ~/libvirt/debian-dev.env
+source ~/libvirt/${NAME}.env
 #+end_run
 
 *** Create directories to hold the VM disks and config files:
@@ -1370,7 +1378,7 @@ Host debian-dev
 
 #+attr_shortcode: :style info
 #+begin_notice
-*Make sure =Hostname= is set to the IP address you retrieved above.*
+*Make sure =Host= and =Hostname= are set correctly for your VM.*
 #+end_notice
 
 With this config, you can now use SSH to control the VM:
@@ -1386,13 +1394,31 @@ root
 *** Install Docker or something else
 
 It is recommended to install Docker on your Debian VM. Please read the
-other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]]
+other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]].
 
 *** Reboot your workstation
 
 Now would be a good time to reboot your workstation to test that the
 VM is automatically restarted on boot, SSH works, and that the IP
 address stays the same due to the static DHCP lease.
+
+*** OK what if autostart didn't work?
+
+You may encounter some issues with it not starting automatically on
+boot, I haven't fully figured the problem out.
+
+**** Remove save state
+
+#+begin_run
+sudo su libvirt-admin -c "virsh managedsave-remove debian-dev"
+
+#+end_run
+
+**** Start the VM manually
+
+#+begin_run
+sudo su libvirt-admin -c "virsh start debian-dev"
+#+end_run
 
 ** VM management commands
 :PROPERTIES:
