@@ -1006,17 +1006,20 @@ key.
 :EXPORT_FILE_NAME: _index
 :END:
 
-You can bend the "no servers on workstations" rule, a bit, by hosting
-some development servers inside of virtual machines (VM) on your
-workstation. Keeping your development servers in isolated VMs, running
-under a dedicated VM user account, will keep your workstation clean.
-You can treat these VMs just like any other remote Linux host, and
-access them over (local) SSH, and have them automatically start when
-your workstation boots.
+You can bend the "No sworkstations" rule, a bit, by hosting some
+development servers inside of virtual machines (VM). Your workstation
+will stay clean, because these VMs are isolated from your normal
+account, running under a dedicated VM user account instead. You can
+treat these VMs just like any other remote Linux host, and access them
+by (local) SSH connection, from your normal account, and you can
+configure them to automatically start when your workstation boots.
 
 These instructions will install a barebones Debian or Fedora server in
 a VM, with NAT networking (private IP address, no public ports open),
 for local development/testing purposes only.
+
+These instructions have been tested on Fedora Atomic and Arch Linux
+workstations.
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -1029,21 +1032,44 @@ index
 table of contents
 #+end_toc
 
-** Enable libvirtd
+** Setup libvirtd
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-libvirtd
 :EXPORT_HUGO_WEIGHT: 100
 :END:
 
+*** Install libvirt packages
+
+**** Fedora Atomic
+
 #+attr_shortcode: :style tip
 #+begin_notice
-This depends on the libvirt packages installed in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
+If you are running Fedora Atomic, this depends on the libvirt packages
+installed in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
 #+end_notice
+
+**** Arch Linux
+
+#+begin_run
+sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \
+               sysfsutils bridge-utils ebtables
+#+end_run
+
+*** Enable libvirtd service
 
 #+begin_run
 sudo systemctl enable --now libvirtd
 sudo systemctl status --no-pager libvirtd
 #+end_run
+
+*** Start the default network
+
+#+begin_run
+virsh net-start default
+virsh net-autostart default
+#+end_run
+
+*** Configure /etc/group
 
 Add the existing =libvirt= group to =/etc/group=, if it isn't already:
 
@@ -1074,7 +1100,7 @@ control the =libvirt-admin= account.
 
 #+begin_run
 VM_ADMIN=libvirt-admin
-sudo useradd ${VM_ADMIN} -G libvirt
+sudo useradd -m ${VM_ADMIN} -G libvirt
 #+end_run
 
 *** Configure systemd for the =libvirt-admin= user
