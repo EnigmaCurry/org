@@ -993,9 +993,15 @@ ssh-add -K
 You will be prompted one time to enter your Solokey pin to unlock the
 key.
 
+* KVM / libvirt
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: kvm-libvirt
+:EXPORT_HUGO_WEIGHT: 4000
+:END:
+
 ** KVM / libvirt
 :PROPERTIES:
-:EXPORT_FILE_NAME: kvm-virt-manager
+:EXPORT_FILE_NAME: _index
 :END:
 
 You can bend the "no servers on workstations" rule, a bit, by hosting
@@ -1010,12 +1016,22 @@ These instructions will install a barebones Debian server in a VM,
 with NAT networking (private IP address, no public ports open), for
 local development/testing purposes only.
 
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+
 #+attr_shortcode:
 #+begin_toc
 table of contents
 #+end_toc
 
-*** Enable libvirtd
+** Enable libvirtd
+:PROPERTIES:
+:EXPORT_FILE_NAME: setup-libvirtd
+:EXPORT_HUGO_WEIGHT: 100
+:END:
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -1027,19 +1043,17 @@ sudo systemctl enable --now libvirtd
 sudo systemctl status --no-pager libvirtd
 #+end_run
 
-Add the existing =libvirt= group to =/etc/group= :
+Add the existing =libvirt= group to =/etc/group=, if it isn't already:
 
 #+begin_run
-sudo bash -c "getent group libvirt >> /etc/group"
+grep "^libvirt:" /etc/group || sudo bash -c "getent group libvirt >> /etc/group"
 #+end_run
 
-#+begin_aside
-(I'm not sure why Fedora Atomic doesn't do this automatically. The
-group and GID exists, it just isn't added to =/etc/group=
-automatically.)
-#+end_aside
-
-*** Create a dedicated user account for VM management
+** Create VM admin
+:PROPERTIES:
+:EXPORT_FILE_NAME: dedicated-vm-user
+:EXPORT_HUGO_WEIGHT: 101
+:END:
 
 This will create a new user account on your workstation named
 =libvirt-admin=. This user will be used as the owner for all the VM
@@ -1047,21 +1061,21 @@ disk images, config files, and for running the libvirt (qemu)
 processes that run your VM.
 
 This separation from the normal account you use is important to limit
-the privileges that your normal account has over the VM
-infrastructure. Your normal account should be able to SSH /into/ the
-VM and have full root prileges over it. But you should not have access
-to the VM disk image files, nor its configuration. Access to all VM
-administrative tasks must be done through =sudo= to control the
-=libvirt-admin= account.
+the privileges that you have over the VM infrastructure. Your normal
+account should be able to SSH /into/ the VM and have full root
+prileges inside the VM. But your normal account should /not/ have
+access to the underlying VM disk image files, nor its configuration.
+Access to all VM administrative tasks must be done through =sudo= to
+control the =libvirt-admin= account.
 
-**** Create =libvirt-admin= user
+*** Create =libvirt-admin= user
 
 #+begin_run
 VM_ADMIN=libvirt-admin
 sudo useradd ${VM_ADMIN} -G libvirt
 #+end_run
 
-**** Configure systemd for the =libvirt-admin= user
+*** Configure systemd for the =libvirt-admin= user
 
 #+begin_run
 sudo loginctl enable-linger ${VM_ADMIN}
@@ -1069,7 +1083,7 @@ sudo su ${VM_ADMIN} -c "mkdir -p ~/.bashrc.d"
 sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bashrc.d/xdg"
 #+end_run
 
-**** Copy your public SSH key into the =libvirt-admin= home directory
+*** Copy your public SSH key into the =libvirt-admin= home directory
 
 #+begin_run
 SSH_KEY=~/.ssh/id_ed25519.pub
@@ -1079,17 +1093,12 @@ chmod a+r ${TMP_SSH}
 sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
 #+end_run
 
-*** Configure VM (named debian-dev)
-**** Find the default subnet (=virbr0=)
-#+attr_shortcode:
-#+begin_run
-ip route | grep virbr0 | cut -d " " -f 1
-#+end_run
-#+begin_stdout
-192.168.122.0/24
-#+end_stdout
+** Configure VM
+:PROPERTIES:
+:EXPORT_FILE_NAME: config-vm
+:END:
 
-**** Choose hardware sizes
+*** Choose hardware sizes
 
 #+attr_shortcode:
 #+begin_run
@@ -1098,11 +1107,11 @@ CPUS=2
 DISK_SIZE=50
 #+end_run
 
-**** Choose cloud image
+*** Choose cloud image
 
 You can choose any standard cloud image that supports cloud-init.
 
-***** Debian 12
+**** Debian 12
 
 #+attr_shortcode:
 #+begin_run
@@ -1110,14 +1119,25 @@ OS_VARIANT=debian12
 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
 #+end_run
 
-***** Fedora 40
+**** Fedora 40
 
 #+attr_shortcode:
 #+begin_run
 OS_VARIANT=fedora40
 CLOUD_IMAGE=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2
 #+end_run
-**** Create static DHCP lease
+
+*** Find the default subnet (=virbr0=)
+#+attr_shortcode:
+#+begin_run
+ip route | grep virbr0 | cut -d " " -f 1
+#+end_run
+#+begin_stdout
+192.168.122.0/24
+#+end_stdout
+
+
+*** Create static DHCP lease
 
 #+attr_shortcode:
 #+begin_run
@@ -1143,7 +1163,7 @@ sudo virsh net-start default
 #+end_run
 #+end_notice
 
-**** Create env file to store main config settings
+*** Create env file to store main config settings
 
 #+attr_shortcode:
 #+begin_run
@@ -1164,10 +1184,16 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c \
     "mkdir -p ~/libvirt && cp ${TMP_ENV} ~/libvirt/${NAME}.env"
 #+end_run
 
+#+attr_shortcode: :style tip
+#+begin_notice
+This will create a new config file *in the libvirt-admin user's home directory*
+=~/libvirt/${NAME}.env=.
+#+end_notice
 
-*** Create VM (named debian-dev)
-**** Run the commands in this section with the libvirt-admin user
-
+** Create VM 
+:PROPERTIES:
+:EXPORT_FILE_NAME: create-vm
+:END:
 #+attr_shortcode: :style info
 #+begin_notice
 *For this entire section you need to perform the VM config as the =libvirt-admin= user.*
@@ -1179,7 +1205,7 @@ sudo su libvirt-admin -l
 #+end_run
 #+end_notice
 
-**** Source the config
+*** Source the config
 
 Now, and anytime you come back later to work on the same VM, source the config file:
 
@@ -1188,14 +1214,14 @@ Now, and anytime you come back later to work on the same VM, source the config f
 source ~/libvirt/debian-dev.env
 #+end_run
 
-**** Create directories to hold the VM disks and config files:
+*** Create directories to hold the VM disks and config files:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
 #+end_run
 
-**** Create the cloud-init config file:
+*** Create the cloud-init config file:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
@@ -1209,7 +1235,7 @@ users:
 EOF
 #+end_run
 
-**** Download the cloud image:
+*** Download the cloud image:
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -1223,7 +1249,7 @@ in =~/libvirt/cloud-images=, so they can be be reused.
 chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
 #+end_run
 
-**** Clean up old VMs with the same name:
+*** Clean up old VMs with the same name:
 #+attr_shortcode: :style warning
 #+begin_notice
 If you already have a VM with the same name, and you want to start
@@ -1239,7 +1265,7 @@ virsh undefine debian-dev
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+end_notice
 
-**** Create the disk image for the new VM:
+*** Create the disk image for the new VM:
 #+attr_shortcode: :style warning
 #+begin_notice
 This is destructive of the existing disk file!
@@ -1257,7 +1283,7 @@ echo Created ~/libvirt/disks/${NAME}.qcow2
 )
 #+end_run
 
-**** Create the VM:
+*** Create the VM:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
@@ -1276,7 +1302,7 @@ virt-install \
   --disk ~/libvirt/disks/${NAME}.qcow2
 #+end_run
 
-**** Watch the console for any errors
+*** Watch the console for any errors
 
 As the VM starts up, your terminal will attach to the console output
 of the VM. This is to monitor any errors that may occur during the
@@ -1288,12 +1314,12 @@ Wait until you see this Login message:
 debian-dev login: 
 #+end_stdout
 
-**** Disconnect from the VM console
+*** Disconnect from the VM console
 To disconnect from the VM console, press the keyboard combination
 =Ctrl+]= (meaning to hold the Control key and the right square bracket
 key at the same time.)
 
-**** Shutdown the VM
+*** Shutdown the VM
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1307,20 +1333,23 @@ otherwise you will get an error about the unejected cloud-init ISO.
 virsh destroy ${NAME}
 #+end_run
 
-**** Restart VM
+*** Restart VM
 #+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virsh start ${NAME}
 #+end_run
 
-**** Enable auto start on boot
+*** Enable auto start on boot
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virsh autostart ${NAME}
 #+end_run
 
-*** Setup your normal workstation user for SSH access to VM
+** Setup workstation SSH config
+:PROPERTIES:
+:EXPORT_FILE_NAME: setup-workstation
+:END:
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1354,24 +1383,28 @@ ssh debian-dev whoami
 root
 #+end_stdout
 
-**** Install Docker or something else
+*** Install Docker or something else
 
 It is recommended to install Docker on your Debian VM. Please read the
 other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]]
 
-**** Reboot your workstation
+*** Reboot your workstation
 
 Now would be a good time to reboot your workstation to test that the
 VM is automatically restarted on boot, SSH works, and that the IP
 address stays the same due to the static DHCP lease.
 
-*** VM Management
+** VM management commands
+:PROPERTIES:
+:EXPORT_FILE_NAME: vm-management
+:END:
+
 #+attr_shortcode: :style tip
 #+begin_notice
 The rest of these commands (greyed out) are *examples* only, you don't need to run them now.
 #+end_notice
 
-**** List all defined VMs
+*** List all defined VMs
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 virsh list --all
@@ -1383,32 +1416,32 @@ virsh list --all
 ​ 5    debian-dev   running
 #+end_stdout
 
-**** Start VM (named debian-dev)
+*** Start VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 virsh start debian-dev
 #+end_run
 
-**** Stop VM (named debian-dev)
+*** Stop VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 ​# destroy actually just means stop, not delete
 virsh destroy debian-dev
 #+end_run
 
-**** Show network interface (MAC address)
+*** Show network interface (MAC address)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 virsh domiflist debian-dev
 #+end_run
 
-**** Undefine VM (named debian-dev)
+*** Undefine VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 ​# undefine removes the VM configuration
 virsh undefine debian-dev
 #+end_run
-**** Serial console of VM (named debian-dev)
+*** Serial console of VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
 virsh console debian-dev
