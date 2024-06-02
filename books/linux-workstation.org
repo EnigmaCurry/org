@@ -1079,7 +1079,7 @@ chmod a+r ${TMP_SSH}
 sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
 #+end_run
 
-*** Create VM (named debian-dev)
+*** Configure VM (named debian-dev)
 **** Find the default subnet (=virbr0=)
 #+attr_shortcode:
 #+begin_run
@@ -1089,6 +1089,34 @@ ip route | grep virbr0 | cut -d " " -f 1
 192.168.122.0/24
 #+end_stdout
 
+**** Choose hardware sizes
+
+#+attr_shortcode:
+#+begin_run
+MEMORY=1024
+CPUS=2
+DISK_SIZE=50
+#+end_run
+
+**** Choose cloud image
+
+You can choose any standard cloud image that supports cloud-init.
+
+***** Debian 12
+
+#+attr_shortcode:
+#+begin_run
+OS_VARIANT=debian12
+CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
+#+end_run
+
+***** Fedora 40
+
+#+attr_shortcode:
+#+begin_run
+OS_VARIANT=fedora40
+CLOUD_IMAGE=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2
+#+end_run
 **** Create static DHCP lease
 
 #+attr_shortcode:
@@ -1122,14 +1150,14 @@ sudo virsh net-start default
 TMP_ENV=$(mktemp)
 cat << EOF > ${TMP_ENV}
 export NAME=${NAME}
+export OS_VARIANT=${OS_VARIANT}
 export IP_ADDRESS=${IP_ADDRESS}
 export MAC_ADDRESS=${MAC_ADDRESS}
-export CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
-export MEMORY=1024
-export CPUS=2
-export DISK_SIZE=50
+export CLOUD_IMAGE=${CLOUD_IMAGE}
+export MEMORY=${MEMORY}
+export CPUS=${CPUS}
+export DISK_SIZE=${DISK_SIZE}
 export USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
-export OS_VARIANT=debian12
 EOF
 chmod a+r ${TMP_ENV}
 sudo su ${VM_ADMIN:-libvirt-admin} -c \
@@ -1137,6 +1165,7 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c \
 #+end_run
 
 
+*** Create VM (named debian-dev)
 **** Run the commands in this section with the libvirt-admin user
 
 #+attr_shortcode: :style info
@@ -1278,10 +1307,10 @@ otherwise you will get an error about the unejected cloud-init ISO.
 virsh destroy ${NAME}
 #+end_run
 
-**** Restart VM (named debian-dev)
+**** Restart VM
 #+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-virsh start debian-dev
+virsh start ${NAME}
 #+end_run
 
 **** Enable auto start on boot
