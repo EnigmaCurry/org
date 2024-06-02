@@ -5,30 +5,26 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="You need to install Docker Engine (not Docker Desktop!) on your workstation.
-You will completely disable the Docker daemon on your workstation, you’re only installing Docker Engine for its client tools (eg. the docker command).
-Various ways to install Docker Engine Try your system package manager Some Linux distributions have decent packages for up-to-date Docker versions. Some other distributions lag behind by several versions, or may even introduce non-standard changes of their own.">
+    <meta name="description" content="You can bend the “no servers on workstations” rule, a bit, by hosting some development servers inside of virtual machines (VM) on your workstation. Keeping your development servers in isolated VMs, running under a dedicated VM user account, will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH, and have them automatically start when your workstation boots.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Install Docker client tools :: book.rymcg.tech">
-    <meta name="twitter:description" content="You need to install Docker Engine (not Docker Desktop!) on your workstation.
-You will completely disable the Docker daemon on your workstation, you’re only installing Docker Engine for its client tools (eg. the docker command).
-Various ways to install Docker Engine Try your system package manager Some Linux distributions have decent packages for up-to-date Docker versions. Some other distributions lag behind by several versions, or may even introduce non-standard changes of their own.">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">
+    <meta name="twitter:title" content="KVM / libvirt :: book.rymcg.tech">
+    <meta name="twitter:description" content="You can bend the “no servers on workstations” rule, a bit, by hosting some development servers inside of virtual machines (VM) on your workstation. Keeping your development servers in isolated VMs, running under a dedicated VM user account, will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH, and have them automatically start when your workstation boots.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Install Docker client tools :: book.rymcg.tech">
-    <meta property="og:description" content="You need to install Docker Engine (not Docker Desktop!) on your workstation.
-You will completely disable the Docker daemon on your workstation, you’re only installing Docker Engine for its client tools (eg. the docker command).
-Various ways to install Docker Engine Try your system package manager Some Linux distributions have decent packages for up-to-date Docker versions. Some other distributions lag behind by several versions, or may even introduce non-standard changes of their own.">
+    <meta property="og:title" content="KVM / libvirt :: book.rymcg.tech">
+    <meta property="og:description" content="You can bend the “no servers on workstations” rule, a bit, by hosting some development servers inside of virtual machines (VM) on your workstation. Keeping your development servers in isolated VMs, running under a dedicated VM user account, will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH, and have them automatically start when your workstation boots.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
     <meta property="og:locale" content="en-us">
-    <meta property="og:type" content="article">
-    <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
-    <meta itemprop="name" content="Install Docker client tools :: book.rymcg.tech">
-    <meta itemprop="description" content="You need to install Docker Engine (not Docker Desktop!) on your workstation.
-You will completely disable the Docker daemon on your workstation, you’re only installing Docker Engine for its client tools (eg. the docker command).
-Various ways to install Docker Engine Try your system package manager Some Linux distributions have decent packages for up-to-date Docker versions. Some other distributions lag behind by several versions, or may even introduce non-standard changes of their own.">
-    <meta itemprop="wordCount" content="452">
-    <title>Install Docker client tools :: book.rymcg.tech</title>
+    <meta property="og:type" content="website">
+    <meta itemprop="name" content="KVM / libvirt :: book.rymcg.tech">
+    <meta itemprop="description" content="You can bend the “no servers on workstations” rule, a bit, by hosting some development servers inside of virtual machines (VM) on your workstation. Keeping your development servers in isolated VMs, running under a dedicated VM user account, will keep your workstation clean. You can treat these VMs just like any other remote Linux host, and access them over SSH, and have them automatically start when your workstation boots.
+These instructions will install a barebones Debian server in a VM, with NAT networking (private IP address, no public ports open), for local development/testing purposes only.">
+    <meta itemprop="wordCount" content="112">
+    <title>KVM / libvirt :: book.rymcg.tech</title>
+    <link href="/linux-workstation/kvm-libvirt/index.xml" rel="alternate" type="application/rss+xml" title="KVM / libvirt :: book.rymcg.tech">
     <link href="/css/fontawesome-all.min.css?1717305958" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717305958" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717305958" rel="stylesheet">
     <link href="/css/auto-complete.css?1717305958" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717305958" rel="stylesheet"></noscript>
@@ -42,8 +38,8 @@ Various ways to install Docker Engine Try your system package manager Some Linux
     <script src="/js/variant.js?1717305958"></script>
     <script>
       window.relearn = window.relearn || {};
-      window.relearn.relBasePath='..\/..\/..';
-      window.relearn.relBaseUri='..\/..\/..';
+      window.relearn.relBasePath='..\/..';
+      window.relearn.relBaseUri='..\/..';
       window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
       window.index_js_url="/index.search.js";
       // variant stuff
@@ -60,7 +56,7 @@ Various ways to install Docker Engine Try your system package manager Some Linux
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -71,33 +67,20 @@ Various ways to install Docker Engine Try your system package manager Some Linux
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"><nav class="TableOfContents">
-  <ul>
-    <li><a href="#various-ways-to-install-docker-engine">Various ways to install Docker Engine</a>
-      <ul>
-        <li><a href="#try-your-system-package-manager">Try your system package manager</a></li>
-        <li><a href="#install-from-upstream-docker-package-repository">Install from upstream Docker package repository</a></li>
-        <li><a href="#use-the-generic-docker-installer-to-install-the-latest-version">Use the generic Docker installer to install the latest version</a></li>
-        <li><a href="#don-t-install-docker-desktop">DON&rsquo;T install Docker Desktop!</a></li>
-      </ul>
-    </li>
-    <li><a href="#disable-docker-daemon-on-your-workstation">Disable Docker daemon on your workstation</a></li>
-  </ul>
-</nav>
+                <div class="topbar-content-wrapper"> 
                 </div>
               </div>
             </div>
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/workstation/index.html"><span itemprop="name">Setup your workstation</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Install Docker client tools</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">KVM / libvirt</span><meta itemprop="position" content="3"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/index.html" title="Setup your workstation (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/ssh/index.html" title="SSH (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" title="Install d.rymcg.tech tools (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html" title="Enable libvirtd (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -117,110 +100,42 @@ Various ways to install Docker Engine Try your system package manager Some Linux
             <header class="headline">
             </header>
 
-<h1 id="install-docker-client-tools">Install Docker client tools</h1>
+<h1 id="kvm--libvirt">KVM / libvirt</h1>
 
-<p>You need to install Docker Engine (not Docker Desktop!) on your
-workstation.</p>
-<p>You will completely disable the Docker daemon on your workstation,
-you&rsquo;re only installing Docker Engine for its client tools (eg. the
-<code>docker</code> command).</p>
-<h2 id="various-ways-to-install-docker-engine">Various ways to install Docker Engine</h2>
-<h3 id="try-your-system-package-manager">Try your system package manager</h3>
-<p>Some Linux distributions have decent packages for up-to-date Docker
-versions. Some other distributions lag behind by several versions, or
-may even introduce non-standard changes of their own. Your mileage may
-vary with packages provided by your operating system.</p>
-<p>If you&rsquo;re on Arch Linux, this is known to be a good configuration:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Arch Linux workstations:</div>
-    <div class="box-content">
-        <code><pre>
-sudo pacman -S docker docker-compose docker-buildx
-</pre></code>
-    </div>
-</div>
-
-
-<h3 id="install-from-upstream-docker-package-repository">Install from upstream Docker package repository</h3>
-<p>The Docker organization provides several up-to-date packages for
-various Linux distributions:</p>
-<ul>
-<li><a href="https://docs.docker.com/engine/install/debian/" rel="external" target="_blank">Debian</a></li>
-<li><a href="https://docs.docker.com/engine/install/ubuntu/" rel="external" target="_blank">Ubuntu</a></li>
-<li><a href="https://docs.docker.com/engine/install/fedora/" rel="external" target="_blank">Fedora</a></li>
+<p>You can bend the &ldquo;no servers on workstations&rdquo; rule, a bit, by hosting
+some development servers inside of virtual machines (VM) on your
+workstation. Keeping your development servers in isolated VMs, running
+under a dedicated VM user account, will keep your workstation clean.
+You can treat these VMs just like any other remote Linux host, and
+access them over SSH, and have them automatically start when your
+workstation boots.</p>
+<p>These instructions will install a barebones Debian server in a VM,
+with NAT networking (private IP address, no public ports open), for
+local development/testing purposes only.</p>
+<div class="index">
+<h2>Index</h2>
+<ul class="children children-li children-sort-">
+	
+<li><a href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html">Enable libvirtd</a><ul>
+	</ul></li>
+<li><a href="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html">Create VM admin</a><ul>
+	</ul></li>
+<li><a href="/linux-workstation/kvm-libvirt/config-vm/index.html">Configure VM</a><ul>
+	</ul></li>
+<li><a href="/linux-workstation/kvm-libvirt/create-vm/index.html">Create VM</a><ul>
+	</ul></li>
+<li><a href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a><ul>
+	</ul></li>
+<li><a href="/linux-workstation/kvm-libvirt/vm-management/index.html">VM management commands</a><ul>
+	</ul></li>
 </ul>
-<h3 id="use-the-generic-docker-installer-to-install-the-latest-version">Use the generic Docker installer to install the latest version</h3>
-<p>If your Linux distribution doesn&rsquo;t provide a Docker package, or you&rsquo;ve
-decided its not good for your situation, you may be better off by running
-the generic installer script from the upstream Docker organization:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-curl -fsSL https://get.docker.com -o install-docker.sh
-sudo sh install-docker.sh
-</pre></code>
-    </div>
 </div>
 
 
-<h3 id="don-t-install-docker-desktop">DON&rsquo;T install Docker Desktop!</h3>
-<ol>
-<li>Docker Desktop isn&rsquo;t open source.</li>
-<li>Docker Desktop runs a VM to run the Docker daemon on localhost.
-(we don&rsquo;t want that, since we will use a remote Docker context
-instead.)</li>
-<li>Docker Desktop does not support host mode networking, so it
-wouldn&rsquo;t have worked with our Traefik config anyway. (This
-situation may have changed in more recent versions of Docker
-Desktop 4.29+).</li>
-<li>Docker Desktop provide the same <code>docker</code> client tools, so it will
-actually still work, if thats the package you prefer to install.
-Just be sure to disable the VM that it creates by default, you
-will <em>not</em> need it! Keep your workstation clean, don&rsquo;t run
-containers / VMs on it!</li>
-</ol>
-<h2 id="disable-docker-daemon-on-your-workstation">Disable Docker daemon on your workstation</h2>
-<p>Your workstation is the <em>manager</em> of <em>remote</em> Docker hosts, so it
-should not run the Docker daemon itself, but only the client.</p>
-<p>Run the following commands to disable the Docker daemon:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-sudo systemctl disable --now docker
-sudo systemctl mask docker
-</pre></code>
-    </div>
-</div>
+<nav id="TableOfContents"></nav>
 
 
 
-<div class="box notices cstyle tip">
-  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
-  <div class="box-content">
-
-<p>There is a vestigal Docker context named &ldquo;default&rdquo; left on your system
-(see <code>docker context ls</code>), and this context was originally used to
-manage the Docker daemon of the local host
-(<code>unix:///var/run/docker.sock</code>). However, this will be of no use to
-you now, since the Docker daemon is now completely disabled on the
-workstation. Furthermore, the &ldquo;default&rdquo; context cannot be deleted, so
-its best to just ignore it (the <code>d.rymcg.tech</code> CLI won&rsquo;t even show
-it). In the next couple of steps, you&rsquo;ll create and activate new
-<strong>remote SSH contexts</strong> that you&rsquo;ll use instead of the &ldquo;default&rdquo;
-context.</p>
-</div>
-</div>
 
             <footer class="footline">
             </footer>
@@ -263,7 +178,7 @@ context.</p>
       <div id="R-content-wrapper" class="highlightable">
         <div id="R-topics">
           <ul class="enlarge morespace collapsible-menu">
-          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class="parent "><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a><ul id="R-subsections-247caeb1441bcea844a3ccf766ca4471" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/introduction/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
           <li data-nav-id="/linux-workstation/introduction/requirements/index.html" class=""><a class="padding" href="/linux-workstation/introduction/requirements/index.html">Requirements</a></li></ul></li>
@@ -276,21 +191,21 @@ context.</p>
           <li data-nav-id="/linux-workstation/config/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
           <li data-nav-id="/linux-workstation/config/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/config/emacs-on-fedora/index.html">Emacs</a></li>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="active parent alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html">Enable libvirtd</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html">Create VM admin</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/config-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/config-vm/index.html">Configure VM</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/create-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/create-vm/index.html">Create VM</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/vm-management/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/vm-management/index.html">VM management commands</a></li></ul></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/index.html" class="parent "><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html">Setup public DNS service</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public server (VPS)</a></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
-          <li data-nav-id="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" class="active"><a class="padding" href="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">Install Docker client tools</a></li>
+          <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">Install Docker client tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/ssh-config-and-docker-context/index.html">Create SSH config and Docker Context</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/install-docker-on-remote-host/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-docker-on-remote-host/index.html">Install Docker on your remote host</a></li>
@@ -325,7 +240,7 @@ context.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
