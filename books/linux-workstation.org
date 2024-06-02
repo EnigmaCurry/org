@@ -1024,7 +1024,7 @@ This depends on the libvirt packages installed in the chapter on [[/linux-workst
 
 #+begin_run
 sudo systemctl enable --now libvirtd
-sudo systemctl status libvirtd
+sudo systemctl status --no-pager libvirtd
 #+end_run
 
 Add the existing =libvirt= group to =/etc/group= :
@@ -1041,12 +1041,27 @@ automatically.)
 
 *** Create a dedicated user account for VM management
 
+This will create a new user account on your workstation named
+=libvirt-admin=. This user will be used as the owner for all the VM
+disk images, config files, and for running the libvirt (qemu)
+processes that run your VM.
+
+This separation from the normal account you use is important to limit
+the privileges that your normal account has over the VM
+infrastructure. Your normal account should be able to SSH /into/ the
+VM and have full root prileges over it. But you should not have access
+to the VM disk image files, nor its configuration. Access to all VM
+administrative tasks must be done through =sudo= to control the
+=libvirt-admin= account.
+
+**** Create =libvirt-admin= user
+
 #+begin_run
 VM_ADMIN=libvirt-admin
 sudo useradd ${VM_ADMIN} -G libvirt
 #+end_run
 
-*** Configure systemd for the libvirt-admin user
+**** Configure systemd for the =libvirt-admin= user
 
 #+begin_run
 sudo loginctl enable-linger ${VM_ADMIN}
@@ -1054,7 +1069,7 @@ sudo su ${VM_ADMIN} -c "mkdir -p ~/.bashrc.d"
 sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bashrc.d/xdg"
 #+end_run
 
-*** Copy your public SSH key into the libvirt-admin home directory
+**** Copy your public SSH key into the =libvirt-admin= home directory
 
 #+begin_run
 SSH_KEY=~/.ssh/id_ed25519.pub
@@ -1064,7 +1079,63 @@ chmod a+r ${TMP_SSH}
 sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
 #+end_run
 
-*** Create VM with the libvirt-admin user
+*** Create VM (named debian-dev)
+**** Find the default subnet (=virbr0=)
+#+attr_shortcode:
+#+begin_run
+ip route | grep virbr0 | cut -d " " -f 1
+#+end_run
+#+begin_stdout
+192.168.122.0/24
+#+end_stdout
+
+**** Create static DHCP lease
+
+#+attr_shortcode:
+#+begin_run
+NAME=debian-dev
+IP_ADDRESS=192.168.122.2
+MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | tr '[:upper:]' '[:lower:]')
+sudo virsh net-update default add-last ip-dhcp-host "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" --live --config --parent-index 0
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You need to choose a valid IP_ADDRESS in the range of your subnet. The
+Gateway should be the same subnet with the address ending in =.1=. The
+MAC address will be random.
+
+You can edit the file manually to do more cleanup. After editing, you
+must stop (destroy) and restart the network.
+
+#+begin_run
+sudo virsh net-edit default
+sudo virsh net-destroy default
+sudo virsh net-start default
+#+end_run
+#+end_notice
+
+**** Create env file to store main config settings
+
+#+attr_shortcode:
+#+begin_run
+TMP_ENV=$(mktemp)
+cat << EOF > ${TMP_ENV}
+export NAME=${NAME}
+export IP_ADDRESS=${IP_ADDRESS}
+export MAC_ADDRESS=${MAC_ADDRESS}
+export CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
+export MEMORY=1024
+export CPUS=2
+export DISK_SIZE=50
+export USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
+export OS_VARIANT=debian12
+EOF
+chmod a+r ${TMP_ENV}
+sudo su ${VM_ADMIN:-libvirt-admin} -c \
+    "mkdir -p ~/libvirt && cp ${TMP_ENV} ~/libvirt/${NAME}.env"
+#+end_run
+
 
 **** Run the commands in this section with the libvirt-admin user
 
@@ -1075,24 +1146,20 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/lib
 Login to the shell account of  =libvirt-admin=:
 
 #+begin_run
-sudo -u libvirt-admin /bin/bash
+sudo su libvirt-admin -l
 #+end_run
 #+end_notice
 
-**** Configure temporary variables for a Debian VM config:
+**** Source the config
 
-#+begin_env
-CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
-NAME=debian-dev
-OS_VARIANT=debian12
-MEMORY=1024
-CPUS=2
-DISK_SIZE=50
-MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] $[RANDOM%256])
-USER_DATA=~/libvirt/cloud-init/${NAME}.yaml
-#+end_env
+Now, and anytime you come back later to work on the same VM, source the config file:
 
-**** Create directories to hold our VM disks and config files:
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+source ~/libvirt/debian-dev.env
+#+end_run
+
+**** Create directories to hold the VM disks and config files:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
@@ -1172,7 +1239,6 @@ virt-install \
   --virt-type kvm \
   --graphics none \
   --console pty,target_type=serial \
-  --noautoconsole \
   --cpu host \
   --vcpus ${CPUS} \
   --memory ${MEMORY} \
@@ -1182,60 +1248,22 @@ virt-install \
   --disk ~/libvirt/disks/${NAME}.qcow2
 #+end_run
 
- * Wait a minute for the VM to boot and bring up its network interface.
- 
-**** Find the IP address of the VM (named debian-dev)
+**** Watch the console for any errors
 
-#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
-#+begin_run
-MAC_ADDRESS=$(virsh domiflist ${NAME:-debian-dev} | grep virbr0 | grep -Po ".* \K.*$")
-IP_ADDRESS=$(arp -n | grep $MAC_ADDRESS | cut -d " " -f 1)
-echo ""
-echo ${MAC_ADDRESS}
-echo ${IP_ADDRESS}
-echo ""
-echo "# Copy this comamnd and run it as root to make a static DHCP lease:"
-echo "sudo virsh net-update default add ip-dhcp-host \"&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;\" --live --config"
-#+end_run
+As the VM starts up, your terminal will attach to the console output
+of the VM. This is to monitor any errors that may occur during the
+bootup, especially relating to cloud-init.
 
-#+attr_shortcode: :style tip
-#+begin_notice
-The final =echo= command prints the command that you need to run as
-*root* (sudo) to add the static DHCP lease:
-
-#+begin_run
-## Adds static DHCP lease to libvirt dnsmasq:
-## Change the NAME, MAC, and IP addresses to suit your VM!
-sudo virsh net-update default add ip-dhcp-host \
-  "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" \
-  --live --config
-#+end_run
-
-This can also be done by editing the config file manually:
-
-#+begin_run
-sudo virsh net-edit default
-#+end_run
+Wait until you see this Login message:
 
 #+begin_stdout
-&lt;network&gt;
-  &lt;name&gt;default&lt;/name&gt;
-  &lt;uuid&gt;bcffa07e-02de-4b64-8820-783b92c80a6a&lt;/uuid&gt;
-&lt;network&gt;
-  &lt;name&gt;default&lt;/name&gt;
-  &lt;uuid&gt;bcffa07e-02de-4b64-8820-783b92c80a6a&lt;/uuid&gt;
-  &lt;forward mode='nat'/&gt;
-  &lt;bridge name='virbr0' stp='on' delay='0'/&gt;
-  &lt;mac address='52:54:00:82:1d:f8'/&gt;
-  &lt;ip address='192.168.122.1' netmask='255.255.255.0'&gt;
-    &lt;dhcp&gt;
-      &lt;range start='192.168.122.2' end='192.168.122.254'/&gt;
-      &lt;host mac='00:60:2f:39:8e:5f' name='debian-dev' ip='192.168.122.165'/&gt;
-    &lt;/dhcp&gt;
-  &lt;/ip&gt;
-&lt;/network&gt;
+debian-dev login: 
 #+end_stdout
-#+end_notice
+
+**** Disconnect from the VM console
+To disconnect from the VM console, press the keyboard combination
+=Ctrl+]= (meaning to hold the Control key and the right square bracket
+key at the same time.)
 
 **** Shutdown the VM
 
@@ -1245,12 +1273,17 @@ It is important to shut down the VM the first time after install,
 otherwise you will get an error about the unejected cloud-init ISO.
 #+end_notice
 
-#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin usre
 #+begin_run
 ## Destroy just means to stop:
 virsh destroy ${NAME}
 #+end_run
 
+**** Restart VM (named debian-dev)
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virsh start debian-dev
+#+end_run
 
 **** Enable auto start on boot
 
@@ -1271,7 +1304,7 @@ Append a new host config into your SSH config (=~/.ssh/config=):
 #+attr_shortcode: :file ~/.ssh/config
 #+begin_edit
 Host debian-dev
-    Hostname 192.168.122.42
+    Hostname 192.168.122.2
     User admin
     ControlMaster auto
     ControlPersist yes
@@ -1283,15 +1316,26 @@ Host debian-dev
 *Make sure =Hostname= is set to the IP address you retrieved above.*
 #+end_notice
 
-
 With this config, you can now use SSH to control the VM:
 
 #+begin_run
 ssh debian-dev whoami
 #+end_run
 
+#+begin_stdout
+admin
+#+end_stdout
+
+**** Install Docker or something else
+
 It is recommended to install Docker on your Debian VM. Please read the
 other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]]
+
+**** Reboot your workstation
+
+Now would be a good time to reboot your workstation to test that the
+VM is automatically restarted on boot, SSH works, and that the IP
+address stays the same due to the static DHCP lease.
 
 *** VM Management
 #+attr_shortcode: :style tip
@@ -1323,6 +1367,13 @@ virsh start debian-dev
 ​# destroy actually just means stop, not delete
 virsh destroy debian-dev
 #+end_run
+
+**** Show network interface (MAC address)
+#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
+#+begin_run
+virsh domiflist debian-dev
+#+end_run
+
 **** Undefine VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
