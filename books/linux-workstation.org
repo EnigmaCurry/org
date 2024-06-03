@@ -1631,44 +1631,43 @@ called. So, this section adds another service that triggers the hook
 manually on boot to setup the port forwarding for each VM.
 #+end_aside
 
+**** Create DNAT service template
+
 #+begin_run
-NAME=debian-dev
-(set -e
-cat << EOF > /etc/systemd/system/libvirt-DNAT-${NAME}.service
+cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
-Description=DNAT port forwarding for kernel virtual machine: ${NAME}
+Description=DNAT port forwarding for kernel virtual machine: %i
 After=network.target
 Wants=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/etc/libvirt/hooks/qemu ${NAME} start
+ExecStart=/etc/libvirt/hooks/qemu %i start
 
 [Install]
 WantedBy=network.target
 EOF
 systemctl daemon-reload
-systemctl enable --now libvirt-DNAT-${NAME}.service
-systemctl status libvirt-DNAT-${NAME}.service
-)
 #+end_run
 
-*** Shutdown your VM
+**** Enable DNAT service once per VM you want to expose
 
 #+begin_run
 NAME=debian-dev
-sudo su libvirt-admin -c "virsh shutdown ${NAME}"
+systemctl enable --now libvirt-DNAT@${NAME}.service
+systemctl status libvirt-DNAT@${NAME}.service
 #+end_run
 
-*** Restart libvirtd
+**** Reboot workstation
+
+Once rebooted, test that your port forward rule exists in iptables
+rules:
 
 #+begin_run
-sudo systemctl restart libvirtd
+iptables-save | grep 2222
 #+end_run
 
-*** Restart your VM
-
-#+begin_run
-NAME=debian-dev
-sudo su libvirt-admin -c "virsh start ${NAME}"
-#+end_run
+#+begin_stdout
+-A DNAT-debian-dev -d 10.13.13.227/32 -p tcp -m tcp --dport 2222 -j DNAT --to-destination 192.168.122.2:22
+-A SNAT-debian-dev -s 192.168.122.2/32 -d 192.168.122.2/32 -p tcp -m tcp --dport 2222 -j MASQUERADE
+#+end_stdout
