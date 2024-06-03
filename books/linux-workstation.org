@@ -1018,8 +1018,18 @@ These instructions will install a barebones Debian or Fedora server in
 a VM, with NAT networking (private IP address, no public ports open),
 for local development/testing purposes only.
 
-These instructions have been tested as working on Fedora Atomic and
-Arch Linux workstations.
+#+attr_shortcode: :style orange :title Compatibility
+#+begin_notice
+These instructions have been tested as working on the following
+Linux distributions:
+
+ * ✅ Fedora Atomic (40)
+ * ✅ Arch Linux
+
+🚧 Debian (12) workstations are only partially compatible, I have not
+been able to get the autostart service to run, due to an app armor
+permission issue, however the VMs do run if you start them manually.
+#+end_notice
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -1040,21 +1050,57 @@ table of contents
 
 *** Install libvirt packages
 
-**** Fedora Atomic
+**** Packages for Fedora Atomic hosts
 
 #+attr_shortcode: :style tip
 #+begin_notice
-If you are running Fedora Atomic, full package installation is covered
-in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
+Full package installation for Fedora Atomic is covered in the chapter
+on [[/linux-workstation/layering-packages][Layering packages]].
 #+end_notice
 
-**** Arch Linux
+**** Packages for Arch Linux hosts
+
+#+attr_shortcode: :style info
+#+begin_notice
+For Arch Linux, it is recommended to do a full system update and
+reboot prior to installing the libvirt packages.
+#+begin_run
+sudo pacman -Syu
+sudo reboot
+#+end_run
+
+After reboot, install packages:
 
 #+begin_run
 sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \
                sysfsutils bridge-utils ebtables git make which jq \
                dmidecode pkgconf gcc
 #+end_run
+#+end_notice
+
+
+**** Packages for Debian/Ubuntu hosts
+
+#+attr_shortcode: :style info
+#+begin_notice
+For Debian (or Ubuntu), it is recommended to do a full system upgrade and
+reboot prior to installing the libvirt packages.
+#+begin_run
+sudo apt update
+sudo apt upgrade
+sudo reboot
+#+end_run
+
+After reboot, install packages:
+
+#+begin_run
+sudo apt install --no-install-recommends \
+                 libvirt-daemon-system virtinst libvirt-clients \
+                 dnsmasq sysfsutils bridge-utils ebtables git make \
+                 which jq dmidecode pkgconf gcc curl \
+                 python3 python-is-python3
+#+end_run
+#+end_notice
 
 *** Enable libvirtd service
 
@@ -1079,6 +1125,32 @@ Add the existing =libvirt= group to =/etc/group=, if it isn't already:
 grep "^libvirt:" /etc/group || sudo bash -c "getent group libvirt >> /etc/group"
 #+end_run
 
+*** Extra steps for Debian workstations
+
+#+attr_shortcode: :style tip
+#+begin_notice
+On a Debian workstation, creating a config for qemu-bridge-helper was
+required, and modifying it to run setuid root to prevent user
+permission error (=failed to create tun device: Operation not permitted:
+Transport endpoint is not connected=):
+
+#+begin_run
+(set -e
+sudo mkdir -p /etc/qemu
+echo "allow virbr0" | sudo tee /etc/qemu/bridge.conf
+sudo chmod u+s /usr/lib/qemu/qemu-bridge-helper
+)
+#+end_run
+
+I also had to disable apparmor for libvirtd, otherwise I got
+permission errors:
+
+#+begin_run
+sudo truncate --size 0 /etc/apparmor.d/usr.sbin.libvirtd
+sudo apparmor_parser -R /etc/apparmor.d/usr.sbin.libvirtd
+#+end_run
+#+end_notice
+
 ** Create VM admin
 :PROPERTIES:
 :EXPORT_FILE_NAME: dedicated-vm-user
@@ -1102,8 +1174,20 @@ control the =libvirt-admin= account.
 
 #+begin_run
 VM_ADMIN=libvirt-admin
-sudo useradd -m ${VM_ADMIN} -G libvirt
+sudo useradd -m ${VM_ADMIN} -s /bin/bash -G libvirt 
 #+end_run
+
+**** Extra steps for Debian workstations
+
+#+attr_shortcode: :style tip
+#+begin_notice
+On a Debian workstation, adding the user to the =kvm= group was also
+required:
+
+#+begin_run
+sudo gpasswd -a ${VM_ADMIN} kvm
+#+end_run
+#+end_notice
 
 *** Configure systemd for the =libvirt-admin= user
 
@@ -1114,9 +1198,18 @@ sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bas
 #+end_run
 
 *** Copy your public SSH key into the =libvirt-admin= home directory
+#+attr_shortcode: :style tip
+#+begin_notice
+If you don't have an SSH key yet, run =ssh-keygen -t ed25519=.
+#+end_notice
+
+Set =SSH_KEY= variable to point to your public SSH key file:
+
+#+begin_env
+SSH_KEY=~/.ssh/id_ed25519.pub
+#+end_env
 
 #+begin_run
-SSH_KEY=~/.ssh/id_ed25519.pub
 TMP_SSH=$(mktemp)
 cat ${SSH_KEY} > ${TMP_SSH}
 chmod a+r ${TMP_SSH}
@@ -1148,6 +1241,16 @@ You can choose any standard cloud image that supports cloud-init.
 OS_VARIANT=debian12
 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2
 #+end_env
+
+
+#+attr_shortcode: :style tip
+#+begin_notice
+On slighly older versions of libvirt, you may need to set OS_VARIANT
+differently, but the image should still work:
+#+begin_env
+OS_VARIANT=debian11
+#+end_env
+#+end_notice
 
 **** Fedora 40
 
@@ -1284,8 +1387,11 @@ in =~/libvirt/cloud-images=, so they can be be reused.
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-(cd ~/libvirt/cloud-images; curl -LO ${CLOUD_IMAGE})
-chmod a-w ~/libvirt/cloud-images/$(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
+(set -e
+cd ~/libvirt/cloud-images
+curl -LO ${CLOUD_IMAGE}
+chmod a-w $(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
+)
 #+end_run
 
 *** Clean up old VMs with the same name:
@@ -1371,11 +1477,40 @@ otherwise you will get an error about the unejected cloud-init ISO.
 virsh shutdown ${NAME}
 #+end_run
 
+*** Verify VM is shut down
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virsh list --all
+#+end_run
+
+#+begin_stdout
+​ Id   Name         State
+​-----------------------------
+​ -    debian-dev   shut off
+#+end_stdout
+
 *** Restart VM
 #+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virsh start ${NAME}
 #+end_run
+
+#+begin_stdout
+Domain 'debian-dev' started
+#+end_stdout
+
+*** Verify VM is running
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virsh list --all
+#+end_run
+
+#+begin_stdout
+​ Id   Name         State
+​-----------------------------
+​ -    debian-dev   running
+#+end_stdout
+
 
 ** Auto start VMs on boot
 :PROPERTIES:
@@ -1443,43 +1578,6 @@ NAME=debian-dev
 sudo systemctl enable --now virsh@${NAME}
 sudo systemctl status virsh@${NAME}
 #+end_run
-
-** Setup workstation SSH config
-:PROPERTIES:
-:EXPORT_FILE_NAME: setup-workstation
-:END:
-
-#+attr_shortcode: :style info
-#+begin_notice
-*For this section, you are back to using your normal workstation user.*
-#+end_notice
-
-Append a new host config into your SSH config (=~/.ssh/config=):
-
-#+attr_shortcode: :file ~/.ssh/config
-#+begin_edit
-Host debian-dev
-    Hostname 192.168.122.2
-    User root
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath /tmp/ssh-%u-%r@%h:%p
-#+end_edit
-
-#+attr_shortcode: :style info
-#+begin_notice
-*Make sure =Host= and =Hostname= are set correctly for your VM.*
-#+end_notice
-
-With this config, you can now use SSH to control the VM:
-
-#+begin_run
-ssh debian-dev whoami
-#+end_run
-
-#+begin_stdout
-root
-#+end_stdout
 
 ** Public routes to VMs
 :PROPERTIES:
@@ -1581,3 +1679,47 @@ iptables-save | grep 2222
 -A DNAT-debian-dev -d 10.13.13.227/32 -p tcp -m tcp --dport 2222 -j DNAT --to-destination 192.168.122.2:22
 -A SNAT-debian-dev -s 192.168.122.2/32 -d 192.168.122.2/32 -p tcp -m tcp --dport 2222 -j MASQUERADE
 #+end_stdout
+** Setup workstation SSH config
+:PROPERTIES:
+:EXPORT_FILE_NAME: setup-workstation
+:EXPORT_HUGO_WEIGHT: 5000
+:END:
+
+#+attr_shortcode: :style info
+#+begin_notice
+*For this section, you are back to using your normal workstation user.*
+#+end_notice
+
+Append a new host config into your SSH config (=~/.ssh/config=):
+
+#+attr_shortcode: :file ~/.ssh/config
+#+begin_edit
+Host debian-dev
+    Hostname 192.168.122.2
+    User root
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+#+end_edit
+
+#+attr_shortcode: :style info
+#+begin_notice
+*Make sure =Host= and =Hostname= are set correctly for your VM.*
+#+end_notice
+
+With this config, you can now use SSH to control the VM:
+
+#+begin_run
+ssh debian-dev whoami
+#+end_run
+
+#+begin_stdout
+root
+#+end_stdout
+
+*** Install Docker
+
+You're now ready to use your VM as an install target for whatever you
+want. It is recommended to install Docker, which you can learn about
+in the volume [[/d.rymcg.tech][Self-hosting Docker]] in the chapter called [[/d.rymcg.tech/workstation][Setup your
+workstation]].
