@@ -1396,14 +1396,23 @@ the systemd unit for starting on boot.
 (set -e
 sudo mkdir -p /usr/local/src/
 sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/virsh-start-stop"
-sudo python -m venv /usr/local/src/virsh-start-stop/env
-sudo /usr/local/src/virsh-start-stop/env/bin/pip install libvirt-python
 )
 #+end_run
 
+#+attr_shortcode: :style credits :title CREDITS :icon gift
+#+begin_notice
+EnigmaCurry/virsh-start-stop is my own fork of
+[[https://github.com/avollmerhaus/virsh-start-stop][avollmerhaus/virsh-start-stop]] which has been slightly customized for
+this configuration. Thank you to avollmerhaus for creating this
+service manager!
+#+end_notice
+
 *** Create Unit template
 
+This is an instantiable template used for all VM services:
+
 #+begin_run
+VM_ADMIN=libvirt-admin
 cat << EOF | sudo tee /etc/systemd/system/virsh@.service
 [Unit]
 Description=virsh start / stop %i
@@ -1413,15 +1422,21 @@ After=libvirtd.service
 [Service]
 Type=oneshot
 RemainAfterExit=true
-ExecStart=su libvirt-admin -c "/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state started"
-ExecStop=su libvirt-admin -c "/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state stopped --timeout 80"
+User=libvirt-admin
+Group=libvirt
+Environment="XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN})"
+ExecStart=/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state started
+ExecStop=/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state stopped
 
 [Install]
 WantedBy=default.target
 EOF
 #+end_run
 
-*** Enable service to autostart each VM
+*** Enable each VM service
+
+This will instantiate the VM service template, and enable a VM named
+=debian-dev=, which will automatically start on workstation boot:
 
 #+begin_run
 NAME=debian-dev
@@ -1465,89 +1480,6 @@ ssh debian-dev whoami
 #+begin_stdout
 root
 #+end_stdout
-
-*** Install Docker or something else
-
-It is recommended to install Docker on your Debian VM. Please read the
-other book on [[/d.rymcg.tech/][Self-hosting Docker]], and the chapter on [[/d.rymcg.tech/workstation/install-docker-on-remote-host/][installing Docker]].
-
-*** Reboot your workstation
-
-Now would be a good time to reboot your workstation to test that the
-VM is automatically restarted on boot, SSH works, and that the IP
-address stays the same due to the static DHCP lease.
-
-*** OK what if autostart didn't work?
-
-You may encounter some issues with it not starting automatically on
-boot, I haven't fully figured the problem out.
-
-**** Remove save state
-
-#+begin_run
-sudo su libvirt-admin -c "virsh managedsave-remove debian-dev"
-
-#+end_run
-
-**** Start the VM manually
-
-#+begin_run
-sudo su libvirt-admin -c "virsh start debian-dev"
-#+end_run
-
-** VM management commands
-:PROPERTIES:
-:EXPORT_FILE_NAME: vm-management
-:END:
-
-#+attr_shortcode: :style tip
-#+begin_notice
-The rest of these commands (greyed out) are *examples* only, you don't need to run them now.
-#+end_notice
-
-*** List all defined VMs
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-virsh list --all
-#+end_run
-
-#+begin_stdout
-​ Id   Name         State
-​---------------------------
-​ 5    debian-dev   running
-#+end_stdout
-
-*** Start VM (named debian-dev)
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-virsh start debian-dev
-#+end_run
-
-*** Stop VM (named debian-dev)
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-virsh shutdown debian-dev
-#+end_run
-
-*** Show network interface (MAC address)
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-virsh domiflist debian-dev
-#+end_run
-
-*** Undefine VM (named debian-dev)
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-​# undefine removes the VM configuration
-virsh undefine debian-dev
-#+end_run
-*** Serial console of VM (named debian-dev)
-#+attr_shortcode:  :style none :title Run this as the libvirt-admin user
-#+begin_run
-virsh console debian-dev
-#+end_run
-
-To exit the console, press =Ctrl-]=. (Control + right square bracket).
 
 ** Public routes to VMs
 :PROPERTIES:
