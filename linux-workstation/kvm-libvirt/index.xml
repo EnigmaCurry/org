@@ -12,7 +12,7 @@
       <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-libvirtd/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-libvirtd/index.html</guid>
-      <description>Install libvirt packages Fedora Atomic Tip If you are running Fedora Atomic, full package installation is covered in the chapter on Layering packages.&#xA;Arch Linux [bash]: Run this on your workstation: sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \ sysfsutils bridge-utils ebtables git make which jq \ dmidecode pkgconf gcc Enable libvirtd service [bash]: Run this on your workstation: sudo systemctl enable --now libvirtd sudo systemctl enable --now libvirt-guests sudo systemctl status --no-pager libvirtd Start the default network [bash]: Run this on your workstation: sudo virsh net-start default sudo virsh net-autostart default Configure /etc/group Add the existing libvirt group to /etc/group, if it isn’t already:</description>
+      <description>Install libvirt packages Packages for Fedora Atomic hosts Tip Full package installation for Fedora Atomic is covered in the chapter on Layering packages.&#xA;Packages for Arch Linux hosts Info For Arch Linux, it is recommended to do a full system update and reboot prior to installing the libvirt packages.&#xA;[bash]: Run this on your workstation: sudo pacman -Syu sudo reboot After reboot, install packages:&#xA;[bash]: Run this on your workstation: sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \ sysfsutils bridge-utils ebtables git make which jq \ dmidecode pkgconf gcc Packages for Debian/Ubuntu hosts Info For Debian (or Ubuntu), it is recommended to do a full system upgrade and reboot prior to installing the libvirt packages.</description>
     </item>
     <item>
       <title>Create VM admin</title>
@@ -26,7 +26,7 @@
       <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/config-vm/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/config-vm/index.html</guid>
-      <description>Choose hardware sizes [bash]: Customize and set temporary environment variables MEMORY=1024 CPUS=2 DISK_SIZE=50 Choose cloud image You can choose any standard cloud image that supports cloud-init.&#xA;Debian 12 [bash]: Customize and set temporary environment variables OS_VARIANT=debian12 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 Fedora 40 [bash]: Customize and set temporary environment variables OS_VARIANT=fedora40 CLOUD_IMAGE=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2 Find the default subnet (virbr0) [bash]: Run this on your workstation: ip route | grep virbr0 | cut -d &#34; &#34; -f 1 (stdout) 192.</description>
+      <description>Choose hardware sizes [bash]: Customize and set temporary environment variables MEMORY=1024 CPUS=2 DISK_SIZE=50 Choose cloud image You can choose any standard cloud image that supports cloud-init.&#xA;Debian 12 [bash]: Customize and set temporary environment variables OS_VARIANT=debian12 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 Tip On slighly older versions of libvirt, you may need to set OS_VARIANT differently, but the image should still work:&#xA;[bash]: Customize and set temporary environment variables OS_VARIANT=debian11&#xA;Fedora 40 [bash]: Customize and set temporary environment variables OS_VARIANT=fedora40 CLOUD_IMAGE=https://download.</description>
     </item>
     <item>
       <title>Create VM</title>
@@ -34,13 +34,6 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/create-vm/index.html</guid>
       <description>Info For this entire section you need to perform the VM config as the libvirt-admin user. Login to the shell account of libvirt-admin: [bash]: Run this on your workstation: sudo su libvirt-admin -l Source the config Now, and anytime you come back later to work on the same VM, source the config file: Run this as the libvirt-admin user NAME=debian-dev source ~/libvirt/${NAME}.env Create directories to hold the VM disks and config files: Run this as the libvirt-admin user mkdir -p ~/libvirt/{cloud-images,disks,cloud-init} Create the cloud-init config file: Run this as the libvirt-admin user cat &lt;&lt; EOF | sed &#39;s/\xe2\x80\x8b//g&#39; &gt; ${USER_DATA} #cloud-config hostname: ${NAME} users: ​ - name: root ssh_authorized_keys: ​ - $(cat ~/libvirt/user-ssh.</description>
-    </item>
-    <item>
-      <title>Setup workstation SSH config</title>
-      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-workstation/index.html</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-workstation/index.html</guid>
-      <description> Info For this section, you are back to using your normal workstation user.&#xA;Append a new host config into your SSH config (~/.ssh/config):&#xA;Edit this file: ~/.ssh/config Host debian-dev Hostname 192.168.122.2 User root ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p Info Make sure Host and Hostname are set correctly for your VM.&#xA;With this config, you can now use SSH to control the VM:&#xA;[bash]: Run this on your workstation: ssh debian-dev whoami (stdout) root </description>
     </item>
     <item>
       <title>Auto start VMs on boot</title>
@@ -55,6 +48,13 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/public-routes/index.html</guid>
       <description>By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.&#xA;If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:&#xA;Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;</description>
+    </item>
+    <item>
+      <title>Setup workstation SSH config</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-workstation/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-workstation/index.html</guid>
+      <description>Info For this section, you are back to using your normal workstation user.&#xA;Append a new host config into your SSH config (~/.ssh/config):&#xA;Edit this file: ~/.ssh/config Host debian-dev Hostname 192.168.122.2 User root ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p Info Make sure Host and Hostname are set correctly for your VM.&#xA;With this config, you can now use SSH to control the VM:&#xA;[bash]: Run this on your workstation: ssh debian-dev whoami (stdout) root Install Docker You’re now ready to use your VM as an install target for whatever you want.</description>
     </item>
   </channel>
 </rss>
