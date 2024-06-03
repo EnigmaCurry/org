@@ -1067,8 +1067,8 @@ sudo systemctl status --no-pager libvirtd
 *** Start the default network
 
 #+begin_run
-virsh net-start default
-virsh net-autostart default
+sudo virsh net-start default
+sudo virsh net-autostart default
 #+end_run
 
 *** Configure /etc/group
@@ -1380,30 +1380,8 @@ virsh start ${NAME}
 ** Auto start VMs on boot
 :PROPERTIES:
 :EXPORT_FILE_NAME: autostart
+:EXPORT_HUGO_WEIGHT: 4001
 :END:
-
-*** Temporary unit
-#+attr_shortcode: :style root :title Run this as root on your workstation
-#+begin_run
-NAME=debian-dev
-(set -e
-cat << EOF > /etc/systemd/system/libvirt-VM-${NAME}.service
-[Unit]
-Description=Start kernel virtual machine: ${NAME}
-
-[Service]
-Type=oneshot
-ExecStartPre=sh -c "virsh net-start default || true"
-ExecStart=su libvirt-admin -c "virsh start ${NAME}"
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-systemctl enable --now libvirt-VM-${NAME}.service
-systemctl status libvirt-VM-${NAME}.service
-)
-#+end_run
 
 *** Download libvirt python interface
 
