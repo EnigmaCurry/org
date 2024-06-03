@@ -1018,8 +1018,8 @@ These instructions will install a barebones Debian or Fedora server in
 a VM, with NAT networking (private IP address, no public ports open),
 for local development/testing purposes only.
 
-These instructions have been tested on Fedora Atomic and Arch Linux
-workstations.
+These instructions have been tested as working on Fedora Atomic and
+Arch Linux workstations.
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -1044,21 +1044,23 @@ table of contents
 
 #+attr_shortcode: :style tip
 #+begin_notice
-If you are running Fedora Atomic, this depends on the libvirt packages
-installed in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
+If you are running Fedora Atomic, full package installation is covered
+in the chapter on [[/linux-workstation/layering-packages][Layering packages]].
 #+end_notice
 
 **** Arch Linux
 
 #+begin_run
 sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \
-               sysfsutils bridge-utils ebtables
+               sysfsutils bridge-utils ebtables git make which jq \
+               dmidecode pkgconf gcc
 #+end_run
 
 *** Enable libvirtd service
 
 #+begin_run
 sudo systemctl enable --now libvirtd
+sudo systemctl enable --now libvirt-guests
 sudo systemctl status --no-pager libvirtd
 #+end_run
 
@@ -1366,8 +1368,7 @@ otherwise you will get an error about the unejected cloud-init ISO.
 
 #+attr_shortcode: :style secondary :title Run this as the libvirt-admin usre
 #+begin_run
-## Destroy just means to stop:
-virsh destroy ${NAME}
+virsh shutdown ${NAME}
 #+end_run
 
 *** Restart VM
@@ -1376,11 +1377,78 @@ virsh destroy ${NAME}
 virsh start ${NAME}
 #+end_run
 
-*** Enable auto start on boot
+** Auto start VMs on boot
+:PROPERTIES:
+:EXPORT_FILE_NAME: autostart
+:END:
 
-#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+*** Temporary unit
+#+attr_shortcode: :style root :title Run this as root on your workstation
 #+begin_run
-virsh autostart ${NAME}
+NAME=debian-dev
+(set -e
+cat << EOF > /etc/systemd/system/libvirt-VM-${NAME}.service
+[Unit]
+Description=Start kernel virtual machine: ${NAME}
+
+[Service]
+Type=oneshot
+ExecStartPre=sh -c "virsh net-start default || true"
+ExecStart=su libvirt-admin -c "virsh start ${NAME}"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+systemctl enable --now libvirt-VM-${NAME}.service
+systemctl status libvirt-VM-${NAME}.service
+)
+#+end_run
+
+*** Download libvirt python interface
+
+#+attr_shortcode: :style tip
+#+begin_notice
+The [[https://github.com/EnigmaCurry/virsh-start-stop][virsh-start-stop]] tool offers a more reliable interface for
+starting and stopping VMs via the libvirt API, so it will be used in
+the systemd unit for starting on boot.
+#+end_notice
+
+#+begin_run
+(set -e
+sudo mkdir -p /usr/local/src/
+sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/virsh-start-stop"
+sudo python -m venv /usr/local/src/virsh-start-stop/env
+sudo /usr/local/src/virsh-start-stop/env/bin/pip install libvirt-python
+)
+#+end_run
+
+*** Create Unit template
+
+#+begin_run
+cat << EOF | sudo tee /etc/systemd/system/virsh@.service
+[Unit]
+Description=virsh start / stop %i
+Requires=libvirtd.service
+After=libvirtd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=su libvirt-admin -c "/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state started"
+ExecStop=su libvirt-admin -c "/usr/bin/python /usr/local/src/virsh-start-stop/src/virsh_start_stop/virsh_start_stop.py --machine %i --state stopped --timeout 80"
+
+[Install]
+WantedBy=default.target
+EOF
+#+end_run
+
+*** Enable service to autostart each VM
+
+#+begin_run
+NAME=debian-dev
+sudo systemctl enable --now virsh@${NAME}
+sudo systemctl status virsh@${NAME}
 #+end_run
 
 ** Setup workstation SSH config
@@ -1480,8 +1548,7 @@ virsh start debian-dev
 *** Stop VM (named debian-dev)
 #+attr_shortcode:  :style none :title Run this as the libvirt-admin user
 #+begin_run
-​# destroy actually just means stop, not delete
-virsh destroy debian-dev
+virsh shutdown debian-dev
 #+end_run
 
 *** Show network interface (MAC address)
@@ -1504,3 +1571,104 @@ virsh console debian-dev
 
 To exit the console, press =Ctrl-]=. (Control + right square bracket).
 
+** Public routes to VMs
+:PROPERTIES:
+:EXPORT_FILE_NAME: public-routes
+:EXPORT_HUGO_WEIGHT: 5000
+:END:
+
+By default, all incoming traffic to the VMs must originate from your
+workstation (or another VM on your workstation) - no traffic is routed
+to your VMs from any other interface.
+
+If you want to break this rule, and allow public routes into these VMs
+(DNAT port forwarding), you will need to install the libvirt hook that
+sets up the iptables forwarding rules:
+
+*** Download the port-forwarding hook
+
+#+begin_run
+sudo mkdir -p /usr/local/src/
+sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/libvirt-hook-qemu.git"
+#+end_run
+
+*** Install the port-forwarding hook
+
+#+begin_run
+sudo make -C /usr/local/src/libvirt-hook-qemu/ install
+#+end_run
+
+*** Customize the port-forwarding hook
+
+Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json][example]] and [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json][schema]] as a reference, then edit
+=/etc/libvirt/hooks/hooks.json= to setup the exact port mapping you
+want.
+
+#+begin_run
+cat << EOF | jq > /etc/libvirt/hooks/hooks.json
+{
+  "debian-dev": {
+    "interface": "virbr0",
+    "private_ip": "192.168.122.2",
+    "port_map": {
+        "tcp": [
+            [2222, 22],
+            [80, 80],
+            [443, 443]
+        ]
+    }
+  }
+}
+EOF
+#+end_run
+
+*** Autostart port-forwarding script on boot
+
+#+begin_aside
+I have not figured out how libvirt hooks are supposed to work with
+user-mode VMs. It seems like when the VM starts, the hook never gets
+called. So, this section adds another service that triggers the hook
+manually on boot to setup the port forwarding for each VM.
+#+end_aside
+
+#+begin_run
+NAME=debian-dev
+(set -e
+cat << EOF > /etc/systemd/system/libvirt-DNAT-${NAME}.service
+[Unit]
+Description=DNAT port forwarding for kernel virtual machine: ${NAME}
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/libvirt/hooks/qemu ${NAME} start
+
+[Install]
+WantedBy=network.target
+EOF
+systemctl daemon-reload
+systemctl enable --now libvirt-DNAT-${NAME}.service
+systemctl status libvirt-DNAT-${NAME}.service
+)
+#+end_run
+
+*** Shutdown your VM
+
+#+begin_run
+NAME=debian-dev
+sudo su libvirt-admin -c "virsh shutdown ${NAME}"
+#+end_run
+
+*** Restart libvirtd
+
+#+begin_run
+sudo systemctl restart libvirtd
+#+end_run
+
+*** Restart your VM
+
+#+begin_run
+NAME=debian-dev
+sudo su libvirt-admin -c "virsh start ${NAME}"
+#+end_run
