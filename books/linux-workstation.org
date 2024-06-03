@@ -1027,6 +1027,7 @@ to public (LAN) routes.
 The following *host* Linux distributions, have been tested as working:
 
  * ✅ Fedora Atomic (40)
+ * ✅ Fedora Server (40)
  * ✅ Arch Linux
 
 🚧 Debian (12) hosts are only partially compatible, I have not been
@@ -1045,23 +1046,45 @@ index
 table of contents
 #+end_toc
 
-** Setup libvirtd
+** Install libvirtd
 :PROPERTIES:
-:EXPORT_FILE_NAME: setup-libvirtd
+:EXPORT_FILE_NAME: install-libvirtd
 :EXPORT_HUGO_WEIGHT: 100
 :END:
 
-*** Install libvirt packages
+This book is primarily about [[/introduction/fedora-sway-atomic/][Fedora Atomic]] hosts, but these
+instructions are generic enough to work on a wide variety of systemd
+based Linux operating systems, including Fedora Workstation
+(traditional), Arch Linux, and Debian (with caveats).
 
-**** Packages for Fedora Atomic hosts
+*** Packages for Fedora Atomic hosts
 
 #+attr_shortcode: :style tip
 #+begin_notice
-Full package installation for Fedora Atomic is covered in the chapter
-on [[/linux-workstation/layering-packages][Layering packages]].
+Full package installation for Fedora Atomic hosts are covered in the
+chapter on [[/linux-workstation/layering-packages][Layering packages]].
 #+end_notice
 
-**** Packages for Arch Linux hosts
+*** Packages for traditional Fedora Workstation hosts
+
+#+attr_shortcode: :style info
+#+begin_notice
+
+These are the packages you would need to install on traditional Fedora
+Workstation (or Server, but not CoreOS nor Atomic hosts)
+
+#+attr_shortcode:
+#+begin_run
+sudo dnf install qemu-kvm libvirt virt-manager virt-viewer \
+     virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
+     libguestfs-tools python3-libguestfs virt-top net-tools \
+     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp \
+     distrobox file-roller thunar-volman
+#+end_run
+#+end_notice
+
+
+*** Packages for Arch Linux hosts
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1082,7 +1105,7 @@ sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \
 #+end_notice
 
 
-**** Packages for Debian/Ubuntu hosts
+*** Packages for Debian/Ubuntu hosts
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1104,6 +1127,13 @@ sudo apt install --no-install-recommends \
                  python3 python-is-python3
 #+end_run
 #+end_notice
+
+
+** Setup libvirtd
+:PROPERTIES:
+:EXPORT_FILE_NAME: setup-libvirtd
+:EXPORT_HUGO_WEIGHT: 100
+:END:
 
 *** Enable libvirtd service
 
@@ -1128,7 +1158,16 @@ Add the existing =libvirt= group to =/etc/group=, if it isn't already:
 grep "^libvirt:" /etc/group || sudo bash -c "getent group libvirt >> /etc/group"
 #+end_run
 
-*** Extra steps for Debian workstations
+*** TODO Extra steps only needed for Debian workstations
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This doesn't actually work on Debian 12 yet. Debian hosts apparently
+have an additional requirement to run *qemu-bridge-helper* (I didn't
+need it on Fedora or Arch Linux). However, I couldn't figure out how
+to get it to work on Debian 12, because I ran into strange app armor
+errors. YMMV.
+#+end_notice
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -1603,6 +1642,13 @@ sudo mkdir -p /usr/local/src/
 sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/libvirt-hook-qemu.git"
 #+end_run
 
+#+attr_shortcode: :style credits :title CREDITS :icon gift
+#+begin_notice
+EnigmaCurry/libvirt-hook-qemu is my own fork of
+[[https://github.com/saschpe/libvirt-hook-qemu][saschpe/libvirt-hook-qemu]] which has been slightly customized for this
+configuration. Thank you to Sascha Peilicke for creating this hook!
+#+end_notice
+
 *** Install the port-forwarding hook
 
 #+begin_run
@@ -1616,7 +1662,7 @@ Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.jso
 want.
 
 #+begin_run
-cat << EOF | jq > /etc/libvirt/hooks/hooks.json
+cat << EOF | jq | sudo tee /etc/libvirt/hooks/hooks.json
 {
   "debian-dev": {
     "interface": "virbr0",
@@ -1648,25 +1694,27 @@ manually on boot to setup the port forwarding for each VM.
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
 Description=DNAT port forwarding for kernel virtual machine: %i
-After=network.target
-Wants=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/etc/libvirt/hooks/qemu %i start
+RemainAfterExit=true
+Environment="XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN})"
+ExecStart=/usr/bin/python /etc/libvirt/hooks/qemu %i start
 
 [Install]
-WantedBy=network.target
+WantedBy=network-online.target
 EOF
-systemctl daemon-reload
+sudo systemctl daemon-reload
 #+end_run
 
 **** Enable DNAT service once per VM you want to expose
 
 #+begin_run
 NAME=debian-dev
-systemctl enable --now libvirt-DNAT@${NAME}.service
-systemctl status libvirt-DNAT@${NAME}.service
+sudo systemctl enable --now libvirt-DNAT@${NAME}.service
+sudo systemctl status libvirt-DNAT@${NAME}.service
 #+end_run
 
 **** Reboot workstation
@@ -1675,7 +1723,7 @@ Once rebooted, test that your port forward rule exists in iptables
 rules:
 
 #+begin_run
-iptables-save | grep 2222
+sudo iptables-save | grep 2222
 #+end_run
 
 #+begin_stdout
