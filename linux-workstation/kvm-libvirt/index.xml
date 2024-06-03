@@ -12,7 +12,7 @@
       <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-libvirtd/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-libvirtd/index.html</guid>
-      <description>Install libvirt packages Fedora Atomic Tip If you are running Fedora Atomic, this depends on the libvirt packages installed in the chapter on Layering packages.&#xA;Arch Linux [bash]: Run this on your workstation: sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \ sysfsutils bridge-utils ebtables Enable libvirtd service [bash]: Run this on your workstation: sudo systemctl enable --now libvirtd sudo systemctl status --no-pager libvirtd Start the default network [bash]: Run this on your workstation: virsh net-start default virsh net-autostart default Configure /etc/group Add the existing libvirt group to /etc/group, if it isn’t already:</description>
+      <description>Install libvirt packages Fedora Atomic Tip If you are running Fedora Atomic, full package installation is covered in the chapter on Layering packages.&#xA;Arch Linux [bash]: Run this on your workstation: sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \ sysfsutils bridge-utils ebtables git make which jq \ dmidecode pkgconf gcc Enable libvirtd service [bash]: Run this on your workstation: sudo systemctl enable --now libvirtd sudo systemctl enable --now libvirt-guests sudo systemctl status --no-pager libvirtd Start the default network [bash]: Run this on your workstation: virsh net-start default virsh net-autostart default Configure /etc/group Add the existing libvirt group to /etc/group, if it isn’t already:</description>
     </item>
     <item>
       <title>Create VM admin</title>
@@ -20,6 +20,13 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html</guid>
       <description>This will create a new user account on your workstation named libvirt-admin. This user will be used as the owner for all the VM disk images, config files, and for running the libvirt (qemu) processes that run your VM.&#xA;This separation from the normal account you use is important to limit the privileges that you have over the VM infrastructure. Your normal account should be able to SSH into the VM and have full root privleges inside the VM.</description>
+    </item>
+    <item>
+      <title>Auto start VMs on boot</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/autostart/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/autostart/index.html</guid>
+      <description>Temporary unit Run this as root on your workstation NAME=debian-dev (set -e cat &lt;&lt; EOF &gt; /etc/systemd/system/libvirt-VM-${NAME}.service [Unit] Description=Start kernel virtual machine: ${NAME} [Service] Type=oneshot ExecStartPre=sh -c &#34;virsh net-start default || true&#34; ExecStart=su libvirt-admin -c &#34;virsh start ${NAME}&#34; [Install] WantedBy=multi-user.target EOF systemctl daemon-reload systemctl enable --now libvirt-VM-${NAME}.service systemctl status libvirt-VM-${NAME}.service ) Download libvirt python interface Tip The virsh-start-stop tool offers a more reliable interface for starting and stopping VMs via the libvirt API, so it will be used in the systemd unit for starting on boot.</description>
     </item>
     <item>
       <title>Configure VM</title>
@@ -47,7 +54,14 @@
       <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/vm-management/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/vm-management/index.html</guid>
-      <description>Tip The rest of these commands (greyed out) are examples only, you don’t need to run them now.&#xA;List all defined VMs Run this as the libvirt-admin user virsh list --all (stdout) ​ Id Name State ​--------------------------- ​ 5 debian-dev running Start VM (named debian-dev) Run this as the libvirt-admin user virsh start debian-dev Stop VM (named debian-dev) Run this as the libvirt-admin user ​# destroy actually just means stop, not delete virsh destroy debian-dev Show network interface (MAC address) Run this as the libvirt-admin user virsh domiflist debian-dev Undefine VM (named debian-dev) Run this as the libvirt-admin user ​# undefine removes the VM configuration virsh undefine debian-dev Serial console of VM (named debian-dev) Run this as the libvirt-admin user virsh console debian-dev To exit the console, press Ctrl-].</description>
+      <description>Tip The rest of these commands (greyed out) are examples only, you don’t need to run them now.&#xA;List all defined VMs Run this as the libvirt-admin user virsh list --all (stdout) ​ Id Name State ​--------------------------- ​ 5 debian-dev running Start VM (named debian-dev) Run this as the libvirt-admin user virsh start debian-dev Stop VM (named debian-dev) Run this as the libvirt-admin user virsh shutdown debian-dev Show network interface (MAC address) Run this as the libvirt-admin user virsh domiflist debian-dev Undefine VM (named debian-dev) Run this as the libvirt-admin user ​# undefine removes the VM configuration virsh undefine debian-dev Serial console of VM (named debian-dev) Run this as the libvirt-admin user virsh console debian-dev To exit the console, press Ctrl-].</description>
+    </item>
+    <item>
+      <title>Public routes to VMs</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/public-routes/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/public-routes/index.html</guid>
+      <description>By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.&#xA;If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:&#xA;Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;</description>
     </item>
   </channel>
 </rss>

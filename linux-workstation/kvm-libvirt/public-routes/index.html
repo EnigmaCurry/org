@@ -5,22 +5,30 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
+    <meta name="description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
+If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
+Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Toolbox :: book.rymcg.tech">
-    <meta name="twitter:description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
-    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/config/toolbox/index.html">
+    <meta name="twitter:title" content="Public routes to VMs :: book.rymcg.tech">
+    <meta name="twitter:description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
+If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
+Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/public-routes/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Toolbox :: book.rymcg.tech">
-    <meta property="og:description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
+    <meta property="og:title" content="Public routes to VMs :: book.rymcg.tech">
+    <meta property="og:description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
+If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
+Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Linux Workstation">
-    <meta itemprop="name" content="Toolbox :: book.rymcg.tech">
-    <meta itemprop="description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
-    <meta itemprop="wordCount" content="623">
-    <title>Toolbox :: book.rymcg.tech</title>
+    <meta itemprop="name" content="Public routes to VMs :: book.rymcg.tech">
+    <meta itemprop="description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
+If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
+Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
+    <meta itemprop="wordCount" content="327">
+    <title>Public routes to VMs :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1717396977" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717396977" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717396977" rel="stylesheet">
     <link href="/css/auto-complete.css?1717396977" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717396977" rel="stylesheet"></noscript>
@@ -52,7 +60,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/linux-workstation/config/toolbox/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/public-routes/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -65,9 +73,16 @@
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#dev-toolbox--fedora">Dev toolbox (Fedora)</a></li>
-    <li><a href="#arch-linux-toolbox">Arch Linux toolbox</a></li>
-    <li><a href="#managing-toolbox-containers">Managing toolbox containers</a></li>
+    <li><a href="#download-the-port-forwarding-hook">Download the port-forwarding hook</a></li>
+    <li><a href="#install-the-port-forwarding-hook">Install the port-forwarding hook</a></li>
+    <li><a href="#customize-the-port-forwarding-hook">Customize the port-forwarding hook</a></li>
+    <li><a href="#autostart-port-forwarding-script-on-boot">Autostart port-forwarding script on boot</a>
+      <ul>
+        <li><a href="#create-dnat-service-template">Create DNAT service template</a></li>
+        <li><a href="#enable-dnat-service-once-per-vm-you-want-to-expose">Enable DNAT service once per VM you want to expose</a></li>
+        <li><a href="#reboot-workstation">Reboot workstation</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
                 </div>
@@ -77,13 +92,13 @@
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/config/index.html"><span itemprop="name">Config</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Toolbox</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/index.html"><span itemprop="name">KVM / libvirt</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Public routes to VMs</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/firefox/index.html" title="Firefox (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/vm-management/index.html" title="VM management commands (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/emacs-on-fedora/index.html" title="Emacs (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/index.html" title="Self-hosting Docker with d.rymcg.tech (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -103,32 +118,15 @@
             <header class="headline">
             </header>
 
-<h1 id="toolbox">Toolbox</h1>
+<h1 id="public-routes-to-vms">Public routes to VMs</h1>
 
-<p><a href="https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/" rel="external" target="_blank">Toolbox</a> is an integral part of Fedora Atomic, being one of the main
-methods of installing software (the alternative being Flatpak), it
-lets you run your applications inside of <a href="https://podman.io" rel="external" target="_blank">Podman</a> containers. Toolbox
-can actually be used on any Linux system that is capable of running
-Podman, but is especially useful on Atomic hosts. Toolbox is more
-tightly integrated with your host OS than Docker or Podman containers
-normally are. Toolbox containers share the same <code>/home</code> directory with
-the host (bind mounted), and they live in the same network and process
-namespace as the host (ie. you can run <code>ps</code> or <code>kill</code> from inside the
-toolbox, and it will see/affect the host.) Toolbox containers are not
-sandboxed like normal Docker containers are, but they are a
-convenience for installing/removing software on Atomic hosts, because
-theres not really any other way (since the host filesystem is
-read-only). The applications you install in the container will live
-only inside the toolbox.</p>
-<p>The killer feature of a toolbox is that it lets you try things out,
-and if you want to start over, you can just delete the toolbox
-container, and create a new one. You are less likely to mess up the
-host by playing around inside the toolbox. Just remember that <code>/home</code>
-is bind mounted to the host, and so if you change or delete things in
-those directories, they are also affected the same way on the host.</p>
-<h2 id="dev-toolbox--fedora">Dev toolbox (Fedora)</h2>
-<p>Let&rsquo;s create a toolbox to install some of the common development tools
-we will use on a daily basis.</p>
+<p>By default, all incoming traffic to the VMs must originate from your
+workstation (or another VM on your workstation) - no traffic is routed
+to your VMs from any other interface.</p>
+<p>If you want to break this rule, and allow public routes into these VMs
+(DNAT port forwarding), you will need to install the libvirt hook that
+sets up the iptables forwarding rules:</p>
+<h2 id="download-the-port-forwarding-hook">Download the port-forwarding hook</h2>
 
 
 <div class="box notices cstyle run">
@@ -136,16 +134,14 @@ we will use on a daily basis.</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox create dev
+sudo mkdir -p /usr/local/src/
+sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/libvirt-hook-qemu.git"
 </pre></code>
     </div>
 </div>
 
 
-<p>This will create a new toolbox container called <code>dev</code> based upon the
-same Fedora version as the host (the toolbox itself is not Atomic
-though, but the normal Fedora Workstation version instead.)</p>
-<p>To enter the toolbox run:</p>
+<h2 id="install-the-port-forwarding-hook">Install the port-forwarding hook</h2>
 
 
 <div class="box notices cstyle run">
@@ -153,14 +149,16 @@ though, but the normal Fedora Workstation version instead.)</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox enter dev
+sudo make -C /usr/local/src/libvirt-hook-qemu/ install
 </pre></code>
     </div>
 </div>
 
 
-<p>This will enter the toolbox container, and now you can install extra
-software:</p>
+<h2 id="customize-the-port-forwarding-hook">Customize the port-forwarding hook</h2>
+<p>Use the <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json" rel="external" target="_blank">example</a> and <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json" rel="external" target="_blank">schema</a> as a reference, then edit
+<code>/etc/libvirt/hooks/hooks.json</code> to setup the exact port mapping you
+want.</p>
 
 
 <div class="box notices cstyle run">
@@ -168,45 +166,34 @@ software:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-sudo dnf install keychain htop
-sudo dnf groupinstall "Development Tools" "Development Libraries"
+cat << EOF | jq > /etc/libvirt/hooks/hooks.json
+{
+  "debian-dev": {
+    "interface": "virbr0",
+    "private_ip": "192.168.122.2",
+    "port_map": {
+        "tcp": [
+            [2222, 22],
+            [80, 80],
+            [443, 443]
+        ]
+    }
+  }
+}
+EOF
 </pre></code>
     </div>
 </div>
 
 
-<h2 id="arch-linux-toolbox">Arch Linux toolbox</h2>
-<p>You are not limited to running Fedora toolboxes, in fact you can run
-any container image you want, or even build your own from a
-<code>Dockerfile</code>. Here is a Dockerfile for Arch Linux you can use to build
-an Arch Linux toolbox container:</p>
-<div class="box notices cstyle edit">
-    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: Dockerfile</div>
-    <div class="box-content">
-        <code><pre>
-FROM docker.io/archlinux/archlinux:latest
-ENV NAME=arch-toolbox VERSION=rolling
-LABEL com.github.containers.toolbox="true" \
-  name="$NAME" \
-  version="$VERSION"
-RUN pacman -Syu --noconfirm \
-    && pacman  -S --noconfirm sudo inetutils less \
-       git base-devel go \
-       noto-fonts noto-fonts-cjk \
-       noto-fonts-emoji noto-fonts-extra \
-    && pacman -Scc --noconfirm \
-    && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
-RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
-    && cd /tmp/yay \
-    && sudo -u nobody makepkg -s \
-    && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
-CMD ["bash"]
-</pre></code>
-    </div>
-</div>
-
-<p>Write this to a file named <code>Dockerfile</code> and open your host terminal to
-the same directory. Then run this command to build the container:</p>
+<h2 id="autostart-port-forwarding-script-on-boot">Autostart port-forwarding script on boot</h2>
+<aside>
+<p>I have not figured out how libvirt hooks are supposed to work with
+user-mode VMs. It seems like when the VM starts, the hook never gets
+called. So, this section adds another service that triggers the hook
+manually on boot to setup the port forwarding for each VM.</p>
+</aside>
+<h3 id="create-dnat-service-template">Create DNAT service template</h3>
 
 
 <div class="box notices cstyle run">
@@ -214,14 +201,26 @@ the same directory. Then run this command to build the container:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-podman build -t arch .
+cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
+[Unit]
+Description=DNAT port forwarding for kernel virtual machine: %i
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/etc/libvirt/hooks/qemu %i start
+
+[Install]
+WantedBy=network.target
+EOF
+systemctl daemon-reload
 </pre></code>
     </div>
 </div>
 
 
-<p>Now you can create a new toolbox based on the new image (both called
-<code>arch</code>):</p>
+<h3 id="enable-dnat-service-once-per-vm-you-want-to-expose">Enable DNAT service once per VM you want to expose</h3>
 
 
 <div class="box notices cstyle run">
@@ -229,13 +228,17 @@ podman build -t arch .
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox create --image arch arch
+NAME=debian-dev
+systemctl enable --now libvirt-DNAT@${NAME}.service
+systemctl status libvirt-DNAT@${NAME}.service
 </pre></code>
     </div>
 </div>
 
 
-<p>To enter the Arch Linux container, run:</p>
+<h3 id="reboot-workstation">Reboot workstation</h3>
+<p>Once rebooted, test that your port forward rule exists in iptables
+rules:</p>
 
 
 <div class="box notices cstyle run">
@@ -243,58 +246,22 @@ toolbox create --image arch arch
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox enter arch
+iptables-save | grep 2222
 </pre></code>
     </div>
 </div>
 
 
-<p>Now that you&rsquo;re inside the toolbox, you can run any Arch Linux command
-(consult the <a href="http://wiki.archlinux.org/" rel="external" target="_blank">Arch Wiki</a>).</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this inside the arch toolbox</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
     <div class="box-content">
-        <code><pre>
-sudo pacman -Syu
-sudo pacman -S keychain base-devel
-</pre></code>
+        <pre>
+-A DNAT-debian-dev -d 10.13.13.227/32 -p tcp -m tcp --dport 2222 -j DNAT --to-destination 192.168.122.2:22
+-A SNAT-debian-dev -s 192.168.122.2/32 -d 192.168.122.2/32 -p tcp -m tcp --dport 2222 -j MASQUERADE
+</pre>
     </div>
 </div>
 
-
-<h2 id="managing-toolbox-containers">Managing toolbox containers</h2>
-<p>You can list all of your toolboxes that you&rsquo;ve created:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-toolbox list
-</pre></code>
-    </div>
-</div>
-
-
-<p>You can remove existing toolboxes:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-toolbox rm --force arch
-</pre></code>
-    </div>
-</div>
-
-
-<p>(force is only required if the toolbox is currently running.)</p>
 
             <footer class="footline">
             </footer>
@@ -344,13 +311,13 @@ toolbox rm --force arch
           <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Install Linux (Fedora Atomic)</a></li>
           <li data-nav-id="/linux-workstation/upgrading/index.html" class=""><a class="padding" href="/linux-workstation/upgrading/index.html">Upgrading</a></li>
           <li data-nav-id="/linux-workstation/layering-packages/index.html" class=""><a class="padding" href="/linux-workstation/layering-packages/index.html">Layering packages</a></li>
-          <li data-nav-id="/linux-workstation/config/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/config/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/config/sway/index.html" class=""><a class="padding" href="/linux-workstation/config/sway/index.html">Sway</a></li>
           <li data-nav-id="/linux-workstation/config/firefox/index.html" class=""><a class="padding" href="/linux-workstation/config/firefox/index.html">Firefox</a></li>
-          <li data-nav-id="/linux-workstation/config/toolbox/index.html" class="active"><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
+          <li data-nav-id="/linux-workstation/config/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
           <li data-nav-id="/linux-workstation/config/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/config/emacs-on-fedora/index.html">Emacs</a></li>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html">Setup libvirtd</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html">Create VM admin</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/autostart/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/autostart/index.html">Auto start VMs on boot</a></li>
@@ -358,7 +325,7 @@ toolbox rm --force arch
           <li data-nav-id="/linux-workstation/kvm-libvirt/create-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/create-vm/index.html">Create VM</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/vm-management/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/vm-management/index.html">VM management commands</a></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li></ul></li></ul></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
@@ -401,7 +368,7 @@ toolbox rm --force arch
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/config/toolbox/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/public-routes/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
