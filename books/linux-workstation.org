@@ -1065,6 +1065,14 @@ Full package installation for Fedora Atomic hosts are covered in the
 chapter on [[/linux-workstation/layering-packages][Layering packages]].
 #+end_notice
 
+*** Packages for Fedora CoreOS
+
+#+begin_run
+sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \
+     virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
+     libguestfs-tools python3-libguestfs virt-top distrobox make
+#+end_run
+
 *** Packages for traditional Fedora Workstation hosts
 
 #+attr_shortcode: :style info
@@ -1077,9 +1085,7 @@ Workstation (or Server, but not CoreOS nor Atomic hosts)
 #+begin_run
 sudo dnf install qemu-kvm libvirt virt-manager virt-viewer \
      virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
-     libguestfs-tools python3-libguestfs virt-top net-tools \
-     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp \
-     distrobox file-roller thunar-volman
+     libguestfs-tools python3-libguestfs virt-top net-tools
 #+end_run
 #+end_notice
 
@@ -1322,9 +1328,10 @@ MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | t
 
 #+attr_shortcode: :style tip
 #+begin_notice
-You need to choose a valid IP_ADDRESS in the range of your subnet. The
-Gateway should be the same subnet with the address ending in =.1=. The
-MAC address will be random.
+You need to choose a valid IP_ADDRESS in the range of your subnet,
+although on every machine I've tried this on so far, the default has
+been =192.168.122.0/24=. The MAC address will be randomized to create
+a static lease.
 #+end_notice
 
 *** Create static DHCP lease
@@ -1564,9 +1571,7 @@ virsh list --all
 
 #+attr_shortcode: :style tip
 #+begin_notice
-The [[https://github.com/EnigmaCurry/virsh-start-stop][virsh-start-stop]] tool offers a more reliable interface for
-starting and stopping VMs via the libvirt API, so it will be used in
-the systemd unit for starting on boot.
+You should now be in your normal workstation account Bash shell.
 #+end_notice
 
 #+begin_run
@@ -1662,9 +1667,10 @@ Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.jso
 want.
 
 #+begin_run
+NAME=debian-dev
 cat << EOF | jq | sudo tee /etc/libvirt/hooks/hooks.json
 {
-  "debian-dev": {
+  "${NAME}": {
     "interface": "virbr0",
     "private_ip": "192.168.122.2",
     "port_map": {
@@ -1691,11 +1697,12 @@ manually on boot to setup the port forwarding for each VM.
 **** Create DNAT service template
 
 #+begin_run
+VM_ADMIN=libvirt-admin
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
 Description=DNAT port forwarding for kernel virtual machine: %i
-After=network-online.target
-Wants=network-online.target
+After=libvirt@%i.service
+Wants=libvirt@%i.service
 
 [Service]
 Type=oneshot
@@ -1704,7 +1711,7 @@ Environment="XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN})"
 ExecStart=/usr/bin/python /etc/libvirt/hooks/qemu %i start
 
 [Install]
-WantedBy=network-online.target
+WantedBy=multi-user.target
 EOF
 sudo systemctl daemon-reload
 #+end_run
