@@ -27,19 +27,19 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
     <meta itemprop="description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
 If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
 Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
-    <meta itemprop="wordCount" content="491">
+    <meta itemprop="wordCount" content="514">
     <title>Public routes to VMs :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717553322" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717553322" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717553322" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717553322" rel="stylesheet">
-    <link href="/css/fonts.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717553322" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717553322" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717553322" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717553322" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717553322" rel="stylesheet">
-    <link href="/css/print.css?1717553322" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717553322"></script>
+    <link href="/css/fontawesome-all.min.css?1717554875" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717554875" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717554875" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717554875" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717554875" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717554875" rel="stylesheet">
+    <link href="/css/fonts.css?1717554875" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717554875" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717554875" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717554875" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717554875" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717554875" rel="stylesheet">
+    <link href="/css/print.css?1717554875" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717554875"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -75,6 +75,7 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
   <ul>
     <li><a href="#download-the-port-forwarding-hook">Download the port-forwarding hook</a></li>
     <li><a href="#install-the-hook-files">Install the hook files</a></li>
+    <li><a href="#set-config-variables">Set config variables</a></li>
     <li><a href="#customize-the-port-forwarding-hook">Customize the port-forwarding hook</a></li>
     <li><a href="#autostart-port-forwarding-script-on-boot">Autostart port-forwarding script on boot</a>
       <ul>
@@ -166,6 +167,17 @@ sudo cp /usr/local/src/libvirt-hook-qemu/hooks.schema.json /etc/libvirt-dnat-hoo
 </div>
 
 
+<h2 id="set-config-variables">Set config variables</h2>
+<p>Set some temporary variables the same as from your config:</p>
+<div class="box notices cstyle edit env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>[bash]: Customize and set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+NAME=debian-dev
+IP_ADDRESS=192.168.122.2
+</pre></code>
+    </div>
+</div>
 <h2 id="customize-the-port-forwarding-hook">Customize the port-forwarding hook</h2>
 <p>Use the <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json" rel="external" target="_blank">example</a> and <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json" rel="external" target="_blank">schema</a> as a reference, then setup the port mapping
 you want for each VM:</p>
@@ -176,12 +188,13 @@ you want for each VM:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
+IP_ADDRESS=${IP_ADDRESS:-192.168.122.2}
 cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook/hooks.json
 {
   "${NAME}": {
     "interface": "virbr0",
-    "private_ip": "192.168.122.2",
+    "private_ip": "${IP_ADDRESS}",
     "port_map": {
         "tcp": [
             [2222, 22],
@@ -227,7 +240,7 @@ manually on boot to setup the port forwarding for each VM.</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-VM_ADMIN=libvirt-admin
+VM_ADMIN=${VM_ADMIN:-libvirt-admin}
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
 Description=DNAT port forwarding for kernel virtual machine: %i
@@ -261,7 +274,7 @@ sudo systemctl daemon-reload
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl enable --now libvirt-DNAT@${NAME}.service
 sudo systemctl status libvirt-DNAT@${NAME}.service
 </pre></code>
@@ -280,7 +293,7 @@ sudo systemctl status libvirt-DNAT@${NAME}.service
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl disable --now libvirt-DNAT@${NAME}.service
 </pre></code>
     </div>
@@ -292,7 +305,7 @@ reboot):</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl stop libvirt-DNAT@${NAME}.service
 </pre></code>
     </div>
@@ -351,12 +364,12 @@ sudo iptables-save | grep 2222
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717553322" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717553322" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717553322" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717553322" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717553322" defer></script>
-        <script src="/js/search.js?1717553322" defer></script>
+        <script src="/js/auto-complete.js?1717554875" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717554875" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717554875" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717554875" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717554875" defer></script>
+        <script src="/js/search.js?1717554875" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -474,14 +487,14 @@ sudo iptables-save | grep 2222
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 5, 2024 at 2:08am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 5, 2024 at 2:34am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717553322" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717553322" defer></script>
-    <script src="/js/theme.js?1717553322" defer></script>
+    <script src="/js/clipboard.min.js?1717554875" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717554875" defer></script>
+    <script src="/js/theme.js?1717554875" defer></script>
   </body>
 </html>
