@@ -57,16 +57,16 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private VM (libvirt) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Create SSH config and Docker Context Install Docker on your remote host Main config for d.rymcg.tech Install Traefik Proxy Whoami ",
-    "description": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private VM (libvirt) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Create SSH config and Docker Context Install Docker on your remote host Main config for d.",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Create SSH config and Docker Context Install Docker on your remote host Main config for d.rymcg.tech Install Traefik Proxy Whoami ",
+    "description": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Create SSH config and Docker Context Install Docker on your remote host Main config for d.",
     "tags": [],
     "title": "Self-hosting Docker with d.rymcg.tech",
     "uri": "/d.rymcg.tech/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker",
-    "content": "A public internet Docker server needs several resources that you need to procure :\nA domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). Index Register a domain name Setup public DNS service Create a public server (VPS) Create a private VM (libvirt) ",
-    "description": "A public internet Docker server needs several resources that you need to procure :\nA domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). Index Register a domain name Setup public DNS service Create a public server (VPS) Create a private VM (libvirt) ",
+    "content": "A public internet Docker server needs several resources that you need to procure :\nA domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). Index Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) ",
+    "description": "A public internet Docker server needs several resources that you need to procure :\nA domain name registrar (eg. Gandi.net). A domain name server (eg. DigitalOcean DNS). A Linux compute platform on which to install Docker (eg. DigitalOcean Droplet). An internet network connection (eg. DigitalOcean network). Index Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) ",
     "tags": [],
     "title": "Required Infrastructure",
     "uri": "/d.rymcg.tech/required-infrastructure/index.html"
@@ -281,10 +281,10 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Required Infrastructure",
-    "content": "Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.\nSetup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.\nYou can follow the wildcard DNS record guide from the public VPS chapter, except instead of pointing to a droplet IP address, it will be your private VM (or workstation) IP address.",
+    "content": "Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.\nSetup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.\nYou can follow the wildcard DNS record guide from the public VPS chapter, except instead of pointing to a droplet IP address, it will be your private VM (or workstation) IP address.\nUse the Traefik ACME DNS-01 challenge If you install Traefik Proxy on a non-public server, and you want to enable ACME for Let’s Encrypt TLS certificiates, make sure to configure ACME for the DNS-01 challenge type, as it is the only challenge type that will work for a server behind a restrictive LAN firewall.",
     "description": "Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.\nSetup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.",
     "tags": [],
-    "title": "Create a private VM (libvirt)",
+    "title": "Create a private server (libvirt VM)",
     "uri": "/d.rymcg.tech/required-infrastructure/private-docker-server/index.html"
   },
   {
