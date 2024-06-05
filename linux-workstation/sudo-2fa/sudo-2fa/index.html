@@ -5,22 +5,22 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
+    <meta name="description" content="Having sudo privileges enabled for your normal workstation user account is both a convenience and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo, to include several authentication methods beyond just asking for a password. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey. Each time sudo asks for authentication, it will prompt for a Solokey button press and a password to be entered.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Toolbox :: book.rymcg.tech">
-    <meta name="twitter:description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
-    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/config/toolbox/index.html">
+    <meta name="twitter:title" content="Sudo with Solokey :: book.rymcg.tech">
+    <meta name="twitter:description" content="Having sudo privileges enabled for your normal workstation user account is both a convenience and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo, to include several authentication methods beyond just asking for a password. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey. Each time sudo asks for authentication, it will prompt for a Solokey button press and a password to be entered.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/sudo-2fa/sudo-2fa/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Toolbox :: book.rymcg.tech">
-    <meta property="og:description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
+    <meta property="og:title" content="Sudo with Solokey :: book.rymcg.tech">
+    <meta property="og:description" content="Having sudo privileges enabled for your normal workstation user account is both a convenience and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo, to include several authentication methods beyond just asking for a password. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey. Each time sudo asks for authentication, it will prompt for a Solokey button press and a password to be entered.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Linux Workstation">
-    <meta itemprop="name" content="Toolbox :: book.rymcg.tech">
-    <meta itemprop="description" content="Toolbox is an integral part of Fedora Atomic, being one of the main methods of installing software (the alternative being Flatpak), it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
-    <meta itemprop="wordCount" content="623">
-    <title>Toolbox :: book.rymcg.tech</title>
+    <meta itemprop="name" content="Sudo with Solokey :: book.rymcg.tech">
+    <meta itemprop="description" content="Having sudo privileges enabled for your normal workstation user account is both a convenience and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo, to include several authentication methods beyond just asking for a password. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey. Each time sudo asks for authentication, it will prompt for a Solokey button press and a password to be entered.">
+    <meta itemprop="wordCount" content="904">
+    <title>Sudo with Solokey :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1717618985" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717618985" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717618985" rel="stylesheet">
     <link href="/css/auto-complete.css?1717618985" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717618985" rel="stylesheet"></noscript>
@@ -52,7 +52,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/linux-workstation/config/toolbox/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/sudo-2fa/sudo-2fa/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -65,9 +65,15 @@
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#dev-toolbox--fedora">Dev toolbox (Fedora)</a></li>
-    <li><a href="#arch-linux-toolbox">Arch Linux toolbox</a></li>
-    <li><a href="#managing-toolbox-containers">Managing toolbox containers</a></li>
+    <li><a href="#open-a-root-session-as-an-anti-lockout-measure">Open a root session as an anti-lockout measure</a>
+      <ul>
+        <li><a href="#consider-adding-a-root-password">Consider adding a root password</a></li>
+      </ul>
+    </li>
+    <li><a href="#register-solokeys">Register Solokeys</a></li>
+    <li><a href="#create-custom-pam-modules-for-u2f">Create custom PAM modules for U2F</a></li>
+    <li><a href="#configure-pam-hook-for-sudo">Configure PAM hook for sudo</a></li>
+    <li><a href="#test-sudo">Test sudo</a></li>
   </ul>
 </nav>
                 </div>
@@ -77,13 +83,13 @@
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/config/index.html"><span itemprop="name">Config</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Toolbox</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/sudo-2fa/index.html"><span itemprop="name">Two Factor Auth with Solokey</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Sudo with Solokey</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/firefox/index.html" title="Firefox (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/sudo-2fa/program-solokey/index.html" title="Program your Solokey (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/emacs-on-fedora/index.html" title="Emacs (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/index.html" title="KVM / libvirt (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -103,32 +109,35 @@
             <header class="headline">
             </header>
 
-<h1 id="toolbox">Toolbox</h1>
+<h1 id="sudo-with-solokey">Sudo with Solokey</h1>
 
-<p><a href="https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/" rel="external" target="_blank">Toolbox</a> is an integral part of Fedora Atomic, being one of the main
-methods of installing software (the alternative being Flatpak), it
-lets you run your applications inside of <a href="https://podman.io" rel="external" target="_blank">Podman</a> containers. Toolbox
-can actually be used on any Linux system that is capable of running
-Podman, but is especially useful on Atomic hosts. Toolbox is more
-tightly integrated with your host OS than Docker or Podman containers
-normally are. Toolbox containers share the same <code>/home</code> directory with
-the host (bind mounted), and they live in the same network and process
-namespace as the host (ie. you can run <code>ps</code> or <code>kill</code> from inside the
-toolbox, and it will see/affect the host.) Toolbox containers are not
-sandboxed like normal Docker containers are, but they are a
-convenience for installing/removing software on Atomic hosts, because
-theres not really any other way (since the host filesystem is
-read-only). The applications you install in the container will live
-only inside the toolbox.</p>
-<p>The killer feature of a toolbox is that it lets you try things out,
-and if you want to start over, you can just delete the toolbox
-container, and create a new one. You are less likely to mess up the
-host by playing around inside the toolbox. Just remember that <code>/home</code>
-is bind mounted to the host, and so if you change or delete things in
-those directories, they are also affected the same way on the host.</p>
-<h2 id="dev-toolbox--fedora">Dev toolbox (Fedora)</h2>
-<p>Let&rsquo;s create a toolbox to install some of the common development tools
-we will use on a daily basis.</p>
+<p>Having <code>sudo</code> privileges enabled for your normal workstation user
+account is both a convenience and a security concern. The Pluggable
+Authentication Module for Linux (PAM) allows us to strengthen the
+requirements for using <code>sudo</code>, to include several authentication
+methods beyond just asking for a password. This chapter will install
+<a href="https://developers.yubico.com/pam-u2f/" rel="external" target="_blank">pam_u2f</a>, which enables PAM authentication via FIDO2/U2F compatible
+hardware tokens like the <a href="https://solokeys.com/" rel="external" target="_blank">Solokey</a>. Each time <code>sudo</code> asks for
+authentication, it will prompt for a Solokey button press <em>and</em> a
+password to be entered.</p>
+
+<div class="box notices cstyle credits">
+  <div class="box-label"><i class="fa-fw fas fa-gift"></i> CREDITS</div>
+  <div class="box-content">
+
+<p>Some of this guide was adapted from these other guides:</p>
+<ul>
+<li><a href="https://fedoraproject.org/wiki/Using_Solokeys_with_Fedora#Introduction:_Using_Solo_Keys_with_Fedora" rel="external" target="_blank">Using Solokeys with Fedora</a></li>
+<li><a href="https://docs.fedoraproject.org/en-US/quick-docs/using-yubikeys/" rel="external" target="_blank">Using YubiKeys with Fedora</a></li>
+</ul>
+<p>Thank you to the Fedora documentation team!</p>
+</div>
+</div>
+<h2 id="open-a-root-session-as-an-anti-lockout-measure">Open a root session as an anti-lockout measure</h2>
+<p>To prevent yourself from being locked out of your own system during
+the setup process, it is recommended to start a new terminal in a root
+session, and to keep it open. That way if you lock yourself out, you
+still have a way you can fix it.</p>
 
 
 <div class="box notices cstyle run">
@@ -136,16 +145,78 @@ we will use on a daily basis.</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox create dev
+## Open root session and leave it alone in another window ....
+sudo su
 </pre></code>
     </div>
 </div>
 
 
-<p>This will create a new toolbox container called <code>dev</code> based upon the
-same Fedora version as the host (the toolbox itself is not Atomic
-though, but the normal Fedora Workstation version instead.)</p>
-<p>To enter the toolbox run:</p>
+<h3 id="consider-adding-a-root-password">Consider adding a root password</h3>
+<p>If you use <code>sudo</code> a lot, you might not actually know the real <code>root</code>
+password of your system (or one might not even be set). As a backup,
+you may want to set a secure long random passphrase for the <code>root</code>
+user and keep it safe (you will rarely need it).</p>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>Reset the root password with a random string:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+(set -e
+LENGTH=26
+PASSWORD=$(tr -dc 'A-Za-z0-9!@#$%^&*()[]~+-_=?<>.,;:' < /dev/urandom | head -c ${LENGTH})
+echo -e "\nSave this ${LENGTH} character long password somewhere safe:    ${PASSWORD}\n"
+read -e -p "Do you want to reset the root password with this value (y/N)? " answer
+(test "${answer,,}" == "y" || test "${answer,,}" == "yes") && \
+    sudo sh -c "echo 'root:${PASSWORD}' | chpasswd && echo Done." || \
+    echo "Cancelled."
+)
+</pre></code>
+    </div>
+</div>
+<p>Test that the root password works <em>without</em> using <code>sudo</code>:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+su
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+<h2 id="register-solokeys">Register Solokeys</h2>
+<p>It is recommended that you register <strong>at least two</strong> solokeys: a primary
+key, and a backup key. That way, if you lose one of the keys, you can
+still use the other one.</p>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Do the next steps as your <strong>normal workstation user account</strong>, which is
+the account that should already have <code>sudo</code> privileges.</p>
+</div>
+</div>
+<p>Create a tempory file to capture solo key registrations:</p>
+<div class="box notices cstyle edit env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>[bash]: Customize and set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+TMP_KEYS=$(mktemp)
+</pre></code>
+    </div>
+</div>
+<ul>
+<li>Plug in the first solokey, then run:</li>
+</ul>
 
 
 <div class="box notices cstyle run">
@@ -153,14 +224,39 @@ though, but the normal Fedora Workstation version instead.)</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-toolbox enter dev
+pamu2fcfg >> ${TMP_KEYS} && \
+     echo >> ${TMP_KEYS}
 </pre></code>
     </div>
 </div>
 
 
-<p>This will enter the toolbox container, and now you can install extra
-software:</p>
+<p>It may ask you to enter the PIN of the solokey:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Enter PIN for /dev/hidraw1:
+</pre>
+    </div>
+</div>
+
+<ul>
+<li>
+<p>When the solokey lights up, press the button.</p>
+</li>
+<li>
+<p>Unplug the first solokey and repeat the last command for the second
+solokey.</p>
+</li>
+<li>
+<p>Unplug the second solokey and repeat for additional solokeys.</p>
+</li>
+<li>
+<p>When you&rsquo;ve written all the keys to <code>${TMP_KEYS}</code>, reformat and
+install them into their final destination:</p>
+</li>
+</ul>
 
 
 <div class="box notices cstyle run">
@@ -168,133 +264,134 @@ software:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-sudo dnf install keychain htop
-sudo dnf groupinstall "Development Tools" "Development Libraries"
+echo "${USER}:$(cat ${TMP_KEYS} | \
+    cut -d ":" -f 2 | tr '\n' ':')" | sed 's/:$//' | \
+    sudo tee /etc/u2f_authorized_keys
 </pre></code>
     </div>
 </div>
 
 
-<h2 id="arch-linux-toolbox">Arch Linux toolbox</h2>
-<p>You are not limited to running Fedora toolboxes, in fact you can run
-any container image you want, or even build your own from a
-<code>Dockerfile</code>. Here is a Dockerfile for Arch Linux you can use to build
-an Arch Linux toolbox container:</p>
+<h2 id="create-custom-pam-modules-for-u2f">Create custom PAM modules for U2F</h2>
+<p>You will create two new PAM modules: <code>u2f-required</code> and
+<code>u2f-sufficient</code>. They will both include these required settings:</p>
+<ol>
+<li>The <code>authfile</code> path to our authorized key list file.</li>
+<li>The <code>cue</code> literal to show the <code>Please touch the device</code> prompt
+message for each authentication. (If you omit this, it will print
+nothing, which can be confusing).</li>
+</ol>
+<p>The only difference between the two PAM modules is that one is
+<strong>required</strong>, and the other is merely <strong>sufficient</strong>.</p>
+<ul>
+<li><code>required</code> means to <strong>enable 2FA</strong>: solokey + password required.</li>
+<li><code>sufficient</code> means to <strong>disable 2FA</strong>: solokey OR password is sufficient.</li>
+</ul>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+cat << EOF | sudo tee /etc/pam.d/u2f-required
+#%PAM-1.0
+auth       required     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
+EOF
+cat << EOF | sudo tee /etc/pam.d/u2f-sufficient
+#%PAM-1.0
+auth       sufficient     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
+EOF
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>The PAM modules you just created (<code>/etc/pam.d/u2f-required</code> and
+<code>/etc/pam.d/u2f-sufficient</code>) can be used for extending any of the
+other pam modules found in <code>/etc/pam.d</code>, by adding an appropriate
+<code>include</code> line at the right place. This can affect many more system
+authentication methods than just <code>sudo</code>, so be careful, but only
+<code>sudo</code> will be covered for now.</p>
+</div>
+</div>
+<h2 id="configure-pam-hook-for-sudo">Configure PAM hook for sudo</h2>
+<p>As <code>root</code>, edit the file <code>/etc/pam.d/sudo</code>, and insert a new line
+directly after the <code>#%PAM-1.0</code> header. A PAM module follows rules in
+top down order, as they are listed. Therefore your solokey rule needs
+to be the <em>first</em> authentication mechanism, and the existing password
+flow is the <em>second</em> authentication method.</p>
 <div class="box notices cstyle edit">
-    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: Dockerfile</div>
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: /etc/pam.d/sudo</div>
     <div class="box-content">
         <code><pre>
-FROM docker.io/archlinux/archlinux:latest
-ENV NAME=arch-toolbox VERSION=rolling
-LABEL com.github.containers.toolbox="true" \
-  name="$NAME" \
-  version="$VERSION"
-RUN pacman -Syu --noconfirm \
-    && pacman  -S --noconfirm sudo inetutils less \
-       git base-devel go \
-       noto-fonts noto-fonts-cjk \
-       noto-fonts-emoji noto-fonts-extra \
-    && pacman -Scc --noconfirm \
-    && echo "%wheel ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/toolbox
-RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
-    && cd /tmp/yay \
-    && sudo -u nobody makepkg -s \
-    && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
-CMD ["bash"]
+#%PAM-1.0
+auth	  include      u2f-required
+auth       include      system-auth
+account    include      system-auth
+password   include      system-auth
+session    optional     pam_keyinit.so revoke
+session    required     pam_limits.so
+session    include      system-auth
 </pre></code>
     </div>
 </div>
 
-<p>Write this to a file named <code>Dockerfile</code> and open your host terminal to
-the same directory. Then run this command to build the container:</p>
 
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
 
+<p>Line 2 (<code>auth include u2f-required</code>) is the only line that was added
+to this file. Everything else in this file was here originally and is
+left intact.</p>
+</div>
+</div>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>If you change <code>u2f-required</code> to <code>u2f-sufficient</code>, then it will <strong>disable
+2FA</strong> allowing solokey press <strong>OR</strong> user password as sufficient!</p>
+</div>
+</div>
+<h2 id="test-sudo">Test sudo</h2>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>When testing sudo, always open a new terminal for <strong>each</strong> test. This is
+to avoid the auth caching mechanism (which is reset for new
+terminals).</p>
 <div class="box notices cstyle run">
     <div class="box-label primary">
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-podman build -t arch .
+sudo
 </pre></code>
     </div>
 </div>
-
-
-<p>Now you can create a new toolbox based on the new image (both called
-<code>arch</code>):</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+<p>The PAM system should now ask for you to touch your solokey (or press
+the button), and afterward prompt for your password.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
     <div class="box-content">
-        <code><pre>
-toolbox create --image arch arch
-</pre></code>
+        <pre>
+Please touch the device.
+[sudo] password for ryan:
+</pre>
     </div>
 </div>
-
-
-<p>To enter the Arch Linux container, run:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-toolbox enter arch
-</pre></code>
-    </div>
 </div>
-
-
-<p>Now that you&rsquo;re inside the toolbox, you can run any Arch Linux command
-(consult the <a href="http://wiki.archlinux.org/" rel="external" target="_blank">Arch Wiki</a>).</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this inside the arch toolbox</div>
-    <div class="box-content">
-        <code><pre>
-sudo pacman -Syu
-sudo pacman -S keychain base-devel
-</pre></code>
-    </div>
 </div>
-
-
-<h2 id="managing-toolbox-containers">Managing toolbox containers</h2>
-<p>You can list all of your toolboxes that you&rsquo;ve created:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-toolbox list
-</pre></code>
-    </div>
-</div>
-
-
-<p>You can remove existing toolboxes:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-toolbox rm --force arch
-</pre></code>
-    </div>
-</div>
-
-
-<p>(force is only required if the toolbox is currently running.)</p>
 
             <footer class="footline">
             </footer>
@@ -344,18 +441,18 @@ toolbox rm --force arch
           <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Install Linux (Fedora Atomic)</a></li>
           <li data-nav-id="/linux-workstation/upgrading/index.html" class=""><a class="padding" href="/linux-workstation/upgrading/index.html">Upgrading</a></li>
           <li data-nav-id="/linux-workstation/layering-packages/index.html" class=""><a class="padding" href="/linux-workstation/layering-packages/index.html">Layering packages</a></li>
-          <li data-nav-id="/linux-workstation/config/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/config/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/config/sway/index.html" class=""><a class="padding" href="/linux-workstation/config/sway/index.html">Sway</a></li>
           <li data-nav-id="/linux-workstation/config/firefox/index.html" class=""><a class="padding" href="/linux-workstation/config/firefox/index.html">Firefox</a></li>
-          <li data-nav-id="/linux-workstation/config/toolbox/index.html" class="active"><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
+          <li data-nav-id="/linux-workstation/config/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
           <li data-nav-id="/linux-workstation/config/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/config/emacs-on-fedora/index.html">Emacs</a></li>
           <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li>
-          <li data-nav-id="/linux-workstation/sudo-2fa/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/sudo-2fa/index.html">Two Factor Auth with Solokey</a><ul id="R-subsections-96e2330197c57518ec319a4d358386d1" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/sudo-2fa/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/sudo-2fa/index.html">Two Factor Auth with Solokey</a><ul id="R-subsections-96e2330197c57518ec319a4d358386d1" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/sudo-2fa/get-your-solokey/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/get-your-solokey/index.html">Get your Solokey (v1)</a></li>
           <li data-nav-id="/linux-workstation/sudo-2fa/install-solo-cli/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/install-solo-cli/index.html">Install Solokey CLI tool</a></li>
           <li data-nav-id="/linux-workstation/sudo-2fa/update-solokey/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/update-solokey/index.html">Update your Solokey</a></li>
           <li data-nav-id="/linux-workstation/sudo-2fa/program-solokey/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/program-solokey/index.html">Program your Solokey</a></li>
-          <li data-nav-id="/linux-workstation/sudo-2fa/sudo-2fa/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/sudo-2fa/index.html">Sudo with Solokey</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/sudo-2fa/index.html" class="active"><a class="padding" href="/linux-workstation/sudo-2fa/sudo-2fa/index.html">Sudo with Solokey</a></li></ul></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/kvm-libvirt/install-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/install-libvirtd/index.html">Install libvirtd</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html">Setup libvirtd</a></li>
@@ -407,7 +504,7 @@ toolbox rm --force arch
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/config/toolbox/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/sudo-2fa/sudo-2fa/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
