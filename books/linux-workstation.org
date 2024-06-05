@@ -1654,21 +1654,21 @@ EnigmaCurry/libvirt-hook-qemu is my own fork of
 configuration. Thank you to Sascha Peilicke for creating this hook!
 #+end_notice
 
-*** Install the port-forwarding hook
+*** Install the hook files
 
 #+begin_run
-sudo make -C /usr/local/src/libvirt-hook-qemu/ install
+sudo mkdir -p /etc/libvirt-dnat-hook
+sudo cp /usr/local/src/libvirt-hook-qemu/hooks.schema.json /etc/libvirt-dnat-hook
 #+end_run
 
 *** Customize the port-forwarding hook
 
-Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json][example]] and [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json][schema]] as a reference, then edit
-=/etc/libvirt/hooks/hooks.json= to setup the exact port mapping you
-want.
+Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json][example]] and [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json][schema]] as a reference, then setup the port mapping
+you want for each VM:
 
 #+begin_run
 NAME=debian-dev
-cat << EOF | jq | sudo tee /etc/libvirt/hooks/hooks.json
+cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook
 {
   "${NAME}": {
     "interface": "virbr0",
@@ -1684,6 +1684,18 @@ cat << EOF | jq | sudo tee /etc/libvirt/hooks/hooks.json
 }
 EOF
 #+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This example opens the following public ports:
+
+ * Public TCP port =2222= forwards to the VM's port =22=.
+ * Public TCP port =80= forwards to the VM's port =80=.
+ * Public TCP port =443= forwards to the VM's port =443=.
+
+UDP ports need to be in their own section, a sibling of TCP. Each VM
+needs its own config, mapped at the top level by the VM's unique name.
+#+end_notice
 
 *** Autostart port-forwarding script on boot
 
@@ -1701,14 +1713,18 @@ VM_ADMIN=libvirt-admin
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
 Description=DNAT port forwarding for kernel virtual machine: %i
+Requires=libvirt@%i.service
+Requires=network-online.target
 After=libvirt@%i.service
-Wants=libvirt@%i.service
+After=network-online.target
 
 [Service]
 Type=oneshot
 RemainAfterExit=true
 Environment="XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN})"
-ExecStart=/usr/bin/python /etc/libvirt/hooks/qemu %i start
+Environment="CONFIG_PATH=/etc/libvirt-dnat-hook"
+ExecStart=/usr/bin/python /usr/local/src/libvirt-hook-qemu/hooks %i start
+ExecStop=/usr/bin/python /usr/local/src/libvirt-hook-qemu/hooks %i stopped
 
 [Install]
 WantedBy=multi-user.target
@@ -1723,6 +1739,25 @@ NAME=debian-dev
 sudo systemctl enable --now libvirt-DNAT@${NAME}.service
 sudo systemctl status libvirt-DNAT@${NAME}.service
 #+end_run
+
+#+attr_shortcode: :style orange :title Stopping and/or Disabling the service
+#+begin_notice
+If you want to disable the port mapping, run:
+
+#+begin_run
+NAME=debian-dev
+sudo systemctl disable --now libvirt-DNAT@${NAME}.service
+#+end_run
+
+Or to temporarily stop the port mapping (until you run =start= or
+reboot):
+
+#+begin_run
+NAME=debian-dev
+sudo systemctl stop libvirt-DNAT@${NAME}.service
+#+end_run
+
+#+end_notice
 
 **** Reboot workstation
 
