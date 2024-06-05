@@ -1415,7 +1415,7 @@ Now, and anytime you come back later to work on the same VM, source the config f
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 source ~/libvirt/${NAME}.env
 #+end_run
 
@@ -1599,7 +1599,7 @@ service manager!
 This is an instantiable template used for all VM services:
 
 #+begin_run
-VM_ADMIN=libvirt-admin
+VM_ADMIN=${VM_ADMIN:-libvirt-admin}
 cat << EOF | sudo tee /etc/systemd/system/libvirt@.service
 [Unit]
 Description=virsh start / stop %i
@@ -1626,7 +1626,7 @@ This will instantiate the VM service template, and enable a VM named
 =debian-dev=, which will automatically start on workstation boot:
 
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl enable --now libvirt@${NAME}
 sudo systemctl status libvirt@${NAME}
 #+end_run
@@ -1666,18 +1666,28 @@ sudo mkdir -p /etc/libvirt-dnat-hook
 sudo cp /usr/local/src/libvirt-hook-qemu/hooks.schema.json /etc/libvirt-dnat-hook
 #+end_run
 
+*** Set config variables
+
+Set some temporary variables the same as from your config:
+
+#+begin_env
+NAME=debian-dev
+IP_ADDRESS=192.168.122.2
+#+end_env
+
 *** Customize the port-forwarding hook
 
 Use the [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json][example]] and [[https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json][schema]] as a reference, then setup the port mapping
 you want for each VM:
 
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
+IP_ADDRESS=${IP_ADDRESS:-192.168.122.2}
 cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook/hooks.json
 {
   "${NAME}": {
     "interface": "virbr0",
-    "private_ip": "192.168.122.2",
+    "private_ip": "${IP_ADDRESS}",
     "port_map": {
         "tcp": [
             [2222, 22],
@@ -1714,7 +1724,7 @@ manually on boot to setup the port forwarding for each VM.
 **** Create DNAT service template
 
 #+begin_run
-VM_ADMIN=libvirt-admin
+VM_ADMIN=${VM_ADMIN:-libvirt-admin}
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
 Description=DNAT port forwarding for kernel virtual machine: %i
@@ -1740,7 +1750,7 @@ sudo systemctl daemon-reload
 **** Enable DNAT service once per VM you want to expose
 
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl enable --now libvirt-DNAT@${NAME}.service
 sudo systemctl status libvirt-DNAT@${NAME}.service
 #+end_run
@@ -1750,7 +1760,7 @@ sudo systemctl status libvirt-DNAT@${NAME}.service
 If you want to disable the port mapping, run:
 
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl disable --now libvirt-DNAT@${NAME}.service
 #+end_run
 
@@ -1758,7 +1768,7 @@ Or to temporarily stop the port mapping (until you run =start= or
 reboot):
 
 #+begin_run
-NAME=debian-dev
+NAME=${NAME:-debian-dev}
 sudo systemctl stop libvirt-DNAT@${NAME}.service
 #+end_run
 
