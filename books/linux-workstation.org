@@ -297,8 +297,9 @@ that you plug into a USB port, which stores a secret key that can be
 used as primary or secondary authentication factors (2FA), with
 websites (Webauthn), and machines (sudo and SSH).
 
-There are two versions of solokey now, v1 and v2. The instructions
-diverge depending on which hardware revision you have.
+There are two versions of solokey now, v1 and v2, and they require
+separate toolchains. The instructions diverge here depending on which
+hardware revision you have.
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -315,6 +316,11 @@ index
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 100
 :END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
 
 **** Get your Solokey (v1)
 :PROPERTIES:
@@ -334,12 +340,12 @@ What to buy:
  * Get the *"secure"* version, don't buy the "hacker" version. 
  * Buy at least two (and store one as a backup).
 
-**** Install Solokey CLI tool
+**** Install Solokey CLI (v1) tool
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-solo-cli
 :END:
 
-**** Create Python environment for solokey
+***** Create Python environment for solokey
 
 #+begin_run
 SOLO_ROOT=~/git/vendor/solokeys
@@ -349,7 +355,7 @@ git clone https://github.com/solokeys/solo1-cli \
 )
 #+end_run
 
-**** Lock Fido2 version to 0.9.1 to fix outstanding bugs
+***** Lock Fido2 version to 0.9.1 to fix outstanding bugs
 
 #+attr_shortcode: :style warning
 #+begin_notice
@@ -366,14 +372,14 @@ sed -i 's/fido2 >= 0.9.1/fido2 == 0.9.1/' ${SOLO_ROOT}/solo1-cli/pyproject.toml
 #+end_run
 #+end_notice
 
-**** Build solo1 key environment
+***** Build solo1 key environment
 
 #+begin_run
 python -m venv ${SOLO_ROOT}/env
 ${SOLO_ROOT}/env/bin/pip3 install -e ${SOLO_ROOT}/solo1-cli
 #+end_run
 
-**** Add =solo= alias to your .bashrc
+***** Add =solo= alias to your .bashrc
 
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
@@ -382,12 +388,12 @@ alias solo=${HOME}/git/vendor/solokeys/env/bin/solo1
 
 Restart your shell to load the new alias.
 
-**** Update your Solokey
+**** Update your Solokey (v1)
 :PROPERTIES:
 :EXPORT_FILE_NAME: update-solokey
 :END:
-**** Plug your solokey into the USB port
-**** Identify your solokey
+***** Plug your solokey into the USB port
+***** Identify your solokey
 #+begin_run
 solo ls
 #+end_run
@@ -397,7 +403,7 @@ solo ls
 AABBCC00112233: SoloKeys Solo 4.1.5
 #+end_stdout
 
-**** Update the firmware
+***** Update the firmware
 
 Check for the [[https://github.com/solokeys/solo1/releases][latest release of solo v1]] and compare it to the version
 that is reported by =solo ls=. If your solokey is not running the
@@ -423,11 +429,11 @@ solo key update
 Congratulations, your key was updated to the latest firmware version: 4.1.5
 #+end_stdout
 
-**** Program your Solokey
+**** Program your Solokey (v1)
 :PROPERTIES:
 :EXPORT_FILE_NAME: program-solokey
 :END:
-**** Reset solokey (recommended first time only)
+***** Reset solokey (recommended first time only)
 
 #+attr_shortcode: :style warning
 #+begin_notice
@@ -438,7 +444,7 @@ solo key reset
 #+end_notice
 
 
-**** Set device PIN
+***** Set device PIN
 
 #+begin_run
 solo key set-pin
@@ -457,7 +463,7 @@ solo key change-pin
 #+end_notice
 
 
-**** Verify PIN
+***** Verify PIN
 
 #+begin_run
 solo key verify
