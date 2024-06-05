@@ -1283,6 +1283,12 @@ sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/lib
 :EXPORT_FILE_NAME: config-vm
 :END:
 
+*** Choose a name
+
+#+begin_env
+NAME=debian-dev
+#+end_env
+
 *** Choose hardware sizes
 
 #+attr_shortcode:
@@ -1332,10 +1338,9 @@ ip route | grep virbr0 | cut -d " " -f 1
 #+end_stdout
 
 
-*** Configure Hostname, IP Address, and MAC address
+*** Configure IP Address and MAC address
 
 #+begin_env
-NAME=debian-dev
 IP_ADDRESS=192.168.122.2
 MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | tr '[:upper:]' '[:lower:]')
 #+end_env
@@ -1602,7 +1607,7 @@ This is an instantiable template used for all VM services:
 VM_ADMIN=${VM_ADMIN:-libvirt-admin}
 cat << EOF | sudo tee /etc/systemd/system/libvirt@.service
 [Unit]
-Description=virsh start / stop %i
+Description=${VM_ADMIN} VM: %i
 Requires=libvirtd.service
 After=libvirtd.service
 
@@ -1727,7 +1732,7 @@ manually on boot to setup the port forwarding for each VM.
 VM_ADMIN=${VM_ADMIN:-libvirt-admin}
 cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
 [Unit]
-Description=DNAT port forwarding for kernel virtual machine: %i
+Description=${VM_ADMIN} VM: %i - DNAT port forwarding
 Requires=libvirt@%i.service
 Requires=network-online.target
 After=libvirt@%i.service
