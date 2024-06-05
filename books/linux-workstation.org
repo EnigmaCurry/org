@@ -1013,26 +1013,40 @@ Using this config, your workstation will stay relatively pure, because
 these VMs are isolated from your normal account. They are
 automatically started on boot, running under a dedicated VM user
 account. You can treat these VMs just like any other *remote* Linux
-host, and access them by (local) SSH connection from your normal
-workstation account.
+host. From your normal workstation account, you can access the VM's
+=root= shell, over (local) SSH conntection.
 
-These instructions will install a barebones Debian or Fedora server,
-inside a VM, with NAT networking (private IP address, no public ports
-open), for local development/testing purposes only. Near the end, you
-get to decide if you'd like to bend that rule too, and open the VMs up
-to public (LAN) routes.
+These instructions will cover installing libvirt, and creating a
+barebones Debian or Fedora VM (but any cloud-init image will work),
+inside of a private host-only network (No public ports are open by
+default, but outgoing internet access is allowed). This is mainly for
+local development/testing purposes only, but near the end of this
+chapter, you'll get to decide if you'd like to bend this rule too, and
+open the VMs up to public (LAN) routes for production-lite roles.
+
+#+attr_shortcode: :style info :title Guest OS compatibility
+#+begin_notice
+The following *guest* Linux distributions, have been tested as working:
+
+ * ✅ Debian 12 cloud image
+ * ✅ Fedora 40 cloud image
+
+These instructions should work for any operating system that is
+shipped as a "Cloud" image (Cloud-Init image).
+#+end_notice
 
 #+attr_shortcode: :style orange :title Host workstation compatibility
 #+begin_notice
 The following *host* Linux distributions, have been tested as working:
 
- * ✅ Fedora Atomic (40)
+ * ✅ Fedora Atomic Workstation (40)
  * ✅ Fedora Server (40)
+ * ✅ Fedora CoreOS (40)
  * ✅ Arch Linux
 
-🚧 Debian (12) hosts are only partially compatible, I have not been
-able to get the autostart service to run, due to an app armor
-permission issue, however the VMs do run if you start them manually.
+The following *host* Linux distributions have some issues:
+
+ * 🚧 Debian (12) *hosts* are only partially compatible, I have not been able to get the autostart service to run, due to an app armor permission issue, however the VMs do run if you start them manually.
 #+end_notice
 
 #+attr_shortcode: :depth 999
@@ -1241,8 +1255,8 @@ sudo gpasswd -a ${VM_ADMIN} kvm
 
 #+begin_run
 sudo loginctl enable-linger ${VM_ADMIN}
-sudo su ${VM_ADMIN} -c "mkdir -p ~/.bashrc.d"
-sudo su ${VM_ADMIN} -c "echo export XDG_RUNTIME_DIR=/run/user/\$(id -u) > ~/.bashrc.d/xdg"
+sudo su ${VM_ADMIN} -c \
+  "echo export XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN}) > ~/.bashrc"
 #+end_run
 
 *** Copy your public SSH key into the =libvirt-admin= home directory
@@ -1538,40 +1552,31 @@ virsh list --all
 ​ -    debian-dev   shut off
 #+end_stdout
 
-*** Restart VM
-#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
-#+begin_run
-virsh start ${NAME}
-#+end_run
+Before proceeding to the next step, make sure the VM is in the off
+state.
 
-#+begin_stdout
-Domain 'debian-dev' started
-#+end_stdout
-
-*** Verify VM is running
-#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
-#+begin_run
-virsh list --all
-#+end_run
-
-#+begin_stdout
-​ Id   Name         State
-​-----------------------------
-​ -    debian-dev   running
-#+end_stdout
-
-
-** Auto start VMs on boot
+** Systemd services to control VMs
 :PROPERTIES:
-:EXPORT_FILE_NAME: autostart
+:EXPORT_FILE_NAME: systemd
 :EXPORT_HUGO_WEIGHT: 4001
 :END:
+
+Systemd services can provide an easy way to manage the on/off state of
+the VMs (=systemctl start/stop=), and can (optionally) start VMs
+automatically when the host system boots.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+libvirt has its own =autostart= feature, but we're not using that,
+because I couldn't get it to work in user session mode. Systemd units
+per VM feels nicer anyway.
+#+end_notice
 
 *** Download libvirt python interface
 
 #+attr_shortcode: :style tip
 #+begin_notice
-You should now be in your normal workstation account Bash shell.
+You should now be in your *normal workstation account* Bash shell.
 #+end_notice
 
 #+begin_run
@@ -1668,7 +1673,7 @@ you want for each VM:
 
 #+begin_run
 NAME=debian-dev
-cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook
+cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook/hooks.json
 {
   "${NAME}": {
     "interface": "virbr0",
