@@ -5,41 +5,41 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.
-[bash]: Run this on your workstation: (set -e sudo mkdir -p /usr/local/src/ sudo su -c &#34;cd /usr/local/src &amp;&amp; git clone https://github.com/EnigmaCurry/virsh-start-stop&#34; ) CREDITS EnigmaCurry/virsh-start-stop is my own fork of avollmerhaus/virsh-start-stop which has been slightly customized for this configuration. Thank you to avollmerhaus for creating this service manager!
-Create Unit template This is an instantiable template used for all VM services:">
+    <meta name="description" content="Systemd services can provide an easy way to manage the on/off state of the VMs (systemctl start/stop), and can (optionally) start VMs automatically when the host system boots.
+Warning libvirt has its own autostart feature, but we’re not using that, because I couldn’t get it to work in user session mode. Systemd units per VM feels nicer anyway.
+Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Auto start VMs on boot :: book.rymcg.tech">
-    <meta name="twitter:description" content="Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.
-[bash]: Run this on your workstation: (set -e sudo mkdir -p /usr/local/src/ sudo su -c &#34;cd /usr/local/src &amp;&amp; git clone https://github.com/EnigmaCurry/virsh-start-stop&#34; ) CREDITS EnigmaCurry/virsh-start-stop is my own fork of avollmerhaus/virsh-start-stop which has been slightly customized for this configuration. Thank you to avollmerhaus for creating this service manager!
-Create Unit template This is an instantiable template used for all VM services:">
-    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/autostart/index.html">
+    <meta name="twitter:title" content="Systemd services to control VMs :: book.rymcg.tech">
+    <meta name="twitter:description" content="Systemd services can provide an easy way to manage the on/off state of the VMs (systemctl start/stop), and can (optionally) start VMs automatically when the host system boots.
+Warning libvirt has its own autostart feature, but we’re not using that, because I couldn’t get it to work in user session mode. Systemd units per VM feels nicer anyway.
+Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/systemd/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Auto start VMs on boot :: book.rymcg.tech">
-    <meta property="og:description" content="Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.
-[bash]: Run this on your workstation: (set -e sudo mkdir -p /usr/local/src/ sudo su -c &#34;cd /usr/local/src &amp;&amp; git clone https://github.com/EnigmaCurry/virsh-start-stop&#34; ) CREDITS EnigmaCurry/virsh-start-stop is my own fork of avollmerhaus/virsh-start-stop which has been slightly customized for this configuration. Thank you to avollmerhaus for creating this service manager!
-Create Unit template This is an instantiable template used for all VM services:">
+    <meta property="og:title" content="Systemd services to control VMs :: book.rymcg.tech">
+    <meta property="og:description" content="Systemd services can provide an easy way to manage the on/off state of the VMs (systemctl start/stop), and can (optionally) start VMs automatically when the host system boots.
+Warning libvirt has its own autostart feature, but we’re not using that, because I couldn’t get it to work in user session mode. Systemd units per VM feels nicer anyway.
+Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Linux Workstation">
-    <meta itemprop="name" content="Auto start VMs on boot :: book.rymcg.tech">
-    <meta itemprop="description" content="Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.
-[bash]: Run this on your workstation: (set -e sudo mkdir -p /usr/local/src/ sudo su -c &#34;cd /usr/local/src &amp;&amp; git clone https://github.com/EnigmaCurry/virsh-start-stop&#34; ) CREDITS EnigmaCurry/virsh-start-stop is my own fork of avollmerhaus/virsh-start-stop which has been slightly customized for this configuration. Thank you to avollmerhaus for creating this service manager!
-Create Unit template This is an instantiable template used for all VM services:">
-    <meta itemprop="wordCount" content="161">
-    <title>Auto start VMs on boot :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717548031" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717548031" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717548031" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717548031" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717548031" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717548031" rel="stylesheet">
-    <link href="/css/fonts.css?1717548031" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717548031" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717548031" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717548031" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717548031" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717548031" rel="stylesheet">
-    <link href="/css/print.css?1717548031" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717548031"></script>
+    <meta itemprop="name" content="Systemd services to control VMs :: book.rymcg.tech">
+    <meta itemprop="description" content="Systemd services can provide an easy way to manage the on/off state of the VMs (systemctl start/stop), and can (optionally) start VMs automatically when the host system boots.
+Warning libvirt has its own autostart feature, but we’re not using that, because I couldn’t get it to work in user session mode. Systemd units per VM feels nicer anyway.
+Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.">
+    <meta itemprop="wordCount" content="219">
+    <title>Systemd services to control VMs :: book.rymcg.tech</title>
+    <link href="/css/fontawesome-all.min.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717553322" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717553322" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717553322" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717553322" rel="stylesheet">
+    <link href="/css/fonts.css?1717553322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717553322" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717553322" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717553322" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717553322" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717553322" rel="stylesheet">
+    <link href="/css/print.css?1717553322" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717553322"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -60,7 +60,7 @@ Create Unit template This is an instantiable template used for all VM services:"
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/autostart/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/systemd/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -86,7 +86,7 @@ Create Unit template This is an instantiable template used for all VM services:"
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/index.html"><span itemprop="name">KVM / libvirt</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Auto start VMs on boot</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Systemd services to control VMs</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
             <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/create-vm/index.html" title="Create VM (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
@@ -111,15 +111,28 @@ Create Unit template This is an instantiable template used for all VM services:"
             <header class="headline">
             </header>
 
-<h1 id="auto-start-vms-on-boot">Auto start VMs on boot</h1>
+<h1 id="systemd-services-to-control-vms">Systemd services to control VMs</h1>
 
+<p>Systemd services can provide an easy way to manage the on/off state of
+the VMs (<code>systemctl start/stop</code>), and can (optionally) start VMs
+automatically when the host system boots.</p>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>libvirt has its own <code>autostart</code> feature, but we&rsquo;re not using that,
+because I couldn&rsquo;t get it to work in user session mode. Systemd units
+per VM feels nicer anyway.</p>
+</div>
+</div>
 <h2 id="download-libvirt-python-interface">Download libvirt python interface</h2>
 
 <div class="box notices cstyle tip">
   <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
   <div class="box-content">
 
-<p>You should now be in your normal workstation account Bash shell.</p>
+<p>You should now be in your <strong>normal workstation account</strong> Bash shell.</p>
 </div>
 </div>
 
@@ -226,12 +239,12 @@ sudo systemctl status libvirt@${NAME}
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717548031" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717548031" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717548031" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717548031" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717548031" defer></script>
-        <script src="/js/search.js?1717548031" defer></script>
+        <script src="/js/auto-complete.js?1717553322" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717553322" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717553322" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717553322" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717553322" defer></script>
+        <script src="/js/search.js?1717553322" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -261,7 +274,7 @@ sudo systemctl status libvirt@${NAME}
           <li data-nav-id="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html">Create VM admin</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/config-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/config-vm/index.html">Configure VM</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/create-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/create-vm/index.html">Create VM</a></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/autostart/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/autostart/index.html">Auto start VMs on boot</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
@@ -306,7 +319,7 @@ sudo systemctl status libvirt@${NAME}
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/autostart/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/systemd/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -349,14 +362,14 @@ sudo systemctl status libvirt@${NAME}
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 5, 2024 at 12:40am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 5, 2024 at 2:08am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717548031" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717548031" defer></script>
-    <script src="/js/theme.js?1717548031" defer></script>
+    <script src="/js/clipboard.min.js?1717553322" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717553322" defer></script>
+    <script src="/js/theme.js?1717553322" defer></script>
   </body>
 </html>

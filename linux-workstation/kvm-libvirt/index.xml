@@ -3,7 +3,7 @@
   <channel>
     <title>KVM / libvirt :: book.rymcg.tech</title>
     <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/index.html</link>
-    <description>Idealistically, the Introduction declared a “No sworkstations” rule. Pragmatically, you can bend this rule a bit, by hosting some development servers inside of virtual machines (VM).&#xA;Using this config, your workstation will stay relatively pure, because these VMs are isolated from your normal account. They are automatically started on boot, running under a dedicated VM user account. You can treat these VMs just like any other remote Linux host, and access them by (local) SSH connection from your normal workstation account.</description>
+    <description>Idealistically, the Introduction declared a “No sworkstations” rule. Pragmatically, you can bend this rule a bit, by hosting some development servers inside of virtual machines (VM).&#xA;Using this config, your workstation will stay relatively pure, because these VMs are isolated from your normal account. They are automatically started on boot, running under a dedicated VM user account. You can treat these VMs just like any other remote Linux host. From your normal workstation account, you can access the VM’s root shell, over (local) SSH conntection.</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <atom:link href="https://book.rymcg.tech/linux-workstation/kvm-libvirt/index.xml" rel="self" type="application/rss+xml" />
@@ -43,11 +43,11 @@
       <description>Info For this entire section you need to perform the VM config as the libvirt-admin user. Login to the shell account of libvirt-admin: [bash]: Run this on your workstation: sudo su libvirt-admin -l Source the config Now, and anytime you come back later to work on the same VM, source the config file: Run this as the libvirt-admin user NAME=debian-dev source ~/libvirt/${NAME}.env Create directories to hold the VM disks and config files: Run this as the libvirt-admin user mkdir -p ~/libvirt/{cloud-images,disks,cloud-init} Create the cloud-init config file: Run this as the libvirt-admin user cat &lt;&lt; EOF | sed &#39;s/\xe2\x80\x8b//g&#39; &gt; ${USER_DATA} #cloud-config hostname: ${NAME} users: ​ - name: root ssh_authorized_keys: ​ - $(cat ~/libvirt/user-ssh.</description>
     </item>
     <item>
-      <title>Auto start VMs on boot</title>
-      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/autostart/index.html</link>
+      <title>Systemd services to control VMs</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/systemd/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/autostart/index.html</guid>
-      <description>Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.&#xA;[bash]: Run this on your workstation: (set -e sudo mkdir -p /usr/local/src/ sudo su -c &#34;cd /usr/local/src &amp;&amp; git clone https://github.com/EnigmaCurry/virsh-start-stop&#34; ) CREDITS EnigmaCurry/virsh-start-stop is my own fork of avollmerhaus/virsh-start-stop which has been slightly customized for this configuration. Thank you to avollmerhaus for creating this service manager!&#xA;Create Unit template This is an instantiable template used for all VM services:</description>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/systemd/index.html</guid>
+      <description>Systemd services can provide an easy way to manage the on/off state of the VMs (systemctl start/stop), and can (optionally) start VMs automatically when the host system boots.&#xA;Warning libvirt has its own autostart feature, but we’re not using that, because I couldn’t get it to work in user session mode. Systemd units per VM feels nicer anyway.&#xA;Download libvirt python interface Tip You should now be in your normal workstation account Bash shell.</description>
     </item>
     <item>
       <title>Public routes to VMs</title>
