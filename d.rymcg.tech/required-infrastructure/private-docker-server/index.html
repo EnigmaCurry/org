@@ -5,22 +5,26 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="This site is automatically published to GitHub Pages via the included action file: .github/workflows/deploy.yaml. You can fork the repository and enable the action to run on your behalf and publish to your own site automatically, whenever you run git push.">
+    <meta name="description" content="Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.
+Setup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Publishing with GitHub pages :: book.rymcg.tech">
-    <meta name="twitter:description" content="This site is automatically published to GitHub Pages via the included action file: .github/workflows/deploy.yaml. You can fork the repository and enable the action to run on your behalf and publish to your own site automatically, whenever you run git push.">
-    <meta property="og:url" content="https://book.rymcg.tech/publishing-with-org-mode/publish-with-github-pages/index.html">
+    <meta name="twitter:title" content="Create a private VM (libvirt) :: book.rymcg.tech">
+    <meta name="twitter:description" content="Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.
+Setup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/required-infrastructure/private-docker-server/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Publishing with GitHub pages :: book.rymcg.tech">
-    <meta property="og:description" content="This site is automatically published to GitHub Pages via the included action file: .github/workflows/deploy.yaml. You can fork the repository and enable the action to run on your behalf and publish to your own site automatically, whenever you run git push.">
+    <meta property="og:title" content="Create a private VM (libvirt) :: book.rymcg.tech">
+    <meta property="og:description" content="Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.
+Setup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
-    <meta property="article:section" content="Publishing with org-mode, ox-hugo, and literate programming.">
-    <meta itemprop="name" content="Publishing with GitHub pages :: book.rymcg.tech">
-    <meta itemprop="description" content="This site is automatically published to GitHub Pages via the included action file: .github/workflows/deploy.yaml. You can fork the repository and enable the action to run on your behalf and publish to your own site automatically, whenever you run git push.">
-    <meta itemprop="wordCount" content="40">
-    <title>Publishing with GitHub pages :: book.rymcg.tech</title>
+    <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
+    <meta itemprop="name" content="Create a private VM (libvirt) :: book.rymcg.tech">
+    <meta itemprop="description" content="Create Debian VM on libvirt Follow the Linux Workstation book chapter on KVM / libvirt to install a Debian VM on your local workstation, and to create a local SSH config to connect to it.
+Setup DNS records for VM services You will need a DNS server to create (wildcard) records for all VM services. You can use the canonical DNS server on the internet, or you can use a local DNS resolver to override the name on the LAN.">
+    <meta itemprop="wordCount" content="112">
+    <title>Create a private VM (libvirt) :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1717624064" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717624064" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717624064" rel="stylesheet">
     <link href="/css/auto-complete.css?1717624064" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717624064" rel="stylesheet"></noscript>
@@ -34,8 +38,8 @@
     <script src="/js/variant.js?1717624064"></script>
     <script>
       window.relearn = window.relearn || {};
-      window.relearn.relBasePath='..\/..';
-      window.relearn.relBaseUri='..\/..';
+      window.relearn.relBasePath='..\/..\/..';
+      window.relearn.relBaseUri='..\/..\/..';
       window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
       window.index_js_url="/index.search.js";
       // variant stuff
@@ -52,7 +56,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/publishing-with-org-mode/publish-with-github-pages/index.html">
+  <body class="mobile-support html" data-url="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -63,20 +67,26 @@
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"> 
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#create-debian-vm-on-libvirt">Create Debian VM on libvirt</a></li>
+    <li><a href="#setup-dns-records-for-vm-services">Setup DNS records for VM services</a></li>
+  </ul>
+</nav>
                 </div>
               </div>
             </div>
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/publishing-with-org-mode/index.html"><span itemprop="name">Publishing with org-mode</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Publishing with GitHub pages</span><meta itemprop="position" content="3"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/required-infrastructure/index.html"><span itemprop="name">Required Infrastructure</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Create a private VM (libvirt)</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/publishing-with-org-mode/building-locally/index.html" title="Building locally (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" title="Create a public server (VPS) (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/publishing-with-org-mode/publish-with-sftp/index.html" title="Publishing with SFTP (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/workstation/index.html" title="Setup your workstation (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -96,12 +106,19 @@
             <header class="headline">
             </header>
 
-<h1 id="publishing-with-github-pages">Publishing with GitHub pages</h1>
+<h1 id="create-a-private-vm-libvirt">Create a private VM (libvirt)</h1>
 
-<p>This site is automatically published to <a href="https://pages.github.com" rel="external" target="_blank">GitHub Pages</a> via the included
-action file: <a href="https://github.com/EnigmaCurry/org/blob/ox-hugo/.github/workflows/deploy.yaml" rel="external" target="_blank">.github/workflows/deploy.yaml</a>. You can fork the
-repository and enable the action to run on your behalf and publish to
-your own site automatically, whenever you run <code>git push</code>.</p>
+<h2 id="create-debian-vm-on-libvirt">Create Debian VM on libvirt</h2>
+<p>Follow the <a href="/linux-workstation/index.html">Linux Workstation</a> book chapter on <a href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a> to install
+a Debian VM on your local workstation, and to create a local SSH
+config to connect to it.</p>
+<h2 id="setup-dns-records-for-vm-services">Setup DNS records for VM services</h2>
+<p>You will need a DNS server to create (wildcard) records for all VM
+services. You can use the canonical DNS server on the internet, or you
+can use a local DNS resolver to override the name on the LAN.</p>
+<p>You can follow the <a href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html#create-wildcard-dns-records-for-the-droplet">wildcard DNS record guide</a> from the public VPS
+chapter, except instead of pointing to a droplet IP address, it will
+be your private VM (or workstation) IP address.</p>
 
             <footer class="footline">
             </footer>
@@ -174,13 +191,13 @@ your own site automatically, whenever you run <code>git push</code>.</p>
           <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li></ul></li></ul></li>
-          <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/index.html" class="parent "><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
-          <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/register-a-domain-nameom/index.html">Register a domain name</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/setup-dns/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/setup-dns/index.html">Setup public DNS service</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/public-docker-server/index.html">Create a public server (VPS)</a></li>
-          <li data-nav-id="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html" class=""><a class="padding" href="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html">Create a private VM (libvirt)</a></li></ul></li>
+          <li data-nav-id="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html" class="active"><a class="padding" href="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html">Create a private VM (libvirt)</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/workstation/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/workstation/index.html">Setup your workstation</a><ul id="R-subsections-4a12c34b2fece93fc397ecf3de950464" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-docker-command-line-tools/index.html">Install Docker client tools</a></li>
           <li data-nav-id="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/install-d-rymcg-tech/index.html">Install d.rymcg.tech tools</a></li>
@@ -189,10 +206,10 @@ your own site automatically, whenever you run <code>git push</code>.</p>
           <li data-nav-id="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html" class=""><a class="padding" href="/d.rymcg.tech/workstation/main-config-for-d.rymcg/index.html">Main config for d.rymcg.tech</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/install-traefik-proxy/index.html" class=""><a class="padding" href="/d.rymcg.tech/install-traefik-proxy/index.html">Install Traefik Proxy</a></li>
           <li data-nav-id="/d.rymcg.tech/whoami/index.html" class=""><a class="padding" href="/d.rymcg.tech/whoami/index.html">Whoami</a></li></ul></li>
-          <li data-nav-id="/publishing-with-org-mode/index.html" class="parent "><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
           <li data-nav-id="/publishing-with-org-mode/building-locally/index.html" class=""><a class="padding" href="/publishing-with-org-mode/building-locally/index.html">Building locally</a></li>
-          <li data-nav-id="/publishing-with-org-mode/publish-with-github-pages/index.html" class="active"><a class="padding" href="/publishing-with-org-mode/publish-with-github-pages/index.html">Publishing with GitHub pages</a></li>
+          <li data-nav-id="/publishing-with-org-mode/publish-with-github-pages/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-github-pages/index.html">Publishing with GitHub pages</a></li>
           <li data-nav-id="/publishing-with-org-mode/publish-with-sftp/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-sftp/index.html">Publishing with SFTP</a></li>
           <li data-nav-id="/publishing-with-org-mode/examples/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/examples/index.html">Example Org / Hugo content</a><ul id="R-subsections-21525f33c1956ce3844918973388ff0a" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/examples/org-blocks/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/org-blocks/index.html">Example Org Blocks</a></li>
@@ -217,7 +234,7 @@ your own site automatically, whenever you run <code>git push</code>.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/publishing-with-org-mode/publish-with-github-pages/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/required-infrastructure/private-docker-server/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
