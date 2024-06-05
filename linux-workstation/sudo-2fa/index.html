@@ -5,18 +5,30 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="">
+    <meta name="description" content="Get your Solokey ready Purchase at least two Solokeys They come in lots of different sizes.
+Programming the Solokey Follow the Programming instructions
+Sudo 2FA Having sudo privileges enabled for your normal workstation user account, is both a convenience, and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Categories :: book.rymcg.tech">
-    <meta property="og:url" content="https://book.rymcg.tech/categories/index.html">
+    <meta name="twitter:title" content="Two Factor Auth with Solokey :: book.rymcg.tech">
+    <meta name="twitter:description" content="Get your Solokey ready Purchase at least two Solokeys They come in lots of different sizes.
+Programming the Solokey Follow the Programming instructions
+Sudo 2FA Having sudo privileges enabled for your normal workstation user account, is both a convenience, and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/sudo-2fa/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Categories :: book.rymcg.tech">
+    <meta property="og:title" content="Two Factor Auth with Solokey :: book.rymcg.tech">
+    <meta property="og:description" content="Get your Solokey ready Purchase at least two Solokeys They come in lots of different sizes.
+Programming the Solokey Follow the Programming instructions
+Sudo 2FA Having sudo privileges enabled for your normal workstation user account, is both a convenience, and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey.">
     <meta property="og:locale" content="en-us">
-    <meta property="og:type" content="website">
-    <meta itemprop="name" content="Categories :: book.rymcg.tech">
-    <title>Categories :: book.rymcg.tech</title>
-    <link href="/categories/index.xml" rel="alternate" type="application/rss+xml" title="Categories :: book.rymcg.tech">
+    <meta property="og:type" content="article">
+    <meta property="article:section" content="Linux Workstation">
+    <meta itemprop="name" content="Two Factor Auth with Solokey :: book.rymcg.tech">
+    <meta itemprop="description" content="Get your Solokey ready Purchase at least two Solokeys They come in lots of different sizes.
+Programming the Solokey Follow the Programming instructions
+Sudo 2FA Having sudo privileges enabled for your normal workstation user account, is both a convenience, and a security concern. The Pluggable Authentication Module for Linux (PAM) allows us to strengthen the requirements for using sudo. This chapter will install pam_u2f, which enables PAM authentication via FIDO2/U2F compatible hardware tokens like the Solokey.">
+    <meta itemprop="wordCount" content="619">
+    <title>Two Factor Auth with Solokey :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1717578393" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717578393" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717578393" rel="stylesheet">
     <link href="/css/auto-complete.css?1717578393" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717578393" rel="stylesheet"></noscript>
@@ -30,8 +42,8 @@
     <script src="/js/variant.js?1717578393"></script>
     <script>
       window.relearn = window.relearn || {};
-      window.relearn.relBasePath='..';
-      window.relearn.relBaseUri='..';
+      window.relearn.relBasePath='..\/..';
+      window.relearn.relBaseUri='..\/..';
       window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
       window.index_js_url="/index.search.js";
       // variant stuff
@@ -48,7 +60,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/categories/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/sudo-2fa/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -59,20 +71,38 @@
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper">
-<nav class="TableOfContents"></nav>
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#get-your-solokey-ready">Get your Solokey ready</a>
+      <ul>
+        <li><a href="#purchase-at-least-two-solokeys">Purchase at least two Solokeys</a></li>
+        <li><a href="#programming-the-solokey">Programming the Solokey</a></li>
+      </ul>
+    </li>
+    <li><a href="#sudo-2fa">Sudo 2FA</a>
+      <ul>
+        <li><a href="#open-a-root-session-as-anti-lockout-measure">Open a root session as anti-lockout measure</a></li>
+        <li><a href="#register-solokeys">Register Solokeys</a></li>
+        <li><a href="#create-custom-pam-config-for-u2f">Create custom PAM config for U2F</a></li>
+        <li><a href="#configure-pam-hook-for-sudo">Configure PAM hook for sudo</a></li>
+        <li><a href="#test-sudo">Test sudo</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
                 </div>
               </div>
             </div>
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Categories</span><meta itemprop="position" content="2"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Two Factor Auth with Solokey</span><meta itemprop="position" content="3"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/index.html" title="book.rymcg.tech (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/layering-packages/index.html" title="Layering packages (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><span class="topbar-control"><i class="fa-fw fas fa-chevron-right"></i></span>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/config/index.html" title="Config (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -88,14 +118,229 @@
       <div id="R-main-overlay"></div>
       <main id="R-body-inner" class="highlightable default" tabindex="-1">
         <div class="flex-block-wrapper">
-          <article>
+          <article class="default">
             <header class="headline">
             </header>
-<h1 id="categories">Categories</h1>
+
+<h1 id="two-factor-auth-with-solokey">Two Factor Auth with Solokey</h1>
+
+<h2 id="get-your-solokey-ready">Get your Solokey ready</h2>
+<h3 id="purchase-at-least-two-solokeys">Purchase at least two Solokeys</h3>
+<p><a href="https://www.crowdsupply.com/solokeys/somu#products" rel="external" target="_blank">They come in lots of different sizes.</a></p>
+<h3 id="programming-the-solokey">Programming the Solokey</h3>
+<p>Follow the <a href="https://docs.solokeys.dev/programming/" rel="external" target="_blank">Programming instructions</a></p>
+<h2 id="sudo-2fa">Sudo 2FA</h2>
+<p>Having <code>sudo</code> privileges enabled for your normal workstation user
+account, is both a convenience, and a security concern. The Pluggable
+Authentication Module for Linux (PAM) allows us to strengthen the
+requirements for using <code>sudo</code>. This chapter will install <a href="https://developers.yubico.com/pam-u2f/" rel="external" target="_blank">pam_u2f</a>,
+which enables PAM authentication via FIDO2/U2F compatible hardware
+tokens like the <a href="https://solokeys.com/" rel="external" target="_blank">Solokey</a>. <code>sudo</code> will then require a Solokey button
+press <em>and</em> a password each time it requires authentication.</p>
+
+<div class="box notices cstyle credits">
+  <div class="box-label"><i class="fa-fw fas fa-gift"></i> CREDITS</div>
+  <div class="box-content">
+
+<p>Some of this guide was adapted from these other guides:</p>
+<ul>
+<li><a href="https://fedoraproject.org/wiki/Using_Solokeys_with_Fedora#Introduction:_Using_Solo_Keys_with_Fedora" rel="external" target="_blank">Using Solokeys with Fedora</a></li>
+<li><a href="https://docs.fedoraproject.org/en-US/quick-docs/using-yubikeys/" rel="external" target="_blank">Using YubiKeys with Fedora</a></li>
+</ul>
+<p>Thank you to the Fedora documentation team!</p>
+</div>
+</div>
+<h3 id="open-a-root-session-as-anti-lockout-measure">Open a root session as anti-lockout measure</h3>
+<p>To prevent yourself from being locked out of your own system during
+the setup process, it is recommended to start a new terminal in a root
+session, and to keep it open. That way if you lock yourself out, you
+still have a way you can fix it.</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+## Open root session and leave it alone in another window ....
+sudo su
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="register-solokeys">Register Solokeys</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Do the next steps as your <strong>normal workstation user account</strong>, which is
+the account that should already have <code>sudo</code> privileges.</p>
+</div>
+</div>
+<p>It is recommended that you register <strong>at least two</strong> solokeys, a primary
+key, and a backup key. That way if you lose one of the keys, you can
+still use the other one.</p>
+<div class="box notices cstyle edit env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>[bash]: Customize and set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+TMP_KEYS=$(mktemp)
+</pre></code>
+    </div>
+</div>
+<ul>
+<li>Plug in the first solokey, then run:</li>
+</ul>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+## Repeat this step for each solokey:
+pamu2fcfg >> ${TMP_KEYS} && \
+     echo >> ${TMP_KEYS}
+</pre></code>
+    </div>
+</div>
+
+
+<p>It may ask you to enter the PIN of the solokey:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Enter PIN for /dev/hidraw1:
+</pre>
+    </div>
+</div>
+
+<ul>
+<li>
+<p>When the solokey lights up, press the button.</p>
+</li>
+<li>
+<p>Unplug the first solokey and repeat the last command for the second
+solokey.</p>
+</li>
+<li>
+<p>Unplug the second solokey and repeat again for however many other
+solokeys you want to register.</p>
+</li>
+<li>
+<p>When you&rsquo;ve written all the keys to <code>${TMP_KEYS}</code>, reformat and
+install them into their final destination <code>/etc/u2f_mappings</code>:</p>
+</li>
+</ul>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+echo "${USER}:$(cat ${TMP_KEYS} | \
+    cut -d ":" -f 2 | tr '\n' ':')" | sed 's/:$//' | \
+    sudo tee /etc/u2f_mappings
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="create-custom-pam-config-for-u2f">Create custom PAM config for U2F</h3>
+<p>This includes the required settings:</p>
+<ol>
+<li>The <code>authfile</code> path to our authorized key list file.</li>
+<li>The <code>cue</code> literal to show the <code>Please touch the device</code> prompt
+message for each authentication. (If you omit this, it will print
+nothing, which can be confusing).</li>
+</ol>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+cat << EOF | sudo tee /etc/pam.d/u2f-required
+#%PAM-1.0
+auth       required     pam_u2f.so authfile=/etc/u2f_mappings cue
+EOF
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="configure-pam-hook-for-sudo">Configure PAM hook for sudo</h3>
+<p>As root, edit the file <code>/etc/pam.d/sudo</code>, and insert a new line
+directly after the <code>#%PAM-1.0</code> header. Your solokey is going to be the
+<em>first required</em> authentication mechanism, and the existing password
+flow is the <em>second required</em> authentication method.</p>
+<div class="box notices cstyle edit">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: /etc/pam.d/sudo</div>
+    <div class="box-content">
+        <code><pre>
+#%PAM-1.0
+auth	  include      u2f-required
+auth       include      system-auth
+account    include      system-auth
+password   include      system-auth
+session    optional     pam_keyinit.so revoke
+session    required     pam_limits.so
+session    include      system-auth
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>The line that reads <code>auth include u2f-required</code>, on line 2, is the
+only line that was added to this file. All the rest of the lines were
+here from the original package.</p>
+</div>
+</div>
+<h3 id="test-sudo">Test sudo</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>When testing sudo, always open a new terminal for <strong>each</strong> test. This is
+to avoid the auth caching mechanism (which is reset for new
+terminals).</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo
+</pre></code>
+    </div>
+</div>
+<p>The PAM system should now ask for you to touch your solokey (or press
+the button), and afterward prompt for your password.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Please touch the device.
+[sudo] password for ryan:
+</pre>
+    </div>
+</div>
+</div>
+</div>
 
             <footer class="footline">
             </footer>
-          </article>        </div>
+          </article>
+        </div>
       </main>
     </div>
     <aside id="R-sidebar" class="default-animation">
@@ -133,14 +378,14 @@
       <div id="R-content-wrapper" class="highlightable">
         <div id="R-topics">
           <ul class="enlarge morespace collapsible-menu">
-          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class="parent "><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a><ul id="R-subsections-247caeb1441bcea844a3ccf766ca4471" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/introduction/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
           <li data-nav-id="/linux-workstation/introduction/requirements/index.html" class=""><a class="padding" href="/linux-workstation/introduction/requirements/index.html">Requirements</a></li></ul></li>
           <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Install Linux (Fedora Atomic)</a></li>
           <li data-nav-id="/linux-workstation/upgrading/index.html" class=""><a class="padding" href="/linux-workstation/upgrading/index.html">Upgrading</a></li>
           <li data-nav-id="/linux-workstation/layering-packages/index.html" class=""><a class="padding" href="/linux-workstation/layering-packages/index.html">Layering packages</a></li>
-          <li data-nav-id="/linux-workstation/sudo-2fa/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/index.html">Two Factor Auth with Solokey</a></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/index.html" class="active"><a class="padding" href="/linux-workstation/sudo-2fa/index.html">Two Factor Auth with Solokey</a></li>
           <li data-nav-id="/linux-workstation/config/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/config/sway/index.html" class=""><a class="padding" href="/linux-workstation/config/sway/index.html">Sway</a></li>
           <li data-nav-id="/linux-workstation/config/firefox/index.html" class=""><a class="padding" href="/linux-workstation/config/firefox/index.html">Firefox</a></li>
@@ -198,7 +443,7 @@
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/categories/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/sudo-2fa/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
