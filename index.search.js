@@ -17,8 +17,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication",
-    "content": "",
-    "description": "",
+    "content": " Index Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
+    "description": " Index Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
     "tags": [],
     "title": "Solokey v1",
     "uri": "/linux-workstation/sudo-2fa/solo-v1/index.html"
@@ -33,8 +33,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI tool Update your Solokey Program your Solokey Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
-    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI tool Update your Solokey Program your Solokey Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
     "tags": [],
     "title": "Linux Workstation",
     "uri": "/linux-workstation/index.html"
@@ -145,8 +145,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
-    "content": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2. The instructions diverge depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI tool Update your Solokey Program your Solokey Sudo with Solokey SSH with Solokey ",
-    "description": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2. The instructions diverge depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI tool Update your Solokey Program your Solokey Sudo with Solokey SSH with Solokey ",
+    "content": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
+    "description": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
     "tags": [],
     "title": "Solokey authentication",
     "uri": "/linux-workstation/sudo-2fa/index.html"
@@ -393,26 +393,26 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication \u003e Solokey v1",
-    "content": "",
-    "description": "",
+    "content": "Create Python environment for solokey [bash]: Run this on your workstation: SOLO_ROOT=~/git/vendor/solokeys (set -e git clone https://github.com/solokeys/solo1-cli \\ ${SOLO_ROOT}/solo1-cli ) Lock Fido2 version to 0.9.1 to fix outstanding bugs Warning Double check if these outstanding bugs are still open:\nhttps://github.com/solokeys/solo1-cli/issues/151 https://github.com/solokeys/solo1-cli/discussions/156 Both of these are related to Fido2 v1.0.0. If you lock the version to the last known good version of 0.9.0, it will work:\n[bash]: Run this on your workstation: sed -i 's/fido2 \u003e= 0.9.1/fido2 == 0.9.1/' ${SOLO_ROOT}/solo1-cli/pyproject.toml Build solo1 key environment [bash]: Run this on your workstation: python -m venv ${SOLO_ROOT}/env ${SOLO_ROOT}/env/bin/pip3 install -e ${SOLO_ROOT}/solo1-cli Add solo alias to your .bashrc Edit this file: ~/.bashrc alias solo=${HOME}/git/vendor/solokeys/env/bin/solo1 Restart your shell to load the new alias.",
+    "description": "Create Python environment for solokey [bash]: Run this on your workstation: SOLO_ROOT=~/git/vendor/solokeys (set -e git clone https://github.com/solokeys/solo1-cli \\ ${SOLO_ROOT}/solo1-cli ) Lock Fido2 version to 0.9.1 to fix outstanding bugs Warning Double check if these outstanding bugs are still open: https://github.com/solokeys/solo1-cli/issues/151 https://github.com/solokeys/solo1-cli/discussions/156 Both of these are related to Fido2 v1.0.0. If you lock the version to the last known good version of 0.9.0, it will work: [bash]: Run this on your workstation: sed -i 's/fido2 \u003e= 0.",
     "tags": [],
-    "title": "Install Solokey CLI tool",
+    "title": "Install Solokey CLI (v1) tool",
     "uri": "/linux-workstation/sudo-2fa/solo-v1/install-solo-cli/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication \u003e Solokey v1",
-    "content": "",
-    "description": "",
+    "content": "Plug your solokey into the USB port Identify your solokey [bash]: Run this on your workstation: solo ls (stdout) :: Solos AABBCC00112233: SoloKeys Solo 4.1.5 Update the firmware Check for the latest release of solo v1 and compare it to the version that is reported by solo ls. If your solokey is not running the latest version, it is recommended to update it.\nEnter bootloader mode:\n[bash]: Run this on your workstation: solo program aux enter-bootloader The solokey should now be rapidly flashing to indicate it is in boot loader mode.\nUpdate the firmware:\n[bash]: Run this on your workstation: solo key update (stdout) ... Congratulations, your key was updated to the latest firmware version: 4.1.5 ",
+    "description": "Plug your solokey into the USB port Identify your solokey [bash]: Run this on your workstation: solo ls (stdout) :: Solos AABBCC00112233: SoloKeys Solo 4.1.5 Update the firmware Check for the latest release of solo v1 and compare it to the version that is reported by solo ls. If your solokey is not running the latest version, it is recommended to update it.\nEnter bootloader mode:\n[bash]: Run this on your workstation: solo program aux enter-bootloader The solokey should now be rapidly flashing to indicate it is in boot loader mode.",
     "tags": [],
-    "title": "Update your Solokey",
+    "title": "Update your Solokey (v1)",
     "uri": "/linux-workstation/sudo-2fa/solo-v1/update-solokey/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication \u003e Solokey v1",
-    "content": "",
-    "description": "",
+    "content": "Reset solokey (recommended first time only) Warning This will wipe all identity from the solokey device!\n[bash]: Run this on your workstation: solo key reset Set device PIN [bash]: Run this on your workstation: solo key set-pin Tip This will only work if the device does not already have a pin (which is the state it is in after a reset).\nIf you want to change the PIN which was already set:\n[bash]: Run this on your workstation: solo key change-pin Verify PIN [bash]: Run this on your workstation: solo key verify (stdout) PIN: Please press the button on your Solo key Register valid Valid Solo with firmware from SoloKeys. ",
+    "description": "Reset solokey (recommended first time only) Warning This will wipe all identity from the solokey device!\n[bash]: Run this on your workstation: solo key reset Set device PIN [bash]: Run this on your workstation: solo key set-pin Tip This will only work if the device does not already have a pin (which is the state it is in after a reset).\nIf you want to change the PIN which was already set:",
     "tags": [],
-    "title": "Program your Solokey",
+    "title": "Program your Solokey (v1)",
     "uri": "/linux-workstation/sudo-2fa/solo-v1/program-solokey/index.html"
   },
   {
