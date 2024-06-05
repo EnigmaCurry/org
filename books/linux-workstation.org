@@ -282,25 +282,190 @@ sudo rpm-ostree cleanup -r
 
 * Two Factor Auth with Solokey
 :PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: sudo-2FA
+:END:
+
+** Two Factor Auth with Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Get your Solokey (v1)
+:PROPERTIES:
+:EXPORT_FILE_NAME: get-your-solokey
+:END:
+
+I know of two places to buy solokeys:
+
+ * https://solokeys.com/collections/all
+ * https://www.crowdsupply.com/solokeys/somu#products
+
+What to buy:
+
+ * Recommended: [[https://solokeys.com/collections/all/products/solo-tap-usb-a-preorder][Solo 1 Tap USB-A]] (durable clicky button, but sticks out of the USB port).
+ * Recommended: [[https://www.crowdsupply.com/solokeys/somu][Somu]] (semi-permanent flush mount USB-A port, soft
+   touch design).
+ * Don't buy a Solokey v2 (yet). Get the Solokey v1. (These
+   instructions are for Solokey v1).
+ * Get the *"secure"* version, don't buy the "hacker" version. 
+ * Buy at least two (and store one as a backup).
+
+** Install Solokey CLI tool
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-solo-cli
+:END:
+
+*** Create Python environment for solokey
+
+#+begin_run
+SOLO_ROOT=~/git/vendor/solokeys
+(set -e
+git clone https://github.com/solokeys/solo1-cli \
+    ${SOLO_ROOT}/solo1-cli
+)
+#+end_run
+
+*** Lock Fido2 version to 0.9.1 to fix outstanding bugs
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Double check if these outstanding bugs are still open:
+
+ * https://github.com/solokeys/solo1-cli/issues/151
+ * https://github.com/solokeys/solo1-cli/discussions/156
+
+Both of these are related to Fido2 v1.0.0. If you lock the version to
+the last known good version of 0.9.0, it will work:
+
+#+begin_run
+sed -i 's/fido2 >= 0.9.1/fido2 == 0.9.1/' ${SOLO_ROOT}/solo1-cli/pyproject.toml
+#+end_run
+#+end_notice
+
+*** Build solo1 key environment
+
+#+begin_run
+python -m venv ${SOLO_ROOT}/env
+${SOLO_ROOT}/env/bin/pip3 install -e ${SOLO_ROOT}/solo1-cli
+#+end_run
+
+*** Add =solo= alias to your .bashrc
+
+#+attr_shortcode: :file ~/.bashrc
+#+begin_edit
+alias solo=${HOME}/git/vendor/solokeys/env/bin/solo1
+#+end_edit
+
+Restart your shell to load the new alias.
+
+** Update your Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: update-solokey
+:END:
+*** Plug your solokey into the USB port
+*** Identify your solokey
+#+begin_run
+solo ls
+#+end_run
+
+#+begin_stdout
+:: Solos
+AABBCC00112233: SoloKeys Solo 4.1.5
+#+end_stdout
+
+*** Update the firmware
+
+Check for the [[https://github.com/solokeys/solo1/releases][latest release of solo v1]] and compare it to the version
+that is reported by =solo ls=. If your solokey is not running the
+latest version, it is recommended to update it.
+
+Enter bootloader mode:
+
+#+begin_run
+solo program aux enter-bootloader
+#+end_run
+
+The solokey should now be rapidly flashing to indicate it is in boot
+loader mode.
+
+Update the firmware:
+
+#+begin_run
+solo key update
+#+end_run
+
+#+begin_stdout
+...
+Congratulations, your key was updated to the latest firmware version: 4.1.5
+#+end_stdout
+
+
+** Program your Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: program-solokey
+:END:
+*** Reset solokey (recommended first time only)
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This will wipe all identity from the solokey device!
+#+begin_run
+solo key reset
+#+end_run
+#+end_notice
+
+
+*** Set device PIN
+
+#+begin_run
+solo key set-pin
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This will only work if the device does not already have a pin (which
+is the state it is in after a reset).
+
+If you want to change the PIN which was already set:
+
+#+begin_run
+solo key change-pin
+#+end_run
+#+end_notice
+
+
+*** Verify PIN
+
+#+begin_run
+solo key verify
+#+end_run
+
+#+begin_stdout
+PIN: 
+Please press the button on your Solo key
+Register valid
+Valid Solo with firmware from SoloKeys.
+#+end_stdout
+
+** Sudo with Solokey
+:PROPERTIES:
 :EXPORT_FILE_NAME: sudo-2FA
 :END:
 
-** Get your Solokey
-
-[[https://www.crowdsupply.com/solokeys/somu#products][They come in lots of different sizes.]] Buy at least two. Get the
-*"secure"* version, don't buy the "hacker" version.
-
-Follow the [[https://docs.solokeys.dev/programming/][Programming instructions]].
-
-** Sudo 2FA
-
 Having =sudo= privileges enabled for your normal workstation user
-account, is both a convenience, and a security concern. The Pluggable
+account is both a convenience and a security concern. The Pluggable
 Authentication Module for Linux (PAM) allows us to strengthen the
-requirements for using =sudo=. This chapter will install [[https://developers.yubico.com/pam-u2f/][pam_u2f]],
-which enables PAM authentication via FIDO2/U2F compatible hardware
-tokens like the [[https://solokeys.com/][Solokey]]. =sudo= will then require a Solokey button
-press /and/ a password each time it requires authentication.
+requirements for using =sudo=, to include several authentication
+methods beyond just asking for a password. This chapter will install
+[[https://developers.yubico.com/pam-u2f/][pam_u2f]], which enables PAM authentication via FIDO2/U2F compatible
+hardware tokens like the [[https://solokeys.com/][Solokey]]. Each time =sudo= asks for
+authentication, it will prompt for a Solokey button press /and/ a
+password to be entered.
 
 #+attr_shortcode: :style credits :title CREDITS :icon gift
 #+begin_notice
@@ -312,7 +477,7 @@ Some of this guide was adapted from these other guides:
 Thank you to the Fedora documentation team!
 #+end_notice
  
-*** Open a root session as anti-lockout measure
+*** Open a root session as an anti-lockout measure
 
 To prevent yourself from being locked out of your own system during
 the setup process, it is recommended to start a new terminal in a root
@@ -324,7 +489,41 @@ still have a way you can fix it.
 sudo su
 #+end_run
 
+**** Consider adding a root password
+
+If you use =sudo= a lot, you might not actually know the real =root=
+password of your system (or one might not even be set). As a backup,
+you may want to set a secure long random passphrase for the =root=
+user and keep it safe (you will rarely need it).
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Reset the root password with a random string:
+
+#+begin_run
+(set -e
+LENGTH=26
+PASSWORD=$(tr -dc 'A-Za-z0-9!@#$%^&*()[]~+-_=?<>.,;:' < /dev/urandom | head -c ${LENGTH})
+echo -e "\nSave this ${LENGTH} character long password somewhere safe:    ${PASSWORD}\n"
+read -e -p "Do you want to reset the root password with this value (y/N)? " answer
+(test "${answer,,}" == "y" || test "${answer,,}" == "yes") && \
+    sudo sh -c "echo 'root:${PASSWORD}' | chpasswd && echo Done." || \
+    echo "Cancelled."
+)
+#+end_run
+
+Test that the root password works /without/ using =sudo=:
+
+#+begin_run
+su
+#+end_run
+#+end_notice
+
 *** Register Solokeys
+
+It is recommended that you register *at least two* solokeys: a primary
+key, and a backup key. That way, if you lose one of the keys, you can
+still use the other one.
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -332,9 +531,7 @@ Do the next steps as your *normal workstation user account*, which is
 the account that should already have =sudo= privileges.
 #+end_notice
 
-It is recommended that you register *at least two* solokeys, a primary
-key, and a backup key. That way if you lose one of the keys, you can
-still use the other one.
+Create a tempory file to capture solo key registrations:
 
 #+begin_env
 TMP_KEYS=$(mktemp)
@@ -343,7 +540,6 @@ TMP_KEYS=$(mktemp)
  * Plug in the first solokey, then run:
 
 #+begin_run
-## Repeat this step for each solokey:
 pamu2fcfg >> ${TMP_KEYS} && \
      echo >> ${TMP_KEYS}
 #+end_run
@@ -359,40 +555,61 @@ Enter PIN for /dev/hidraw1:
  * Unplug the first solokey and repeat the last command for the second
    solokey.
 
- * Unplug the second solokey and repeat again for however many other
-   solokeys you want to register.
+ * Unplug the second solokey and repeat for additional solokeys.
  
  * When you've written all the keys to =${TMP_KEYS}=, reformat and
-   install them into their final destination =/etc/u2f_mappings=:
+   install them into their final destination:
 
 #+begin_run
 echo "${USER}:$(cat ${TMP_KEYS} | \
     cut -d ":" -f 2 | tr '\n' ':')" | sed 's/:$//' | \
-    sudo tee /etc/u2f_mappings
+    sudo tee /etc/u2f_authorized_keys
 #+end_run
 
-*** Create custom PAM config for U2F
+*** Create custom PAM modules for U2F
 
-This includes the required settings:
+You will create two new PAM modules: =u2f-required= and
+=u2f-sufficient=. They will both include these required settings:
 
  1. The =authfile= path to our authorized key list file.
  2. The =cue= literal to show the =Please touch the device= prompt
     message for each authentication. (If you omit this, it will print
     nothing, which can be confusing).
 
+The only difference between the two PAM modules is that one is
+*required*, and the other is merely *sufficient*.
+
+ * =required= means to *enable 2FA*: solokey + password required.
+ * =sufficient= means to *disable 2FA*: solokey OR password is sufficient.
+ 
 #+begin_run
 cat << EOF | sudo tee /etc/pam.d/u2f-required
 #%PAM-1.0
-auth       required     pam_u2f.so authfile=/etc/u2f_mappings cue
+auth       required     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
+EOF
+cat << EOF | sudo tee /etc/pam.d/u2f-sufficient
+#%PAM-1.0
+auth       sufficient     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
 EOF
 #+end_run
 
+#+attr_shortcode: :style warning
+#+begin_notice
+The PAM modules you just created (=/etc/pam.d/u2f-required= and
+=/etc/pam.d/u2f-sufficient=) can be used for extending any of the
+other pam modules found in =/etc/pam.d=, by adding an appropriate
+=include= line at the right place. This can affect many more system
+authentication methods than just =sudo=, so be careful, but only
+=sudo= will be covered for now.
+#+end_notice
+
 *** Configure PAM hook for sudo
 
-As root, edit the file =/etc/pam.d/sudo=, and insert a new line
-directly after the =#%PAM-1.0= header. Your solokey is going to be the
-/first required/ authentication mechanism, and the existing password
-flow is the /second required/ authentication method.
+As =root=, edit the file =/etc/pam.d/sudo=, and insert a new line
+directly after the =#%PAM-1.0= header. A PAM module follows rules in
+top down order, as they are listed. Therefore your solokey rule needs
+to be the /first/ authentication mechanism, and the existing password
+flow is the /second/ authentication method.
 
 #+attr_shortcode: :file /etc/pam.d/sudo
 #+begin_edit
@@ -408,9 +625,15 @@ session    include      system-auth
 
 #+attr_shortcode: :style tip
 #+begin_notice
-The line that reads =auth include u2f-required=, on line 2, is the
-only line that was added to this file. All the rest of the lines were
-here from the original package.
+Line 2 (=auth include u2f-required=) is the only line that was added
+to this file. Everything else in this file was here originally and is
+left intact.
+#+end_notice
+
+#+attr_shortcode: :style warning
+#+begin_notice
+If you change =u2f-required= to =u2f-sufficient=, then it will *disable
+2FA* allowing solokey press *OR* user password as sufficient!
 #+end_notice
 
 *** Test sudo
