@@ -285,17 +285,38 @@ sudo rpm-ostree cleanup -r
 :EXPORT_HUGO_SECTION_FRAG: sudo-2FA
 :END:
 
-** Two Factor Auth with Solokey
+** Solokey authentication
+*** Solokey authentication
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 1200
 :END:
+
+[[https://solokeys.com/][Solokeys]] are physical hardware authentication (U2F / FIDO2) devices,
+that you plug into a USB port, which stores a secret key that can be
+used as primary or secondary authentication factors (2FA), with
+websites (Webauthn), and machines (sudo and SSH).
+
+There are two versions of solokey now, v1 and v2. The instructions
+diverge depending on which hardware revision you have.
 
 #+attr_shortcode: :depth 999
 #+begin_index
 index
 #+end_index
 
-** Get your Solokey (v1)
+*** Solokey v1
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: solo-v1
+:END:
+
+**** Solokey v1
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 100
+:END:
+
+**** Get your Solokey (v1)
 :PROPERTIES:
 :EXPORT_FILE_NAME: get-your-solokey
 :END:
@@ -310,17 +331,15 @@ What to buy:
  * Recommended: [[https://solokeys.com/collections/all/products/solo-tap-usb-a-preorder][Solo 1 Tap USB-A]] (durable clicky button, but sticks out of the USB port).
  * Recommended: [[https://www.crowdsupply.com/solokeys/somu][Somu]] (semi-permanent flush mount USB-A port, soft
    touch design).
- * Don't buy a Solokey v2 (yet). Get the Solokey v1. (These
-   instructions are for Solokey v1).
  * Get the *"secure"* version, don't buy the "hacker" version. 
  * Buy at least two (and store one as a backup).
 
-** Install Solokey CLI tool
+**** Install Solokey CLI tool
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-solo-cli
 :END:
 
-*** Create Python environment for solokey
+**** Create Python environment for solokey
 
 #+begin_run
 SOLO_ROOT=~/git/vendor/solokeys
@@ -330,7 +349,7 @@ git clone https://github.com/solokeys/solo1-cli \
 )
 #+end_run
 
-*** Lock Fido2 version to 0.9.1 to fix outstanding bugs
+**** Lock Fido2 version to 0.9.1 to fix outstanding bugs
 
 #+attr_shortcode: :style warning
 #+begin_notice
@@ -347,14 +366,14 @@ sed -i 's/fido2 >= 0.9.1/fido2 == 0.9.1/' ${SOLO_ROOT}/solo1-cli/pyproject.toml
 #+end_run
 #+end_notice
 
-*** Build solo1 key environment
+**** Build solo1 key environment
 
 #+begin_run
 python -m venv ${SOLO_ROOT}/env
 ${SOLO_ROOT}/env/bin/pip3 install -e ${SOLO_ROOT}/solo1-cli
 #+end_run
 
-*** Add =solo= alias to your .bashrc
+**** Add =solo= alias to your .bashrc
 
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
@@ -363,12 +382,12 @@ alias solo=${HOME}/git/vendor/solokeys/env/bin/solo1
 
 Restart your shell to load the new alias.
 
-** Update your Solokey
+**** Update your Solokey
 :PROPERTIES:
 :EXPORT_FILE_NAME: update-solokey
 :END:
-*** Plug your solokey into the USB port
-*** Identify your solokey
+**** Plug your solokey into the USB port
+**** Identify your solokey
 #+begin_run
 solo ls
 #+end_run
@@ -378,7 +397,7 @@ solo ls
 AABBCC00112233: SoloKeys Solo 4.1.5
 #+end_stdout
 
-*** Update the firmware
+**** Update the firmware
 
 Check for the [[https://github.com/solokeys/solo1/releases][latest release of solo v1]] and compare it to the version
 that is reported by =solo ls=. If your solokey is not running the
@@ -404,12 +423,11 @@ solo key update
 Congratulations, your key was updated to the latest firmware version: 4.1.5
 #+end_stdout
 
-
-** Program your Solokey
+**** Program your Solokey
 :PROPERTIES:
 :EXPORT_FILE_NAME: program-solokey
 :END:
-*** Reset solokey (recommended first time only)
+**** Reset solokey (recommended first time only)
 
 #+attr_shortcode: :style warning
 #+begin_notice
@@ -420,7 +438,7 @@ solo key reset
 #+end_notice
 
 
-*** Set device PIN
+**** Set device PIN
 
 #+begin_run
 solo key set-pin
@@ -439,7 +457,7 @@ solo key change-pin
 #+end_notice
 
 
-*** Verify PIN
+**** Verify PIN
 
 #+begin_run
 solo key verify
@@ -452,7 +470,20 @@ Register valid
 Valid Solo with firmware from SoloKeys.
 #+end_stdout
 
-** Sudo with Solokey
+*** Solokey v2
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: solo-v2
+:END:
+
+**** TODO Solokey v2
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 100
+:END:
+
+TODO
+
+*** Sudo with Solokey
 :PROPERTIES:
 :EXPORT_FILE_NAME: sudo-2FA
 :END:
@@ -477,7 +508,7 @@ Some of this guide was adapted from these other guides:
 Thank you to the Fedora documentation team!
 #+end_notice
  
-*** Open a root session as an anti-lockout measure
+***** Open a root session as an anti-lockout measure
 
 To prevent yourself from being locked out of your own system during
 the setup process, it is recommended to start a new terminal in a root
@@ -489,7 +520,7 @@ still have a way you can fix it.
 sudo su
 #+end_run
 
-**** Consider adding a root password
+****** Consider adding a root password
 
 If you use =sudo= a lot, you might not actually know the real =root=
 password of your system (or one might not even be set). As a backup,
@@ -519,7 +550,7 @@ su
 #+end_run
 #+end_notice
 
-*** Register Solokeys
+***** Register Solokeys
 
 It is recommended that you register *at least two* solokeys: a primary
 key, and a backup key. That way, if you lose one of the keys, you can
@@ -566,7 +597,7 @@ echo "${USER}:$(cat ${TMP_KEYS} | \
     sudo tee /etc/u2f_authorized_keys
 #+end_run
 
-*** Create custom PAM modules for U2F
+***** Create custom PAM modules for U2F
 
 You will create two new PAM modules: =u2f-required= and
 =u2f-sufficient=. They will both include these required settings:
@@ -603,7 +634,7 @@ authentication methods than just =sudo=, so be careful, but only
 =sudo= will be covered for now.
 #+end_notice
 
-*** Configure PAM hook for sudo
+***** Configure PAM hook for sudo
 
 As =root=, edit the file =/etc/pam.d/sudo=, and insert a new line
 directly after the =#%PAM-1.0= header. A PAM module follows rules in
@@ -636,7 +667,7 @@ If you change =u2f-required= to =u2f-sufficient=, then it will *disable
 2FA* allowing solokey press *OR* user password as sufficient!
 #+end_notice
 
-*** Test sudo
+***** Test sudo
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -657,6 +688,12 @@ Please touch the device.
 #+end_stdout
 #+end_notice
 
+*** SSH with Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: ssh-2FA
+:END:
+
+Follow the chapter on [[/linux-workstation/config/ssh/][SSH config]].
 
 * Config
 :PROPERTIES:
