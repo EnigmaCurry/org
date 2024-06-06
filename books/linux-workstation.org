@@ -701,6 +701,101 @@ Please touch the device.
 
 Follow the chapter on [[/linux-workstation/config/ssh/][SSH config]].
 
+* Application users
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: app-users
+:END:
+
+** Application users
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+With strong authentication for sudo taken care of by [[/linux-workstation/sudo-2fa][Solokey]], we can
+separate permissions for privileged data access, by creating
+additional user accounts.
+
+One use case for this can be to control access to command line
+programs that store sensitive API tokens, via =sudo=.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** DigitalOcean app user (doctl)
+:PROPERTIES:
+:EXPORT_FILE_NAME: digitalocean-app-user
+:END:
+
+[[https://docs.digitalocean.com/reference/doctl/][doctl]] is the official DigitalOcean command line interface (CLI). It
+allows you to interact with the DigitalOcean API via the command line.
+
+You should create a dedicated user for the =doctl= application, so
+that it can securely store the Personal Access Token for the
+DigitalOcean API. You can then access the privileged =doctl= command
+from your normal workstation account via =sudo=.
+
+*** Create doctl user
+
+#+begin_run
+sudo useradd -s /bin/bash -m doctl
+#+end_run
+
+*** Install doctl client
+
+Following the [[https://docs.digitalocean.com/reference/doctl/how-to/install/][doctl install guide]], install the doctl client directly
+in the home directory of the doctl user:
+
+#+begin_run
+DOCTL_VERSION=1.104.0
+DOCTL_PLATFORM=linux-amd64
+(set -e
+sudo curl -L -O --output-dir /usr/local/src https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VERSION}/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz
+sudo tar -C ~doctl/ -x -f /usr/local/src/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz
+)
+#+end_run
+
+*** Create app alias for normal user account
+
+In your normal workstation account, create this alias in your
+=~/.bashrc= to make it more convenient to run doctl via =sudo=:
+
+#+attr_shortcode: :file ~/.bashrc
+#+begin_edit
+alias doctl='sudo -u doctl ~doctl/doctl'
+#+end_edit
+
+Restart your terminal, and you can now use =doctl= from your normal
+account.
+
+*** Create a Personal Access Token
+
+[[https://docs.digitalocean.com/reference/api/create-personal-access-token/][Read the offical documentation for creating tokens]]
+
+Tokens allow programmatic access to the resources owned by a single
+[[https://docs.digitalocean.com/platform/teams/][Team]].
+
+ * [[https://cloud.digitalocean.com/account/team/create?i=01afa5][Create a new Team]], or choose an existing one. (If the domain name,
+   or another resource you want to use, is already controlled by an
+   existing team, choose that team).
+ * [[https://cloud.digitalocean.com/account/api/tokens/new][Create the new token for the team]].
+ * Decide what scopes you want to allow the doctl user to access, or
+   choose =Full Access=.
+ * Copy the token string to the clipboard.
+
+Register the client using the token, choose any context name (but it
+should reference your team name and/or role somehow):
+
+#+begin_run
+DOCTL_CONTEXT=my_team
+doctl auth init --context "${DOCTL_CONTEXT}"
+#+end_run
+
+*** Use the doctl client
+
+[[https://docs.digitalocean.com/reference/doctl/reference/][Read the doctl command reference]].
+
 * Config
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: config
