@@ -33,8 +33,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
-    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean app user (doctl) Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean app user (doctl) Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
     "tags": [],
     "title": "Linux Workstation",
     "uri": "/linux-workstation/index.html"
@@ -153,6 +153,14 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
+    "content": "With strong authentication for sudo taken care of by Solokey, we can separate permissions for privileged data access, by creating additional user accounts.\nOne use case for this can be to control access to command line programs that store sensitive API tokens, via sudo.\nIndex DigitalOcean app user (doctl) ",
+    "description": "With strong authentication for sudo taken care of by Solokey, we can separate permissions for privileged data access, by creating additional user accounts.\nOne use case for this can be to control access to command line programs that store sensitive API tokens, via sudo.\nIndex DigitalOcean app user (doctl) ",
+    "tags": [],
+    "title": "Application users",
+    "uri": "/linux-workstation/app-users/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
     "content": " Index Sway Firefox Toolbox Emacs SSH ",
     "description": " Index Sway Firefox Toolbox Emacs SSH ",
     "tags": [],
@@ -174,6 +182,14 @@ var relearn_search_index = [
     "tags": [],
     "title": "Setup your workstation",
     "uri": "/d.rymcg.tech/workstation/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Application users",
+    "content": "doctl is the official DigitalOcean command line interface (CLI). It allows you to interact with the DigitalOcean API via the command line.\nYou should create a dedicated user for the doctl application, so that it can securely store the Personal Access Token for the DigitalOcean API. You can then access the privileged doctl command from your normal workstation account via sudo.\nCreate doctl user [bash]: Run this on your workstation: sudo useradd -s /bin/bash -m doctl Install doctl client Following the doctl install guide, install the doctl client directly in the home directory of the doctl user:\n[bash]: Run this on your workstation: DOCTL_VERSION=1.104.0 DOCTL_PLATFORM=linux-amd64 (set -e sudo curl -L -O --output-dir /usr/local/src https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VERSION}/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz sudo tar -C ~doctl/ -x -f /usr/local/src/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz ) Create app alias for normal user account In your normal workstation account, create this alias in your ~/.bashrc to make it more convenient to run doctl via sudo:\nEdit this file: ~/.bashrc alias doctl='sudo -u doctl ~doctl/doctl' Restart your terminal, and you can now use doctl from your normal account.\nCreate a Personal Access Token Read the offical documentation for creating tokens\nTokens allow programmatic access to the resources owned by a single Team.\nCreate a new Team, or choose an existing one. (If the domain name, or another resource you want to use, is already controlled by an existing team, choose that team). Create the new token for the team. Decide what scopes you want to allow the doctl user to access, or choose Full Access. Copy the token string to the clipboard. Register the client using the token, choose any context name (but it should reference your team name and/or role somehow):\n[bash]: Run this on your workstation: DOCTL_CONTEXT=my_team doctl auth init --context \"${DOCTL_CONTEXT}\" Use the doctl client Read the doctl command reference.",
+    "description": "doctl is the official DigitalOcean command line interface (CLI). It allows you to interact with the DigitalOcean API via the command line.\nYou should create a dedicated user for the doctl application, so that it can securely store the Personal Access Token for the DigitalOcean API. You can then access the privileged doctl command from your normal workstation account via sudo.\nCreate doctl user [bash]: Run this on your workstation: sudo useradd -s /bin/bash -m doctl Install doctl client Following the doctl install guide, install the doctl client directly in the home directory of the doctl user:",
+    "tags": [],
+    "title": "DigitalOcean app user (doctl)",
+    "uri": "/linux-workstation/app-users/digitalocean-app-user/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Example Org / Hugo content",
