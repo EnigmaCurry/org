@@ -1,0 +1,65 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /fedora-coreos
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index %run %stdout %edit math mermaid openapi
+#+STARTUP: align
+
+* Fedora CoreOS
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 190
+:END:
+
+** Download / Create Fedora Workstation Live USB
+
+** Butane
+
+Create a YAML config file that includes your public SSH keys:
+
+#+begin_run
+cat << EOF > fcos.yaml
+variant: fcos
+version: 1.5.0
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHNX1pL7UQ3sNkg752MHLGuY77Eb8wA8pKEj7HCub3U+
+EOF
+#+end_run
+
+** Ignition
+
+#+begin_run
+podman pull quay.io/coreos/butane:release
+alias butane='podman run --rm --interactive       \
+              --security-opt label=disable        \
+              --volume ${PWD}:/pwd --workdir /pwd \
+              quay.io/coreos/butane:release'
+#+end_run
+
+#+begin_run
+butane --pretty --strict fcos.yaml > fcos.ign
+#+end_run
+
+** Indentify storage device
+
+#+begin_run
+sudo fdisk -l
+#+end_run
+
+** Kill device mapper blocking access to storage device
+
+#+begin_run
+sudo dmsetup remove /dev/dm-0
+#+end_run
+
+** Install Fedora CoreOS onto storage device
+
+#+begin_run
+DEVICE=/dev/nvme0n1
+sudo podman run --pull=always --privileged --rm \
+    -v /dev:/dev -v /run/udev:/run/udev -v .:/data -w /data \
+    quay.io/coreos/coreos-installer:release \
+    install ${DEVICE} -i fcos.ign
+#+end_run
