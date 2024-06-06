@@ -753,6 +753,7 @@ DOCTL_PLATFORM=linux-amd64
 (set -e
 sudo curl -L -O --output-dir /usr/local/src https://github.com/digitalocean/doctl/releases/download/v${DOCTL_VERSION}/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz
 sudo tar -C ~doctl/ -x -f /usr/local/src/doctl-${DOCTL_VERSION}-${DOCTL_PLATFORM}.tar.gz
+sudo ~doctl/doctl completion bash | sudo tee /etc/profile.d/doctl_completion.sh
 )
 #+end_run
 
@@ -763,7 +764,11 @@ In your normal workstation account, create this alias in your
 
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
+## DigitalOcean client (dotcl):
 alias doctl='sudo -u doctl ~doctl/doctl'
+## Bash completion for dotcl:
+source /etc/profile.d/bash_completion.sh
+source /etc/profile.d/doctl_completion.sh
 #+end_edit
 
 Restart your terminal, and you can now use =doctl= from your normal
