@@ -1805,7 +1805,9 @@ must stop (destroy) and restart the network.
 #+begin_run
 sudo virsh net-edit default
 sudo virsh net-destroy default
+sudo rm /var/lib/libvirt/dnsmasq/virbr0.status
 sudo virsh net-start default
+sudo virsh net-dhcp-leases default
 #+end_run
 #+end_notice
 
@@ -1857,7 +1859,7 @@ Now, and anytime you come back later to work on the same VM, source the config f
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-NAME=${NAME:-debian-dev}
+NAME=debian-dev
 source ~/libvirt/${NAME}.env
 #+end_run
 
