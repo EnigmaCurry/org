@@ -723,9 +723,14 @@ programs that store sensitive API tokens, via =sudo=.
 index
 #+end_index
 
-** DigitalOcean app user (doctl)
+** DigitalOcean
 :PROPERTIES:
-:EXPORT_FILE_NAME: digitalocean-app-user
+:EXPORT_HUGO_SECTION_FRAG: digitalocean
+:END:
+
+*** DigitalOcean CLI (doctl)
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
 :END:
 
 [[https://docs.digitalocean.com/reference/doctl/][doctl]] is the official DigitalOcean command line interface (CLI). It
@@ -736,13 +741,13 @@ that it can securely store the Personal Access Token for the
 DigitalOcean API. You can then access the privileged =doctl= command
 from your normal workstation account via =sudo=.
 
-*** Create doctl user
+**** Create doctl user
 
 #+begin_run
 sudo useradd -s /bin/bash -m doctl
 #+end_run
 
-*** Install doctl client
+**** Install doctl client
 
 Following the [[https://docs.digitalocean.com/reference/doctl/how-to/install/][doctl install guide]], install the doctl client directly
 in the home directory of the doctl user:
@@ -757,7 +762,7 @@ sudo ~doctl/doctl completion bash | sudo tee /etc/profile.d/doctl_completion.sh
 )
 #+end_run
 
-*** Create app alias for normal user account
+**** Create app alias for normal user account
 
 In your normal workstation account, create this alias in your
 =~/.bashrc= to make it more convenient to run doctl via =sudo=:
@@ -767,14 +772,16 @@ In your normal workstation account, create this alias in your
 ## DigitalOcean client (dotcl):
 alias doctl='sudo -u doctl ~doctl/doctl'
 ## Bash completion for dotcl:
-source /etc/profile.d/bash_completion.sh
-source /etc/profile.d/doctl_completion.sh
+BASH_COMPLETION=/etc/profile.d/bash_completion.sh
+DOCTL_COMPLETION=/etc/profile.d/doctl_completion.sh
+test -f ${BASH_COMPLETION} && source ${BASH_COMPLETION}
+test -f ${DOCTL_COMPLETION} && source ${DOCTL_COMPLETION}
 #+end_edit
 
 Restart your terminal, and you can now use =doctl= from your normal
 account.
 
-*** Create a Personal Access Token
+**** Create a Personal Access Token
 
 [[https://docs.digitalocean.com/reference/api/create-personal-access-token/][Read the offical documentation for creating tokens]]
 
@@ -797,7 +804,10 @@ DOCTL_CONTEXT=my_team
 doctl auth init --context "${DOCTL_CONTEXT}"
 #+end_run
 
-*** Use the doctl client
+**** Use the doctl client
+
+Read the [[/d.rymcg.tech/required-infrastructure][Self-hosting Docker]] book and setup a Docker server on
+DigitalOcean, using doctl.
 
 [[https://docs.digitalocean.com/reference/doctl/reference/][Read the doctl command reference]].
 

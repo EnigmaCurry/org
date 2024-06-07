@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /d.rymcg.tech
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi toc
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi toc env
 #+STARTUP: align
 
 * Self-hosting Docker with d.rymcg.tech
@@ -248,6 +248,8 @@ You can buy (rent) a domain name from lots of places. For
 documentation purposes, we will use [[https://www.gandi.net][Gandi.net]], but these instructions
 will be similar regardless of the domain provider you pick.
 
+#+attr_shortcode: :style info :title Setup on Gandi.net
+#+begin_notice
  * Sign up for an account at [[https://www.gandi.net/][Gandi.net]]
  * Once signed in, from your dashboard, click =Register=.
  * Search for any domain name you like, eg. =your-name.com=.
@@ -257,6 +259,8 @@ will be similar regardless of the domain provider you pick.
    =Dashboard=, under the =Domain= tab.
  * Leave this browser tab open, you will return to it in the next
    chapter.
+#+end_notice
+
 ** Setup public DNS service
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-dns
@@ -293,6 +297,9 @@ regardless of the supported provider you pick.
 
 *** Configure your domain's DNS server on Gandi.net
 
+#+attr_shortcode: :style info :title Setup on Gandi.net
+#+begin_notice
+
  * Login to your [[https://admin.gandi.net][gandi.net]] dashboard.
  * Click the =Domain= tab.
  * Find your domain name in the list and click on it.
@@ -304,7 +311,9 @@ regardless of the supported provider you pick.
    * =ns1.digitalocean.com=
    * =ns2.digitalocean.com=
    * =ns3.digitalocean.com=
+#+end_notice
 
+ 
 Wait a few minutes for the change to take effect, then you can verify
 the setting from your workstation, using the =whois= command:
 
@@ -324,17 +333,38 @@ Name Server: DNS4.EXAMPLE.NET
 The output shows a report for your domain registration, including the
 list of the new nameservers.
 
-*** Setup public DNS on DigitalOcean.com
+*** Add your domain on DigitalOcean.com
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup, run:
+
+#+begin_run
+DOMAIN=example.com
+doctl compute domain create ${DOMAIN}
+#+end_run
+
+To list all your domains, run:
+
+#+begin_run
+doctl compute domain list
+#+end_run
+
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Signup for an account at [[https://m.do.co/c/069af06b869e][DigitalOcean]], if you haven't already.
  * Login to the [[https://cloud.digitalocean.com/][cloud console]].
  * Click on the =Networking= tab in the menu.
  * Click on the =Domains= tab.
  * Enter your domain name into the box and click =Add Domain=.
+#+end_notice
 
 DigitalOcean is now in charge of your DNS for your domain. You will
 return to this screen later on, when creating individual subdomain
 records for your services.
+
 ** Create a public server (VPS)
 :PROPERTIES:
 :EXPORT_FILE_NAME: public-docker-server
@@ -368,6 +398,37 @@ one of the most important features to look for in a hosting provider.
 If you have not yet setup an SSH key on your workstation, [[file:linux-workstation.org][read the
 Linux Workstation book]] and do that first.
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+List all your SSH keys:
+#+begin_run
+doctl compute ssh-key list
+#+end_run
+
+Configure the SSH public key file you want to use:
+
+#+begin_env
+SSH_KEY=~/.ssh/id_ed25519.pub
+#+end_env
+
+Install the public key on DigitalOcean:
+
+#+begin_run
+(set -e
+test -f ${SSH_KEY} || (echo "SSH key not found: ${SSH_KEY}" && exit 1)
+SSH_TMP=$(mktemp) && chmod a+r ${SSH_TMP}
+cat ${SSH_KEY} > ${SSH_TMP}
+doctl compute ssh-key import ${USER}@${HOSTNAME} --public-key-file ${SSH_TMP}
+rm -f ${SSH_TMP}
+)
+#+end_run
+
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Settings= in the menu.
  * Click on the =Security= tab.
@@ -377,14 +438,42 @@ Linux Workstation book]] and do that first.
  * Enter a key name, I recommend this be the name of your workstation
    computer.
  * Finish adding the key, click =Add SSH Key=.
+#+end_notice
 
 **** Create a DigitalOcean firewall template
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+#+begin_run
+doctl compute firewall list
+#+end_run
+
+#+begin_run
+(set -e
+FIREWALL_ID=$(doctl compute firewall create \
+    --name "ssh-web-https-wireguard" \
+    --inbound-rules "protocol:tcp,ports:22,address:0.0.0.0/0" \
+    --no-header --format ID)
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:80,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:443,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:51820,address:0.0.0.0/0"
+echo ${FIREWALL_ID}
+)
+#+end_run
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
  * Click the =Firewalls= tab.
  * Click =Create Firewall=.
- * Enter the name, eg. =basic-docker-public-web=.
+ * Enter the name, eg. =ssh-web-https-wireguard=.
  * Enter the following rules:
    * SSH:
      * Type: =SSH=
@@ -408,12 +497,46 @@ Linux Workstation book]] and do that first.
      * Port Range: =51820=
      * Sources: All IPv4, All IPv6.
   * Click =Create Firewall=.
- 
+#+end_notice
+
 **** Creating a DigitalOcean droplet for a Docker server
 
 DigitalOcean provides a Docker image with which to create a droplet
 (DigitalOcean's name for their own VPS product).
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+Set variables to configure the droplet:
+
+#+begin_env
+NAME=docker-dev
+IMAGE=debian-12-x64
+REGION=nyc1
+SIZE=s-1vcpu-2gb
+SSH_KEY=~/.ssh/id_ed25519.pub
+SSH_FINGERPRINT=$(ssh-keygen -E md5 -l -f ${SSH_KEY} | grep -Po "MD5:\K[a-f0-9\:]+")
+#+end_env
+
+Create the droplet:
+
+#+begin_run
+DROPLET_ID=$(doctl compute droplet create \
+    "${NAME}" \
+    --image "${IMAGE}" \
+    --size "${SIZE}" \
+    --region "${REGION}" \
+    --ssh-keys "${SSH_FINGERPRINT}" \
+    --tag-names "doctl-${USERNAME}@${HOST}" \
+    --wait --no-header --format ID)
+echo ${DROPLET_ID}
+#+end_run
+
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Droplets= in the menu.
  * Click =Create Droplet=.
@@ -437,15 +560,31 @@ DigitalOcean provides a Docker image with which to create a droplet
    and typeable, as it will become a part of the canononical service
    URLs. For this example, we choose =prod=.
  * Verify everything's correct, and then click =Create Dropet=.
+#+end_notice
 
 **** Apply the DigitalOcean droplet firewall
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+#+begin_run
+FIREWALL_ID=$(doctl compute firewall list | grep ssh-web-https-wireguard | cut -d " " -f1)
+doctl compute firewall add-droplets \
+    "${FIREWALL_ID}" \
+    --droplet-ids "${DROPLET_ID}"
+#+end_run
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
  * Find the firewall template you created, and click it.
  * Click on the firewall's =Droplets= tab.
  * Click =Add Droplets= and search for the droplet you created and select it.
  * Click =Add Droplet= to add the firewall to the droplet.
+#+end_notice
 
 **** Create wildcard DNS records for the droplet
 
@@ -454,6 +593,56 @@ For the purposes of documentation, assume you you own the domain
 should replace =example.com= with your actual domain name, and =prod=
 with your actual docker instance name/stage.
 
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+List all domains:
+
+#+begin_run
+doctl compute domain list
+#+end_run
+
+#+begin_env
+ROOT_DOMAIN=example.com
+HOST=docker-dev
+HOST_IP=$(doctl compute droplet get --no-header --format "Public IPv4" ${DROPLET_ID})
+TTL=1800
+#+end_env
+
+List all records for =ROOT_DOMAIN=:
+
+#+begin_run
+doctl compute domain records list ${ROOT_DOMAIN}
+#+end_run
+
+Create Host record:
+
+#+begin_run
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+#+end_run
+
+Create Wildcard subdomain record:
+
+#+begin_run
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "*.${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+#+end_run
+
+#+end_notice
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
  * Click the =Domains= tab.
@@ -479,6 +668,7 @@ with your actual docker instance name/stage.
    (=*.example.com=) because then the domain could only be used with a
    single Docker instance, therefore all records on the root should be
    non-wildcard, and this means you must add them one by one.
+#+end_notice
 
 Test that your wildcard record actually works. Use the =dig= command
 (For Debian/Ubuntu install the =dnsutils= package. For Arch Linux
