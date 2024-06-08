@@ -73,8 +73,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nIndex Dependencies Building locally Publishing with GitHub pages Publishing with SFTP Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
-    "description": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nIndex Dependencies Building locally Publishing with GitHub pages Publishing with SFTP Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "content": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nIndex Dependencies Building locally Publishing with GitHub pages Publishing with SFTP Using Org-mode and Emacs Editing Org-mode files Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
+    "description": "This book describes how this site is written, in Org-mode, with ox-hugo, and bits of Literate Programming.\nIndex Dependencies Building locally Publishing with GitHub pages Publishing with SFTP Using Org-mode and Emacs Editing Org-mode files Example Org / Hugo content Example Org Blocks Example Shortcodes Example of a deeply … Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "tags": [],
     "title": "Publishing with org-mode, ox-hugo, and literate programming.",
     "uri": "/publishing-with-org-mode/index.html"
@@ -168,6 +168,14 @@ var relearn_search_index = [
     "uri": "/linux-workstation/sudo-2fa/index.html"
   },
   {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode",
+    "content": "Here are some tips on using Org-mode and Emacs.\nIndex Editing Org-mode files ",
+    "description": "Here are some tips on using Org-mode and Emacs.\nIndex Editing Org-mode files ",
+    "tags": [],
+    "title": "Using Org-mode and Emacs",
+    "uri": "/publishing-with-org-mode/org-mode-emacs/index.html"
+  },
+  {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
     "content": "With strong authentication for sudo taken care of by Solokey, we can separate permissions for privileged data access, by creating additional user accounts.\nOne use case for this can be to control access to command line programs that store sensitive API tokens, via sudo.\nIndex DigitalOcean CLI (doctl) ",
     "description": "With strong authentication for sudo taken care of by Solokey, we can separate permissions for privileged data access, by creating additional user accounts.\nOne use case for this can be to control access to command line programs that store sensitive API tokens, via sudo.\nIndex DigitalOcean CLI (doctl) ",
@@ -198,6 +206,14 @@ var relearn_search_index = [
     "tags": [],
     "title": "Create SSH config and Docker context",
     "uri": "/d.rymcg.tech/docker-context/ssh-config-and-docker-context/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Using Org-mode and Emacs",
+    "content": "Indirect Buffers and Narrow To Subtree One of the advantages of Org-mode is you can organize lots of different articles into one big file. This is also a disadvantage when you are trying to focus on just one of them. It is easy to get lost.\nAs an example, open the other book named d.rymcg.tech.org (found in this same directory). Let’s say we want to focus on the chapter named Traefik Proxy.\nPress C-x 4 c. (or M-x clone-indirect-buffer-other-window). You now have two buffers open for the same file: d.rymcg.tech.org (the original) and d.rymcg.tech.org\u003c2\u003e (the clone), and you are automatically switched focus to the newly cloned buffer.\nRename the new buffer to traefik so you don’t get confused:\nPress C-x x r (or M-x rename-buffer). Type the new name: traefik. Now find the chapter you want to focus on:\nNavigate to the chapter heading named * Traefik Proxy, make sure your cursor is now somewhere on this line. Narrow the buffer to the selected subtree:\nPress C-x n s (or M-x org-narrow-to-subtree). You have now completed the process of narrowing the content of this buffer to only the Traefik Proxy article. It is important to know that the traefik buffer is still an indirect clone of the original d.rymcg.tech.org buffer, and they are both simultaneously editing the same underlying file. But now you know how to focus on a bite sized peice of a larger file. Go ahead and create more buffers to work on other parts you frequently need to focus on.",
+    "description": "Indirect Buffers and Narrow To Subtree One of the advantages of Org-mode is you can organize lots of different articles into one big file. This is also a disadvantage when you are trying to focus on just one of them. It is easy to get lost.\nAs an example, open the other book named d.rymcg.tech.org (found in this same directory). Let’s say we want to focus on the chapter named Traefik Proxy.",
+    "tags": [],
+    "title": "Editing Org-mode files",
+    "uri": "/publishing-with-org-mode/org-mode-emacs/edit-org-mode/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Example Org / Hugo content",
