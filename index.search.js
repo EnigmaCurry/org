@@ -33,8 +33,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config Manually create VM from .iso Configure VM with .iso boot Boot VM from .iso Bootstrap CoreOS ",
-    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) Config Sway Firefox Toolbox Emacs SSH KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config Manually create VM from .",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config Manually create VM from .iso Configure VM with .iso boot Boot VM from .iso Bootstrap CoreOS ",
+    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Configure VM Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config Manually create VM from .",
     "tags": [],
     "title": "Linux Workstation",
     "uri": "/linux-workstation/index.html"
@@ -153,6 +153,14 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
+    "content": " Index Sway Firefox Toolbox Emacs SSH ",
+    "description": " Index Sway Firefox Toolbox Emacs SSH ",
+    "tags": [],
+    "title": "Config",
+    "uri": "/linux-workstation/config/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
     "content": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
     "description": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
     "tags": [],
@@ -166,14 +174,6 @@ var relearn_search_index = [
     "tags": [],
     "title": "Application users",
     "uri": "/linux-workstation/app-users/index.html"
-  },
-  {
-    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
-    "content": " Index Sway Firefox Toolbox Emacs SSH ",
-    "description": " Index Sway Firefox Toolbox Emacs SSH ",
-    "tags": [],
-    "title": "Config",
-    "uri": "/linux-workstation/config/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode",
