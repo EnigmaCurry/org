@@ -36,11 +36,11 @@
       <description>Choose a name [bash]: Customize and set temporary environment variables NAME=debian-dev Choose hardware sizes [bash]: Customize and set temporary environment variables MEMORY=1024 CPUS=2 DISK_SIZE=50 Choose cloud image You can choose any standard cloud image that supports cloud-init.&#xA;Debian 12 [bash]: Customize and set temporary environment variables OS_VARIANT=debian12 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 Tip On slighly older versions of libvirt, you may need to set OS_VARIANT differently, but the image should still work:&#xA;[bash]: Customize and set temporary environment variables OS_VARIANT=debian11</description>
     </item>
     <item>
-      <title>Create VM</title>
+      <title>Create VM (cloud-init)</title>
       <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/create-vm/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/create-vm/index.html</guid>
-      <description>Info For this entire section you need to perform the VM config as the libvirt-admin user. Login to the shell account of libvirt-admin: [bash]: Run this on your workstation: sudo su libvirt-admin -l Source the config Now, and anytime you come back later to work on the same VM, source the config file: Run this as the libvirt-admin user NAME=debian-dev source ~/libvirt/${NAME}.env Create directories to hold the VM disks and config files: Run this as the libvirt-admin user mkdir -p ~/libvirt/{cloud-images,disks,cloud-init} Create the cloud-init config file: Run this as the libvirt-admin user cat &lt;&lt; EOF | sed &#39;s/\xe2\x80\x8b//g&#39; &gt; ${USER_DATA} #cloud-config hostname: ${NAME} users: ​ - name: root ssh_authorized_keys: ​ - $(cat ~/libvirt/user-ssh.</description>
+      <description>Info For this entire section you need to perform the VM config as the libvirt-admin user. Login to the shell account of libvirt-admin: [bash]: Run this on your workstation: sudo su libvirt-admin -l Source the config Now, and anytime you come back later to work on the same VM, source the config file: Run this as the libvirt-admin user NAME=debian-dev source ~/libvirt/${NAME}.env Create directories to hold the VM disks and config files: Run this as the libvirt-admin user mkdir -p ~/libvirt/{cloud-images,disks,cloud-init,iso} Create the cloud-init config file: Run this as the libvirt-admin user cat &lt;&lt; EOF | sed &#39;s/\xe2\x80\x8b//g&#39; &gt; ${USER_DATA} #cloud-config hostname: ${NAME} users: ​ - name: root ssh_authorized_keys: ​ - $(cat ~/libvirt/user-ssh.</description>
     </item>
     <item>
       <title>Systemd services to control VMs</title>
@@ -62,6 +62,13 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/setup-workstation/index.html</guid>
       <description>Info For this section, you are back to using your normal workstation user.&#xA;Append a new host config into your SSH config (~/.ssh/config):&#xA;Edit this file: ~/.ssh/config Host debian-dev Hostname 192.168.122.2 User root ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p Info Make sure Host and Hostname are set correctly for your VM.&#xA;With this config, you can now use SSH to control the VM:&#xA;[bash]: Run this on your workstation: ssh debian-dev whoami (stdout) root Install Docker You’re now ready to use your VM as an install target for whatever you want.</description>
+    </item>
+    <item>
+      <title>Manually create VM from .iso</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/vm-from-iso/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/vm-from-iso/index.html</guid>
+      <description>The previous section named Create VM (cloud-init) installed a VM from a cloud-init enabled image (colloquially known as a “cloud image”), which is the streamlined and preferred method of VM installation. However, not all Linux distributions have a cloud image available. You may need to manually install the OS using a traditional graphical installer. Thats what this section is all about.&#xA;As an example, these are the steps to install a VM using Fedora CoreOS (which does not support cloud-init, nor a traditional installer).</description>
     </item>
   </channel>
 </rss>
