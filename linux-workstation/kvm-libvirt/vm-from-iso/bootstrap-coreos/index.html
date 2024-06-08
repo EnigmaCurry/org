@@ -27,19 +27,19 @@ SSH into Live environment From your normal workstation account, connect to the S
     <meta itemprop="description" content="Tip These commands should be run on your normal workstation account.
 Configure variables to connect to Live environment [bash]: Customize and set temporary environment variables IP_ADDRESS=192.168.122.5 Copy SSH key to the liveuser [bash]: Run this on your workstation: ssh-copy-id liveuser@${IP_ADDRESS} When prompted, type the password that you set for the liveuser account.
 SSH into Live environment From your normal workstation account, connect to the SSH server of the Fedora Live environment:">
-    <meta itemprop="wordCount" content="539">
+    <meta itemprop="wordCount" content="718">
     <title>Bootstrap CoreOS :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717810855" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717810855" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717810855" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717810855" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717810855" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717810855" rel="stylesheet">
-    <link href="/css/fonts.css?1717810855" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717810855" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717810855" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717810855" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717810855" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717810855" rel="stylesheet">
-    <link href="/css/print.css?1717810855" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717810855"></script>
+    <link href="/css/fontawesome-all.min.css?1717813010" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717813010" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717813010" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717813010" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717813010" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717813010" rel="stylesheet">
+    <link href="/css/fonts.css?1717813010" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717813010" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717813010" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717813010" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717813010" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717813010" rel="stylesheet">
+    <link href="/css/print.css?1717813010" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717813010"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..\/..';
@@ -84,6 +84,8 @@ SSH into Live environment From your normal workstation account, connect to the S
     <li><a href="#shutdown-coreos-vm">Shutdown CoreOS VM</a></li>
     <li><a href="#edit-vm-config">Edit VM config</a></li>
     <li><a href="#enable-systemd-service-to-start-vm">Enable systemd service to start VM</a></li>
+    <li><a href="#create-ssh-config">Create SSH config</a></li>
+    <li><a href="#install-docker">Install Docker</a></li>
   </ul>
 </nav>
                 </div>
@@ -94,7 +96,7 @@ SSH into Live environment From your normal workstation account, connect to the S
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/index.html"><span itemprop="name">KVM / libvirt</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/vm-from-iso/index.html"><span itemprop="name">Manually create VM from .iso</span></a><meta itemprop="position" content="4">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/vm-from-iso/index.html"><span itemprop="name">Create VM from .iso image</span></a><meta itemprop="position" content="4">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Bootstrap CoreOS</span><meta itemprop="position" content="5"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
@@ -341,7 +343,7 @@ remove the CD-ROM disk and graphics adapter entries:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
-cat &lt;&lt; EOF &gt; remove-cdrom.xslt.xml
+cat &lt;&lt; EOF &gt; edit-coreos-vm.xslt.xml
 &lt;xsl:stylesheet version="1.0"
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
 
@@ -378,7 +380,7 @@ EOF
     <div class="box-content">
         <code><pre>
 (set -e
-virsh dumpxml ${NAME} | xsltproc remove-cdrom.xslt.xml - > ${NAME}.xml
+virsh dumpxml ${NAME} | xsltproc edit-coreos-vm.xslt.xml - > ${NAME}.xml
 virsh define ${NAME}.xml
 )
 </pre></code>
@@ -401,6 +403,106 @@ sudo systemctl status libvirt@${NAME}
 </div>
 
 
+<h2 id="create-ssh-config">Create SSH config</h2>
+<p>Create a Host entry in your <code>~/.ssh/config</code> file to make connections
+easy:</p>
+<div class="box notices cstyle edit">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>Edit this file: ~/.ssh/config</div>
+    <div class="box-content">
+        <code><pre>
+Host coreos-dev
+     Hostname 192.168.122.5
+     User core
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+</pre></code>
+    </div>
+</div>
+
+<p>Remove the old host keys from the live user environment for your
+<code>~/.ssh/known_hosts</code> file:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh-keygen -R ${IP_ADDRESS}
+</pre></code>
+    </div>
+</div>
+
+
+<p>Test logging into the VM from your workstation:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh coreos-dev
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="install-docker">Install Docker</h2>
+<p>Docker comes preinstalled on CoreOS, you just have to enable it:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh coreos-dev sudo gpasswd -a core docker
+ssh coreos-dev sudo systemctl enable --now docker
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>Because of the <code>ControlMaster</code> config, you will need to kill your
+existing connection to reload the session, and load new groups.</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh -O exit coreos-dev
+</pre></code>
+    </div>
+</div>
+<p>Then check your groups again, to be sure it includes <code>docker</code>:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ssh coreos-dev groups
+</pre></code>
+    </div>
+</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+core adm wheel sudo systemd-journal docker
+</pre>
+    </div>
+</div>
+</div>
+</div>
+<p>Next, follow the <a href="/d.rymcg.tech/index.html">Self-Hosting Docker</a> book to setup this VM as a Docker
+context on your workstation.</p>
 
             <footer class="footline">
             </footer>
@@ -427,12 +529,12 @@ sudo systemctl status libvirt@${NAME}
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717810855" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717810855" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717810855" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717810855" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717810855" defer></script>
-        <script src="/js/search.js?1717810855" defer></script>
+        <script src="/js/auto-complete.js?1717813010" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717813010" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717813010" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717813010" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717813010" defer></script>
+        <script src="/js/search.js?1717813010" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -475,7 +577,7 @@ sudo systemctl status libvirt@${NAME}
           <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/vm-from-iso/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/vm-from-iso/index.html">Manually create VM from .iso</a><ul id="R-subsections-fccf744633d8b11ebaec12aa36bf4834" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/kvm-libvirt/vm-from-iso/index.html" class="parent alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/vm-from-iso/index.html">Create VM from .iso image</a><ul id="R-subsections-fccf744633d8b11ebaec12aa36bf4834" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/kvm-libvirt/vm-from-iso/configure-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/vm-from-iso/configure-vm/index.html">Configure VM with .iso boot</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/vm-from-iso/install-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/vm-from-iso/install-vm/index.html">Boot VM from .iso</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/vm-from-iso/bootstrap-coreos/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/vm-from-iso/bootstrap-coreos/index.html">Bootstrap CoreOS</a></li></ul></li></ul></li></ul></li>
@@ -566,14 +668,14 @@ sudo systemctl status libvirt@${NAME}
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 8, 2024 at 1:40am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 8, 2024 at 2:16am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717810855" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717810855" defer></script>
-    <script src="/js/theme.js?1717810855" defer></script>
+    <script src="/js/clipboard.min.js?1717813010" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717813010" defer></script>
+    <script src="/js/theme.js?1717813010" defer></script>
   </body>
 </html>
