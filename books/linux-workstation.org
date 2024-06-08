@@ -2384,12 +2384,12 @@ want. It is recommended to install Docker, which you can learn about
 in the volume [[/d.rymcg.tech][Self-hosting Docker]] in the chapter called [[/d.rymcg.tech/workstation][Setup your
 workstation]].
 
-** Manually create VM from .iso
+** Create VM from .iso (CoreOS)
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: vm-from-iso
 :END:
 
-*** Manually create VM from .iso
+*** Create VM from .iso image
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 6000
@@ -2757,7 +2757,7 @@ Create an XSLT template that will perform the necessary edits to
 remove the CD-ROM disk and graphics adapter entries:
 
 #+begin_run
-cat &lt;&lt; EOF &gt; remove-cdrom.xslt.xml
+cat &lt;&lt; EOF &gt; edit-coreos-vm.xslt.xml
 &lt;xsl:stylesheet version="1.0"
  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
 
@@ -2786,7 +2786,7 @@ Redefine the VM using the edited config:
 
 #+begin_run
 (set -e
-virsh dumpxml ${NAME} | xsltproc remove-cdrom.xslt.xml - > ${NAME}.xml
+virsh dumpxml ${NAME} | xsltproc edit-coreos-vm.xslt.xml - > ${NAME}.xml
 virsh define ${NAME}.xml
 )
 #+end_run
@@ -2797,3 +2797,62 @@ virsh define ${NAME}.xml
 sudo systemctl enable --now libvirt@${NAME}
 sudo systemctl status libvirt@${NAME}
 #+end_run
+**** Create SSH config
+
+Create a Host entry in your =~/.ssh/config= file to make connections
+easy:
+
+#+attr_shortcode: :file ~/.ssh/config
+#+begin_edit
+Host coreos-dev
+     Hostname 192.168.122.5
+     User core
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+#+end_edit
+
+Remove the old host keys from the live user environment for your
+=~/.ssh/known_hosts= file:
+
+#+begin_run
+ssh-keygen -R ${IP_ADDRESS}
+#+end_run
+
+Test logging into the VM from your workstation:
+
+#+begin_run
+ssh coreos-dev
+#+end_run
+
+**** Install Docker
+
+Docker comes preinstalled on CoreOS, you just have to enable it:
+
+#+begin_run
+ssh coreos-dev sudo gpasswd -a core docker
+ssh coreos-dev sudo systemctl enable --now docker
+#+end_run
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Because of the =ControlMaster= config, you will need to kill your
+existing connection to reload the session, and load new groups.
+
+#+begin_run
+ssh -O exit coreos-dev
+#+end_run
+
+Then check your groups again, to be sure it includes =docker=:
+
+#+begin_run
+ssh coreos-dev groups
+#+end_run
+
+#+begin_stdout
+core adm wheel sudo systemd-journal docker
+#+end_stdout
+#+end_notice
+
+Next, follow the [[/d.rymcg.tech][Self-Hosting Docker]] book to setup this VM as a Docker
+context on your workstation.
