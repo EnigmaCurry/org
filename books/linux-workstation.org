@@ -1825,19 +1825,33 @@ cat ${SSH_KEY} > ${TMP_SSH}
 chmod a+r ${TMP_SSH}
 sudo su ${VM_ADMIN:-libvirt-admin} -c "mkdir -p ~/libvirt && cp ${TMP_SSH} ~/libvirt/user-ssh.pub"
 #+end_run
+** Cloud-Init VMs
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: cloud-init
+:END:
 
-** Configure VM
+*** Cloud-Init VMs
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+*** Configure VM (cloud-init)
 :PROPERTIES:
 :EXPORT_FILE_NAME: config-vm
 :END:
 
-*** Choose a name
+**** Choose a name
 
 #+begin_env
 NAME=debian-dev
 #+end_env
 
-*** Choose hardware sizes
+**** Choose hardware sizes
 
 #+attr_shortcode:
 #+begin_env
@@ -1846,11 +1860,11 @@ CPUS=2
 DISK_SIZE=50
 #+end_env
 
-*** Choose cloud image
+**** Choose cloud image
 
 You can choose any standard cloud image that supports cloud-init.
 
-**** Debian 12
+***** Debian 12
 
 #+attr_shortcode:
 #+begin_env
@@ -1868,7 +1882,7 @@ OS_VARIANT=debian11
 #+end_env
 #+end_notice
 
-**** Fedora 40
+***** Fedora 40
 
 #+attr_shortcode:
 #+begin_env
@@ -1876,7 +1890,7 @@ OS_VARIANT=fedora40
 CLOUD_IMAGE=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Cloud/x86_64/images/Fedora-Cloud-Base-Generic.x86_64-40-1.14.qcow2
 #+end_env
 
-*** Find the default subnet (=virbr0=)
+**** Find the default subnet (=virbr0=)
 #+attr_shortcode:
 #+begin_run
 ip route | grep virbr0 | cut -d " " -f 1
@@ -1886,7 +1900,7 @@ ip route | grep virbr0 | cut -d " " -f 1
 #+end_stdout
 
 
-*** Configure IP Address and MAC address
+**** Configure IP Address and MAC address
 
 #+begin_env
 IP_ADDRESS=192.168.122.2
@@ -1901,7 +1915,7 @@ been =192.168.122.0/24=. The MAC address will be randomized to create
 a static lease.
 #+end_notice
 
-*** Create static DHCP lease
+**** Create static DHCP lease
 
 #+attr_shortcode:
 #+begin_run
@@ -1922,7 +1936,7 @@ sudo virsh net-dhcp-leases default
 #+end_run
 #+end_notice
 
-*** Create env file to store main config settings
+**** Create env file to store main config settings
 
 #+attr_shortcode:
 #+begin_run
@@ -1949,7 +1963,7 @@ This will create a new config file *in the libvirt-admin user's home directory*
 =~/libvirt/${NAME}.env=.
 #+end_notice
 
-** Create VM (cloud-init)
+*** Create VM (cloud-init)
 :PROPERTIES:
 :EXPORT_FILE_NAME: create-vm
 :END:
@@ -1964,7 +1978,7 @@ sudo su libvirt-admin -l
 #+end_run
 #+end_notice
 
-*** Source the config
+**** Source the config
 
 Now, and anytime you come back later to work on the same VM, source the config file:
 
@@ -1974,14 +1988,14 @@ NAME=debian-dev
 source ~/libvirt/${NAME}.env
 #+end_run
 
-*** Create directories to hold the VM disks and config files:
+**** Create directories to hold the VM disks and config files:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 mkdir -p ~/libvirt/{cloud-images,disks,cloud-init,iso}
 #+end_run
 
-*** Create the cloud-init config file:
+**** Create the cloud-init config file:
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
@@ -1995,7 +2009,7 @@ users:
 EOF
 #+end_run
 
-*** Download the cloud image:
+**** Download the cloud image:
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -2012,7 +2026,7 @@ chmod a-w $(echo ${CLOUD_IMAGE} | grep -Po ".*/\K.*$")
 )
 #+end_run
 
-*** Clean up old VMs with the same name:
+**** Clean up old VMs with the same name:
 #+attr_shortcode: :style warning
 #+begin_notice
 If you already have a VM with the same name, and you want to start
@@ -2028,7 +2042,7 @@ virsh undefine debian-dev
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+end_notice
 
-*** Create the disk image for the new VM:
+**** Create the disk image for the new VM:
 #+attr_shortcode: :style warning
 #+begin_notice
 This is destructive of the existing disk file!
@@ -2046,8 +2060,7 @@ echo Created ~/libvirt/disks/${NAME}.qcow2
 )
 #+end_run
 
-*** Create the VM:
-
+**** Create the VM
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virt-install \
@@ -2057,12 +2070,15 @@ virt-install \
   --cpu host \
   --vcpus ${CPUS} \
   --memory ${MEMORY} \
-  --graphics spice \
+  --graphics none \
+  --console pty,target_type=serial \
   --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
+  --cloud-init user-data=${USER_DATA} \
+  --import \
   --disk ~/libvirt/disks/${NAME}.qcow2
 #+end_run
 
-*** Watch the console for any errors
+**** Watch the console for any errors
 
 As the VM starts up, your terminal will attach to the console output
 of the VM. This is to monitor any errors that may occur during the
@@ -2074,12 +2090,12 @@ Wait until you see this Login message:
 debian-dev login: 
 #+end_stdout
 
-*** Disconnect from the VM console
+**** Disconnect from the VM console
 To disconnect from the VM console, press the keyboard combination
 =Ctrl+]= (meaning to hold the Control key and the right square bracket
 key at the same time.)
 
-*** Shutdown the VM
+**** Shutdown the VM
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -2092,7 +2108,7 @@ otherwise you will get an error about the unejected cloud-init ISO.
 virsh shutdown ${NAME}
 #+end_run
 
-*** Verify VM is shut down
+**** Verify VM is shut down
 #+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
 #+begin_run
 virsh list --all
@@ -2106,6 +2122,203 @@ virsh list --all
 
 Before proceeding to the next step, make sure the VM is in the off
 state.
+
+** Raw disk VMs
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: raw-disk
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :hidden true
+:END:
+
+*** Raw disk VMs
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:END:
+
+If you OS is not packaged as a cloud-init enabled image, you can boot
+a raw disk image instead. The example will install Fedora IoT (40)
+from raw disk image.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+*** Configure VM (raw disk)
+:PROPERTIES:
+:EXPORT_FILE_NAME: config
+:END:
+
+**** Configure VM with raw disk image
+
+#+begin_env
+RAW_DISK=https://download.fedoraproject.org/pub/alt/iot/40/IoT/x86_64/images/Fedora-IoT-raw-40-20240422.3.x86_64.raw.xz
+NAME=fedora-iot
+OS_VARIANT=fedora40
+MEMORY=2048
+CPUS=2
+DISK_SIZE=30
+IP_ADDRESS=192.168.122.6
+MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | tr '[:upper:]' '[:lower:]')
+#+end_env
+
+**** Create DHCP lease
+
+#+begin_run
+sudo virsh net-update default add-last ip-dhcp-host "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' />" --live --config --parent-index 0
+#+end_run
+
+**** Copy config to libvirt-user account
+
+#+begin_run
+TMP_ENV=$(mktemp)
+cat << EOF > ${TMP_ENV}
+export NAME=${NAME}
+export OS_VARIANT=${OS_VARIANT}
+export IP_ADDRESS=${IP_ADDRESS}
+export MAC_ADDRESS=${MAC_ADDRESS}
+export RAW_DISK=${RAW_DISK}
+export MEMORY=${MEMORY}
+export CPUS=${CPUS}
+export DISK_SIZE=${DISK_SIZE}
+EOF
+chmod a+r ${TMP_ENV}
+sudo su ${VM_ADMIN:-libvirt-admin} -c \
+    "mkdir -p ~/libvirt && cp ${TMP_ENV} ~/libvirt/${NAME}.env"
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This will create a new config file *in the libvirt-admin user's home directory*
+=~/libvirt/${NAME}.env=.
+#+end_notice
+
+*** Create VM (raw disk)
+:PROPERTIES:
+:EXPORT_FILE_NAME: create-vm
+:END:
+#+attr_shortcode: :style info
+#+begin_notice
+*For this entire section you need to perform the VM config as the =libvirt-admin= user.*
+
+Login to the shell account of  =libvirt-admin=:
+
+#+begin_run
+sudo su libvirt-admin -l
+#+end_run
+#+end_notice
+
+**** Source the config
+
+Now, and anytime you come back later to work on the same VM, source the config file:
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+NAME=fedora-iot
+source ~/libvirt/${NAME}.env
+#+end_run
+
+**** Create directories to hold the VM disks and config files:
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+mkdir -p ~/libvirt/{cloud-images,raw,disks,cloud-init,iso}
+#+end_run
+
+**** Download the raw disk:
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You only need to download each RAW_DISK once, they will be cached
+in =~/libvirt/raw=, so they can be be reused.
+#+end_notice
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+(set -e
+cd ~/libvirt/raw
+curl -LO ${RAW_DISK}
+chmod a-w $(echo ${RAW_DISK} | grep -Po ".*/\K.*$")
+)
+#+end_run
+
+**** Create the disk image for the new VM:
+#+attr_shortcode: :style warning
+#+begin_notice
+This is destructive of the existing disk file!
+#+end_notice
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+(set -e
+xzcat ~/libvirt/raw/$(echo ${RAW_DISK} | grep -Po ".*/\K.*") \
+   > ~/libvirt/disks/${NAME}.raw
+chmod u+w ~/libvirt/disks/${NAME}.raw
+echo Created ~/libvirt/disks/${NAME}.raw
+)
+#+end_run
+
+**** Create the VM
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virt-install \
+  --name ${NAME} \
+  --os-variant ${OS_VARIANT} \
+  --virt-type kvm \
+  --cpu host \
+  --vcpus ${CPUS} \
+  --memory ${MEMORY} \
+  --graphics vnc,port=5901,listen=127.0.0.1 \
+  --console pty,target_type=serial \
+  --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
+  --import \
+  --disk ~/libvirt/disks/${NAME}.raw,format=raw
+#+end_run
+
+**** Watch the console for any errors
+
+As the VM starts up, your terminal will attach to the console output
+of the VM. This is to monitor any errors that may occur during the
+bootup, especially relating to cloud-init.
+
+Wait until you see this Login message:
+
+#+begin_stdout
+debian-dev login: 
+#+end_stdout
+
+**** Disconnect from the VM console
+To disconnect from the VM console, press the keyboard combination
+=Ctrl+]= (meaning to hold the Control key and the right square bracket
+key at the same time.)
+
+**** Shutdown the VM
+
+#+attr_shortcode: :style info
+#+begin_notice
+It is important to shut down the VM the first time after install,
+otherwise you will get an error about the unejected cloud-init ISO.
+#+end_notice
+
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin usre
+#+begin_run
+virsh shutdown ${NAME}
+#+end_run
+
+**** Verify VM is shut down
+#+attr_shortcode: :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virsh list --all
+#+end_run
+
+#+begin_stdout
+​ Id   Name         State
+​-----------------------------
+​ -    debian-dev   shut off
+#+end_stdout
+
+Before proceeding to the next step, make sure the VM is in the off
+state.
+
 
 ** Systemd services to control VMs
 :PROPERTIES:
@@ -2870,3 +3083,4 @@ core adm wheel sudo systemd-journal docker
 
 Next, follow the [[/d.rymcg.tech][Self-Hosting Docker]] book to setup this VM as a Docker
 context on your workstation.
+
