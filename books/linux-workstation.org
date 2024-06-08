@@ -2478,6 +2478,18 @@ xhost +local:libvirt-admin
 sudo -u libvirt-admin /bin/bash
 #+end_run
 #+end_notice
+
+#+attr_shortcode: :style tip
+#+begin_notice
+The =xhost= line is to allow graphical apps (=virt-viewer=) from the
+other user appear on your display. You may need to play with xhost a
+few times to get it to work. Try =xhost += to temporarily allow all
+hosts to use the DISPLAY (and =xhost -= afterward to set it back). If
+you start the VM, and the =virt-viewer= fails to load, you can just
+fix it, try it again, and reconnect to an existing VM already running
+in the background.
+#+end_notice
+
 **** Source the config
 
 Now, and anytime you come back later to work on the same VM, source the config file:
@@ -2577,18 +2589,18 @@ inet 192.168.122.5/24 brd 192.168.122.255 scope global dynamic noprefixroute enp
 ...
 #+end_stdout
 
-**** Set the live user password
-
-#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
-#+begin_run
-passwd
-#+end_run
-
 **** Enable remote SSH access
 
 #+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
 #+begin_run
 sudo systemctl enable --now sshd
+#+end_run
+
+**** Set the live user password
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+passwd
 #+end_run
 
 **** Leave the virt-viewer window alone
