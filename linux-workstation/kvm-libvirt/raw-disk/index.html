@@ -5,30 +5,26 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
-If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
-Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
+    <meta name="description" content="If you OS is not packaged as a cloud-init enabled image, you can boot a raw disk image instead. The example will install Fedora IoT (40) from raw disk image.
+Index ">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Public routes to VMs :: book.rymcg.tech">
-    <meta name="twitter:description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
-If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
-Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
-    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/public-routes/index.html">
+    <meta name="twitter:title" content="Raw disk VMs :: book.rymcg.tech">
+    <meta name="twitter:description" content="If you OS is not packaged as a cloud-init enabled image, you can boot a raw disk image instead. The example will install Fedora IoT (40) from raw disk image.
+Index ">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/kvm-libvirt/raw-disk/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Public routes to VMs :: book.rymcg.tech">
-    <meta property="og:description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
-If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
-Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
+    <meta property="og:title" content="Raw disk VMs :: book.rymcg.tech">
+    <meta property="og:description" content="If you OS is not packaged as a cloud-init enabled image, you can boot a raw disk image instead. The example will install Fedora IoT (40) from raw disk image.
+Index ">
     <meta property="og:locale" content="en-us">
-    <meta property="og:type" content="article">
-    <meta property="article:section" content="Linux Workstation">
-    <meta itemprop="name" content="Public routes to VMs :: book.rymcg.tech">
-    <meta itemprop="description" content="By default, all incoming traffic to the VMs must originate from your workstation (or another VM on your workstation) - no traffic is routed to your VMs from any other interface.
-If you want to break this rule, and allow public routes into these VMs (DNAT port forwarding), you will need to install the libvirt hook that sets up the iptables forwarding rules:
-Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkdir -p /usr/local/src/ sudo su -c &#34;">
-    <meta itemprop="wordCount" content="513">
-    <title>Public routes to VMs :: book.rymcg.tech</title>
+    <meta property="og:type" content="website">
+    <meta itemprop="name" content="Raw disk VMs :: book.rymcg.tech">
+    <meta itemprop="description" content="If you OS is not packaged as a cloud-init enabled image, you can boot a raw disk image instead. The example will install Fedora IoT (40) from raw disk image.
+Index ">
+    <meta itemprop="wordCount" content="31">
+    <title>Raw disk VMs :: book.rymcg.tech</title>
+    <link href="/linux-workstation/kvm-libvirt/raw-disk/index.xml" rel="alternate" type="application/rss+xml" title="Raw disk VMs :: book.rymcg.tech">
     <link href="/css/fontawesome-all.min.css?1717827650" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717827650" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1717827650" rel="stylesheet">
     <link href="/css/auto-complete.css?1717827650" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717827650" rel="stylesheet"></noscript>
@@ -60,7 +56,7 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/public-routes/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/kvm-libvirt/raw-disk/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -71,21 +67,7 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"><nav class="TableOfContents">
-  <ul>
-    <li><a href="#download-the-port-forwarding-hook">Download the port-forwarding hook</a></li>
-    <li><a href="#install-the-hook-files">Install the hook files</a></li>
-    <li><a href="#set-config-variables">Set config variables</a></li>
-    <li><a href="#customize-the-port-forwarding-hook">Customize the port-forwarding hook</a></li>
-    <li><a href="#autostart-port-forwarding-script-on-boot">Autostart port-forwarding script on boot</a>
-      <ul>
-        <li><a href="#create-dnat-service-template">Create DNAT service template</a></li>
-        <li><a href="#enable-dnat-service-once-per-vm-you-want-to-expose">Enable DNAT service once per VM you want to expose</a></li>
-        <li><a href="#reboot-workstation">Reboot workstation</a></li>
-      </ul>
-    </li>
-  </ul>
-</nav>
+                <div class="topbar-content-wrapper"> 
                 </div>
               </div>
             </div>
@@ -94,12 +76,12 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/kvm-libvirt/index.html"><span itemprop="name">KVM / libvirt</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Public routes to VMs</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Raw disk VMs</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/systemd/index.html" title="Systemd services to control VMs (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/cloud-init/create-vm/index.html" title="Create VM (cloud-init) (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html" title="Setup workstation SSH config (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/systemd/index.html" title="Systemd services to control VMs (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -119,223 +101,16 @@ Download the port-forwarding hook [bash]: Run this on your workstation: sudo mkd
             <header class="headline">
             </header>
 
-<h1 id="public-routes-to-vms">Public routes to VMs</h1>
+<h1 id="raw-disk-vms">Raw disk VMs</h1>
 
-<p>By default, all incoming traffic to the VMs must originate from your
-workstation (or another VM on your workstation) - no traffic is routed
-to your VMs from any other interface.</p>
-<p>If you want to break this rule, and allow public routes into these VMs
-(DNAT port forwarding), you will need to install the libvirt hook that
-sets up the iptables forwarding rules:</p>
-<h2 id="download-the-port-forwarding-hook">Download the port-forwarding hook</h2>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-sudo mkdir -p /usr/local/src/
-sudo su -c "cd /usr/local/src && git clone https://github.com/EnigmaCurry/libvirt-hook-qemu.git"
-</pre></code>
-    </div>
-</div>
-
-
-
-<div class="box notices cstyle credits">
-  <div class="box-label"><i class="fa-fw fas fa-gift"></i> CREDITS</div>
-  <div class="box-content">
-
-<p>EnigmaCurry/libvirt-hook-qemu is my own fork of
-<a href="https://github.com/saschpe/libvirt-hook-qemu" rel="external" target="_blank">saschpe/libvirt-hook-qemu</a> which has been slightly customized for this
-configuration. Thank you to Sascha Peilicke for creating this hook!</p>
-</div>
-</div>
-<h2 id="install-the-hook-files">Install the hook files</h2>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-sudo mkdir -p /etc/libvirt-dnat-hook
-sudo cp /usr/local/src/libvirt-hook-qemu/hooks.schema.json /etc/libvirt-dnat-hook
-</pre></code>
-    </div>
-</div>
-
-
-<h2 id="set-config-variables">Set config variables</h2>
-<p>Set some temporary variables the same as from your config:</p>
-<div class="box notices cstyle edit env">
-    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i>[bash]: Customize and set temporary environment variables</div>
-    <div class="box-content">
-        <code><pre>
-NAME=debian-dev
-IP_ADDRESS=192.168.122.2
-</pre></code>
-    </div>
-</div>
-<h2 id="customize-the-port-forwarding-hook">Customize the port-forwarding hook</h2>
-<p>Use the <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.json" rel="external" target="_blank">example</a> and <a href="https://github.com/EnigmaCurry/libvirt-hook-qemu/blob/master/hooks.schema.json" rel="external" target="_blank">schema</a> as a reference, then setup the port mapping
-you want for each VM:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-NAME=${NAME:-debian-dev}
-IP_ADDRESS=${IP_ADDRESS:-192.168.122.2}
-cat << EOF | jq | sudo tee /etc/libvirt-dnat-hook/hooks.json
-{
-  "${NAME}": {
-    "interface": "virbr0",
-    "private_ip": "${IP_ADDRESS}",
-    "port_map": {
-        "tcp": [
-            [2222, 22],
-            [80, 80],
-            [443, 443]
-        ]
-    }
-  }
-}
-EOF
-</pre></code>
-    </div>
-</div>
-
-
-
-<div class="box notices cstyle tip">
-  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
-  <div class="box-content">
-
-<p>This example opens the following public ports:</p>
-<ul>
-<li>Public TCP port <code>2222</code> forwards to the VM&rsquo;s port <code>22</code>.</li>
-<li>Public TCP port <code>80</code> forwards to the VM&rsquo;s port <code>80</code>.</li>
-<li>Public TCP port <code>443</code> forwards to the VM&rsquo;s port <code>443</code>.</li>
+<p>If you OS is not packaged as a cloud-init enabled image, you can boot
+a raw disk image instead. The example will install Fedora IoT (40)
+from raw disk image.</p>
+<div class="index">
+<h2>Index</h2>
+<ul class="children children-li children-sort-">
+	
 </ul>
-<p>UDP ports need to be in their own section, a sibling of TCP. Each VM
-needs its own config, mapped at the top level by the VM&rsquo;s unique name.</p>
-</div>
-</div>
-<h2 id="autostart-port-forwarding-script-on-boot">Autostart port-forwarding script on boot</h2>
-<aside>
-<p>I have not figured out how libvirt hooks are supposed to work with
-user-mode VMs. It seems like when the VM starts, the hook never gets
-called. So, this section adds another service that triggers the hook
-manually on boot to setup the port forwarding for each VM.</p>
-</aside>
-<h3 id="create-dnat-service-template">Create DNAT service template</h3>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-VM_ADMIN=${VM_ADMIN:-libvirt-admin}
-cat << EOF | sudo tee /etc/systemd/system/libvirt-DNAT@.service
-[Unit]
-Description=${VM_ADMIN} VM: %i - DNAT port forwarding
-Requires=libvirt@%i.service
-Requires=network-online.target
-After=libvirt@%i.service
-After=network-online.target
-
-[Service]
-Type=oneshot
-RemainAfterExit=true
-Environment="XDG_RUNTIME_DIR=/run/user/$(id -u ${VM_ADMIN})"
-Environment="CONFIG_PATH=/etc/libvirt-dnat-hook"
-ExecStart=/usr/bin/python /usr/local/src/libvirt-hook-qemu/hooks %i start
-ExecStop=/usr/bin/python /usr/local/src/libvirt-hook-qemu/hooks %i stopped
-
-[Install]
-WantedBy=multi-user.target
-EOF
-sudo systemctl daemon-reload
-</pre></code>
-    </div>
-</div>
-
-
-<h3 id="enable-dnat-service-once-per-vm-you-want-to-expose">Enable DNAT service once per VM you want to expose</h3>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-NAME=${NAME:-debian-dev}
-sudo systemctl enable --now libvirt-DNAT@${NAME}.service
-sudo systemctl status libvirt-DNAT@${NAME}.service
-</pre></code>
-    </div>
-</div>
-
-
-
-<div class="box notices cstyle orange">
-  <div class="box-label">Stopping and/or Disabling the service</div>
-  <div class="box-content">
-
-<p>If you want to disable the port mapping, run:</p>
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-NAME=${NAME:-debian-dev}
-sudo systemctl disable --now libvirt-DNAT@${NAME}.service
-</pre></code>
-    </div>
-</div>
-<p>Or to temporarily stop the port mapping (until you run <code>start</code> or
-reboot):</p>
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-NAME=${NAME:-debian-dev}
-sudo systemctl stop libvirt-DNAT@${NAME}.service
-</pre></code>
-    </div>
-</div>
-</div>
-</div>
-<h3 id="reboot-workstation">Reboot workstation</h3>
-<p>Once rebooted, test that your port forward rule exists in iptables
-rules:</p>
-
-
-<div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
-    <div class="box-content">
-        <code><pre>
-sudo iptables-save | grep 2222
-</pre></code>
-    </div>
-</div>
-
-
-<div class="box notices cstyle stdout">
-    <div class="box-label">(stdout)</div>
-    <div class="box-content">
-        <pre>
--A DNAT-debian-dev -d 10.13.13.227/32 -p tcp -m tcp --dport 2222 -j DNAT --to-destination 192.168.122.2:22
--A SNAT-debian-dev -s 192.168.122.2/32 -d 192.168.122.2/32 -p tcp -m tcp --dport 2222 -j MASQUERADE
-</pre>
-    </div>
 </div>
 
 
@@ -410,8 +185,9 @@ sudo iptables-save | grep 2222
           <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/index.html">Cloud-Init VMs</a><ul id="R-subsections-85e75632117660d261346e27d0e1596a" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/config-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/config-vm/index.html">Configure VM (cloud-init)</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/create-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/create-vm/index.html">Create VM (cloud-init)</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/raw-disk/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/raw-disk/index.html">Raw disk VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
-          <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class="active"><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
@@ -457,7 +233,7 @@ sudo iptables-save | grep 2222
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/public-routes/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/kvm-libvirt/raw-disk/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>

@@ -29,18 +29,18 @@
       <description>This will create a new user account on your workstation named libvirt-admin. This user will be used as the owner for all the VM disk images, config files, and for running the libvirt (qemu) processes that run your VM.&#xA;This separation from the normal account you use is important to limit the privileges that you have over the VM infrastructure. Your normal account should be able to SSH into the VM and have full root privleges inside the VM.</description>
     </item>
     <item>
-      <title>Configure VM</title>
-      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/config-vm/index.html</link>
+      <title>Cloud-Init VMs</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/cloud-init/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/config-vm/index.html</guid>
-      <description>Choose a name [bash]: Customize and set temporary environment variables NAME=debian-dev Choose hardware sizes [bash]: Customize and set temporary environment variables MEMORY=1024 CPUS=2 DISK_SIZE=50 Choose cloud image You can choose any standard cloud image that supports cloud-init.&#xA;Debian 12 [bash]: Customize and set temporary environment variables OS_VARIANT=debian12 CLOUD_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 Tip On slighly older versions of libvirt, you may need to set OS_VARIANT differently, but the image should still work:&#xA;[bash]: Customize and set temporary environment variables OS_VARIANT=debian11</description>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/cloud-init/index.html</guid>
+      <description> Index Configure VM (cloud-init) Create VM (cloud-init) </description>
     </item>
     <item>
-      <title>Create VM (cloud-init)</title>
-      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/create-vm/index.html</link>
+      <title>Raw disk VMs</title>
+      <link>https://book.rymcg.tech/linux-workstation/kvm-libvirt/raw-disk/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/create-vm/index.html</guid>
-      <description>Info For this entire section you need to perform the VM config as the libvirt-admin user. Login to the shell account of libvirt-admin: [bash]: Run this on your workstation: sudo su libvirt-admin -l Source the config Now, and anytime you come back later to work on the same VM, source the config file: Run this as the libvirt-admin user NAME=debian-dev source ~/libvirt/${NAME}.env Create directories to hold the VM disks and config files: Run this as the libvirt-admin user mkdir -p ~/libvirt/{cloud-images,disks,cloud-init,iso} Create the cloud-init config file: Run this as the libvirt-admin user cat &lt;&lt; EOF | sed &#39;s/\xe2\x80\x8b//g&#39; &gt; ${USER_DATA} #cloud-config hostname: ${NAME} users: ​ - name: root ssh_authorized_keys: ​ - $(cat ~/libvirt/user-ssh.</description>
+      <guid>https://book.rymcg.tech/linux-workstation/kvm-libvirt/raw-disk/index.html</guid>
+      <description>If you OS is not packaged as a cloud-init enabled image, you can boot a raw disk image instead. The example will install Fedora IoT (40) from raw disk image.&#xA;Index </description>
     </item>
     <item>
       <title>Systemd services to control VMs</title>
