@@ -1948,7 +1948,7 @@ This will create a new config file *in the libvirt-admin user's home directory*
 =~/libvirt/${NAME}.env=.
 #+end_notice
 
-** Create VM 
+** Create VM (cloud-init)
 :PROPERTIES:
 :EXPORT_FILE_NAME: create-vm
 :END:
@@ -1977,7 +1977,7 @@ source ~/libvirt/${NAME}.env
 
 #+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
 #+begin_run
-mkdir -p ~/libvirt/{cloud-images,disks,cloud-init}
+mkdir -p ~/libvirt/{cloud-images,disks,cloud-init,iso}
 #+end_run
 
 *** Create the cloud-init config file:
@@ -2053,14 +2053,11 @@ virt-install \
   --name ${NAME} \
   --os-variant ${OS_VARIANT} \
   --virt-type kvm \
-  --graphics none \
-  --console pty,target_type=serial \
   --cpu host \
   --vcpus ${CPUS} \
   --memory ${MEMORY} \
+  --graphics spice \
   --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
-  --cloud-init user-data=${USER_DATA} \
-  --import \
   --disk ~/libvirt/disks/${NAME}.qcow2
 #+end_run
 
@@ -2385,3 +2382,417 @@ You're now ready to use your VM as an install target for whatever you
 want. It is recommended to install Docker, which you can learn about
 in the volume [[/d.rymcg.tech][Self-hosting Docker]] in the chapter called [[/d.rymcg.tech/workstation][Setup your
 workstation]].
+
+** Manually create VM from .iso
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: vm-from-iso
+:END:
+
+*** Manually create VM from .iso
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 6000
+:END:
+
+The previous section named [[/linux-workstation/kvm-libvirt/create-vm][Create VM (cloud-init)]] installed a VM from
+a cloud-init enabled image (colloquially known as a "cloud image"),
+which is the streamlined and preferred method of VM installation.
+However, not all Linux distributions have a cloud image available. You
+may need to manually install the OS using a traditional graphical
+installer. Thats what this section is all about.
+
+As an example, these are the steps to install a VM using [[https://fedoraproject.org/coreos/][Fedora CoreOS]]
+(which does not support cloud-init, nor a traditional installer). You
+will be using the graphical [[https://fedoraproject.org/workstation/download/][Fedora Workstation Live .iso image]] as a
+temporary OS to bootstrap CoreOS onto a blank virtual disk.
+
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+
+*** Configure VM with .iso boot
+:PROPERTIES:
+:EXPORT_FILE_NAME: configure-vm
+:EXPORT_HUGO_WEIGHT: 1000
+:END:
+
+**** Configure VM
+
+#+begin_env
+NAME=coreos-dev
+OS_VARIANT=fedora-coreos-stable
+CPUS=1
+MEMORY=2048
+DISK_SIZE=25
+IP_ADDRESS=192.168.122.5
+MAC_ADDRESS=$(printf '00:60:2F:%02X:%02X:%02X\n' $[RANDOM%256] $[RANDOM%256] | tr '[:upper:]' '[:lower:]')
+ISO_MEDIA=https://download.fedoraproject.org/pub/fedora/linux/releases/40/Workstation/x86_64/iso/Fedora-Workstation-Live-x86_64-40-1.14.iso
+#+end_env
+
+**** Write config file into libvirt user directory
+
+#+attr_shortcode:
+#+begin_run
+TMP_ENV=$(mktemp)
+cat << EOF > ${TMP_ENV}
+export NAME=${NAME}
+export OS_VARIANT=${OS_VARIANT}
+export IP_ADDRESS=${IP_ADDRESS}
+export MAC_ADDRESS=${MAC_ADDRESS}
+export MEMORY=${MEMORY}
+export CPUS=${CPUS}
+export DISK_SIZE=${DISK_SIZE}
+export ISO_MEDIA=${ISO_MEDIA}
+EOF
+chmod a+r ${TMP_ENV}
+sudo su ${VM_ADMIN:-libvirt-admin} -c \
+    "mkdir -p ~/libvirt && cp ${TMP_ENV} ~/libvirt/${NAME}.env"
+#+end_run
+
+**** Create DHCP lease
+
+#+begin_run
+sudo virsh net-update default add-last ip-dhcp-host \
+  "&lt;host mac='${MAC_ADDRESS}' name='${NAME}' ip='${IP_ADDRESS}' /&gt;" \
+  --live --config --parent-index 0
+#+end_run
+*** Boot VM from .iso
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-vm
+:END:
+
+**** Switch to the libvirt user account
+#+attr_shortcode: :style info
+#+begin_notice
+*For the rest of this section you need to perform the VM config as the
+=libvirt-admin= user.*
+
+Login to the shell account of  =libvirt-admin=:
+
+#+begin_run
+xhost +local:libvirt-admin
+sudo -u libvirt-admin /bin/bash
+#+end_run
+#+end_notice
+**** Source the config
+
+Now, and anytime you come back later to work on the same VM, source the config file:
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+NAME=coreos-dev
+source ~/libvirt/${NAME}.env
+#+end_run
+
+**** Create directories to hold the VM disks and config files:
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+mkdir -p ~/libvirt/{cloud-images,disks,cloud-init,iso}
+#+end_run
+
+**** Download the ISO image:
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You only need to download each ISO_MEDIA once, they will be cached
+in =~/libvirt/iso=, so they can be be reused.
+#+end_notice
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+(set -e
+cd ~/libvirt/iso
+curl -LO ${ISO_MEDIA}
+chmod a-w $(echo ${ISO_MEDIA} | grep -Po ".*/\K.*$")
+)
+#+end_run
+
+**** Create virtual disk
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+qemu-img create -f qcow2 ~/libvirt/disks/${NAME}.qcow2 ${DISK_SIZE}G
+#+end_run
+
+**** Start VM
+
+#+attr_shortcode:  :style secondary :title Run this as the libvirt-admin user
+#+begin_run
+virt-install \
+  --name ${NAME} \
+  --os-variant ${OS_VARIANT} \
+  --virt-type kvm \
+  --graphics spice \
+  --cpu host \
+  --vcpus ${CPUS} \
+  --memory ${MEMORY} \
+  --network bridge=virbr0,model=virtio,mac=${MAC_ADDRESS} \
+  --boot cdrom,hd,menu=on \
+  --disk ~/libvirt/disks/${NAME}.qcow2 \
+  --cdrom ~/libvirt/iso/$(echo ${ISO_MEDIA} | grep -Po ".*/\K.*$")
+#+end_run
+
+**** Boot Fedora Workstation Live environment
+
+Once the VM starts, the =virt-viewer= window should open and display
+the virtual console of the VM.
+
+[[/img/fedora/grub.webp]]
+
+Choose /Start Fedora-Workstation-Live/.
+
+**** Welcome
+
+[[/img/fedora/welcome.webp]]
+
+Wait a minute for the Welcome screen to appear. To use the Live
+environment, click /Not Now/.
+
+**** Press Alt-F2 to run a command
+
+[[/img/fedora/run-a-command.webp]]
+
+Open the terminal by pressing =Alt-F2= and then typing the name of the
+command: =gnome-terminal=.
+
+**** Gnome Terminal
+
+[[/img/fedora/gnome-terminal.webp]]
+
+**** Verify network IP address
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+ip addr show dev enp1s0 | grep inet
+#+end_run
+
+#+begin_stdout
+...
+inet 192.168.122.5/24 brd 192.168.122.255 scope global dynamic noprefixroute enp1s0
+...
+#+end_stdout
+
+**** Set the live user password
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+passwd
+#+end_run
+
+**** Enable remote SSH access
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+sudo systemctl enable --now sshd
+#+end_run
+
+**** Leave the virt-viewer window alone
+
+You're now done needing to use the graphical console of the live
+environment, but until you're done setting things up, you'll need to
+leave it running for the time being. For now, just hide the window in
+another workspace (or minimize the window) but leave it running.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+I have noticed that the Live environment is set to go to sleep after a
+period of inactivity. If it goes to sleep, you may need to move/click
+the mouse inside the =virt-viewer= window to wake it up again. There's
+probably a great command to disable this, but I don't know it yet..
+#+end_notice
+
+**** Leave the libvirt-admin shell
+
+You're also done with the =libvirt-admin= shell for now, press
+=Ctrl-D= to leave it. Proceed now, back to using the normal
+workstation shell.
+
+*** Bootstrap CoreOS
+:PROPERTIES:
+:EXPORT_FILE_NAME: bootstrap-coreos
+:END:
+
+#+attr_shortcode: :style tip
+#+begin_notice
+These commands should be run on your *normal workstation account*.
+#+end_notice
+
+**** Configure variables to connect to Live environment
+
+#+begin_env
+IP_ADDRESS=192.168.122.5
+#+end_env
+
+**** Copy SSH key to the liveuser
+
+#+begin_run
+ssh-copy-id liveuser@${IP_ADDRESS}
+#+end_run
+
+When prompted, type the password that you set for the liveuser
+account.
+
+**** SSH into Live environment
+
+From your normal workstation account, connect to the SSH server of the
+Fedora Live environment:
+
+#+begin_run
+ssh liveuser@${IP_ADDRESS}
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+The reset of the commands in this section should be run *in the Fedora
+Live environment*.
+#+end_notice
+
+**** Create Butane Config
+
+[[https://coreos.github.io/butane/getting-started/][Butane]] is an intermediate tool used to generate the [[https://coreos.github.io/ignition/][Ignition]] bootstrap
+file required for CoreOS.
+
+Create a YAML config file that includes your public SSH keys:
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+(set -eo pipefail
+cat << EOF | sed 's/\xe2\x80\x8b//g' > fcos.yaml
+variant: fcos
+version: 1.5.0
+passwd:
+  users:
+​    - name: core
+      ssh_authorized_keys:
+EOF
+cat ~/.ssh/authorized_keys | xargs -iXX echo "        - XX" >> fcos.yaml
+podman pull quay.io/coreos/butane:release
+podman run --rm --interactive       \
+           --security-opt label=disable        \
+           --volume ${PWD}:/pwd --workdir /pwd \
+           quay.io/coreos/butane:release \
+           --pretty --strict fcos.yaml > fcos.ign
+)
+#+end_run
+
+**** Identify the storage device to install on
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+lsblk
+#+end_run
+
+#+begin_stdout
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+loop0         7:0    0    2G  1 loop 
+loop1         7:1    0    8G  1 loop 
+├─live-rw   253:0    0    8G  0 dm   /
+└─live-base 253:1    0    8G  1 dm   
+loop2         7:2    0   32G  0 loop 
+└─live-rw   253:0    0    8G  0 dm   /
+sr0          11:0    1  2.1G  0 rom  /run/initramfs/live
+zram0       251:0    0  956M  0 disk [SWAP]
+vda         252:0    0   25G  0 disk 
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+For the default VM config, you can see the 25G device named =vda=.
+#+end_notice
+
+#+begin_env
+DEVICE=vda
+#+end_env
+
+**** Install Fedora CoreOS onto the storage device
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+sudo podman run --pull=always --privileged --rm \
+    -v /dev:/dev -v /run/udev:/run/udev -v .:/data -w /data \
+    quay.io/coreos/coreos-installer:release \
+    install /dev/${DEVICE} -i fcos.ign
+#+end_run
+
+**** Shutdown Fedora Live environment
+
+CoreOS is now installed, so you can now shutdown the Fedora Live
+environment:
+
+#+attr_shortcode:  :style secondary :title Run this in the Fedora Live environment
+#+begin_run
+sudo poweroff
+#+end_run
+
+This will immediately restart the VM and CoreOS should now boot. If
+successful you should see the console print the following information:
+
+#+begin_stdout
+enp1s0: 192.168.122.5 ....
+Ignition: user-provided config was applied
+Ignition: wrote ssh authorized keys file for user: core
+#+end_stdout
+
+**** Close virt-viewer window.
+
+**** Shutdown CoreOS VM
+
+#+begin_env
+NAME=coreos-dev
+#+end_env
+
+#+begin_run
+sudo XDG_RUNTIME_DIR=/var/run/user/$(id -u libvirt-admin) -u libvirt-admin \
+    virsh destroy ${NAME}
+#+end_run
+
+**** Edit VM config
+
+Create an XSLT template that will perform the necessary edits to
+remove the CD-ROM disk and graphics adapter entries:
+
+#+begin_run
+cat &lt;&lt; EOF &gt; remove-cdrom.xslt.xml
+&lt;xsl:stylesheet version="1.0"
+ xmlns:xsl="http://www.w3.org/1999/XSL/Transform"&gt;
+
+ &lt;xsl:output omit-xml-declaration="yes"/&gt;
+
+    &lt;xsl:template match="node()|@*"&gt;
+      &lt;xsl:copy&gt;
+         &lt;xsl:apply-templates select="node()|@*"/&gt;
+      &lt;/xsl:copy&gt;
+    &lt;/xsl:template&gt;
+
+    &lt;xsl:template match="bootmenu[@enable='yes']"/&gt;
+    &lt;xsl:template match="boot[@dev='cdrom']"/&gt;
+    &lt;xsl:template match="disk[@device='cdrom']"/&gt;
+    &lt;xsl:template match="channel[@type='spicevmc']"/&gt;
+    &lt;xsl:template match="graphics"/&gt;
+    &lt;xsl:template match="sound"/&gt;
+    &lt;xsl:template match="audio"/&gt;
+    &lt;xsl:template match="redirdev[@type='spicevmc']"/&gt;
+    &lt;xsl:template match="video"/&gt;
+&lt;/xsl:stylesheet&gt;
+EOF
+#+end_run
+
+Redefine the VM using the edited config:
+
+#+begin_run
+(set -e
+virsh dumpxml ${NAME} | xsltproc remove-cdrom.xslt.xml - > ${NAME}.xml
+virsh define ${NAME}.xml
+)
+#+end_run
+
+**** Enable systemd service to start VM
+
+#+begin_run
+sudo systemctl enable --now libvirt@${NAME}
+sudo systemctl status libvirt@${NAME}
+#+end_run
