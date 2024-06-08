@@ -1143,23 +1143,48 @@ default configs.
 
 
 
-* Install Traefik Proxy
+* Traefik Proxy
 :PROPERTIES:
-:EXPORT_FILE_NAME: install-traefik-proxy
+:EXPORT_HUGO_SECTION_FRAG: traefik-proxy
 :EXPORT_HUGO_WEIGHT: 2020
 :END:
 
-Traefik Proxy is a core service that acts as a gateway for all of the
-other applications installed on your Docker host. Everything that is
-served behind Traefik Proxy can take advantage of automatic TLS
-certificates (ACME), perform user authentication (mTLS, OAuth2, HTTP
-Basic), apply sentry authorization (user account filtering), and IP
+** Traefik Proxy
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 2020
+:END:
+
+Traefik Proxy (Traefik) is a core service, an application gateway, for
+all of the service containers installed on your Docker host. Traefik
+is an advanced software router: it can serve hundreds of deployed
+application containers (routes) at the same time. Traefik has a
+configuration provider that operates by discovery, so that when it is
+installed on a Docker host, it can automatically configure itself
+based upon the runtime settings of each individual application it
+finds. Each application becomes directly in charge of defining its own
+proxy rules, setting them as Docker container labels. Traefik will
+automatically discover these container labels (by permission of the
+host Docker socket), and configure itself for each application.
+
+Traefik is infrastructure. With Traefik installed, now each service
+container can take advantage of automatic TLS certificates (ACME),
+perform user authentication (mTLS, OAuth2, or HTTP Basic with
+group/certitficate sentry authorization), GeoIP tagging, and client IP
 address filtering middlewares. Based on all of this criteria, Traefik
-Proxy ultimately decides whether to route incoming requests to the
-backend service containers, or to block it and return an error.
+is in charge of deciding which incoming requests are to be allowed
+(and forwarded to the backend service containers), and which of them
+should be blocked (and an error returned to the client).
 
-** Configure Traefik Proxy
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
 
+** Configure Traefik
+:PROPERTIES:
+:EXPORT_FILE_NAME: config
+:END:
 #+begin_run
 d make traefik config
 #+end_run
