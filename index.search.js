@@ -1,5 +1,13 @@
 var relearn_search_index = [
   {
+    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication",
+    "content": "I know of two places to buy solokeys:\nhttps://solokeys.com/collections/all https://www.crowdsupply.com/solokeys/somu#products What to buy:\nRecommended: Solo 1 Tap USB-A (durable clicky button, but its long and sticks out of the USB port). Recommended: Solo 2 USB-A (touch capacitive, but its long and sticks out of the USB port). Recommended: Somu (semi-permanent flush mount USB-A port, soft touch design). Get the “secure” version, don’t buy the “hacker” version. Buy at least two (and store one as a backup). ",
+    "description": "I know of two places to buy solokeys:\nhttps://solokeys.com/collections/all https://www.crowdsupply.com/solokeys/somu#products What to buy:\nRecommended: Solo 1 Tap USB-A (durable clicky button, but its long and sticks out of the USB port). Recommended: Solo 2 USB-A (touch capacitive, but its long and sticks out of the USB port). Recommended: Somu (semi-permanent flush mount USB-A port, soft touch design). Get the “secure” version, don’t buy the “hacker” version. Buy at least two (and store one as a backup).",
+    "tags": [],
+    "title": "Get your Solokey",
+    "uri": "/linux-workstation/sudo-2fa/get-your-solokey/index.html"
+  },
+  {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e KVM / libvirt",
     "content": "This book is primarily about Fedora Atomic Desktop (sway) hosts, but these instructions are generic enough to work on a wide variety of systemd based Linux operating systems, including Fedora Workstation (traditional), Fedora CoreOS, Arch Linux, and Debian (with caveats).\nPackages for Fedora Atomic Desktop hosts Tip Full package installation for Fedora Atomic Desktop hosts are covered in the chapter on Layering packages.\nPackages for Fedora CoreOS [bash]: Run this on your workstation: sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \\ virt-install libvirt-daemon-config-network libvirt-daemon-kvm \\ libguestfs-tools python3-libguestfs virt-top distrobox make Packages for traditional Fedora Workstation hosts Info These are the packages you would need to install on traditional Fedora Workstation (or Server, but not CoreOS nor Atomic hosts)\n[bash]: Run this on your workstation: sudo dnf install qemu-kvm libvirt virt-manager virt-viewer \\ virt-install libvirt-daemon-config-network libvirt-daemon-kvm \\ libguestfs-tools python3-libguestfs virt-top net-tools Packages for Arch Linux hosts Info For Arch Linux, it is recommended to do a full system update and reboot prior to installing the libvirt packages.\n[bash]: Run this on your workstation: sudo pacman -Syu sudo reboot After reboot, install packages:\n[bash]: Run this on your workstation: sudo pacman -S libvirt iptables-nft dnsmasq qemu-base virt-install \\ sysfsutils bridge-utils ebtables git make which jq \\ dmidecode pkgconf gcc Packages for Debian/Ubuntu hosts Info For Debian (or Ubuntu), it is recommended to do a full system upgrade and reboot prior to installing the libvirt packages.\n[bash]: Run this on your workstation: sudo apt update sudo apt upgrade sudo reboot After reboot, install packages:\n[bash]: Run this on your workstation: sudo apt install --no-install-recommends \\ libvirt-daemon-system virtinst libvirt-clients \\ dnsmasq sysfsutils bridge-utils ebtables git make \\ which jq dmidecode pkgconf gcc curl \\ python3 python-is-python3 ",
     "description": "This book is primarily about Fedora Atomic Desktop (sway) hosts, but these instructions are generic enough to work on a wide variety of systemd based Linux operating systems, including Fedora Workstation (traditional), Fedora CoreOS, Arch Linux, and Debian (with caveats).\nPackages for Fedora Atomic Desktop hosts Tip Full package installation for Fedora Atomic Desktop hosts are covered in the chapter on Layering packages.\nPackages for Fedora CoreOS [bash]: Run this on your workstation: sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \\ virt-install libvirt-daemon-config-network libvirt-daemon-kvm \\ libguestfs-tools python3-libguestfs virt-top distrobox make Packages for traditional Fedora Workstation hosts Info These are the packages you would need to install on traditional Fedora Workstation (or Server, but not CoreOS nor Atomic hosts)",
@@ -17,11 +25,19 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication",
-    "content": " Index Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
-    "description": " Index Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
+    "content": " Index Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
+    "description": " Index Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) ",
     "tags": [],
     "title": "Solokey v1",
     "uri": "/linux-workstation/sudo-2fa/solo-v1/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication",
+    "content": "Install solo2-cli Find the latest version of solo2-cli\n[bash]: Customize and set temporary environment variables SOLO2_VERSION=0.2.2 PLATFORM=x86_64-unknown-linux-gnu [bash]: Run this on your workstation: (set -e curl -L -o solo2 \\ https://github.com/solokeys/solo2-cli/releases/download/v${SOLO2_VERSION}/solo2-v${SOLO2_VERSION}-x86_64-unknown-linux-gnu sudo install solo2 /usr/local/bin/ rm -f solo2 ) Identify solokey [bash]: Run this on your workstation: solo2 list (stdout) Solo 2 xxxxxxxxxxx (CTAP+PCSC, firmware 2:20220822.0, locked) Install udev rules [bash]: Run this on your workstation: curl https://raw.githubusercontent.com/solokeys/solo2-cli/main/70-solo2.rules | sudo tee /etc/udev/rules.d/solokey2.rules Update solokey [bash]: Run this on your workstation: solo2 update Tip You may need to run sudo solo2 update if the udev rules aren’t working correctly.\nSet PIN The solo2-cli has an outstanding issue that it cannot set a device pin.\nThe workaround is either to do so using the chromium browser (which you may need to install in a toolbox container):\n[bash]: Run this on your workstation: chromium Navigate to chrome://settings/securityKeys Click Create a PIN. Follow the prompt to set a device PIN. ",
+    "description": "Install solo2-cli Find the latest version of solo2-cli\n[bash]: Customize and set temporary environment variables SOLO2_VERSION=0.2.2 PLATFORM=x86_64-unknown-linux-gnu [bash]: Run this on your workstation: (set -e curl -L -o solo2 \\ https://github.com/solokeys/solo2-cli/releases/download/v${SOLO2_VERSION}/solo2-v${SOLO2_VERSION}-x86_64-unknown-linux-gnu sudo install solo2 /usr/local/bin/ rm -f solo2 ) Identify solokey [bash]: Run this on your workstation: solo2 list (stdout) Solo 2 xxxxxxxxxxx (CTAP+PCSC, firmware 2:20220822.0, locked) Install udev rules [bash]: Run this on your workstation: curl https://raw.githubusercontent.com/solokeys/solo2-cli/main/70-solo2.rules | sudo tee /etc/udev/rules.",
+    "tags": [],
+    "title": "Solokey v2",
+    "uri": "/linux-workstation/sudo-2fa/solo-v2/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e KVM / libvirt",
@@ -33,8 +49,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Cloud-Init VMs Configure VM (cloud-init) Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
-    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Cloud-Init VMs Configure VM (cloud-init) Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "content": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Get your Solokey Solokey v1 Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Solokey v2 Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Cloud-Init VMs Configure VM (cloud-init) Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
+    "description": "This book describes how I setup a Linux Workstation (on a personal Desktop or Laptop computer).\nIndex Introduction Fedora Sway Atomic Requirements Install Linux (Fedora Atomic) Upgrading Layering packages Config Sway Firefox Toolbox Emacs SSH Solokey authentication Get your Solokey Solokey v1 Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Solokey v2 Sudo with Solokey SSH with Solokey Application users DigitalOcean CLI (doctl) KVM / libvirt Install libvirtd Setup libvirtd Create VM admin Cloud-Init VMs Configure VM (cloud-init) Create VM (cloud-init) Systemd services to control VMs Public routes to VMs Setup workstation SSH config ",
     "tags": [],
     "title": "Linux Workstation",
     "uri": "/linux-workstation/index.html"
@@ -169,8 +185,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
-    "content": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
-    "description": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Solokey v1 Get your Solokey (v1) Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Sudo with Solokey SSH with Solokey ",
+    "content": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Get your Solokey Solokey v1 Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Solokey v2 Sudo with Solokey SSH with Solokey ",
+    "description": "Solokeys are physical hardware authentication (U2F / FIDO2) devices, that you plug into a USB port, which stores a secret key that can be used as primary or secondary authentication factors (2FA), with websites (Webauthn), and machines (sudo and SSH).\nThere are two versions of solokey now, v1 and v2, and they require separate toolchains. The instructions diverge here depending on which hardware revision you have.\nIndex Get your Solokey Solokey v1 Install Solokey CLI (v1) tool Update your Solokey (v1) Program your Solokey (v1) Solokey v2 Sudo with Solokey SSH with Solokey ",
     "tags": [],
     "title": "Solokey authentication",
     "uri": "/linux-workstation/sudo-2fa/index.html"
@@ -502,14 +518,6 @@ var relearn_search_index = [
     "tags": [],
     "title": "Systemd services to control VMs",
     "uri": "/linux-workstation/kvm-libvirt/systemd/index.html"
-  },
-  {
-    "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication \u003e Solokey v1",
-    "content": "I know of two places to buy solokeys:\nhttps://solokeys.com/collections/all https://www.crowdsupply.com/solokeys/somu#products What to buy:\nRecommended: Solo 1 Tap USB-A (durable clicky button, but sticks out of the USB port). Recommended: Somu (semi-permanent flush mount USB-A port, soft touch design). Get the “secure” version, don’t buy the “hacker” version. Buy at least two (and store one as a backup). ",
-    "description": "I know of two places to buy solokeys:\nhttps://solokeys.com/collections/all https://www.crowdsupply.com/solokeys/somu#products What to buy:\nRecommended: Solo 1 Tap USB-A (durable clicky button, but sticks out of the USB port). Recommended: Somu (semi-permanent flush mount USB-A port, soft touch design). Get the “secure” version, don’t buy the “hacker” version. Buy at least two (and store one as a backup). ",
-    "tags": [],
-    "title": "Get your Solokey (v1)",
-    "uri": "/linux-workstation/sudo-2fa/solo-v1/get-your-solokey/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation \u003e Solokey authentication \u003e Solokey v1",
