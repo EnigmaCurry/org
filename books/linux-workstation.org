@@ -1023,6 +1023,29 @@ hardware revision you have.
 index
 #+end_index
 
+*** Get your Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: get-your-solokey
+:EXPORT_HUGO_WEIGHT: 100
+:END:
+
+I know of two places to buy solokeys:
+
+ * https://solokeys.com/collections/all
+ * https://www.crowdsupply.com/solokeys/somu#products
+
+What to buy:
+
+ * Recommended: [[https://solokeys.com/collections/all/products/solo-tap-usb-a-preorder][Solo 1 Tap USB-A]] (durable clicky button, but its long
+   and sticks out of the USB port).
+ * Recommended: [[https://solokeys.com/collections/all/products/solo-tap-usb-a-preorder][Solo 2 USB-A]] (touch capacitive, but its long and
+   sticks out of the USB port).
+ * Recommended: [[https://www.crowdsupply.com/solokeys/somu][Somu]] (semi-permanent flush mount USB-A port, soft
+   touch design).
+ * Get the *"secure"* version, don't buy the "hacker" version. 
+ * Buy at least two (and store one as a backup).
+
+
 *** Solokey v1
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: solo-v1
@@ -1038,24 +1061,6 @@ index
 #+begin_index
 index
 #+end_index
-
-**** Get your Solokey (v1)
-:PROPERTIES:
-:EXPORT_FILE_NAME: get-your-solokey
-:END:
-
-I know of two places to buy solokeys:
-
- * https://solokeys.com/collections/all
- * https://www.crowdsupply.com/solokeys/somu#products
-
-What to buy:
-
- * Recommended: [[https://solokeys.com/collections/all/products/solo-tap-usb-a-preorder][Solo 1 Tap USB-A]] (durable clicky button, but sticks out of the USB port).
- * Recommended: [[https://www.crowdsupply.com/solokeys/somu][Somu]] (semi-permanent flush mount USB-A port, soft
-   touch design).
- * Get the *"secure"* version, don't buy the "hacker" version. 
- * Buy at least two (and store one as a backup).
 
 **** Install Solokey CLI (v1) tool
 :PROPERTIES:
@@ -1198,13 +1203,71 @@ Valid Solo with firmware from SoloKeys.
 :EXPORT_HUGO_SECTION_FRAG: solo-v2
 :END:
 
-**** TODO Solokey v2
+**** Solokey v2
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 100
 :END:
 
-TODO
+***** Install solo2-cli
+
+Find the [[https://github.com/solokeys/solo2-cli/releases][latest version of solo2-cli]]
+
+#+begin_env
+SOLO2_VERSION=0.2.2
+PLATFORM=x86_64-unknown-linux-gnu
+#+end_env
+
+#+begin_run
+(set -e
+curl -L -o solo2 \
+  https://github.com/solokeys/solo2-cli/releases/download/v${SOLO2_VERSION}/solo2-v${SOLO2_VERSION}-x86_64-unknown-linux-gnu
+sudo install solo2 /usr/local/bin/
+rm -f solo2
+)
+#+end_run
+
+***** Identify solokey
+
+#+begin_run
+solo2 list
+#+end_run
+
+#+begin_stdout
+Solo 2 xxxxxxxxxxx (CTAP+PCSC, firmware 2:20220822.0, locked)
+#+end_stdout
+
+***** Install udev rules
+
+#+begin_run
+curl https://raw.githubusercontent.com/solokeys/solo2-cli/main/70-solo2.rules | sudo tee /etc/udev/rules.d/solokey2.rules
+#+end_run
+
+***** Update solokey
+#+begin_run
+solo2 update
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You may need to run =sudo solo2 update= if the udev rules aren't
+working correctly.
+#+end_notice
+
+***** Set PIN
+
+[[https://github.com/solokeys/solo2-cli/discussions/58][The solo2-cli has an outstanding issue that it cannot set a device pin]].
+
+The workaround is either to do so using the chromium browser (which
+you may need to install in a toolbox container):
+
+#+begin_run
+chromium
+#+end_run
+
+ * Navigate to =chrome://settings/securityKeys=
+ * Click =Create a PIN=.
+ * Follow the prompt to set a device PIN.
 
 *** Sudo with Solokey
 :PROPERTIES:
