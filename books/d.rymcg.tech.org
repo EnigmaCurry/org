@@ -1173,7 +1173,7 @@ perform user authentication (mTLS, OAuth2, or HTTP Basic with
 group/certitficate sentry authorization), GeoIP tagging, and client IP
 address filtering middlewares. Based on all of this criteria, Traefik
 is in charge of deciding which incoming requests are to be allowed
-(and forwarded to the backend service containers), and which of them
+(and forwarded to the backend service containers), and which of these
 should be blocked (and an error returned to the client).
 
 #+attr_shortcode: :depth 999
@@ -1181,16 +1181,28 @@ should be blocked (and an error returned to the client).
 index
 #+end_index
 
-** Configure Traefik
+** Traefik Quickstart (public VPS)
 :PROPERTIES:
-:EXPORT_FILE_NAME: config
+:EXPORT_FILE_NAME: vps-quickstart
+:EXPORT_HUGO_WEIGHT: 1000
 :END:
+Before we get too deep into Traefik configuration, if you just want to
+setup a public VPS, follow these instructions as a quickstart
+tutorial:
+
+*** Choose your active Docker context
+
+#+begin_run
+d context
+#+end_run
+
+*** Configure Traefik for your active Docker context
+
 #+begin_run
 d make traefik config
 #+end_run
 
-This creates a config for Traefik on your active Docker context. The
-configuration is driven by a text wizard menu system.
+The configuration is driven by a text wizard menu system.
 
 #+begin_stdout
 ? Traefik config main menu:  
@@ -1204,45 +1216,32 @@ v Configure error page template
 [↑↓ to move, enter to select, type to filter, ESC to cancel]
 #+end_stdout
 
-Use your arrow keys to select a menu item and press the =Enter= key.
-To cancel, press the =ESC= key.
+Use your arrow keys to select only the menu items this tutorial talks
+about, and press the =Enter= key. To cancel, press the =ESC= key.
 
 Once complete, it will have created and configured your
 =.env_{CONTEXT}= file for you.
 
-*** Create system user on Docker host
+**** Create system user on Docker host
 
 This option will create a new username on the Docker host, called
 =traefik=. This is necessary to reserve a unique UID for traefik to
 run as on the system. Run this first before anything else.
 
-*** Configure entrypoints
+**** Skip: Configure entrypoints
 
-Traefik uses various entrypoints to allow requests on certain TCP
-ports. By default, only port 80 and 443 are enabled. You can enable
-extra entrypoints through this menu, which may be necessary for any
-application that doesn't use the standard =websecure= entrypoint (port
-443).
+For this tutorial, you will use the default entrypoints, so you don't
+need to configure anything.
 
-By default, the Traefik Dashboard is not enabled. To enable it, you
-must select it via this menu option, and set a username / password. It
-is only ever exposed to localhost, or through an SSH tunnel, never to
-the public network, but it is still best to leave it turned off if you
-don't need it.
+ * =web= (TCP port 80)
+ * =websecure= (TCP port 443)
 
-*** Configure Certificate Authorities (CA)
+**** Skip: Configure Certificate Authorities (CA)
 
-If you're planning on running a public server, using TLS certificates
-from Let's Encrypt, you can skip this option.
+For this tutorial you will only need the default CA list provided by
+the container image.
 
-You only need to run this if you wish to modify the TLS certificate
-trust store to accomodate a "self-signed" Step-CA authority.
-
-*** Configure ACME (Let's Encrypt or Step-CA)
-
-Choose this option to configure ACME, which makes requesting and
-renewing TLS certificates an easy and automatic process.
-
+**** Configure ACME (Let's Encrypt)
 #+begin_stdout
 ? Which ACME provider do you want to use?  
 > Let's Encrypt (ACME)
@@ -1251,19 +1250,8 @@ renewing TLS certificates an easy and automatic process.
   Cancel / Go back
 #+end_stdout
 
-For most installs, you should choose =Let's Encrypt (ACME)=. This is
-the only option that will create valid TLS certificates for public
-websites.
-
-If you want to run private services, you may want to consider using
-=Step-CA= instead, as it does not rely upon any external platform like
-Let's Encrypt does.
-
-Finally, if you want to setup TLS certificates manually, you can
-choose =Disable ACME=.
-
+Choose =Let's Encrypt (ACME)=.
 **** Configure Let's Encrypt environment
-
 #+begin_stdout
 ? Which LE environment do you want to use?  
 > Production (recommended!)
@@ -1278,7 +1266,6 @@ valid (trusted) TLS certificates.
 #+end_notice
 
 **** Choose type of ACME challenge
-
 #+begin_stdout
 ? Which type of ACME challenge should be used?  
 > TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
@@ -1290,19 +1277,17 @@ valid (trusted) TLS certificates.
 For your first install, choose =TLS-ALPN-01=, it is the easiest method
 to use for public servers.
 
-If you want to use wildcard DNS records, you must choose the more
-advanced method =DNS-01=, and setup your DNS platform for programmatic
-access with an API token.
+If you want to use wildcard DNS records, or you need to setup a server
+behind a firewall, you must choose the more advanced method =DNS-01=,
+and setup your DNS platform for programmatic access with an API token.
 #+end_notice
-
-
-**** Configure ACME email address (optional)
+**** Skip: Configure ACME email address
 
 You don't have to provide your email address, but if you do, Let's
 Encrypt can email you about configuration issues, like certitficates
 about to expire.
 
-*** Configure TLS certificates and domains
+**** Configure TLS certificates and domains
 
 d.rymcg.tech uses explicit certificate requests configured centrally,
 on the traefik project:
@@ -1340,9 +1325,9 @@ certificate.
 #+end_notice
 
 *** Configure middleware
-*** Configure error page template
-*** Configure wireguard VPN
-*** Install Traefik
+**** Configure error page template
+**** Configure wireguard VPN
+**** Install Traefik
 
 To install Traefik (on your active Docker context), you can simply
 choose the =Reinstall Traefik= option in the menu, or you can run that
@@ -1354,6 +1339,12 @@ d make traefik install
 
 You should always reinstall Traefik after changing any configuration
 setting.
+** TODO Full Traefik Configuration
+:PROPERTIES:
+:EXPORT_FILE_NAME: config
+:END:
+
+TODO
 
 * Whoami
 :PROPERTIES:
