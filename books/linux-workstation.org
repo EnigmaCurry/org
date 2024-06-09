@@ -37,19 +37,19 @@ will focus on /physical/ workstations).
 
 Historically, there has been a hardware distinction between a personal
 computer (PC) and a Unix workstation, but ever since the introduction
-of Linux, the difference in hardware doesn't really exist anymore, and
-any computing device can become a workstation. The only important
+of Linux, the difference in hardware doesn't really matter anymore,
+and any computing device can become a workstation. The only important
 distinction for a workstation is the role that it serves, and how
 /you/ configure and use it on a daily basis.
 
 The role of a workstation is very different than that of a server. A
-workstation's only purpose is to serve the user, during the moments
-that you are interfacing with its physical keyboard/display. A
-workstation /is/ usually connected to a network, but only as a client,
-not as a server. (Of course, you may bend this rule if you like, to
-make your computer a server-workstation or "Sworkstation", but it is
-cleaner, and more secure, to use separate [virtual] machines for these
-very different roles.)
+workstation's only purpose is to serve /you/, during the moments that
+you are interfacing with its physical keyboard/display. A workstation
+is usually connected to a network, but only as a client (terminal, web
+browser, etc.), not as a server. (Of course, you may bend this rule if
+you like, to make your computer a server-workstation, or
+"Sworkstation", but it is cleaner, and more secure, to use separate
+[virtual] machines for all servers, even for development purposes.)
 
 This book will describe my preferred method for setting up a new
 computer, for use as a personal Linux workstation. It will also show
@@ -86,28 +86,35 @@ image provided by the distro, and then reboot the system to use it.
 
 The base image includes all the typical things everyone needs:
 coreutils, a display manager, web browser, terminal apps etc. However,
-the base image is still pretty bare bones. Furthermore, the image is
-read-only, so you can't install packages like you can with a more
-traditional Linux distro. If you want to install something that isn't
-in the base image, you have a few different options:
+the base image is still pretty bare bones. Except for a few
+directories, the root filesystem is immutable, so the process of
+installing packages might be a bit different than what you are familar
+with. If you want to install something that isn't in the base image,
+you have a few different options:
 
- * Podman or Docker containers. Since containers use their own image,
-   they are separate from the main image, and can be freely created
-   and destroyed separately.
+ * Podman or Docker containers (including toolbox and distrobox).
+   Since containers use their own image, they are separate from the
+   root image, and can be freely created and destroyed separately (no
+   reboot).
+   
  * Flatpak is a type of application container that includes all of its
    dependencies, and it is sandboxed/isolated from the host system,
    therefore they can be installed/managed separately from the base
    image.
- * Use rpm-ostree itself to create a new image *layer*. This extends
-   the base layer with extra packages you want to install. This is
-   fully supported, but not optimal, as when you upgrade the base
-   image, this layer needs to be recreated each time.
 
+ * Use rpm-ostree to create a new image *layer*. This extends the root
+   atomic layer with extra packages that you want to install natively
+   (not in a container). It bundles all of the requested packages into
+   a new layer, and this is laid on top of the root atomic layer. The
+   machine must boot the combined layers as one image, so therefore
+   you must reboot the machine each time you install new packages this
+   way.
+   
 I only use a couple of Flatpak apps for a few things. For almost
 everything else I use Podman containers via [[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][toolbox]] and/or [[https://distrobox.it/][distrobox]]
-and these can even include graphical applications. Creating your own
-[[https://docs.fedoraproject.org/en-US/iot/adding-layered/][rpm-ostree layers]] is to be avoided if possible, but some things don't
-like running in containers, so this remains an option.
+and these can even include graphical applications. For a few things
+that cannot be installed in a container, they are [[/linux-workstation/layering-packages][added as an
+rpm-ostree layer]].
 
 ** Requirements
 :PROPERTIES:
@@ -215,7 +222,7 @@ Let it finish downloading the new image, and then reboot again.
 
 See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]]. For most packages,
 you should not install them this way, but you should prefer installing
-them inside of a toolbox / distrobox container instead. On the Fedora
+them inside of a /linux-workstation/config/toolbox / distrobox container instead. On the Fedora
 Atomic host, you should install (layer) only those packages that
 cannot be run from a container (or you really just want to run them
 natively for some reason).
@@ -225,11 +232,11 @@ one go*, using as few layers as possible. Here is a list of packages
 you might want to add all together as one layer:
 
 #+begin_run
-sudo rpm-ostree install qemu-kvm libvirt virt-manager virt-viewer \
-     virt-install libvirt-daemon-config-network libvirt-daemon-kvm \
-     libguestfs-tools python3-libguestfs virt-top net-tools \
-     gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp distrobox \
-     file-roller thunar-volman pamu2fcfg pam-u2f fido2-tools
+sudo rpm-ostree install wdisplays qemu-kvm libvirt virt-manager \
+     virt-viewer virt-install libvirt-daemon-config-network \
+     libvirt-daemon-kvm libguestfs-tools python3-libguestfs virt-top \
+     net-tools gvfs-smb gvfs-archive gvfs-nfs gvfs-fuse gvfs-mtp \
+     distrobox file-roller thunar-volman pamu2fcfg pam-u2f fido2-tools
 #+end_run
 
 [[https://fedoraproject.org/atomic-desktops/sway/][Fedora Atomic Sway edition (Sericea) already includes a lot of
@@ -352,13 +359,7 @@ new config files.
 
 Fedora Sway Atomic ships with [[https://git.sr.ht/~emersion/kanshi][kanshi]] for display setup. Kanshi does
 not include any GUI for setting it up, so another program called
-[[https://github.com/artizirk/wdisplays][wdisplays]] is useful, however it is not included in the base Atomic
-distribution, and you will have to install it via [[/linux-workstation/toolbox][toolbox]].
-
-#+attr_shortcode: :title install wdisplays inside of toolbox
-#+begin_run
-sudo dnf install wdisplays
-#+end_run
+[[https://github.com/artizirk/wdisplays][wdisplays]] is useful.
 
 You can configure all of your displays using the wdisplays GUI
 program, however, the configuration will not persist across login
