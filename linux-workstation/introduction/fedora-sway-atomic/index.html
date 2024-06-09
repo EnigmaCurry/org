@@ -27,19 +27,19 @@ The “Atomic” part refers to rpm-ostree, which was originally used by the Cor
     <meta itemprop="description" content="I have tried a great many different Linux distributions over the years, but I have recently settled on using Fedora Sway Atomic for my desktop and laptop workstations.
 Sway is a minimal tiling window manager for Wayland. It is ideal for efficient keyboard centric development and for getting out of your way.
 The “Atomic” part refers to rpm-ostree, which was originally used by the CoreOS team to build an operating system that is built entirely to support containers.">
-    <meta itemprop="wordCount" content="363">
+    <meta itemprop="wordCount" content="402">
     <title>Fedora Sway Atomic :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717970322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717970322" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717970322" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717970322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717970322" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717970322" rel="stylesheet">
-    <link href="/css/fonts.css?1717970322" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717970322" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717970322" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717970322" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717970322" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717970322" rel="stylesheet">
-    <link href="/css/print.css?1717970322" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717970322"></script>
+    <link href="/css/fontawesome-all.min.css?1717974579" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717974579" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717974579" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717974579" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717974579" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717974579" rel="stylesheet">
+    <link href="/css/fonts.css?1717974579" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717974579" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717974579" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717974579" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717974579" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717974579" rel="stylesheet">
+    <link href="/css/print.css?1717974579" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717974579"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -123,28 +123,39 @@ no need to replace packages one-by-one, you just download the new
 image provided by the distro, and then reboot the system to use it.</p>
 <p>The base image includes all the typical things everyone needs:
 coreutils, a display manager, web browser, terminal apps etc. However,
-the base image is still pretty bare bones. Furthermore, the image is
-read-only, so you can&rsquo;t install packages like you can with a more
-traditional Linux distro. If you want to install something that isn&rsquo;t
-in the base image, you have a few different options:</p>
+the base image is still pretty bare bones. Except for a few
+directories, the root filesystem is immutable, so the process of
+installing packages might be a bit different than what you are familar
+with. If you want to install something that isn&rsquo;t in the base image,
+you have a few different options:</p>
 <ul>
-<li>Podman or Docker containers. Since containers use their own image,
-they are separate from the main image, and can be freely created
-and destroyed separately.</li>
-<li>Flatpak is a type of application container that includes all of its
+<li>
+<p>Podman or Docker containers (including toolbox and distrobox).
+Since containers use their own image, they are separate from the
+root image, and can be freely created and destroyed separately (no
+reboot).</p>
+</li>
+<li>
+<p>Flatpak is a type of application container that includes all of its
 dependencies, and it is sandboxed/isolated from the host system,
 therefore they can be installed/managed separately from the base
-image.</li>
-<li>Use rpm-ostree itself to create a new image <strong>layer</strong>. This extends
-the base layer with extra packages you want to install. This is
-fully supported, but not optimal, as when you upgrade the base
-image, this layer needs to be recreated each time.</li>
+image.</p>
+</li>
+<li>
+<p>Use rpm-ostree to create a new image <strong>layer</strong>. This extends the root
+atomic layer with extra packages that you want to install natively
+(not in a container). It bundles all of the requested packages into
+a new layer, and this is laid on top of the root atomic layer. The
+machine must boot the combined layers as one image, so therefore
+you must reboot the machine each time you install new packages this
+way.</p>
+</li>
 </ul>
 <p>I only use a couple of Flatpak apps for a few things. For almost
 everything else I use Podman containers via <a href="https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/" rel="external" target="_blank">toolbox</a> and/or <a href="https://distrobox.it/" rel="external" target="_blank">distrobox</a>
-and these can even include graphical applications. Creating your own
-<a href="https://docs.fedoraproject.org/en-US/iot/adding-layered/" rel="external" target="_blank">rpm-ostree layers</a> is to be avoided if possible, but some things don&rsquo;t
-like running in containers, so this remains an option.</p>
+and these can even include graphical applications. For a few things
+that cannot be installed in a container, they are <a href="/linux-workstation/layering-packages/index.html">added as an
+rpm-ostree layer</a>.</p>
 
             <footer class="footline">
             </footer>
@@ -171,12 +182,12 @@ like running in containers, so this remains an option.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717970322" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717970322" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717970322" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717970322" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717970322" defer></script>
-        <script src="/js/search.js?1717970322" defer></script>
+        <script src="/js/auto-complete.js?1717974579" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717974579" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717974579" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717974579" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717974579" defer></script>
+        <script src="/js/search.js?1717974579" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -309,14 +320,14 @@ like running in containers, so this remains an option.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 9, 2024 at 9:58pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 9, 2024 at 11:09pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717970322" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717970322" defer></script>
-    <script src="/js/theme.js?1717970322" defer></script>
+    <script src="/js/clipboard.min.js?1717974579" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717974579" defer></script>
+    <script src="/js/theme.js?1717974579" defer></script>
   </body>
 </html>
