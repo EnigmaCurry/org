@@ -1258,23 +1258,27 @@ working correctly.
 
 ***** Set PIN
 
-#+attr_shortcode: :style warning
-#+begin_notice
-[[https://github.com/solokeys/solo2-cli/discussions/58][The solo2-cli has an outstanding issue that it cannot set a device pin]].
+You should set a device PIN for the solokey, so that it cannot be used
+if it is stolen.
 
-The workaround is to use the chromium browser (which you may need to
-install in a toolbox container):
+Identify the device name (=/dev/hidrawX=):
 
 #+begin_run
-chromium
+fido2-token -L
 #+end_run
 
- * Navigate to URL =chrome://settings/securityKeys=
- * Plug in your solokey.
- * Click =Create a PIN=.
- * Follow the prompt to set a device PIN.
-#+end_notice
-   
+This probably shows the device as =/dev/hidraw0=:
+
+#+begin_stdout
+/dev/hidraw0: ......
+#+end_stdout
+
+Set the PIN for the device (=/dev/hidraw0=):
+
+#+begin_run
+fido2-token -C /dev/hidraw0
+#+end_run
+
 *** Sudo with Solokey
 :PROPERTIES:
 :EXPORT_FILE_NAME: sudo-2FA
