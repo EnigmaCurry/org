@@ -1324,9 +1324,7 @@ additional domain names that you want to be listed on the same
 certificate.
 #+end_notice
 
-*** Configure middleware
-**** Configure error page template
-**** Configure wireguard VPN
+**** Skip: Configure middleware
 **** Install Traefik
 
 To install Traefik (on your active Docker context), you can simply
@@ -1357,15 +1355,14 @@ TODO
 :END:
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/whoami#readme][Whoami]] is a very simple application, but you can learn a lot from it.
-After you install Traefik, whoami should be the very first application
+After you install Traefik, whoami should be the very next application
 that you install. It can help you test whether or not your Traefik
 installation is functioning properly.
 
 *You should study the configuration of whoami*, as it is used as a
-template for all the other apps provided by d.rymcg.tech. Because of
-its simplicity, it reduces the complexity of its core components.
-Whoami can be a good base template for creating your own d.rymcg.tech
-enabled applications.
+template for all the other apps provided by d.rymcg.tech. Whoami can
+be a good base template for creating your own d.rymcg.tech enabled
+applications.
 
 #+attr_shortcode:
 #+begin_toc
@@ -1375,9 +1372,9 @@ table of contents
 ** What is Whoami?
 
 Whoami is a web application that simply outputs the request headers
-that it receives itself (reflecting them back to the requesting
-client):
+that it receives (reflecting them back to the requesting client):
 
+#+attr_shortcode: :title Run this later after you install it: :style none
 #+begin_run
 ## Use your own whoami URL here once you install it:
 curl https://whoami.example.com
@@ -1405,7 +1402,9 @@ X-Real-Ip: 10.93.23.114
 
 This output is useful for end-to-end testing, to verify that the
 application is capable of serving requests, and that all of the
-configuration is correct.
+configuration is correct. Traefik middlewares may also add additional
+headers to incoming requests, and so whoami is a nice way to verify
+that those are working.
 
 ** Quickstart
 
@@ -1449,8 +1448,15 @@ Open whoami:
 d make whoami open
 #+end_run
 
-Or just open your web browser to the URL =https://{WHOAMI_TRAEFIK_HOST}=
- 
+#+attr_shortcode: :style tip
+#+begin_notice
+The =open= target uses the =xdg-open= tool to automatically open your
+preferred web browser to the given application's URL. There are
+various reasons why this may not work, so be prepared in that event to
+know that you may simply copy the URL that it prints, and copy and
+paste that into your browser: =https://{WHOAMI_TRAEFIK_HOST}=
+#+end_notice
+
 ** Features
 
 [[https://github.com/traefik/whoami?tab=readme-ov-file#whoami][See the upstream whoami documentation and feature list here.]]
@@ -1629,8 +1635,8 @@ name is =default=.
 
 **** WHOAMI_IP_SOURCERANGE
 
-This sets the acceptable IP addresses ranges for incoming requests. It
-is a comma separated list of [[https://en.wikipedia.org/wiki/CIDR#CIDR_notation][CIDR formatted netmasks]].
+This sets the acceptable IP address ranges for incoming requests. It
+is a comma separated list of [[https://en.wikipedia.org/wiki/CIDR#CIDR_notation][CIDR formatted networks]].
 
 Here are some example settings:
  
@@ -1722,6 +1728,15 @@ d make whoami open
 This will automatically open your default web browser to the URL of
 the installed whoami application. If you want to do so manually, just
 go to the same URL as you configured for =WHOAMI_TRAEFIK_HOST=.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+The =open= target uses the =xdg-open= tool to automatically open your
+preferred web browser to the given application's URL. There are
+various reasons why this may not work, so be prepared in that event to
+know that you may simply copy the URL that it prints, and copy and
+paste that into your browser: =https://{WHOAMI_TRAEFIK_HOST}=
+#+end_notice
 
 *** View the logs
 
