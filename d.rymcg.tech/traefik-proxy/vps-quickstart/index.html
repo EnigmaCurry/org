@@ -5,33 +5,33 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="[bash]: Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
+    <meta name="description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik for your active Docker context [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Configure Traefik :: book.rymcg.tech">
-    <meta name="twitter:description" content="[bash]: Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/config/index.html">
+    <meta name="twitter:title" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
+    <meta name="twitter:description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik for your active Docker context [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Configure Traefik :: book.rymcg.tech">
-    <meta property="og:description" content="[bash]: Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
+    <meta property="og:title" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
+    <meta property="og:description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik for your active Docker context [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
-    <meta itemprop="name" content="Configure Traefik :: book.rymcg.tech">
-    <meta itemprop="description" content="[bash]: Run this on your workstation: d make traefik config This creates a config for Traefik on your active Docker context. The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select a menu item and press the Enter key.">
-    <meta itemprop="wordCount" content="784">
-    <title>Configure Traefik :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1717890319" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717890319" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1717890319" rel="stylesheet">
-    <link href="/css/auto-complete.css?1717890319" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717890319" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1717890319" rel="stylesheet">
-    <link href="/css/fonts.css?1717890319" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717890319" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1717890319" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1717890319" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1717890319" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1717890319" rel="stylesheet">
-    <link href="/css/print.css?1717890319" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1717890319"></script>
+    <meta itemprop="name" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
+    <meta itemprop="description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik for your active Docker context [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
+    <meta itemprop="wordCount" content="651">
+    <title>Traefik Quickstart (public VPS) :: book.rymcg.tech</title>
+    <link href="/css/fontawesome-all.min.css?1717891948" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1717891948" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1717891948" rel="stylesheet">
+    <link href="/css/auto-complete.css?1717891948" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1717891948" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1717891948" rel="stylesheet">
+    <link href="/css/fonts.css?1717891948" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1717891948" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1717891948" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1717891948" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1717891948" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1717891948" rel="stylesheet">
+    <link href="/css/print.css?1717891948" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1717891948"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -52,7 +52,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/traefik-proxy/config/index.html">
+  <body class="mobile-support html" data-url="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -65,26 +65,28 @@
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#create-system-user-on-docker-host">Create system user on Docker host</a></li>
-    <li><a href="#configure-entrypoints">Configure entrypoints</a></li>
-    <li><a href="#configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</a></li>
-    <li><a href="#configure-acme--let-s-encrypt-or-step-ca">Configure ACME (Let&rsquo;s Encrypt or Step-CA)</a>
+    <li><a href="#choose-your-active-docker-context">Choose your active Docker context</a></li>
+    <li><a href="#configure-traefik-for-your-active-docker-context">Configure Traefik for your active Docker context</a>
       <ul>
+        <li><a href="#create-system-user-on-docker-host">Create system user on Docker host</a></li>
+        <li><a href="#skip-configure-entrypoints">Skip: Configure entrypoints</a></li>
+        <li><a href="#skip-configure-certificate-authorities--ca">Skip: Configure Certificate Authorities (CA)</a></li>
+        <li><a href="#configure-acme--let-s-encrypt">Configure ACME (Let&rsquo;s Encrypt)</a></li>
         <li><a href="#configure-let-s-encrypt-environment">Configure Let&rsquo;s Encrypt environment</a></li>
         <li><a href="#choose-type-of-acme-challenge">Choose type of ACME challenge</a></li>
-        <li><a href="#configure-acme-email-address--optional">Configure ACME email address (optional)</a></li>
-      </ul>
-    </li>
-    <li><a href="#configure-tls-certificates-and-domains">Configure TLS certificates and domains</a>
-      <ul>
+        <li><a href="#skip-configure-acme-email-address">Skip: Configure ACME email address</a></li>
+        <li><a href="#configure-tls-certificates-and-domains">Configure TLS certificates and domains</a></li>
         <li><a href="#manage-all-certificates">Manage all certificates</a></li>
         <li><a href="#create-a-new-certificate">Create a new certificate</a></li>
       </ul>
     </li>
-    <li><a href="#configure-middleware">Configure middleware</a></li>
-    <li><a href="#configure-error-page-template">Configure error page template</a></li>
-    <li><a href="#configure-wireguard-vpn">Configure wireguard VPN</a></li>
-    <li><a href="#install-traefik">Install Traefik</a></li>
+    <li><a href="#configure-middleware">Configure middleware</a>
+      <ul>
+        <li><a href="#configure-error-page-template">Configure error page template</a></li>
+        <li><a href="#configure-wireguard-vpn">Configure wireguard VPN</a></li>
+        <li><a href="#install-traefik">Install Traefik</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
                 </div>
@@ -95,7 +97,7 @@
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/traefik-proxy/index.html"><span itemprop="name">Traefik Proxy</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Configure Traefik</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Traefik Quickstart (public VPS)</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
             <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/traefik-proxy/index.html" title="Traefik Proxy (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
@@ -120,8 +122,26 @@
             <header class="headline">
             </header>
 
-<h1 id="configure-traefik">Configure Traefik</h1>
+<h1 id="traefik-quickstart-public-vps">Traefik Quickstart (public VPS)</h1>
 
+<p>Before we get too deep into Traefik configuration, if you just want to
+setup a public VPS, follow these instructions as a quickstart
+tutorial:</p>
+<h2 id="choose-your-active-docker-context">Choose your active Docker context</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+d context
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="configure-traefik-for-your-active-docker-context">Configure Traefik for your active Docker context</h2>
 
 
 <div class="box notices cstyle run">
@@ -135,8 +155,7 @@ d make traefik config
 </div>
 
 
-<p>This creates a config for Traefik on your active Docker context. The
-configuration is driven by a text wizard menu system.</p>
+<p>The configuration is driven by a text wizard menu system.</p>
 <div class="box notices cstyle stdout">
     <div class="box-label">(stdout)</div>
     <div class="box-content">
@@ -154,33 +173,25 @@ v Configure error page template
     </div>
 </div>
 
-<p>Use your arrow keys to select a menu item and press the <code>Enter</code> key.
-To cancel, press the <code>ESC</code> key.</p>
+<p>Use your arrow keys to select only the menu items this tutorial talks
+about, and press the <code>Enter</code> key. To cancel, press the <code>ESC</code> key.</p>
 <p>Once complete, it will have created and configured your
 <code>.env_{CONTEXT}</code> file for you.</p>
-<h2 id="create-system-user-on-docker-host">Create system user on Docker host</h2>
+<h3 id="create-system-user-on-docker-host">Create system user on Docker host</h3>
 <p>This option will create a new username on the Docker host, called
 <code>traefik</code>. This is necessary to reserve a unique UID for traefik to
 run as on the system. Run this first before anything else.</p>
-<h2 id="configure-entrypoints">Configure entrypoints</h2>
-<p>Traefik uses various entrypoints to allow requests on certain TCP
-ports. By default, only port 80 and 443 are enabled. You can enable
-extra entrypoints through this menu, which may be necessary for any
-application that doesn&rsquo;t use the standard <code>websecure</code> entrypoint (port
-443).</p>
-<p>By default, the Traefik Dashboard is not enabled. To enable it, you
-must select it via this menu option, and set a username / password. It
-is only ever exposed to localhost, or through an SSH tunnel, never to
-the public network, but it is still best to leave it turned off if you
-don&rsquo;t need it.</p>
-<h2 id="configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</h2>
-<p>If you&rsquo;re planning on running a public server, using TLS certificates
-from Let&rsquo;s Encrypt, you can skip this option.</p>
-<p>You only need to run this if you wish to modify the TLS certificate
-trust store to accomodate a &ldquo;self-signed&rdquo; Step-CA authority.</p>
-<h2 id="configure-acme--let-s-encrypt-or-step-ca">Configure ACME (Let&rsquo;s Encrypt or Step-CA)</h2>
-<p>Choose this option to configure ACME, which makes requesting and
-renewing TLS certificates an easy and automatic process.</p>
+<h3 id="skip-configure-entrypoints">Skip: Configure entrypoints</h3>
+<p>For this tutorial, you will use the default entrypoints, so you don&rsquo;t
+need to configure anything.</p>
+<ul>
+<li><code>web</code> (TCP port 80)</li>
+<li><code>websecure</code> (TCP port 443)</li>
+</ul>
+<h3 id="skip-configure-certificate-authorities--ca">Skip: Configure Certificate Authorities (CA)</h3>
+<p>For this tutorial you will only need the default CA list provided by
+the container image.</p>
+<h3 id="configure-acme--let-s-encrypt">Configure ACME (Let&rsquo;s Encrypt)</h3>
 <div class="box notices cstyle stdout">
     <div class="box-label">(stdout)</div>
     <div class="box-content">
@@ -194,14 +205,7 @@ renewing TLS certificates an easy and automatic process.</p>
     </div>
 </div>
 
-<p>For most installs, you should choose <code>Let's Encrypt (ACME)</code>. This is
-the only option that will create valid TLS certificates for public
-websites.</p>
-<p>If you want to run private services, you may want to consider using
-<code>Step-CA</code> instead, as it does not rely upon any external platform like
-Let&rsquo;s Encrypt does.</p>
-<p>Finally, if you want to setup TLS certificates manually, you can
-choose <code>Disable ACME</code>.</p>
+<p>Choose <code>Let's Encrypt (ACME)</code>.</p>
 <h3 id="configure-let-s-encrypt-environment">Configure Let&rsquo;s Encrypt environment</h3>
 <div class="box notices cstyle stdout">
     <div class="box-label">(stdout)</div>
@@ -243,16 +247,16 @@ valid (trusted) TLS certificates.</p>
 
 <p>For your first install, choose <code>TLS-ALPN-01</code>, it is the easiest method
 to use for public servers.</p>
-<p>If you want to use wildcard DNS records, you must choose the more
-advanced method <code>DNS-01</code>, and setup your DNS platform for programmatic
-access with an API token.</p>
+<p>If you want to use wildcard DNS records, or you need to setup a server
+behind a firewall, you must choose the more advanced method <code>DNS-01</code>,
+and setup your DNS platform for programmatic access with an API token.</p>
 </div>
 </div>
-<h3 id="configure-acme-email-address--optional">Configure ACME email address (optional)</h3>
+<h3 id="skip-configure-acme-email-address">Skip: Configure ACME email address</h3>
 <p>You don&rsquo;t have to provide your email address, but if you do, Let&rsquo;s
 Encrypt can email you about configuration issues, like certitficates
 about to expire.</p>
-<h2 id="configure-tls-certificates-and-domains">Configure TLS certificates and domains</h2>
+<h3 id="configure-tls-certificates-and-domains">Configure TLS certificates and domains</h3>
 <p>d.rymcg.tech uses explicit certificate requests configured centrally,
 on the traefik project:</p>
 <div class="box notices cstyle stdout">
@@ -290,9 +294,9 @@ certificate.</p>
 </div>
 </div>
 <h2 id="configure-middleware">Configure middleware</h2>
-<h2 id="configure-error-page-template">Configure error page template</h2>
-<h2 id="configure-wireguard-vpn">Configure wireguard VPN</h2>
-<h2 id="install-traefik">Install Traefik</h2>
+<h3 id="configure-error-page-template">Configure error page template</h3>
+<h3 id="configure-wireguard-vpn">Configure wireguard VPN</h3>
+<h3 id="install-traefik">Install Traefik</h3>
 <p>To install Traefik (on your active Docker context), you can simply
 choose the <code>Reinstall Traefik</code> option in the menu, or you can run that
 step all by itself from the command line at any time:</p>
@@ -337,12 +341,12 @@ setting.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1717890319" defer></script>
-        <script src="/js/lunr/lunr.min.js?1717890319" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1717890319" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1717890319" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1717890319" defer></script>
-        <script src="/js/search.js?1717890319" defer></script>
+        <script src="/js/auto-complete.js?1717891948" defer></script>
+        <script src="/js/lunr/lunr.min.js?1717891948" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1717891948" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1717891948" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1717891948" defer></script>
+        <script src="/js/search.js?1717891948" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -401,7 +405,7 @@ setting.</p>
           <li data-nav-id="/d.rymcg.tech/docker-context/install-docker-on-remote-host/index.html" class=""><a class="padding" href="/d.rymcg.tech/docker-context/install-docker-on-remote-host/index.html">Install Docker</a></li>
           <li data-nav-id="/d.rymcg.tech/docker-context/main-config-for-d.rymcg/index.html" class=""><a class="padding" href="/d.rymcg.tech/docker-context/main-config-for-d.rymcg/index.html">Setup d.rymcg.tech</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/traefik-proxy/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/traefik-proxy/index.html">Traefik Proxy</a><ul id="R-subsections-e5faef2e23bdb87f9fe5fba855380f02" class="morespace collapsible-menu">
-          <li data-nav-id="/d.rymcg.tech/traefik-proxy/config/index.html" class="active"><a class="padding" href="/d.rymcg.tech/traefik-proxy/config/index.html">Configure Traefik</a></li></ul></li>
+          <li data-nav-id="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html" class="active"><a class="padding" href="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">Traefik Quickstart (public VPS)</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/whoami/index.html" class=""><a class="padding" href="/d.rymcg.tech/whoami/index.html">Whoami</a></li></ul></li>
           <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
@@ -434,7 +438,7 @@ setting.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/traefik-proxy/config/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -477,14 +481,14 @@ setting.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 8, 2024 at 11:45pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 9, 2024 at 12:12am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1717890319" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1717890319" defer></script>
-    <script src="/js/theme.js?1717890319" defer></script>
+    <script src="/js/clipboard.min.js?1717891948" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1717891948" defer></script>
+    <script src="/js/theme.js?1717891948" defer></script>
   </body>
 </html>
