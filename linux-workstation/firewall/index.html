@@ -27,19 +27,19 @@ Don’t mess with it Warning Fedora Atomic comes with a good default zone for wo
     <meta itemprop="description" content="Firewalld Firewalld is an abstraction of nftables (which is an abstraction of netfilter). Firewalld is installed on Fedora systems by default, and it is what is used to configure the system firewall.
 Firewalld rules are grouped into zones. There can be multiple zones, and you may switch between them. There can only be one active zone per network interface.
 Don’t mess with it Warning Fedora Atomic comes with a good default zone for workstation use, named public.">
-    <meta itemprop="wordCount" content="919">
+    <meta itemprop="wordCount" content="950">
     <title>Firewall :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1718010610" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718010610" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1718010610" rel="stylesheet">
-    <link href="/css/auto-complete.css?1718010610" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718010610" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1718010610" rel="stylesheet">
-    <link href="/css/fonts.css?1718010610" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718010610" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1718010610" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1718010610" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1718010610" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1718010610" rel="stylesheet">
-    <link href="/css/print.css?1718010610" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1718010610"></script>
+    <link href="/css/fontawesome-all.min.css?1718035811" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718035811" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1718035811" rel="stylesheet">
+    <link href="/css/auto-complete.css?1718035811" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718035811" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1718035811" rel="stylesheet">
+    <link href="/css/fonts.css?1718035811" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718035811" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1718035811" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1718035811" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1718035811" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1718035811" rel="stylesheet">
+    <link href="/css/print.css?1718035811" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1718035811"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..';
@@ -84,6 +84,8 @@ Don’t mess with it Warning Fedora Atomic comes with a good default zone for wo
         <li><a href="#adding-a-temporary-rule">Adding a temporary rule</a></li>
         <li><a href="#adding-a-permanent-rule">Adding a permanent rule</a></li>
         <li><a href="#remove-a-permanent-rule">Remove a permanent rule</a></li>
+        <li><a href="#adding-a-new-zone">Adding a new zone</a></li>
+        <li><a href="#promoting-all-temporary-rules-to-permanent-rules">Promoting all temporary rules to permanent rules</a></li>
         <li><a href="#showing-all-firewall-rules">Showing all firewall rules</a></li>
         <li><a href="#how-to-query-json-info-from-nftables">How to query JSON info from nftables</a></li>
       </ul>
@@ -396,6 +398,35 @@ sudo firewall-cmd --remove-port=5000/tcp --permanent
 </div>
 
 
+<h3 id="adding-a-new-zone">Adding a new zone</h3>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+NEW_ZONE=foo
+sudo firewall-cmd --permanent --new-zone=${NEW_ZONE}
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="promoting-all-temporary-rules-to-permanent-rules">Promoting all temporary rules to permanent rules</h3>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo firewall-cmd --runtime-to-permanent
+</pre></code>
+    </div>
+</div>
+
+
 <h3 id="showing-all-firewall-rules">Showing all firewall rules</h3>
 <p>To show all the netfilter rules formatted for nftables:</p>
 
@@ -542,12 +573,12 @@ sudo nft -j list ruleset | jq -c '.nftables[] | select(has("rule")) | select(.ru
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1718010610" defer></script>
-        <script src="/js/lunr/lunr.min.js?1718010610" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1718010610" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1718010610" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1718010610" defer></script>
-        <script src="/js/search.js?1718010610" defer></script>
+        <script src="/js/auto-complete.js?1718035811" defer></script>
+        <script src="/js/lunr/lunr.min.js?1718035811" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1718035811" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1718035811" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1718035811" defer></script>
+        <script src="/js/search.js?1718035811" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -681,14 +712,14 @@ sudo nft -j list ruleset | jq -c '.nftables[] | select(has("rule")) | select(.ru
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 9:10am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 4:10pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1718010610" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1718010610" defer></script>
-    <script src="/js/theme.js?1718010610" defer></script>
+    <script src="/js/clipboard.min.js?1718035811" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1718035811" defer></script>
+    <script src="/js/theme.js?1718035811" defer></script>
   </body>
 </html>
