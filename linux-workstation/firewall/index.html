@@ -5,30 +5,30 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Here are some tips on using Org-mode and Emacs.
-Read the Org manual Many of these tips are found in the Org Manual.
-Index Navigating Org-mode files Editing Org-mode files ">
+    <meta name="description" content="Firewalld Firewalld is an abstraction of nftables (which is an abstraction of netfilter). Firewalld is installed on Fedora systems by default, and it is what is used to configure the system firewall.
+Firewalld rules are grouped into zones. There can be multiple zones, and you may switch between them. There can only be one active zone per network interface.
+Don’t mess with it Warning Fedora Atomic comes with good default workstation firewall rules, so theres really nothing required for you to do here.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Using Org-mode and Emacs :: book.rymcg.tech">
-    <meta name="twitter:description" content="Here are some tips on using Org-mode and Emacs.
-Read the Org manual Many of these tips are found in the Org Manual.
-Index Navigating Org-mode files Editing Org-mode files ">
-    <meta property="og:url" content="https://book.rymcg.tech/publishing-with-org-mode/org-mode-emacs/index.html">
+    <meta name="twitter:title" content="Firewall :: book.rymcg.tech">
+    <meta name="twitter:description" content="Firewalld Firewalld is an abstraction of nftables (which is an abstraction of netfilter). Firewalld is installed on Fedora systems by default, and it is what is used to configure the system firewall.
+Firewalld rules are grouped into zones. There can be multiple zones, and you may switch between them. There can only be one active zone per network interface.
+Don’t mess with it Warning Fedora Atomic comes with good default workstation firewall rules, so theres really nothing required for you to do here.">
+    <meta property="og:url" content="https://book.rymcg.tech/linux-workstation/firewall/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Using Org-mode and Emacs :: book.rymcg.tech">
-    <meta property="og:description" content="Here are some tips on using Org-mode and Emacs.
-Read the Org manual Many of these tips are found in the Org Manual.
-Index Navigating Org-mode files Editing Org-mode files ">
+    <meta property="og:title" content="Firewall :: book.rymcg.tech">
+    <meta property="og:description" content="Firewalld Firewalld is an abstraction of nftables (which is an abstraction of netfilter). Firewalld is installed on Fedora systems by default, and it is what is used to configure the system firewall.
+Firewalld rules are grouped into zones. There can be multiple zones, and you may switch between them. There can only be one active zone per network interface.
+Don’t mess with it Warning Fedora Atomic comes with good default workstation firewall rules, so theres really nothing required for you to do here.">
     <meta property="og:locale" content="en-us">
-    <meta property="og:type" content="website">
-    <meta itemprop="name" content="Using Org-mode and Emacs :: book.rymcg.tech">
-    <meta itemprop="description" content="Here are some tips on using Org-mode and Emacs.
-Read the Org manual Many of these tips are found in the Org Manual.
-Index Navigating Org-mode files Editing Org-mode files ">
-    <meta itemprop="wordCount" content="30">
-    <title>Using Org-mode and Emacs :: book.rymcg.tech</title>
-    <link href="/publishing-with-org-mode/org-mode-emacs/index.xml" rel="alternate" type="application/rss+xml" title="Using Org-mode and Emacs :: book.rymcg.tech">
+    <meta property="og:type" content="article">
+    <meta property="article:section" content="Linux Workstation">
+    <meta itemprop="name" content="Firewall :: book.rymcg.tech">
+    <meta itemprop="description" content="Firewalld Firewalld is an abstraction of nftables (which is an abstraction of netfilter). Firewalld is installed on Fedora systems by default, and it is what is used to configure the system firewall.
+Firewalld rules are grouped into zones. There can be multiple zones, and you may switch between them. There can only be one active zone per network interface.
+Don’t mess with it Warning Fedora Atomic comes with good default workstation firewall rules, so theres really nothing required for you to do here.">
+    <meta itemprop="wordCount" content="884">
+    <title>Firewall :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1718009457" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718009457" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1718009457" rel="stylesheet">
     <link href="/css/auto-complete.css?1718009457" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718009457" rel="stylesheet"></noscript>
@@ -60,7 +60,7 @@ Index Navigating Org-mode files Editing Org-mode files ">
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/publishing-with-org-mode/org-mode-emacs/index.html">
+  <body class="mobile-support html" data-url="/linux-workstation/firewall/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -73,7 +73,20 @@ Index Navigating Org-mode files Editing Org-mode files ">
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#read-the-org-manual">Read the Org manual</a></li>
+    <li><a href="#firewalld">Firewalld</a>
+      <ul>
+        <li><a href="#don-t-mess-with-it">Don&rsquo;t mess with it</a></li>
+        <li><a href="#zone-files">Zone files</a></li>
+        <li><a href="#default-zone">Default Zone</a></li>
+        <li><a href="#public-zone">Public zone</a></li>
+        <li><a href="#test-blocked-ports">Test blocked ports</a></li>
+        <li><a href="#adding-a-temporary-rule">Adding a temporary rule</a></li>
+        <li><a href="#adding-a-permanent-rule">Adding a permanent rule</a></li>
+        <li><a href="#remove-a-permanent-rule">Remove a permanent rule</a></li>
+        <li><a href="#showing-all-firewall-rules">Showing all firewall rules</a></li>
+        <li><a href="#how-to-query-json-info-from-nftables">How to query JSON info from nftables</a></li>
+      </ul>
+    </li>
   </ul>
 </nav>
                 </div>
@@ -82,13 +95,13 @@ Index Navigating Org-mode files Editing Org-mode files ">
           </div>
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/publishing-with-org-mode/index.html"><span itemprop="name">Publishing with org-mode</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Using Org-mode and Emacs</span><meta itemprop="position" content="3"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/linux-workstation/index.html"><span itemprop="name">Linux Workstation</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Firewall</span><meta itemprop="position" content="3"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/publishing-with-org-mode/publish-with-sftp/index.html" title="Publishing with SFTP (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html" title="Setup workstation SSH config (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html" title="Navigating Org-mode files (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/index.html" title="Self-hosting Docker with d.rymcg.tech (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -108,22 +121,396 @@ Index Navigating Org-mode files Editing Org-mode files ">
             <header class="headline">
             </header>
 
-<h1 id="using-org-mode-and-emacs">Using Org-mode and Emacs</h1>
+<h1 id="firewall">Firewall</h1>
 
-<p>Here are some tips on using Org-mode and Emacs.</p>
-<h2 id="read-the-org-manual">Read the Org manual</h2>
-<p>Many of these tips are found in the <a href="https://orgmode.org/org.html" rel="external" target="_blank">Org Manual</a>.</p>
-<div class="index">
-<h2>Index</h2>
-<ul class="children children-li children-sort-">
-	
-<li><a href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html">Navigating Org-mode files</a><ul>
-	</ul></li>
-<li><a href="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/index.html">Editing Org-mode files</a><ul>
-	</ul></li>
+<h2 id="firewalld">Firewalld</h2>
+<p><a href="https://firewalld.org/" rel="external" target="_blank">Firewalld</a> is an abstraction of <a href="https://netfilter.org/projects/nftables/index.html" rel="external" target="_blank">nftables</a> (which is an abstraction of
+<a href="https://netfilter.org/" rel="external" target="_blank">netfilter</a>). Firewalld is installed on Fedora systems by default, and
+it is what is used to configure the system firewall.</p>
+<p>Firewalld rules are grouped into <em>zones</em>. There can be multiple zones,
+and you may switch between them. There can only be <em>one active</em> zone
+per network interface.</p>
+<h3 id="don-t-mess-with-it">Don&rsquo;t mess with it</h3>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>Fedora Atomic comes with good default workstation firewall rules, so theres
+really nothing <em>required</em> for you to do here. This chapter will mostly
+discuss things you should <em>not</em> change on a workstation, but is a
+general guide to how things work, if the need should arise.</p>
+</div>
+</div>
+<h3 id="zone-files">Zone files</h3>
+<p>On Fedora Atomic, there are two directories that contain firewalld
+zone files:</p>
+<ul>
+<li><code>/etc/firewalld/zones</code> this is the primary zone directory, and it
+takes precedence.</li>
+<li><code>/usr/lib/firewalld/zones/</code> this is the secondary <strong>read-only</strong>
+default zone directory. The files here are loaded only if the
+primary zone directory is missing a file with the same name.</li>
 </ul>
+<h3 id="default-zone">Default Zone</h3>
+<p>Firewalld lets you configure multiple zones, which are segmented
+realms for different network activity or locations (for example, there
+are predefined zones for <code>home</code> and <code>work</code>).</p>
+<p>Check out the default zones of the system:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+firewall-cmd --get-active-zones
+</pre></code>
+    </div>
 </div>
 
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+libvirt
+  interfaces: virbr0
+public (default)
+  interfaces: enp4s0
+</pre>
+    </div>
+</div>
+
+<p>This shows two active zones:</p>
+<ul>
+<li><code>public</code>, which it mentions is the default, is attached to the
+primary network interface <code>enp4s0</code>.</li>
+<li><code>libvirt</code>, which is all the <a href="/linux-workstation/kvm-libvirt/public-routes/index.html">libvirt rules defined for VMs</a>, and only
+listening on the libvirt network interface <code>virbr0</code>.</li>
+</ul>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>As long as you don&rsquo;t need multiple zones, it&rsquo;s recommended to always
+use the <code>public</code> zone. But here is how you can switch zones if you
+need to change it to something else (eg. <code>work</code>):</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+ZONE=work
+sudo firewall-cmd --set-default-zone ${ZONE}
+</pre></code>
+    </div>
+</div>
+<p>This change is <strong>permanent</strong>, until you change it again.</p>
+</div>
+</div>
+<h3 id="public-zone">Public zone</h3>
+<p>Look at the default public zone file:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+cat /usr/lib/firewalld/zones/public.xml
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;zone&gt;
+  &lt;short&gt;Public&lt;/short&gt;
+  &lt;description&gt;For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.&lt;/description&gt;
+  &lt;service name="ssh"/&gt;
+  &lt;service name="mdns"/&gt;
+  &lt;service name="dhcpv6-client"/&gt;
+  &lt;forward/&gt;
+&lt;/zone&gt;
+</pre>
+    </div>
+</div>
+
+<p>You can find out what these services are by grepping <code>/etc/services</code>:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+cat /etc/services | grep -P "^(dhcpv6-client|ssh|mdns) " | sort -u
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+dhcpv6-client   546/tcp
+dhcpv6-client   546/udp
+mdns            5353/tcp    # Multicast DNS
+mdns            5353/udp    # Multicast DNS
+ssh             22/sctp     # SSH
+ssh             22/tcp      # The Secure Shell (SSH) Protocol
+ssh             22/udp      # The Secure Shell (SSH) Protocol
+</pre>
+    </div>
+</div>
+
+<p>So that means that the only incoming ports that are allowed are:</p>
+<ul>
+<li>SSH (port 22, but only if you enable the SSH service.)</li>
+<li>multicast (broadcast) DNS (port 5353)</li>
+<li>IPV6 link-local DHCP (port )</li>
+</ul>
+<h3 id="test-blocked-ports">Test blocked ports</h3>
+<p>Start a local netcat server on port 5000 (which is blocked by default):</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+nc -l 5000
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Leave the <code>nc</code> server running, and open another terminal window to
+continue on, or press <code>Ctrl-C</code> to quit nc.</p>
+</div>
+</div>
+<p>From <em>another machine</em>, on the same network, try connecting to the
+blocked port 5000 on the workstations LAN ip address:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label none">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on another machine on the same network</div>
+    <div class="box-content">
+        <code><pre>
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+</pre></code>
+    </div>
+</div>
+
+
+<p>It should immediately exit (return 1), and print nothing, because the
+port is blocked.</p>
+<h3 id="adding-a-temporary-rule">Adding a temporary rule</h3>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo firewall-cmd --add-port=5000/tcp
+</pre></code>
+    </div>
+</div>
+
+
+<p>From <em>another machine</em>, on the same network, try connecting to the now
+open port 5000:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label none">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on another machine on the same network</div>
+    <div class="box-content">
+        <code><pre>
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+</pre></code>
+    </div>
+</div>
+
+
+<p>This time it should sucessfully connect. You can type some message and
+then press <code>Enter</code>. You should see the message in the original window
+running the <code>nc</code> server. If you see the message, you know the port is
+open.</p>
+<p>This rule is temporary, and will go away when the system reboots.</p>
+<h3 id="adding-a-permanent-rule">Adding a permanent rule</h3>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo firewall-cmd --add-port=5000/tcp --permanent
+</pre></code>
+    </div>
+</div>
+
+
+<p>This adds the rule to the permanent config
+<code>/etc/firewalld/zones/public.xml</code>, and it will survive a system
+reboot:</p>
+
+<div class="box notices cstyle default">
+  <div class="box-label">Excerpt from /etc/firewalld/zones/public.xml</div>
+  <div class="box-content">
+
+<p>&lt;port port=&ldquo;5000&rdquo; protocol=&ldquo;tcp&rdquo;&gt;</p>
+</div>
+</div>
+<h3 id="remove-a-permanent-rule">Remove a permanent rule</h3>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo firewall-cmd --remove-port=5000/tcp --permanent
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="showing-all-firewall-rules">Showing all firewall rules</h3>
+<p>To show all the netfilter rules formatted for nftables:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo nft list ruleset
+</pre></code>
+    </div>
+</div>
+
+
+<p>To show all the netfilter rules formatted for iptables:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+sudo iptables-save
+sudo ip6tables-save
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>nftables and iptables are equivalent interfaces to the same netfilter
+backend. They show the same rules, just in a different format,
+depending on your preference.</p>
+</div>
+</div>
+<h3 id="how-to-query-json-info-from-nftables">How to query JSON info from nftables</h3>
+<h4 id="get-chain">Get chain</h4>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq '.nftables[] | select(has("chain")) | select(.chain.name == "'${CHAIN}'")'
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+{
+  "chain": {
+    "family": "inet",
+    "table": "firewalld",
+    "name": "filter_IN_public_allow",
+    "handle": 153
+  }
+}
+</pre>
+    </div>
+</div>
+
+<h4 id="get-rules-per-chain">Get rules per chain</h4>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq '.nftables[] | select(has("rule")) | select(.rule.chain == "'${CHAIN}'")'
+</pre></code>
+    </div>
+</div>
+
+
+<h4 id="get-destination-ports--dnat--per-chain">Get destination ports (DNAT) per chain</h4>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq -c '.nftables[] | select(has("rule")) | select(.rule.chain == "'${CHAIN}'") | .rule.expr[0] | select(.match.left.payload.field == "dport") | .match.right'
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+22
+5000
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>This might need better filtering and account for the &ldquo;allow&rdquo; action only.</p>
+</div>
+</div>
 
             <footer class="footline">
             </footer>
@@ -166,7 +553,7 @@ Index Navigating Org-mode files Editing Org-mode files ">
       <div id="R-content-wrapper" class="highlightable">
         <div id="R-topics">
           <ul class="enlarge morespace collapsible-menu">
-          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class="parent "><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a><ul id="R-subsections-247caeb1441bcea844a3ccf766ca4471" class="morespace collapsible-menu">
           <li data-nav-id="/linux-workstation/introduction/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/introduction/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
           <li data-nav-id="/linux-workstation/introduction/requirements/index.html" class=""><a class="padding" href="/linux-workstation/introduction/requirements/index.html">Requirements</a></li></ul></li>
@@ -197,7 +584,7 @@ Index Navigating Org-mode files Editing Org-mode files ">
           <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
           <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li></ul></li>
-          <li data-nav-id="/linux-workstation/firewall/index.html" class=""><a class="padding" href="/linux-workstation/firewall/index.html">Firewall</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/firewall/index.html" class="active"><a class="padding" href="/linux-workstation/firewall/index.html">Firewall</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/index.html" class=""><a class="padding" href="/d.rymcg.tech/index.html">Self-hosting Docker</a><ul id="R-subsections-8a053662b5014ad6ad1762206cc0e2f9" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/introduction/index.html" class=""><a class="padding" href="/d.rymcg.tech/introduction/index.html">Introduction</a></li>
           <li data-nav-id="/d.rymcg.tech/required-infrastructure/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/required-infrastructure/index.html">Required Infrastructure</a><ul id="R-subsections-850ccad8337ba16ba7e92d565f4fea56" class="morespace collapsible-menu">
@@ -215,12 +602,12 @@ Index Navigating Org-mode files Editing Org-mode files ">
           <li data-nav-id="/d.rymcg.tech/traefik-proxy/index.html" class="alwaysopen"><a class="padding" href="/d.rymcg.tech/traefik-proxy/index.html">Traefik Proxy</a><ul id="R-subsections-e5faef2e23bdb87f9fe5fba855380f02" class="morespace collapsible-menu">
           <li data-nav-id="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html" class=""><a class="padding" href="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">Traefik Quickstart (public VPS)</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/whoami/index.html" class=""><a class="padding" href="/d.rymcg.tech/whoami/index.html">Whoami</a></li></ul></li>
-          <li data-nav-id="/publishing-with-org-mode/index.html" class="parent "><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
           <li data-nav-id="/publishing-with-org-mode/building-locally/index.html" class=""><a class="padding" href="/publishing-with-org-mode/building-locally/index.html">Building locally</a></li>
           <li data-nav-id="/publishing-with-org-mode/publish-with-github-pages/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-github-pages/index.html">Publishing with GitHub pages</a></li>
           <li data-nav-id="/publishing-with-org-mode/publish-with-sftp/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-sftp/index.html">Publishing with SFTP</a></li>
-          <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/index.html" class="active parent alwaysopen"><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/index.html">Using Org-mode and Emacs</a><ul id="R-subsections-f93c6166e26669592c85e9cf02707646" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/index.html">Using Org-mode and Emacs</a><ul id="R-subsections-f93c6166e26669592c85e9cf02707646" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html">Navigating Org-mode files</a></li>
           <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/index.html">Editing Org-mode files</a></li></ul></li>
           <li data-nav-id="/publishing-with-org-mode/examples/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/examples/index.html">Example Org / Hugo content</a><ul id="R-subsections-21525f33c1956ce3844918973388ff0a" class="morespace collapsible-menu">
@@ -246,7 +633,7 @@ Index Navigating Org-mode files Editing Org-mode files ">
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/publishing-with-org-mode/org-mode-emacs/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/linux-workstation/firewall/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
