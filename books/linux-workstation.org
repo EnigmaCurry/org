@@ -162,6 +162,8 @@ install.
 
 Tips:
 
+ * Disable the root account. You will use a normal user accound and
+   =sudo=.
  * Enable whole disk encryption and choose a secure passphrase.
    Especially for laptop computers that you may travel with, this an
    important thing to do to keep your files safe at rest.
@@ -3141,3 +3143,251 @@ core adm wheel sudo systemd-journal docker
 Next, follow the [[/d.rymcg.tech][Self-Hosting Docker]] book to setup this VM as a Docker
 context on your workstation.
 
+* Firewall
+:PROPERTIES:
+:EXPORT_FILE_NAME: firewall
+:EXPORT_HUGO_WEIGHT: 9000
+:END:
+
+** Firewalld
+
+[[https://firewalld.org/][Firewalld]] is an abstraction of [[https://netfilter.org/projects/nftables/index.html][nftables]] (which is an abstraction of
+[[https://netfilter.org/][netfilter]]). Firewalld is installed on Fedora systems by default, and
+it is what is used to configure the system firewall.
+
+Firewalld rules are grouped into /zones/. There can be multiple zones,
+and you may switch between them. There can only be /one active/ zone
+per network interface.
+
+*** Don't mess with it
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Fedora Atomic comes with good default workstation firewall rules, so theres
+really nothing /required/ for you to do here. This chapter will mostly
+discuss things you should /not/ change on a workstation, but is a
+general guide to how things work, if the need should arise.
+#+end_notice
+
+*** Zone files
+On Fedora Atomic, there are two directories that contain firewalld
+zone files:
+
+ * =/etc/firewalld/zones= this is the primary zone directory, and it
+   takes precedence.
+ * =/usr/lib/firewalld/zones/= this is the secondary *read-only*
+   default zone directory. The files here are loaded only if the
+   primary zone directory is missing a file with the same name.
+   
+*** Default Zone
+
+Firewalld lets you configure multiple zones, which are segmented
+realms for different network activity or locations (for example, there
+are predefined zones for =home= and =work=).
+
+Check out the default zones of the system:
+
+#+begin_run
+firewall-cmd --get-active-zones
+#+end_run
+
+#+begin_stdout
+libvirt
+  interfaces: virbr0
+public (default)
+  interfaces: enp4s0
+#+end_stdout
+
+This shows two active zones:
+
+ * =public=, which it mentions is the default, is attached to the
+   primary network interface =enp4s0=.
+ * =libvirt=, which is all the [[/linux-workstation/kvm-libvirt/public-routes][libvirt rules defined for VMs]], and only
+   listening on the libvirt network interface =virbr0=.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+As long as you don't need multiple zones, it's recommended to always
+use the =public= zone. But here is how you can switch zones if you
+need to change it to something else (eg. =work=):
+
+#+begin_run
+ZONE=work
+sudo firewall-cmd --set-default-zone ${ZONE}
+#+end_run
+
+This change is *permanent*, until you change it again.
+#+end_notice
+
+*** Public zone
+
+Look at the default public zone file:
+
+#+begin_run
+cat /usr/lib/firewalld/zones/public.xml
+#+end_run
+
+#+begin_stdout
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;zone&gt;
+  &lt;short&gt;Public&lt;/short&gt;
+  &lt;description&gt;For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.&lt;/description&gt;
+  &lt;service name="ssh"/&gt;
+  &lt;service name="mdns"/&gt;
+  &lt;service name="dhcpv6-client"/&gt;
+  &lt;forward/&gt;
+&lt;/zone&gt;
+#+end_stdout
+
+You can find out what these services are by grepping =/etc/services=:
+
+#+begin_run
+cat /etc/services | grep -P "^(dhcpv6-client|ssh|mdns) " | sort -u
+#+end_run
+
+#+begin_stdout
+dhcpv6-client   546/tcp
+dhcpv6-client   546/udp
+mdns            5353/tcp    # Multicast DNS
+mdns            5353/udp    # Multicast DNS
+ssh             22/sctp     # SSH
+ssh             22/tcp      # The Secure Shell (SSH) Protocol
+ssh             22/udp      # The Secure Shell (SSH) Protocol
+#+end_stdout
+
+So that means that the only incoming ports that are allowed are:
+
+ * SSH (port 22, but only if you enable the SSH service.)
+ * multicast (broadcast) DNS (port 5353)
+ * IPV6 link-local DHCP (port )
+
+*** Test blocked ports
+Start a local netcat server on port 5000 (which is blocked by default):
+
+#+begin_run
+nc -l 5000
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Leave the =nc= server running, and open another terminal window to
+continue on, or press =Ctrl-C= to quit nc.
+#+end_notice
+
+From /another machine/, on the same network, try connecting to the
+blocked port 5000 on the workstations LAN ip address:
+
+#+attr_shortcode: :style none :title Run this on another machine on the same network
+#+begin_run
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+#+end_run
+
+It should immediately exit (return 1), and print nothing, because the
+port is blocked.
+
+*** Adding a temporary rule
+
+#+begin_run
+sudo firewall-cmd --add-port=5000/tcp
+#+end_run
+
+From /another machine/, on the same network, try connecting to the now
+open port 5000:
+
+#+attr_shortcode: :style none :title Run this on another machine on the same network
+#+begin_run
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+#+end_run
+
+This time it should sucessfully connect. You can type some message and
+then press =Enter=. You should see the message in the original window
+running the =nc= server. If you see the message, you know the port is
+open.
+
+This rule is temporary, and will go away when the system reboots.
+
+*** Adding a permanent rule
+
+#+begin_run
+sudo firewall-cmd --add-port=5000/tcp --permanent
+#+end_run
+
+This adds the rule to the permanent config
+=/etc/firewalld/zones/public.xml=, and it will survive a system
+reboot:
+
+#+attr_shortcode: :title Excerpt from /etc/firewalld/zones/public.xml
+#+begin_notice
+<port port="5000" protocol="tcp">
+#+end_notice
+
+*** Remove a permanent rule
+
+#+begin_run
+sudo firewall-cmd --remove-port=5000/tcp --permanent
+#+end_run
+
+*** Showing all firewall rules
+
+To show all the netfilter rules formatted for nftables:
+
+#+begin_run
+sudo nft list ruleset
+#+end_run
+
+To show all the netfilter rules formatted for iptables:
+
+#+begin_run
+sudo iptables-save
+sudo ip6tables-save
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+nftables and iptables are equivalent interfaces to the same netfilter
+backend. They show the same rules, just in a different format,
+depending on your preference.
+#+end_notice
+
+*** How to query JSON info from nftables
+**** Get chain
+
+#+begin_run
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq '.nftables[] | select(has("chain")) | select(.chain.name == "'${CHAIN}'")'
+#+end_run
+
+#+begin_stdout
+{
+  "chain": {
+    "family": "inet",
+    "table": "firewalld",
+    "name": "filter_IN_public_allow",
+    "handle": 153
+  }
+}
+#+end_stdout
+
+**** Get rules per chain
+
+#+begin_run
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq '.nftables[] | select(has("rule")) | select(.rule.chain == "'${CHAIN}'")'
+#+end_run
+
+**** Get destination ports (DNAT) per chain
+
+#+begin_run
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq -c '.nftables[] | select(has("rule")) | select(.rule.chain == "'${CHAIN}'") | .rule.expr[0] | select(.match.left.payload.field == "dport") | .match.right'
+#+end_run
+
+#+begin_stdout
+22
+5000
+#+end_stdout
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This might need better filtering and account for the "allow" action only.
+#+end_notice
