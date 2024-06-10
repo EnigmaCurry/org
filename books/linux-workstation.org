@@ -3163,10 +3163,14 @@ per network interface.
 
 #+attr_shortcode: :style warning
 #+begin_notice
-Fedora Atomic comes with good default workstation firewall rules, so theres
-really nothing /required/ for you to do here. This chapter will mostly
-discuss things you should /not/ change on a workstation, but is a
-general guide to how things work, if the need should arise.
+Fedora Atomic comes with good default zone for workstation use, named
+=public=. Theres really nothing /required/ for you to do here. This
+chapter will mostly discuss things you should /not/ change on a
+workstation, but is a general guide to how things work, if the need
+should arise.
+
+If you are running VMs, those rules are handled in the zone named
+=libvirt=, and this is discussed separately. See [[/linux-workstation/kvm-libvirt/public-routes][Public routes to VMs]].
 #+end_notice
 
 *** Zone files
@@ -3205,10 +3209,12 @@ This shows two active zones:
  * =libvirt=, which is all the [[/linux-workstation/kvm-libvirt/public-routes][libvirt rules defined for VMs]], and only
    listening on the libvirt network interface =virbr0=.
 
+*** Changing the default zone
+   
 #+attr_shortcode: :style tip
 #+begin_notice
-As long as you don't need multiple zones, it's recommended to always
-use the =public= zone. But here is how you can switch zones if you
+As long as you don't need multiple zones, it's recommended to use the
+default =public= zone. But here is how you can switch zones if you
 need to change it to something else (eg. =work=):
 
 #+begin_run
@@ -3259,7 +3265,7 @@ So that means that the only incoming ports that are allowed are:
 
  * SSH (port 22, but only if you enable the SSH service.)
  * multicast (broadcast) DNS (port 5353)
- * IPV6 link-local DHCP (port )
+ * IPV6 link-local DHCP (port 546)
 
 *** Test blocked ports
 Start a local netcat server on port 5000 (which is blocked by default):
@@ -3271,7 +3277,7 @@ nc -l 5000
 #+attr_shortcode: :style tip
 #+begin_notice
 Leave the =nc= server running, and open another terminal window to
-continue on, or press =Ctrl-C= to quit nc.
+continue on. When you are done testing, press =Ctrl-C= to quit nc.
 #+end_notice
 
 From /another machine/, on the same network, try connecting to the
