@@ -7,39 +7,39 @@
     <meta name="generator" content="Relearn 6.0.0+tip">
     <meta name="description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
 Info This scenario is good for public and private websites and services.
-All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+All Let’s Encrypt challenges leak domain names to public CT logs, however, with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
     <meta name="twitter:description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
 Info This scenario is good for public and private websites and services.
-All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+All Let’s Encrypt challenges leak domain names to public CT logs, however, with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
     <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
     <meta property="og:title" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
     <meta property="og:description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
 Info This scenario is good for public and private websites and services.
-All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+All Let’s Encrypt challenges leak domain names to public CT logs, however, with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
     <meta itemprop="name" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
     <meta itemprop="description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
 Info This scenario is good for public and private websites and services.
-All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
-    <meta itemprop="wordCount" content="1329">
+All Let’s Encrypt challenges leak domain names to public CT logs, however, with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+    <meta itemprop="wordCount" content="1417">
     <title>Let&#39;s Encrypt DNS challenge :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718050193" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1718050193" rel="stylesheet">
-    <link href="/css/auto-complete.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718050193" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1718050193" rel="stylesheet">
-    <link href="/css/fonts.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718050193" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1718050193" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1718050193" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1718050193" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1718050193" rel="stylesheet">
-    <link href="/css/print.css?1718050193" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1718050193"></script>
+    <link href="/css/fontawesome-all.min.css?1718051434" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718051434" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1718051434" rel="stylesheet">
+    <link href="/css/auto-complete.css?1718051434" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718051434" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1718051434" rel="stylesheet">
+    <link href="/css/fonts.css?1718051434" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718051434" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1718051434" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1718051434" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1718051434" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1718051434" rel="stylesheet">
+    <link href="/css/print.css?1718051434" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1718051434"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..\/..';
@@ -82,7 +82,7 @@ All Let’s Encrypt challenges leak domain names to public CT logs, however with
         <li><a href="#skip-configure-certificate-authorities--ca">Skip: Configure Certificate Authorities (CA)</a></li>
         <li><a href="#configure-acme--let-s-encrypt">Configure ACME (Let&rsquo;s Encrypt)</a></li>
         <li><a href="#configure-let-s-encrypt-environment">Configure Let&rsquo;s Encrypt environment</a></li>
-        <li><a href="#choose-type-of-acme-challenge">Choose type of ACME challenge</a></li>
+        <li><a href="#choose-dns-01-acme-challenge">Choose DNS-01 ACME challenge</a></li>
         <li><a href="#skip-configure-acme-email-address">Skip: Configure ACME email address</a></li>
         <li><a href="#enter-acme-dns-provider-config">Enter ACME DNS provider config</a></li>
         <li><a href="#enter-acme-dns-api-token">Enter ACME DNS API token</a></li>
@@ -143,8 +143,8 @@ valid for use in most web browsers. This scenario will use the
 
 <p>This scenario is good for <em>public</em> and <em>private</em> websites and
 services.</p>
-<p>All Let&rsquo;s Encrypt challenges <strong>leak domain names to public CT logs</strong>,
-however with DNS-01 challenge we can use wildcards, so that only the
+<p>All Let&rsquo;s Encrypt challenges <strong>leak domain names to <a href="https://letsencrypt.org/docs/ct-logs/" rel="external" target="_blank">public CT logs</a></strong>,
+however, with DNS-01 challenge we can use wildcards, so that only the
 root domain is leaked, not the exact hostnames.</p>
 </div>
 </div>
@@ -153,27 +153,36 @@ root domain is leaked, not the exact hostnames.</p>
   <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
   <div class="box-content">
 
-<p>This scenario requires storing a security sensitive API token to
-control the DNS of your domain. You must take special steps to store
-this token in your .env file, only on a secure workstation.</p>
+<p>This scenario offers a much more powerful feature set, but it requires
+storing a security sensitive API token, to control the active DNS
+server of your domain. You must take special steps to store this token
+only on a secure workstation and and Docker host.</p>
 </div>
 </div>
 <h2 id="acme-dns-01-challenge-type">ACME DNS-01 challenge type</h2>
-<p><a href="https://letsencrypt.org/docs/challenge-types/" rel="external" target="_blank">ACME challenges</a> are a type of procedure that authenticates your server
-to Let&rsquo;s Encrypt that you are the owner (controller) of your domain
-name system (DNS). This is important because it prevents other actors
-from requesting certificates for your domains.</p>
+<p><a href="https://letsencrypt.org/docs/challenge-types/" rel="external" target="_blank">ACME challenges</a> are a type of procedure that authenticates your
+Traefik instance to the Let&rsquo;s Encrypt API, proving that you are the
+owner (controller) of your domain name system (DNS). This is important,
+because it prevents other actors from requesting certificates for your
+domains.</p>
 <p>The &ldquo;DNS challenge&rdquo; (DNS-01), is one of <em>two</em> supported ACME Challenge
 types. DNS-01 has some advantanges, and disadvantages.</p>
 <ul>
+<li>DNS-01 challenge works for servers that are behind restrictive
+firewalls. No open ports are necessary.</li>
+<li>DNS-01 challenge allows wildcard certificate domains
+(<code>*.example.com</code>), which means less work when you want to deploy a
+new application, as long as it uses a valid sub-domain of the
+existing certificate, you won&rsquo;t need to reconfigure traefik each
+time.</li>
 <li>All Let&rsquo;s Encrypt challenge types participate in <strong>public</strong>
 <a href="https://letsencrypt.org/docs/ct-logs/" rel="external" target="_blank">Certificate Transparency
 logs</a>. Therefore, any domain name you create a certificate for is
-publicly &ldquo;leaked&rdquo; via CT logs. However, if you only use a
-&ldquo;wildcard&rdquo; domain (<code>*.example.com</code>) in your certificate, then only
-the root domain name will be leaked, and the bots that are reading
-the CT logs would have to guess your exact hostnames in order to
-crawl them.</li>
+publicly &ldquo;leaked&rdquo; via CT logs. However, if you only use a wildcard
+domain (<code>*.example.com</code>) in your certificate, then only the root
+domain name (<code>example.com</code>) will be leaked, and the bots that are
+reading the CT logs would have to guess your exact sub-domains, in
+order to crawl them.</li>
 </ul>
 <h2 id="choose-your-active-docker-context">Choose your active Docker context</h2>
 
@@ -277,7 +286,7 @@ what you&rsquo;re doing. <code>Production</code> is the only environment that pr
 valid (trusted) TLS certificates.</p>
 </div>
 </div>
-<h3 id="choose-type-of-acme-challenge">Choose type of ACME challenge</h3>
+<h3 id="choose-dns-01-acme-challenge">Choose DNS-01 ACME challenge</h3>
 <div class="box notices cstyle stdout">
     <div class="box-label">(stdout)</div>
     <div class="box-content">
@@ -433,6 +442,9 @@ SANS.</p>
 <p>Make sure that each domain name that you entered on the certificate
 has a valid DNS <code>A</code> record, pointing to your Docker server&rsquo;s IP
 address, including any wildcard domain.</p>
+<p>The next chapter will require the domain <code>whoami.prod.example.com</code>,
+and this will automatically be covered by the wildcard domain
+<code>*.prod.example.com</code>.</p>
 </div>
 </div>
 <h3 id="skip-configure-middleware--including-auth">Skip: Configure middleware (including auth)</h3>
@@ -552,12 +564,12 @@ DONE
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1718050193" defer></script>
-        <script src="/js/lunr/lunr.min.js?1718050193" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1718050193" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1718050193" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1718050193" defer></script>
-        <script src="/js/search.js?1718050193" defer></script>
+        <script src="/js/auto-complete.js?1718051434" defer></script>
+        <script src="/js/lunr/lunr.min.js?1718051434" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1718051434" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1718051434" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1718051434" defer></script>
+        <script src="/js/search.js?1718051434" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -694,14 +706,14 @@ DONE
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 8:09pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 8:30pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1718050193" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1718050193" defer></script>
-    <script src="/js/theme.js?1718050193" defer></script>
+    <script src="/js/clipboard.min.js?1718051434" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1718051434" defer></script>
+    <script src="/js/theme.js?1718051434" defer></script>
   </body>
 </html>
