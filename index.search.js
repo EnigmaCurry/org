@@ -57,7 +57,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Setup Docker context Create SSH config and Docker context Install Docker on your remote host Setup d.rymcg.tech per Docker context Traefik Proxy Traefik Scenarios Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge Whoami ",
+    "content": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Setup Docker context Create SSH config and Docker context Install Docker on your remote host Setup d.rymcg.tech per Docker context Traefik Proxy Traefik Scenarios Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge Step-CA TLS challenge Step-CA DNS challenge Wireguard layer 7 proxy Wireguard layer 7 client Wireguard layer 4 client Whoami ",
     "description": "This book describes how to get started with self-hosting your own Docker server, using the tools provided by d.rymcg.tech.\nd.rymcg.tech Chat with us on Matrix Index Introduction Required Infrastructure Register a domain name Setup public DNS service Create a public server (VPS) Create a private server (libvirt VM) Setup your workstation Install Docker client tools Install d.rymcg.tech tools Setup Docker context Create SSH config and Docker context Install Docker on your remote host Setup d.",
     "tags": [],
     "title": "Self-hosting Docker with d.rymcg.tech",
@@ -105,8 +105,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy",
-    "content": "This section will discuss deploying Traefik in a variety of scenarios. Each scenario will build upon the next, so you might consider following them in order, but you can also skip straight to the one you want, as each set of instructions is self-contained.\nIndex Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge ",
-    "description": "This section will discuss deploying Traefik in a variety of scenarios. Each scenario will build upon the next, so you might consider following them in order, but you can also skip straight to the one you want, as each set of instructions is self-contained.\nIndex Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge ",
+    "content": "This section will discuss deploying Traefik in a variety of scenarios. Each scenario will build upon the next, so you might consider following them in order, but you can also skip straight to the one you want, as each set of instructions is self-contained.\nIndex Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge Step-CA TLS challenge Step-CA DNS challenge Wireguard layer 7 proxy Wireguard layer 7 client Wireguard layer 4 client ",
+    "description": "This section will discuss deploying Traefik in a variety of scenarios. Each scenario will build upon the next, so you might consider following them in order, but you can also skip straight to the one you want, as each set of instructions is self-contained.\nIndex Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge Step-CA TLS challenge Step-CA DNS challenge Wireguard layer 7 proxy Wireguard layer 7 client Wireguard layer 4 client ",
     "tags": [],
     "title": "Traefik Scenarios",
     "uri": "/d.rymcg.tech/traefik-proxy/scenarios/index.html"
@@ -401,7 +401,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker",
-    "content": "Traefik Proxy (Traefik) is a core service, an application gateway, for all of the service containers installed on your Docker host. Traefik is an advanced software router: it can serve hundreds of deployed application containers (routes) at the same time. Traefik has a configuration provider that operates by discovery, so that when it is installed on a Docker host, it can automatically configure itself based upon the runtime settings of each individual application it finds. Each application becomes directly in charge of defining its own proxy rules, setting them as Docker container labels. Traefik will automatically discover these container labels (by permission of the host Docker socket), and configure itself for each application.\nTraefik is infrastructure. With Traefik installed, now each service container can take advantage of automatic TLS certificates (ACME), perform user authentication (mTLS, OAuth2, or HTTP Basic with group/certitficate sentry authorization), GeoIP tagging, and client IP address filtering middlewares. Based on all of this criteria, Traefik is in charge of deciding which incoming requests are to be allowed (and forwarded to the backend service containers), and which of these should be blocked (and an error returned to the client).\nIndex Traefik Scenarios Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge ",
+    "content": "Traefik Proxy (Traefik) is a core service, an application gateway, for all of the service containers installed on your Docker host. Traefik is an advanced software router: it can serve hundreds of deployed application containers (routes) at the same time. Traefik has a configuration provider that operates by discovery, so that when it is installed on a Docker host, it can automatically configure itself based upon the runtime settings of each individual application it finds. Each application becomes directly in charge of defining its own proxy rules, setting them as Docker container labels. Traefik will automatically discover these container labels (by permission of the host Docker socket), and configure itself for each application.\nTraefik is infrastructure. With Traefik installed, now each service container can take advantage of automatic TLS certificates (ACME), perform user authentication (mTLS, OAuth2, or HTTP Basic with group/certitficate sentry authorization), GeoIP tagging, and client IP address filtering middlewares. Based on all of this criteria, Traefik is in charge of deciding which incoming requests are to be allowed (and forwarded to the backend service containers), and which of these should be blocked (and an error returned to the client).\nIndex Traefik Scenarios Minimal Traefik Let's Encrypt TLS challenge Let's Encrypt DNS challenge Step-CA TLS challenge Step-CA DNS challenge Wireguard layer 7 proxy Wireguard layer 7 client Wireguard layer 4 client ",
     "description": "Traefik Proxy (Traefik) is a core service, an application gateway, for all of the service containers installed on your Docker host. Traefik is an advanced software router: it can serve hundreds of deployed application containers (routes) at the same time. Traefik has a configuration provider that operates by discovery, so that when it is installed on a Docker host, it can automatically configure itself based upon the runtime settings of each individual application it finds.",
     "tags": [],
     "title": "Traefik Proxy",
@@ -528,6 +528,14 @@ var relearn_search_index = [
     "uri": "/linux-workstation/kvm-libvirt/raw-disk/index.html"
   },
   {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy \u003e Traefik Scenarios",
+    "content": "TODO",
+    "description": "TODO",
+    "tags": [],
+    "title": "Step-CA TLS challenge",
+    "uri": "/d.rymcg.tech/traefik-proxy/scenarios/step-ca-tls-challenge/index.html"
+  },
+  {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Example Org / Hugo content",
     "content": " Index Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": " Index Nested … Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
@@ -560,6 +568,14 @@ var relearn_search_index = [
     "uri": "/linux-workstation/kvm-libvirt/setup-workstation/index.html"
   },
   {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy \u003e Traefik Scenarios",
+    "content": "TODO",
+    "description": "TODO",
+    "tags": [],
+    "title": "Step-CA DNS challenge",
+    "uri": "/d.rymcg.tech/traefik-proxy/scenarios/step-ca-dns-challenge/index.html"
+  },
+  {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Example Org / Hugo content \u003e Example of a deeply …",
     "content": " Index Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
     "description": " Index Sub-chapter 1 Sub-chapter 2 Sub-chapter 3 ",
@@ -574,6 +590,14 @@ var relearn_search_index = [
     "tags": [],
     "title": "Create VM from .iso image",
     "uri": "/linux-workstation/kvm-libvirt/vm-from-iso/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy \u003e Traefik Scenarios",
+    "content": "TODO",
+    "description": "TODO",
+    "tags": [],
+    "title": "Wireguard layer 7 proxy",
+    "uri": "/d.rymcg.tech/traefik-proxy/scenarios/wireguard-layer-7-server/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Publishing with org-mode \u003e Example Org / Hugo content \u003e Example of a deeply … \u003e Nested …",
@@ -598,6 +622,22 @@ var relearn_search_index = [
     "tags": [],
     "title": "Sub-chapter 3",
     "uri": "/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter3/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy \u003e Traefik Scenarios",
+    "content": "TODO",
+    "description": "TODO",
+    "tags": [],
+    "title": "Wireguard layer 7 client",
+    "uri": "/d.rymcg.tech/traefik-proxy/scenarios/wireguard-layer-7-client/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Self-hosting Docker \u003e Traefik Proxy \u003e Traefik Scenarios",
+    "content": "TODO",
+    "description": "TODO",
+    "tags": [],
+    "title": "Wireguard layer 4 client",
+    "uri": "/d.rymcg.tech/traefik-proxy/scenarios/wireguard-layer-4-client/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Linux Workstation",
