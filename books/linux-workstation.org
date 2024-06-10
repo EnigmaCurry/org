@@ -3163,26 +3163,18 @@ per network interface.
 
 #+attr_shortcode: :style warning
 #+begin_notice
-Fedora Atomic comes with a good default zone for workstation use,
-named =public=. Theres really nothing else for you to do here. This
-chapter will mostly discuss things you should /not/ change on a
-workstation, but is a general guide to how things work, if the need
-should arise.
+Fedora Atomic installs a good default zone for workstation use, named
+=public=. Theres really nothing more for you to do here. *This chapter
+will mostly discuss things you should /NOT/ change on a workstation*,
+but this is a general guide as to how these things work, and how to
+modify the rules if the need should arise.
 
-If you are running VMs, those rules are handled in the zone named
-=libvirt=, and this is discussed separately. See [[/linux-workstation/kvm-libvirt/public-routes][Public routes to VMs]].
+If you are running virtual machines, these use a different interface
+=virbr0=, and so they use a different zone named =libvirt=. The VM
+routes are configured separately. Read the chapter [[/linux-workstation/kvm-libvirt/public-routes][Public routes to
+VMs]].
 #+end_notice
 
-*** Zone files
-On Fedora Atomic, there are two directories that contain firewalld
-zone files:
-
- * =/etc/firewalld/zones= this is the primary zone directory, and it
-   takes precedence.
- * =/usr/lib/firewalld/zones/= this is the secondary *read-only*
-   default zone directory. The files here are loaded only if the
-   primary zone directory is missing a file with the same name.
-   
 *** Default Zone
 
 Firewalld lets you configure multiple zones, which are segmented
@@ -3225,6 +3217,16 @@ sudo firewall-cmd --set-default-zone ${ZONE}
 This change is *permanent*, until you change it again.
 #+end_notice
 
+*** Zone files
+On Fedora Atomic, there are two directories that contain firewalld
+zone files:
+
+ * =/etc/firewalld/zones= this is the /primary/ zone directory, and it
+   takes precedence. The directory is empty by default.
+ * =/usr/lib/firewalld/zones/= this is the /secondary/ *read-only*
+   default zone directory. The files here are loaded only if the
+   primary zone directory is missing a file with the same name.
+   
 *** Public zone
 
 Look at the default public zone file:
@@ -3368,6 +3370,31 @@ backend. They show the same rules, just in a different format,
 depending on your preference.
 #+end_notice
 
+*** How to query nftables
+**** Show all tables
+#+begin_run
+sudo nft list tables
+#+end_run
+#+begin_stdout
+table inet firewalld
+table ip filter
+table ip nat
+table ip mangle
+table ip6 filter
+table ip6 nat
+table ip6 mangle
+#+end_stdout
+**** Show table chains
+#+begin_run
+TABLE=filter
+sudo nft list table ip ${TABLE}
+#+end_run
+**** Show chain
+#+begin_run
+TABLE=filter
+CHAIN=FORWARD
+sudo nft list chain ip ${TABLE} ${CHAIN}
+#+end_run
 *** How to query JSON info from nftables
 **** Get chain
 
@@ -3414,3 +3441,7 @@ This might need better filtering and account for the "allow" action only.
 *** Read firewalld script
 
 =/usr/lib/python3.12/site-packages/firewall/core/nftables.py=
+
+*** Useful links
+
+ * [[https://wiki.nftables.org/wiki-nftables/index.php/Netfilter_hooks][Netfilter hooks flowchart]]
