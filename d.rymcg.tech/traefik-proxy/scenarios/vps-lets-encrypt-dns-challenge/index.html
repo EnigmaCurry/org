@@ -5,37 +5,45 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
+    <meta name="description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
+Info This scenario is good for public and private websites and services.
+All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
-    <meta name="twitter:description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
-    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">
+    <meta name="twitter:title" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
+    <meta name="twitter:description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
+Info This scenario is good for public and private websites and services.
+All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+    <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
-    <meta property="og:description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
+    <meta property="og:title" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
+    <meta property="og:description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
+Info This scenario is good for public and private websites and services.
+All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
-    <meta itemprop="name" content="Traefik Quickstart (public VPS) :: book.rymcg.tech">
-    <meta itemprop="description" content="Before we get too deep into Traefik configuration, if you just want to setup a public VPS, follow these instructions as a quickstart tutorial: Choose your active Docker context [bash]: Run this on your workstation: d context Configure Traefik [bash]: Run this on your workstation: d make traefik config The configuration is driven by a text wizard menu system. (stdout) ? Traefik config main menu: &gt; Create system user on Docker host Configure entrypoints (including dashboard) Configure Certificate Authorities (CA) Configure ACME (Let&#39;s Encrypt or Step-CA) Configure TLS certificates and domains (make certs) Configure middleware (including auth) v Configure error page template [↑↓ to move, enter to select, type to filter, ESC to cancel] Use your arrow keys to select only the menu items this tutorial talks about, and press the Enter key.">
-    <meta itemprop="wordCount" content="642">
-    <title>Traefik Quickstart (public VPS) :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1718039622" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718039622" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1718039622" rel="stylesheet">
-    <link href="/css/auto-complete.css?1718039622" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718039622" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1718039622" rel="stylesheet">
-    <link href="/css/fonts.css?1718039622" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718039622" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1718039622" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1718039622" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1718039622" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1718039622" rel="stylesheet">
-    <link href="/css/print.css?1718039622" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1718039622"></script>
+    <meta itemprop="name" content="Let&#39;s Encrypt DNS challenge :: book.rymcg.tech">
+    <meta itemprop="description" content="This scenario covers a Traefik configuration for a public or private server. This uses Let’s Encrypt to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the DNS-01 challenge type.
+Info This scenario is good for public and private websites and services.
+All Let’s Encrypt challenges leak domain names to public CT logs, however with DNS-01 challenge we can use wildcards, so that only the root domain is leaked, not the exact hostnames.">
+    <meta itemprop="wordCount" content="1329">
+    <title>Let&#39;s Encrypt DNS challenge :: book.rymcg.tech</title>
+    <link href="/css/fontawesome-all.min.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718050193" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1718050193" rel="stylesheet">
+    <link href="/css/auto-complete.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718050193" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1718050193" rel="stylesheet">
+    <link href="/css/fonts.css?1718050193" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718050193" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1718050193" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1718050193" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1718050193" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1718050193" rel="stylesheet">
+    <link href="/css/print.css?1718050193" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1718050193"></script>
     <script>
       window.relearn = window.relearn || {};
-      window.relearn.relBasePath='..\/..\/..';
-      window.relearn.relBaseUri='..\/..\/..';
+      window.relearn.relBasePath='..\/..\/..\/..';
+      window.relearn.relBaseUri='..\/..\/..\/..';
       window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
       window.index_js_url="/index.search.js";
       // variant stuff
@@ -52,7 +60,7 @@
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">
+  <body class="mobile-support html" data-url="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -65,6 +73,7 @@
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
+    <li><a href="#acme-dns-01-challenge-type">ACME DNS-01 challenge type</a></li>
     <li><a href="#choose-your-active-docker-context">Choose your active Docker context</a></li>
     <li><a href="#configure-traefik">Configure Traefik</a>
       <ul>
@@ -75,10 +84,12 @@
         <li><a href="#configure-let-s-encrypt-environment">Configure Let&rsquo;s Encrypt environment</a></li>
         <li><a href="#choose-type-of-acme-challenge">Choose type of ACME challenge</a></li>
         <li><a href="#skip-configure-acme-email-address">Skip: Configure ACME email address</a></li>
+        <li><a href="#enter-acme-dns-provider-config">Enter ACME DNS provider config</a></li>
+        <li><a href="#enter-acme-dns-api-token">Enter ACME DNS API token</a></li>
         <li><a href="#configure-tls-certificates-and-domains">Configure TLS certificates and domains</a></li>
         <li><a href="#manage-all-certificates">Manage all certificates</a></li>
         <li><a href="#create-a-new-certificate">Create a new certificate</a></li>
-        <li><a href="#skip-configure-middleware">Skip: Configure middleware</a></li>
+        <li><a href="#skip-configure-middleware--including-auth">Skip: Configure middleware (including auth)</a></li>
         <li><a href="#install-traefik">Install Traefik</a></li>
         <li><a href="#test-traefik-by-installing-whoami">Test Traefik by installing whoami</a></li>
       </ul>
@@ -93,10 +104,11 @@
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/index.html"><span itemprop="name">Self-hosting Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/traefik-proxy/index.html"><span itemprop="name">Traefik Proxy</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Traefik Quickstart (public VPS)</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/d.rymcg.tech/traefik-proxy/scenarios/index.html"><span itemprop="name">Traefik Scenarios</span></a><meta itemprop="position" content="4">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Let&#39;s Encrypt DNS challenge</span><meta itemprop="position" content="5"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/traefik-proxy/index.html" title="Traefik Proxy (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-tls-challenge/index.html" title="Let&#39;s Encrypt TLS challenge (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
             <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/d.rymcg.tech/whoami/index.html" title="Whoami (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
@@ -118,11 +130,51 @@
             <header class="headline">
             </header>
 
-<h1 id="traefik-quickstart-public-vps">Traefik Quickstart (public VPS)</h1>
+<h1 id="lets-encrypt-dns-challenge">Let&#39;s Encrypt DNS challenge</h1>
 
-<p>Before we get too deep into Traefik configuration, if you just want to
-setup a public VPS, follow these instructions as a quickstart
-tutorial:</p>
+<p>This scenario covers a Traefik configuration for a public <em>or private</em>
+server. This uses <a href="https://letsencrypt.org/" rel="external" target="_blank">Let&rsquo;s Encrypt</a> to sign TLS certificates, which are
+valid for use in most web browsers. This scenario will use the
+<strong>DNS-01</strong> challenge type.</p>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<p>This scenario is good for <em>public</em> and <em>private</em> websites and
+services.</p>
+<p>All Let&rsquo;s Encrypt challenges <strong>leak domain names to public CT logs</strong>,
+however with DNS-01 challenge we can use wildcards, so that only the
+root domain is leaked, not the exact hostnames.</p>
+</div>
+</div>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>This scenario requires storing a security sensitive API token to
+control the DNS of your domain. You must take special steps to store
+this token in your .env file, only on a secure workstation.</p>
+</div>
+</div>
+<h2 id="acme-dns-01-challenge-type">ACME DNS-01 challenge type</h2>
+<p><a href="https://letsencrypt.org/docs/challenge-types/" rel="external" target="_blank">ACME challenges</a> are a type of procedure that authenticates your server
+to Let&rsquo;s Encrypt that you are the owner (controller) of your domain
+name system (DNS). This is important because it prevents other actors
+from requesting certificates for your domains.</p>
+<p>The &ldquo;DNS challenge&rdquo; (DNS-01), is one of <em>two</em> supported ACME Challenge
+types. DNS-01 has some advantanges, and disadvantages.</p>
+<ul>
+<li>All Let&rsquo;s Encrypt challenge types participate in <strong>public</strong>
+<a href="https://letsencrypt.org/docs/ct-logs/" rel="external" target="_blank">Certificate Transparency
+logs</a>. Therefore, any domain name you create a certificate for is
+publicly &ldquo;leaked&rdquo; via CT logs. However, if you only use a
+&ldquo;wildcard&rdquo; domain (<code>*.example.com</code>) in your certificate, then only
+the root domain name will be leaked, and the bots that are reading
+the CT logs would have to guess your exact hostnames in order to
+crawl them.</li>
+</ul>
 <h2 id="choose-your-active-docker-context">Choose your active Docker context</h2>
 
 
@@ -169,10 +221,11 @@ v Configure error page template
     </div>
 </div>
 
-<p>Use your arrow keys to select only the menu items this tutorial talks
-about, and press the <code>Enter</code> key. To cancel, press the <code>ESC</code> key.</p>
-<p>Once complete, it will have created and configured your
-<code>.env_{CONTEXT}</code> file for you.</p>
+<p>Use your arrow keys to select only the menu items this tutorial does
+not tell you to skip. Select the first one and press the <code>Enter</code> key.
+To go back, press the <code>ESC</code> key.</p>
+<p>Once you go through all the options you need, it will have created and
+configured your <code>.env_{CONTEXT}</code> file for you.</p>
 <h3 id="create-system-user-on-docker-host">Create system user on Docker host</h3>
 <p>This option will create a new username on the Docker host, called
 <code>traefik</code>. This is necessary to reserve a unique UID for traefik to
@@ -181,8 +234,8 @@ run as on the system. Run this first before anything else.</p>
 <p>For this tutorial, you will use the default entrypoints, so you don&rsquo;t
 need to configure anything.</p>
 <ul>
-<li><code>web</code> (TCP port 80)</li>
-<li><code>websecure</code> (TCP port 443)</li>
+<li><code>websecure</code> (TCP port 443, https)</li>
+<li><code>web</code> (TCP port 80, but only used as redirect to <code>websecure</code>)</li>
 </ul>
 <h3 id="skip-configure-certificate-authorities--ca">Skip: Configure Certificate Authorities (CA)</h3>
 <p>For this tutorial you will only need the default CA list provided by
@@ -230,8 +283,8 @@ valid (trusted) TLS certificates.</p>
     <div class="box-content">
         <pre>
 ? Which type of ACME challenge should be used?
-> TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
-  DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+  TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+> DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
 </pre>
     </div>
 </div>
@@ -241,17 +294,98 @@ valid (trusted) TLS certificates.</p>
   <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
   <div class="box-content">
 
-<p>For your first install, choose <code>TLS-ALPN-01</code>, it is the easiest method
-to use for public servers.</p>
-<p>If you want to use wildcard DNS records, or you need to setup a server
-behind a firewall, you must choose the more advanced method <code>DNS-01</code>,
-and setup your DNS platform for programmatic access with an API token.</p>
+<p>For this install, choose <code>DNS-01</code>.</p>
+<p>The challenge type will let you use wildcard DNS records, and also
+works behind a firewall, but it requires storing a security token for
+your DNS API.</p>
 </div>
 </div>
 <h3 id="skip-configure-acme-email-address">Skip: Configure ACME email address</h3>
 <p>You don&rsquo;t have to provide your email address, but if you do, Let&rsquo;s
 Encrypt can email you about configuration issues, like certitficates
 about to expire.</p>
+<h3 id="enter-acme-dns-provider-config">Enter ACME DNS provider config</h3>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Find the provider code of your supported DNS provider here:
+https://go-acme.github.io/lego/dns/#dns-providers
+
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+
+: digitalocean
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>You may use any supported DNS provider of LEGO. This example uses the
+<a href="https://go-acme.github.io/lego/dns/digitalocean/" rel="external" target="_blank">DigitalOcean provider</a>. If you&rsquo;re using a different platform, you need
+to look up the supported <a href="https://go-acme.github.io/lego/dns/#dns-providers" rel="external" target="_blank">DNS provider code</a> in the LEGO docs, and type
+its name. The code is always one word, no spaces.</p>
+</div>
+</div>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+You need to enter the NAMES of these variables that your provider needs.
+You can enter up to 5 variable names and/or leave them blank
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+
+: DO_AUTH_TOKEN
+
+TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+
+:
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<p>Each supported DNS provider requires certain variables to be set, in
+order to pass the API token. In the <a href="https://go-acme.github.io/lego/dns/digitalocean/" rel="external" target="_blank">LEGO docs for DigitalOcean</a> it
+lists the variable name that it needs. This question is asking for the
+literal <strong>name</strong> of the variables specific to the DNS platform, which
+for DigitalOcean is: <code>DO_AUTH_TOKEN</code>. If your provider needs more than
+one variable set, you can enter them on additional lines, but
+DigitalOcean only needs one variable set, so it leaves the second line
+blank.</p>
+</div>
+</div>
+<h3 id="enter-acme-dns-api-token">Enter ACME DNS API token</h3>
+<p>Next it will ask you to enter the values for the variable names you
+just set. This is where you put <strong>your actual API token</strong> of your DNS
+platform.</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+Now to enter the values for the custom DNS API variables:
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (eg. your-actual-digitalocean-token-here)
+
+: dop_xxxxxx
+</pre></code>
+    </div>
+</div>
+
+
 <h3 id="configure-tls-certificates-and-domains">Configure TLS certificates and domains</h3>
 <p>d.rymcg.tech uses explicit certificate requests configured centrally,
 on the traefik project:</p>
@@ -273,12 +407,10 @@ and allow you to manage each one. It will be blank to start out with.</p>
 <h3 id="create-a-new-certificate">Create a new certificate</h3>
 <p>Use this to define all the certificates you need for all your
 applications.</p>
-<ul>
-<li>Set certificate main domain (CN)</li>
-</ul>
 <p>Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.</p>
-<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>prod.example.com</span></span></code></pre></div>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter the main domain (CN) for this certificate
+</span></span><span style="display:flex;"><span>: prod.example.com</span></span></code></pre></div>
 <div class="box notices cstyle info">
   <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
   <div class="box-content">
@@ -286,14 +418,29 @@ domain name of the certificate.</p>
 <p>Each certificate may also contain several other domain names, known as
 SANs (Subject Alternative Names). You can use this to list as many
 additional domain names that you want to be listed on the same
-certificate.</p>
+certificate. In the special case of DNS-01, you are allowed to use a
+<strong>wildcard domain</strong> (<code>*.example.com</code>) for either the main CN or the
+SANS.</p>
 </div>
 </div>
-<h3 id="skip-configure-middleware">Skip: Configure middleware</h3>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Now enter additional domains (SANS), one per line:
+</span></span><span style="display:flex;"><span>Enter a secondary domain (enter blank to skip)
+</span></span><span style="display:flex;"><span>: *.prod.example.com</span></span></code></pre></div>
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Make sure that each domain name that you entered on the certificate
+has a valid DNS <code>A</code> record, pointing to your Docker server&rsquo;s IP
+address, including any wildcard domain.</p>
+</div>
+</div>
+<h3 id="skip-configure-middleware--including-auth">Skip: Configure middleware (including auth)</h3>
+<p>No middleware is needed for this scenario.</p>
 <h3 id="install-traefik">Install Traefik</h3>
-<p>To install Traefik, you can simply
-choose the <code>Reinstall Traefik</code> option in the menu, or you can run that
-step all by itself from the command line at any time:</p>
+<p>To install Traefik, you can simply choose the <code>Reinstall Traefik</code>
+option in the menu, or you can run that step all by itself from the
+command line at any time:</p>
 
 
 <div class="box notices cstyle run">
@@ -310,7 +457,75 @@ d make traefik install
 <p>You should always reinstall Traefik after changing any configuration
 setting.</p>
 <h3 id="test-traefik-by-installing-whoami">Test Traefik by installing whoami</h3>
-<p>Install <a href="/d.rymcg.tech/whoami/index.html">whoami</a></p>
+<p>Install <a href="/d.rymcg.tech/whoami/index.html">whoami</a>.</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+curl https://whoami.prod.example.com
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Name: default
+Hostname: 65ef62c6fa52
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:47974
+GET / HTTP/1.1
+Host: whoami.prod.example.com
+User-Agent: curl/8.2.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 192.168.122.1
+X-Forwarded-Host: whoami.prod.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: debian-dev
+X-Real-Ip: 192.168.122.1
+</pre>
+    </div>
+</div>
+
+<p>You can verify the certificate this way:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+WHOAMI=whoami.prod.example.com
+openssl s_client -connect "$WHOAMI:443" < /dev/null >/dev/null
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+depth=2 C = US, O = Internet Security Research Group, CN = ISRG Root X1
+verify return:1
+depth=1 C = US, O = Let's Encrypt, CN = R3
+verify return:1
+depth=0 CN = *.prod.example.com
+verify return:1
+DONE
+</pre>
+    </div>
+</div>
+
 
             <footer class="footline">
             </footer>
@@ -337,12 +552,12 @@ setting.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1718039622" defer></script>
-        <script src="/js/lunr/lunr.min.js?1718039622" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1718039622" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1718039622" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1718039622" defer></script>
-        <script src="/js/search.js?1718039622" defer></script>
+        <script src="/js/auto-complete.js?1718050193" defer></script>
+        <script src="/js/lunr/lunr.min.js?1718050193" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1718050193" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1718050193" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1718050193" defer></script>
+        <script src="/js/search.js?1718050193" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -400,7 +615,10 @@ setting.</p>
           <li data-nav-id="/d.rymcg.tech/docker-context/install-docker-on-remote-host/index.html" class=""><a class="padding" href="/d.rymcg.tech/docker-context/install-docker-on-remote-host/index.html">Install Docker</a></li>
           <li data-nav-id="/d.rymcg.tech/docker-context/main-config-for-d.rymcg/index.html" class=""><a class="padding" href="/d.rymcg.tech/docker-context/main-config-for-d.rymcg/index.html">Setup d.rymcg.tech</a></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/traefik-proxy/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/traefik-proxy/index.html">Traefik Proxy</a><ul id="R-subsections-e5faef2e23bdb87f9fe5fba855380f02" class="morespace collapsible-menu">
-          <li data-nav-id="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html" class="active"><a class="padding" href="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html">Traefik Quickstart (public VPS)</a></li></ul></li>
+          <li data-nav-id="/d.rymcg.tech/traefik-proxy/scenarios/index.html" class="parent alwaysopen"><a class="padding" href="/d.rymcg.tech/traefik-proxy/scenarios/index.html">Traefik Scenarios</a><ul id="R-subsections-dfc498c87b9d757fa5891043e3c908fe" class="morespace collapsible-menu">
+          <li data-nav-id="/d.rymcg.tech/traefik-proxy/scenarios/minimal/index.html" class=""><a class="padding" href="/d.rymcg.tech/traefik-proxy/scenarios/minimal/index.html">Minimal Traefik</a></li>
+          <li data-nav-id="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-tls-challenge/index.html" class=""><a class="padding" href="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-tls-challenge/index.html">Let&#39;s Encrypt TLS challenge</a></li>
+          <li data-nav-id="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html" class="active"><a class="padding" href="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html">Let&#39;s Encrypt DNS challenge</a></li></ul></li></ul></li>
           <li data-nav-id="/d.rymcg.tech/whoami/index.html" class=""><a class="padding" href="/d.rymcg.tech/whoami/index.html">Whoami</a></li></ul></li>
           <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
@@ -433,7 +651,7 @@ setting.</p>
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/traefik-proxy/vps-quickstart/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/d.rymcg.tech/traefik-proxy/scenarios/vps-lets-encrypt-dns-challenge/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -476,14 +694,14 @@ setting.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 5:13pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 8:09pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1718039622" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1718039622" defer></script>
-    <script src="/js/theme.js?1718039622" defer></script>
+    <script src="/js/clipboard.min.js?1718050193" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1718050193" defer></script>
+    <script src="/js/theme.js?1718050193" defer></script>
   </body>
 </html>
