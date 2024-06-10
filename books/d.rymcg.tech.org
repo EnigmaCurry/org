@@ -1342,7 +1342,7 @@ valid for use in most web browsers. This scenario will use the
 This scenario is only good for /public/ websites and services. For
 (semi-)private servers, that you don't really want the world to know
 about yet, you should avoid this and use the DNS-01 challenge instead.
-*TLS-ALPN-01 will leak all of your domain names to public CT logs* and
+*TLS-ALPN-01 will leak all of your domain names to [[https://letsencrypt.org/docs/ct-logs/][public CT logs]]* and
 you will have bots crawling your domains within seconds of certificate
 issuance.
 #+end_notice
@@ -1369,7 +1369,9 @@ advantanges, and disadvantages.
    storage of a sensitive API token for your DNS provider.
  * A significant drawback is the limitation that it can only issue
    certificates for an *explicit list of domain names*. No wildcards
-   (=*.example.com=) are allowed with TLS-ALPN-01.
+   (=*.example.com=) are allowed with TLS-ALPN-01. So you will need to
+   revisit your traefik config every time you add a new application
+   domain name.
  * All Let's Encrypt challenge types participate in *public*
    [[https://letsencrypt.org/docs/ct-logs/][Certificate Transparency
    logs]]. Therefore, any domain name you create a certificate for is
@@ -1459,7 +1461,7 @@ what you're doing. =Production= is the only environment that produces
 valid (trusted) TLS certificates.
 #+end_notice
 
-***** Choose type of ACME challenge
+***** Choose TLS-ALPN-01 ACME challenge
 #+begin_stdout
 ? Which type of ACME challenge should be used?  
 > TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
@@ -1606,37 +1608,46 @@ valid for use in most web browsers. This scenario will use the
 This scenario is good for /public/ and /private/ websites and
 services.
 
-All Let's Encrypt challenges *leak domain names to public CT logs*,
-however with DNS-01 challenge we can use wildcards, so that only the
+All Let's Encrypt challenges *leak domain names to [[https://letsencrypt.org/docs/ct-logs/][public CT logs]]*,
+however, with DNS-01 challenge we can use wildcards, so that only the
 root domain is leaked, not the exact hostnames.
 #+end_notice
 
 #+attr_shortcode: :style warning
 #+begin_notice
-This scenario requires storing a security sensitive API token to
-control the DNS of your domain. You must take special steps to store
-this token in your .env file, only on a secure workstation.
+This scenario offers a much more powerful feature set, but it requires
+storing a security sensitive API token, to control the active DNS
+server of your domain. You must take special steps to store this token
+only on a secure workstation and and Docker host.
 #+end_notice
 
 
 **** ACME DNS-01 challenge type
 
-[[https://letsencrypt.org/docs/challenge-types/][ACME challenges]] are a type of procedure that authenticates your server
-to Let's Encrypt that you are the owner (controller) of your domain
-name system (DNS). This is important because it prevents other actors
-from requesting certificates for your domains.
+[[https://letsencrypt.org/docs/challenge-types/][ACME challenges]] are a type of procedure that authenticates your
+Traefik instance to the Let's Encrypt API, proving that you are the
+owner (controller) of your domain name system (DNS). This is important,
+because it prevents other actors from requesting certificates for your
+domains.
 
 The "DNS challenge" (DNS-01), is one of /two/ supported ACME Challenge
 types. DNS-01 has some advantanges, and disadvantages.
 
+ * DNS-01 challenge works for servers that are behind restrictive
+   firewalls. No open ports are necessary.
+ * DNS-01 challenge allows wildcard certificate domains
+   (=*.example.com=), which means less work when you want to deploy a
+   new application, as long as it uses a valid sub-domain of the
+   existing certificate, you won't need to reconfigure traefik each
+   time.
  * All Let's Encrypt challenge types participate in *public*
    [[https://letsencrypt.org/docs/ct-logs/][Certificate Transparency
    logs]]. Therefore, any domain name you create a certificate for is
-   publicly "leaked" via CT logs. However, if you only use a
-   "wildcard" domain (=*.example.com=) in your certificate, then only
-   the root domain name will be leaked, and the bots that are reading
-   the CT logs would have to guess your exact hostnames in order to
-   crawl them.
+   publicly "leaked" via CT logs. However, if you only use a wildcard
+   domain (=*.example.com=) in your certificate, then only the root
+   domain name (=example.com=) will be leaked, and the bots that are
+   reading the CT logs would have to guess your exact sub-domains, in
+   order to crawl them.
    
 **** Choose your active Docker context
 
@@ -1716,7 +1727,7 @@ what you're doing. =Production= is the only environment that produces
 valid (trusted) TLS certificates.
 #+end_notice
 
-***** Choose type of ACME challenge
+***** Choose DNS-01 ACME challenge
 #+begin_stdout
 ? Which type of ACME challenge should be used?  
   TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
@@ -1832,6 +1843,10 @@ SANS.
 Make sure that each domain name that you entered on the certificate
 has a valid DNS =A= record, pointing to your Docker server's IP
 address, including any wildcard domain.
+
+The next chapter will require the domain =whoami.prod.example.com=,
+and this will automatically be covered by the wildcard domain
+=*.prod.example.com=.
 #+end_notice
 
 ***** Skip: Configure middleware (including auth)
