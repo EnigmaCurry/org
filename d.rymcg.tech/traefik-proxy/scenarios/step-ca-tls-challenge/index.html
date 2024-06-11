@@ -5,33 +5,41 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="TODO">
+    <meta name="description" content="This scenario covers a basic Traefik configuration for a public server (VPS). This uses Step-CA to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the TLS-ALPN-01 challenge type.
+Step-CA is a self-hosted ACME provider, a root Certificate Authority, to sign TLS certificates. Step-CA is an alternative to Let’s Encrypt, but they serve difference purposes:
+Use Let’s Encrypt if you need “valid” certificates trusted by web browsers.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Step-CA TLS challenge :: book.rymcg.tech">
-    <meta name="twitter:description" content="TODO">
+    <meta name="twitter:description" content="This scenario covers a basic Traefik configuration for a public server (VPS). This uses Step-CA to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the TLS-ALPN-01 challenge type.
+Step-CA is a self-hosted ACME provider, a root Certificate Authority, to sign TLS certificates. Step-CA is an alternative to Let’s Encrypt, but they serve difference purposes:
+Use Let’s Encrypt if you need “valid” certificates trusted by web browsers.">
     <meta property="og:url" content="https://book.rymcg.tech/d.rymcg.tech/traefik-proxy/scenarios/step-ca-tls-challenge/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
     <meta property="og:title" content="Step-CA TLS challenge :: book.rymcg.tech">
-    <meta property="og:description" content="TODO">
+    <meta property="og:description" content="This scenario covers a basic Traefik configuration for a public server (VPS). This uses Step-CA to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the TLS-ALPN-01 challenge type.
+Step-CA is a self-hosted ACME provider, a root Certificate Authority, to sign TLS certificates. Step-CA is an alternative to Let’s Encrypt, but they serve difference purposes:
+Use Let’s Encrypt if you need “valid” certificates trusted by web browsers.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Self-hosting Docker with d.rymcg.tech">
     <meta itemprop="name" content="Step-CA TLS challenge :: book.rymcg.tech">
-    <meta itemprop="description" content="TODO">
-    <meta itemprop="wordCount" content="1">
+    <meta itemprop="description" content="This scenario covers a basic Traefik configuration for a public server (VPS). This uses Step-CA to sign TLS certificates, which are valid for use in most web browsers. This scenario will use the TLS-ALPN-01 challenge type.
+Step-CA is a self-hosted ACME provider, a root Certificate Authority, to sign TLS certificates. Step-CA is an alternative to Let’s Encrypt, but they serve difference purposes:
+Use Let’s Encrypt if you need “valid” certificates trusted by web browsers.">
+    <meta itemprop="wordCount" content="1185">
     <title>Step-CA TLS challenge :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1718053698" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718053698" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1718053698" rel="stylesheet">
-    <link href="/css/auto-complete.css?1718053698" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718053698" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1718053698" rel="stylesheet">
-    <link href="/css/fonts.css?1718053698" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718053698" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1718053698" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1718053698" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1718053698" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1718053698" rel="stylesheet">
-    <link href="/css/print.css?1718053698" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1718053698"></script>
+    <link href="/css/fontawesome-all.min.css?1718069952" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718069952" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1718069952" rel="stylesheet">
+    <link href="/css/auto-complete.css?1718069952" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718069952" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1718069952" rel="stylesheet">
+    <link href="/css/fonts.css?1718069952" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718069952" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1718069952" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1718069952" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1718069952" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1718069952" rel="stylesheet">
+    <link href="/css/print.css?1718069952" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1718069952"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..\/..';
@@ -63,7 +71,28 @@
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"> 
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#create-a-step-ca-server">Create a Step-CA server</a></li>
+    <li><a href="#acme-tls-alpn-01-challenge-type">ACME TLS-ALPN-01 challenge type</a></li>
+    <li><a href="#choose-your-active-docker-context">Choose your active Docker context</a></li>
+    <li><a href="#configure-traefik">Configure Traefik</a>
+      <ul>
+        <li><a href="#create-system-user-on-docker-host">Create system user on Docker host</a></li>
+        <li><a href="#skip-configure-entrypoints">Skip: Configure entrypoints</a></li>
+        <li><a href="#configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</a></li>
+        <li><a href="#configure-acme--step-ca">Configure ACME (Step-CA)</a></li>
+        <li><a href="#choose-tls-alpn-01-acme-challenge">Choose TLS-ALPN-01 ACME challenge</a></li>
+        <li><a href="#configure-tls-certificates-and-domains">Configure TLS certificates and domains</a></li>
+        <li><a href="#manage-all-certificates">Manage all certificates</a></li>
+        <li><a href="#create-a-new-certificate">Create a new certificate</a></li>
+        <li><a href="#skip-configure-middleware--including-auth">Skip: Configure middleware (including auth)</a></li>
+        <li><a href="#install-traefik">Install Traefik</a></li>
+        <li><a href="#test-traefik-by-installing-whoami">Test Traefik by installing whoami</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
                 </div>
               </div>
             </div>
@@ -100,7 +129,346 @@
 
 <h1 id="step-ca-tls-challenge">Step-CA TLS challenge</h1>
 
-<p>TODO</p>
+<p>This scenario covers a basic Traefik configuration for a public server
+(VPS). This uses <a href="https://smallstep.com/docs/step-ca/" rel="external" target="_blank">Step-CA</a> to sign TLS certificates, which are valid for
+use in most web browsers. This scenario will use the <strong>TLS-ALPN-01</strong>
+challenge type.</p>
+<p>Step-CA is a self-hosted ACME provider, a root Certificate Authority,
+to sign TLS certificates. Step-CA is an alternative to Let&rsquo;s Encrypt,
+but they serve difference purposes:</p>
+<ul>
+<li>Use Let&rsquo;s Encrypt if you need &ldquo;valid&rdquo; certificates trusted by web
+browsers.</li>
+<li>Use Step-CA if you want fully self-hosted PKI, and your own
+Certificate Authority. The certificates will not be validated by
+your clients unless they add your root CA public key to their OS or
+web browser trust store.</li>
+</ul>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>This scenario is only good for <em>private</em> websites and services, as the
+certificates are considered &ldquo;self signed&rdquo;, they will not be trusted in
+normal web browsers.</p>
+</div>
+</div>
+<h2 id="create-a-step-ca-server">Create a Step-CA server</h2>
+<p>Follow the chapter named <a href="/d.rymcg.tech/step-ca">Step-CA</a> to create your own Step-CA powered
+ACME Certificate Authority.</p>
+<h2 id="acme-tls-alpn-01-challenge-type">ACME TLS-ALPN-01 challenge type</h2>
+<p><a href="https://letsencrypt.org/docs/challenge-types/" rel="external" target="_blank">ACME challenges</a> are a type of procedure that authenticates your server
+to Let&rsquo;s Encrypt that you are the owner (controller) of your domain
+name system (DNS). This is important because it prevents other actors
+from requesting certificates for your domains.</p>
+<p>The &ldquo;TLS challenge&rdquo; (TLS-ALPN-01), is one of <em>two</em> supported ACME
+Challenge types. TLS-ALPN-01 is the default type, which has some
+advantanges, and disadvantages.</p>
+<ul>
+<li>It <em>requires</em> port 443 to be public. <strong>It cannot work when port 443
+is blocked.</strong></li>
+<li>It <em>only</em> requires a valid DNS <code>A</code> record for the certificate
+domains to be pointing to the IP address of your server. For a
+public service, you would have needed to create this record anyway,
+so this isn&rsquo;t really an extra requirement.</li>
+<li>Compared to other supported challenge type, DNS-01, it is much
+easier and safer to configure, because it does not require the
+storage of a sensitive API token for your DNS provider.</li>
+<li>A significant drawback is the limitation that it can only issue
+certificates for an <strong>explicit list of domain names</strong>. No wildcards
+(<code>*.example.com</code>) are allowed with TLS-ALPN-01. So you will need to
+revisit your traefik config every time you add a new application
+domain name.</li>
+<li>Step-CA does <em>not</em> participate in
+<a href="https://letsencrypt.org/docs/ct-logs/" rel="external" target="_blank">Certificate Transparency
+logs</a>.</li>
+</ul>
+<h2 id="choose-your-active-docker-context">Choose your active Docker context</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+d context
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="configure-traefik">Configure Traefik</h2>
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>If you want to reset the existing config back to the defaults, run:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+d make traefik clean
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+d make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<p>The configuration is driven by a text wizard menu system.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik config main menu:
+> Create system user on Docker host
+  Configure entrypoints (including dashboard)
+  Configure Certificate Authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates and domains (make certs)
+  Configure middleware (including auth)
+v Configure error page template
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+</pre>
+    </div>
+</div>
+
+<p>Use your arrow keys to select only the menu items this tutorial does
+not tell you to skip. Select the first one and press the <code>Enter</code> key.
+To go back, press the <code>ESC</code> key.</p>
+<p>Once you go through all the options you need, it will have created and
+configured your <code>.env_{CONTEXT}</code> file for you.</p>
+<h3 id="create-system-user-on-docker-host">Create system user on Docker host</h3>
+<p>This option will create a new username on the Docker host, called
+<code>traefik</code>. This is necessary to reserve a unique UID for traefik to
+run as on the system. Run this first before anything else.</p>
+<h3 id="skip-configure-entrypoints">Skip: Configure entrypoints</h3>
+<p>For this tutorial, you will use the default entrypoints, so you don&rsquo;t
+need to configure anything.</p>
+<ul>
+<li><code>websecure</code> (TCP port 443, https)</li>
+<li><code>web</code> (TCP port 80, but only used as redirect to <code>websecure</code>)</li>
+</ul>
+<h3 id="configure-certificate-authorities--ca">Configure Certificate Authorities (CA)</h3>
+<p>You must configure Traefik instance to trust the root certificate of
+your Step-CA instance.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+? How do you want to configure the list of trusted Certificate Authorities (CA)?
+  Use the stock list, (alpine: ca-certificates ca-certificates-bundle).
+> Use the stock list, plus add my own root Step-CA certificate.
+  Delete the entire list, and add my own root Step-CA certificate.
+  Delete the entire list.
+  Cancel / Go back.
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+</pre>
+    </div>
+</div>
+
+<p>Enter the root URL of your Step-CA instance:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+TRAEFIK_STEP_CA_ENDPOINT: Enter your Step-CA endpoint URL (eg. https://ca.example.com)
+
+: https://ca.example.com
+</pre>
+    </div>
+</div>
+
+<h3 id="configure-acme--step-ca">Configure ACME (Step-CA)</h3>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Which ACME provider do you want to use?
+  Let's Encrypt (ACME)
+> Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+</pre>
+    </div>
+</div>
+
+<p>Choose <code>Step-CA (ACME)</code>.</p>
+<h3 id="choose-tls-alpn-01-acme-challenge">Choose TLS-ALPN-01 ACME challenge</h3>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Which type of ACME challenge should be used?
+> TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+  DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>For your first install, choose <code>TLS-ALPN-01</code>, it is the easiest method
+to use for public servers.</p>
+<p>If you want to use wildcard DNS records, or you need to setup a server
+behind a firewall, you must choose the more advanced method <code>DNS-01</code>,
+and setup your DNS platform for programmatic access with an API token.</p>
+</div>
+</div>
+<h3 id="configure-tls-certificates-and-domains">Configure TLS certificates and domains</h3>
+<p>d.rymcg.tech uses explicit certificate requests configured centrally,
+on the traefik project:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Configure Traefik TLS certificates
+> Manage all certificates.
+  Create a new certificate.
+  Done / Go back
+</pre>
+    </div>
+</div>
+
+<h3 id="manage-all-certificates">Manage all certificates</h3>
+<p>This will show you all the certificate requests that have been defined
+and allow you to manage each one. It will be blank to start out with.</p>
+<h3 id="create-a-new-certificate">Create a new certificate</h3>
+<p>Use this to define all the certificates you need for all your
+applications.</p>
+<p>Each certificate needs a main name (CN), which should be the main
+domain name of the certificate.</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter the main domain (CN) for this certificate
+</span></span><span style="display:flex;"><span>: prod.example.com</span></span></code></pre></div>
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Info</div>
+  <div class="box-content">
+
+<p>Each certificate may also contain several other domain names, known as
+SANs (Subject Alternative Names). You can use this to list as many
+additional domain names that you want to be listed on the same
+certificate. The record for <code>whoami</code> is required for the next chapter,
+<a href="/d.rymcg.tech/whoami/index.html">Whoami</a>.</p>
+</div>
+</div>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Now enter additional domains (SANS), one per line:
+</span></span><span style="display:flex;"><span>Enter a secondary domain (enter blank to skip)
+</span></span><span style="display:flex;"><span>: whoami.prod.example.com</span></span></code></pre></div>
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Make sure that each domain name that you entered on the certificate
+has a valid DNS <code>A</code> record, pointing to your Docker server&rsquo;s IP
+address.</p>
+</div>
+</div>
+<h3 id="skip-configure-middleware--including-auth">Skip: Configure middleware (including auth)</h3>
+<p>No middleware is needed for this scenario.</p>
+<h3 id="install-traefik">Install Traefik</h3>
+<p>To install Traefik, you can simply choose the <code>Reinstall Traefik</code>
+option in the menu, or you can run that step all by itself from the
+command line at any time:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+d make traefik install
+</pre></code>
+    </div>
+</div>
+
+
+<p>You should always reinstall Traefik after changing any configuration
+setting.</p>
+<h3 id="test-traefik-by-installing-whoami">Test Traefik by installing whoami</h3>
+<p>Install <a href="/d.rymcg.tech/whoami/index.html">whoami</a>.</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+curl --cacert CA_CERT_FILE https://whoami.prod.example.com
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+Name: default
+Hostname: 65ef62c6fa52
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:47974
+GET / HTTP/1.1
+Host: whoami.prod.example.com
+User-Agent: curl/8.2.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 192.168.122.1
+X-Forwarded-Host: whoami.prod.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: debian-dev
+X-Real-Ip: 192.168.122.1
+</pre>
+    </div>
+</div>
+
+<p>You can verify the certificate this way:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+WHOAMI=whoami.prod.example.com
+openssl s_client -connect "$WHOAMI:443" < /dev/null >/dev/null
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label">(stdout)</div>
+    <div class="box-content">
+        <pre>
+depth=1 C = US, CN = ca.example.com
+verify return:1
+depth=0 CN = whoami.prod.example.com
+verify return:1
+DONE
+</pre>
+    </div>
+</div>
+
 
             <footer class="footline">
             </footer>
@@ -127,12 +495,12 @@
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1718053698" defer></script>
-        <script src="/js/lunr/lunr.min.js?1718053698" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1718053698" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1718053698" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1718053698" defer></script>
-        <script src="/js/search.js?1718053698" defer></script>
+        <script src="/js/auto-complete.js?1718069952" defer></script>
+        <script src="/js/lunr/lunr.min.js?1718069952" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1718069952" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1718069952" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1718069952" defer></script>
+        <script src="/js/search.js?1718069952" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -274,14 +642,14 @@
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 10, 2024 at 9:08pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 11, 2024 at 1:39am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1718053698" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1718053698" defer></script>
-    <script src="/js/theme.js?1718053698" defer></script>
+    <script src="/js/clipboard.min.js?1718069952" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1718069952" defer></script>
+    <script src="/js/theme.js?1718069952" defer></script>
   </body>
 </html>
