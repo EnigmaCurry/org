@@ -1939,7 +1939,272 @@ DONE
 :EXPORT_FILE_NAME: step-ca-tls-challenge
 :EXPORT_HUGO_WEIGHT: 4000
 :END:
-TODO
+This scenario covers a basic Traefik configuration for a public server
+(VPS). This uses [[https://smallstep.com/docs/step-ca/][Step-CA]] to sign TLS certificates, which are valid for
+use in most web browsers. This scenario will use the *TLS-ALPN-01*
+challenge type.
+
+Step-CA is a self-hosted ACME provider, a root Certificate Authority,
+to sign TLS certificates. Step-CA is an alternative to Let's Encrypt,
+but they serve difference purposes:
+
+ * Use Let's Encrypt if you need "valid" certificates trusted by web
+   browsers.
+ * Use Step-CA if you want fully self-hosted PKI, and your own
+   Certificate Authority. The certificates will not be validated by
+   your clients unless they add your root CA public key to their OS or
+   web browser trust store.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This scenario is only good for /private/ websites and services, as the
+certificates are considered "self signed", they will not be trusted in
+normal web browsers.
+#+end_notice
+
+**** Create a Step-CA server
+
+Follow the chapter named [[/d.rymcg.tech/step-ca][Step-CA]] to create your own Step-CA powered
+ACME Certificate Authority.
+
+**** ACME TLS-ALPN-01 challenge type
+
+[[https://letsencrypt.org/docs/challenge-types/][ACME challenges]] are a type of procedure that authenticates your server
+to Let's Encrypt that you are the owner (controller) of your domain
+name system (DNS). This is important because it prevents other actors
+from requesting certificates for your domains.
+
+The "TLS challenge" (TLS-ALPN-01), is one of /two/ supported ACME
+Challenge types. TLS-ALPN-01 is the default type, which has some
+advantanges, and disadvantages.
+
+ * It /requires/ port 443 to be public. *It cannot work when port 443
+   is blocked.*
+ * It /only/ requires a valid DNS =A= record for the certificate
+   domains to be pointing to the IP address of your server. For a
+   public service, you would have needed to create this record anyway,
+   so this isn't really an extra requirement.
+ * Compared to other supported challenge type, DNS-01, it is much
+   easier and safer to configure, because it does not require the
+   storage of a sensitive API token for your DNS provider.
+ * A significant drawback is the limitation that it can only issue
+   certificates for an *explicit list of domain names*. No wildcards
+   (=*.example.com=) are allowed with TLS-ALPN-01. So you will need to
+   revisit your traefik config every time you add a new application
+   domain name.
+ * Step-CA does /not/ participate in
+   [[https://letsencrypt.org/docs/ct-logs/][Certificate Transparency
+   logs]].
+   
+**** Choose your active Docker context
+
+#+begin_run
+d context
+#+end_run
+
+**** Configure Traefik
+#+attr_shortcode: :style warning
+#+begin_notice
+If you want to reset the existing config back to the defaults, run:
+
+#+begin_run
+d make traefik clean
+#+end_run
+#+end_notice
+
+
+#+begin_run
+d make traefik config
+#+end_run
+
+The configuration is driven by a text wizard menu system.
+
+#+begin_stdout
+? Traefik config main menu:  
+> Create system user on Docker host
+  Configure entrypoints (including dashboard)
+  Configure Certificate Authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates and domains (make certs)
+  Configure middleware (including auth)
+v Configure error page template
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+#+end_stdout
+
+Use your arrow keys to select only the menu items this tutorial does
+not tell you to skip. Select the first one and press the =Enter= key.
+To go back, press the =ESC= key.
+
+Once you go through all the options you need, it will have created and
+configured your =.env_{CONTEXT}= file for you.
+
+***** Create system user on Docker host
+
+This option will create a new username on the Docker host, called
+=traefik=. This is necessary to reserve a unique UID for traefik to
+run as on the system. Run this first before anything else.
+
+***** Skip: Configure entrypoints
+
+For this tutorial, you will use the default entrypoints, so you don't
+need to configure anything.
+
+ * =websecure= (TCP port 443, https)
+ * =web= (TCP port 80, but only used as redirect to =websecure=)
+
+***** Configure Certificate Authorities (CA)
+
+You must configure Traefik instance to trust the root certificate of
+your Step-CA instance.
+
+#+begin_stdout
+? How do you want to configure the list of trusted Certificate Authorities (CA)?  
+  Use the stock list, (alpine: ca-certificates ca-certificates-bundle).
+> Use the stock list, plus add my own root Step-CA certificate.
+  Delete the entire list, and add my own root Step-CA certificate.
+  Delete the entire list.
+  Cancel / Go back.
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+#+end_stdout
+
+Enter the root URL of your Step-CA instance:
+
+#+begin_stdout
+TRAEFIK_STEP_CA_ENDPOINT: Enter your Step-CA endpoint URL (eg. https://ca.example.com)
+: https://ca.example.com
+#+end_stdout
+***** Configure ACME (Step-CA)
+#+begin_stdout
+? Which ACME provider do you want to use?  
+  Let's Encrypt (ACME)
+> Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+#+end_stdout
+
+Choose =Step-CA (ACME)=.
+***** Choose TLS-ALPN-01 ACME challenge
+#+begin_stdout
+? Which type of ACME challenge should be used?  
+> TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+  DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+For your first install, choose =TLS-ALPN-01=, it is the easiest method
+to use for public servers.
+
+If you want to use wildcard DNS records, or you need to setup a server
+behind a firewall, you must choose the more advanced method =DNS-01=,
+and setup your DNS platform for programmatic access with an API token.
+#+end_notice
+***** Configure TLS certificates and domains
+
+d.rymcg.tech uses explicit certificate requests configured centrally,
+on the traefik project:
+
+#+begin_stdout
+? Configure Traefik TLS certificates  
+> Manage all certificates.
+  Create a new certificate.
+  Done / Go back
+#+end_stdout
+
+***** Manage all certificates
+
+This will show you all the certificate requests that have been defined
+and allow you to manage each one. It will be blank to start out with.
+
+***** Create a new certificate
+
+Use this to define all the certificates you need for all your
+applications.
+
+Each certificate needs a main name (CN), which should be the main
+domain name of the certificate.
+
+: Enter the main domain (CN) for this certificate
+: : prod.example.com
+
+#+attr_shortcode: :style info
+#+begin_notice
+Each certificate may also contain several other domain names, known as
+SANs (Subject Alternative Names). You can use this to list as many
+additional domain names that you want to be listed on the same
+certificate. The record for =whoami= is required for the next chapter,
+[[/d.rymcg.tech/whoami][Whoami]].
+#+end_notice
+
+: Now enter additional domains (SANS), one per line:
+: Enter a secondary domain (enter blank to skip)
+: : whoami.prod.example.com
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Make sure that each domain name that you entered on the certificate
+has a valid DNS =A= record, pointing to your Docker server's IP
+address.
+#+end_notice
+
+***** Skip: Configure middleware (including auth)
+No middleware is needed for this scenario.
+***** Install Traefik
+
+To install Traefik, you can simply choose the =Reinstall Traefik=
+option in the menu, or you can run that step all by itself from the
+command line at any time:
+
+#+begin_run
+d make traefik install
+#+end_run
+
+You should always reinstall Traefik after changing any configuration
+setting.
+***** Test Traefik by installing whoami
+
+Install [[/d.rymcg.tech/whoami][whoami]].
+
+#+begin_run
+curl --cacert CA_CERT_FILE https://whoami.prod.example.com
+#+end_run
+
+#+begin_stdout
+Name: default
+Hostname: 65ef62c6fa52
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:47974
+GET / HTTP/1.1
+Host: whoami.prod.example.com
+User-Agent: curl/8.2.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: 192.168.122.1
+X-Forwarded-Host: whoami.prod.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: debian-dev
+X-Real-Ip: 192.168.122.1
+#+end_stdout
+
+You can verify the certificate this way:
+
+#+begin_run
+WHOAMI=whoami.prod.example.com
+openssl s_client -connect "$WHOAMI:443" < /dev/null >/dev/null
+#+end_run
+
+#+begin_stdout
+depth=1 C = US, CN = ca.example.com
+verify return:1
+depth=0 CN = whoami.prod.example.com
+verify return:1
+DONE
+#+end_stdout
+
+
 *** Step-CA DNS challenge
 :PROPERTIES:
 :EXPORT_FILE_NAME: step-ca-dns-challenge
