@@ -1940,13 +1940,12 @@ DONE
 :EXPORT_HUGO_WEIGHT: 4000
 :END:
 This scenario covers a basic Traefik configuration for a public server
-(VPS). This uses [[https://smallstep.com/docs/step-ca/][Step-CA]] to sign TLS certificates, which are valid for
-use in most web browsers. This scenario will use the *TLS-ALPN-01*
-challenge type.
+(VPS). This uses [[https://smallstep.com/docs/step-ca/][Step-CA]] to sign off-grid TLS certificates. This
+scenario will use the *TLS-ALPN-01* challenge type.
 
-Step-CA is a self-hosted ACME provider, a root Certificate Authority,
-to sign TLS certificates. Step-CA is an alternative to Let's Encrypt,
-but they serve difference purposes:
+Step-CA is a self-hosted ACME provider, a root Certificate Authority.
+Step-CA is an alternative to Let's Encrypt, but they do serve
+difference purposes:
 
  * Use Let's Encrypt if you need "valid" certificates trusted by web
    browsers.
@@ -1958,8 +1957,8 @@ but they serve difference purposes:
 #+attr_shortcode: :style warning
 #+begin_notice
 This scenario is only good for /private/ websites and services, as the
-certificates are considered "self signed", they will not be trusted in
-normal web browsers.
+certificates are considered "self signed", they will not be trusted by
+normal web browsers, unless you add it to the trust store.
 #+end_notice
 
 **** Create a Step-CA server
@@ -2631,3 +2630,482 @@ so as follows:
 #+begin_run
 d make whoami logs
 #+end_run
+
+* Step-CA
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: step-ca
+:END:
+
+** Step-CA
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 2040
+:END:
+
+[[https://smallstep.com/docs/step-ca/][Step-CA]] is a secure, online, self-hosted Certificate Authority (CA).
+Its purpose is to issue (sign) X.509 (TLS) certificates, and to
+securely store the private key for the root CA.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Install Step-CA
+:PROPERTIES:
+:EXPORT_FILE_NAME: install
+:END:
+
+*** Select your Docker context
+
+Running your own Certificate Authority should be a careful
+undertaking. Ideally, your Step-CA instance should run on its own
+dedicated Docker (virtual) machine. That way, it can stay up long
+term, as part of your personal cloud infrastructure, and not be tied
+to the lifecycle of any other application you run in your domain.
+
+#+begin_run
+d context
+#+end_run
+
+*** Install Minimal Traefik
+
+If you are creating a new Traefik instance, follow the [[/d.rymcg.tech/traefik-proxy/scenarios/minimal][Mininmal
+Traefik]] install. You do not need anything extra like ACME, nor any
+TLS certificates. Step-CA does all that for itself.
+
+Step-CA can also be installed on an existing Traefik instance, even
+one already configured to use Let's Encrypt. Traefik is configured to
+do TLS passthrough directly to Step-CA, which handles its own TLS
+certificate.
+
+*** Configure Step-CA
+
+#+begin_run
+d make step-ca config
+#+end_run
+
+*** Install interactively
+
+You must run step-ca interactively, for the first time only. This is
+important because you need to make a record of the CA password, which
+is only printed one time in the log:
+
+#+begin_run
+## Run the step-ca interactively the first time only:
+d make step-ca up service=step-ca
+#+end_run
+
+In the log output, you should find your new password:
+
+#+begin_stdout
+step-ca-1  | 👉 Your CA administrative password is: xxxxxxxxxxxxxxxxxxxxxxxxx
+step-ca-1  | 🤫 This will only be displayed once.
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If this is not the /very first time/ you've tried running this, and you
+can't find the password in the log, and you want to start completely
+fresh, destroy the instance, and then try again:
+
+#+attr_shortcode: :style warning
+#+begin_run
+d make step-ca destroy
+d make step-ca up service=step-ca
+#+end_run
+#+end_notice
+
+*** Shutdown the instance
+
+Once you have copied the password, and stored it in a safe place,
+press Ctrl-C, and the service will automatically shutdown. You will
+need this password for later when you request new certificates to be
+created.
+
+#+attr_shortcode: :style info
+#+begin_notice
+Starting the container up one time, and then shutting it down, also
+served another purpose: on the first run, the Step-CA service
+automatically creates =/home/step/config/ca.json= (in the container
+volume), this is important to know the order in which it creates it,
+because our config container requires this file to already exist (it
+wants to modify an existing config file), and since its supposed to
+run before the step-ca container, we must run it manually, one time
+only. This ensures that =ca.json= now exists in the config volume, and
+now the config container can fully manage this file going forward. In
+other words: the config values you set in your =.env_{CONTEXT}= file
+will only take affect after the SECOND time the container boots.
+#+end_notice
+
+*** Install
+
+Once configured, you can install the service permanently:
+
+#+begin_run
+d make step-ca install wait
+#+end_run
+
+Traefik will wait for the service healthcheck to complete, before
+serving it. The =wait= target will block until this occurs.
+
+
+** Create Certificates
+:PROPERTIES:
+:EXPORT_FILE_NAME: certificates
+:END:
+*** Setup step-cli
+
+Step-CA is strictly an API service, it has no user web interface. All
+interaction with Step-CA is done with the command line client
+[[https://smallstep.com/docs/step-cli/installation/][step-cli]], which you should install on your workstation, using your
+package manager, or according to those instructions.
+
+#+attr_shortcode: :style info
+#+begin_notice
+Some packages install only the binary named step-cli. step-cli is just
+another name for step. However, most of the Step-CA documentation uses
+the step name in place of step-cli. So if your package doesn't install
+step (Arch Linux is this way), you can add alias step=step-cli to your
+~/.bashrc or wherever you put that stuff on your workstation. You can
+also change the STEP variable at the top of the Makefile to use to
+point to any name/path.
+#+end_notice
+
+Once you've install the =step-cli= program, you need to configure it
+to use your server:
+
+#+begin_run
+d make step-ca client-bootstrap
+#+end_run
+
+*** Create and sign X.509 (TLS) certificates
+
+Each time you want to create a new certificate, run:
+
+#+begin_run
+d make step-ca cert
+#+end_run
+
+This will prompt you to enter the subject name (CN), or fully
+qualified domain name, of the host/entity you want to create the
+certificate for. (eg. certificates may be created for a server, or for
+a client, in the same way.)
+
+You are required to enter the passphrase that you copied during the
+initial installation process.
+
+Once completed, it will create two new files on your worksation:
+
+ * =certs/{DOMAIN}.crt= - This is the public certificate file for your
+   host, along with the full public CA certificate chain.
+ * =certs/{DOMAIN}.key= - This is the private key file (do not share)!
+ * =certs/{DOMAIN}.p12= - This is the private key in an encrypted
+   format (this is what the password it asked you was for). This is
+   the preferred format for importing into a web browser.
+
+You can inspect the certificate file, and gather important details
+about it:
+
+#+begin_run
+step-cli certificate inspect certs/{DOMAIN}.crt
+#+end_run
+
+The certificate has an expiration set in the future, according to the
+default value set as
+=STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION= in your
+=.env_{CONTEXT}= file.
+
+Install the certificate and key files into your target host
+environment.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+The key file is NOT encrypted, keep it safe!
+#+end_notice
+
+** Configure TLS clients
+:PROPERTIES:
+:EXPORT_FILE_NAME: tls-clients
+:END:
+
+The certificates that Step-CA creates are untrusted by mainstream
+trust stores, both as part of your operating system, and separately by
+your web browser. Before clients can trust these certificates, you
+will need to add the CA certificate chain to each of their
+trust stores.
+
+ * Here is the [[https://wiki.archlinux.org/title/TLS#Trust_management][trust management document]] on the Arch Linux wiki. It is
+   also applicable to most other Linux distributions.
+ * For other operating systems, you will need to consult their
+   documentation for how you add root CA certificates.
+
+To export the root CA certificate chain, run:
+
+
+#+begin_run
+make inspect-ca-cert
+#+end_run
+
+You can also find the same thing publicly from your server at
+=https://ca.example.com/roots.pem=.
+
+If your client already has the `step-cli` tool installed and
+configured for your CA, you can install the certs automatically:
+
+#+begin_run
+## Install your public CA certificate into your user trust store:
+step-cli certificate install $(step-cli path)/certs/root_ca.crt
+#+end_run
+
+And if you want remove it again later:
+
+#+begin_run
+## Uninstall your public CA certificate from your user trust store:
+step-cli certificate uninstall $(step-cli path)/certs/root_ca.crt
+#+end_run
+
+This will make simple command line programs, like =curl= work with
+your certificates. However, web browsers have completly separate trust
+stores, and these must be configured separately (also, it's not
+recommended for most users to mess with their browsers security in
+this way unless you really know what you're doing).
+
+** Change Root CA Passphrase
+:PROPERTIES:
+:EXPORT_FILE_NAME: root-ca-passphrase
+:END:
+You must retain the manager passphrase in order to use the service. If
+you lose it, I don't think there's a way to get it back. However, you
+can change the password (assuming you still know the current one).
+
+#+begin_run
+make change-password
+#+end_run
+
+#+attr_shortcode: :style info
+#+begin_notice
+The change password script will ask you to enter two separate
+passwords.. Don't get confused, it's not asking for confirmation!
+The first question is asking for the OLD password (to decrypt), and the
+second questions is asking you for the NEW password (to encrypt). The
+passwords should be different! If you change your mind half-way
+through, press =Ctrl-C= to abort.
+#+end_notice
+
+It's a good idea to immediately change the password, so that the
+initial password is no longer sitting in the docker container logs.
+
+** ACME
+:PROPERTIES:
+:EXPORT_FILE_NAME: acme
+:END:
+
+By default, Step-CA only configures the
+[JWK](https://smallstep.com/docs/step-ca/provisioners/#jwk)
+provisioner, which basically means it's limited to the manual
+certificate requests like `make cert` does.
+
+ACME is an API that offers a more automatic process of requesting,
+issuing, and renewing TLS certificates. If you're familiar with Let's
+Encrypt, you've already been using ACME. Step-CA offers the same
+experience through this common API.
+
+*** Enable ACME
+#+begin_run
+make enable-acme
+#+end_run
+
+In your Traefik instance, you will want to configure ACME to point to
+your Step-CA instance. When you run =d make traefik config=, choose
+=Configure ACME=, choose =Step-CA= and you will be prompted to enter
+the ACME endpoint URL, which is:
+
+#+begin_src
+https://ca.example.com/acme/acme/directory
+#+end_src
+
+(replace =ca.example.com= with your own domain name.)
+
+** Mutual TLS
+:PROPERTIES:
+:EXPORT_FILE_NAME: mtls
+:END:
+
+*** Enable mTLS in Trafeik config
+
+Traefik needs to install the root CA certificate in order to trust
+your client certificates.
+
+In the Traefik =make config= menu, choose =Configure Certificate
+Authorities (CA)=. You need to import your Step-CA root certificate
+into your Traefik container's trust store. Choose one of the options
+that does this, and it will prompt you for the endpoint and
+fingerprint.
+
+ * Endpoint: =https://ca.example.com=
+ * Fingerprint: get this by running =make inspect-fingerprint= in the step-ca project.
+
+Strong mTLS depends on both the client and server using certificates
+from the same CA chain. However, you can relax that if you want. It
+does not technically matter what ACME provider the server uses, it can
+use Let's Encrypt, or Step-CA. The clients will be using Step-CA, but
+they likely already have the Let's Encrypt CA trusted too (because of
+the operating system and browser bundled CAs), so either will work. In
+some cases that will be preferred, because clients won't need to add
+modify their trust store, just add a single client certificate.
+
+*** Enable mTLS for an app
+
+Most d.rymcg.tech apps have been made compatible with mTLS sentry
+authentication. In each of their respective =make config= menus, there
+is the option to turn on mTLS authentication:
+
+#+begin_stdout
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?  
+  No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+> Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+Choosing this option enables mTLS for the given app. The next question
+asks about what certificates it should allow in.
+
+#+begin_stdout
+NGINX_MTLS_AUTHORIZED_CERTS: Enter comma separated list of allowed client certificate names (or blank to allow all) (eg. *.clients.www.example.com)
+: *.clients.whoami.test.rymcg.tech,bob.geocities.com
+#+end_stdout
+
+In the example above, it would only let users in if the fit all of the following criteria:
+
+ * The user must present a valid TLS certicate for all HTTP requests.
+   (eg. with curl =--cacert=, =--cert=, =--key= options) and it must be
+   signed by your own Step-CA instance.
+ * The client certificate name (CN) value must match the list of
+   =NGINX_MTLS_AUTHORIZED_CERTS= (wildcards allowed), comma separated.
+ 
+So any of these clients are allowed access, assuming they are signed
+by our Step-CA instance, and because they match the list of authorized
+domains:
+
+   * ✅ =bob.clients.whoami.test.rymcg.tech=
+   * ✅ =alice.clients.whoami.test.rymcg.tech=
+   * ✅ =ANYTHING.clients.whoami.test.rymcg.tech=
+   * ✅ =bob.geocities.com=
+
+None, of these clients are allowed access, not only because they
+wouldn't be signed by our Step-CA instance, but also because they
+don't match our list of authorized domains:
+  
+   * ❌ =thing2.rymcg.tech=
+   * ❌ =ads.google.com=
+   * ❌ =ANYTHING.else=
+
+*** In-app Authorization
+
+The ={APP}_MTLS_AUTHORIZED_CERTS= variable does a crude form of
+authorization for the app as a whole (it lets some certs in, while
+rejecting others). For finer grained permissions than that, you need
+to ask the app itself to do it, Traefik can't do it alone.
+
+The =mtlsheader= middleware will forward the authenticated client
+certificate name (CN) to the proxied service, via the header named
+=X-Client-CN=. This is verified information that tells the backend app
+the unique name of the client, based upon the signed name (CN) of the
+certificate. Using this information, the application routes can do
+fine grained authoriation (eg. sending http =200= or =403= codes on a
+per page basis, based on user permissions stored in a database row per
+name (CN)).
+
+*** Creating client certificates
+
+You create client certificates the same way you create server
+cerificates:
+
+#+begin_stdout
+d make step-ca cert
+#+end_stdout
+
+You will be asked to enter the name (CN) which must be a name that is
+allowed by your Step-CA instance.
+
+You can also generate client ceritificates via ACME, if you want to
+setup a client that way. Give
+[acme.sh](https://github.com/acmesh-official/acme.sh) a try.
+
+*** Naming client certificates (CN)
+
+Although client certificate names do have to look like internet domain
+names, but unless you're issuing client certificates via ACME, they do
+not need to have DNS. You are free to make up whatever domain names
+you want for your user certificates. However, here is a good naming
+convention you may want to use, as a subdomain of the app you are
+creating the certificates for:
+
+#+begin_stdout
+NAME.clients.app.example.com
+#+end_stdout
+
+If you create your client certificates like that, they will retain a
+relation back to where they are supposed to go. However, if a user
+needs access to multiple apps, they will need to manage certificates.
+
+A better way might be to create a central store where users have
+unique IDs inside of your organization:
+
+#+begin_stdout
+NAME.users.example.com
+#+end_stdout
+
+*** Testing TLS with curl
+
+Assuming you have already deployed [whoami](../whoami) and configured
+it for mTLS, and you have the following config:
+
+#+begin_stdout
+ROOT_STEP_CA_CERT=~/.step/certs/root_ca.crt
+CLIENT_CERT=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.crt
+CLIENT_KEY=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.key
+
+WHOAMI_URL=https://whoami.example.com
+#+end_stdout
+
+*** Test the root CA
+
+If your system has no trust of the Step-CA root certificate, curl will
+show you this error, which is normal of any "self-signed" certificate:
+
+#+begin_stdout
+$ curl ${WHOAMI_URL}
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+#+end_stdout
+
+It means that curl is politely refusing to show you the content
+because the certificate is not trusted. However, you can bypass the
+check with the =--insecure= (or =-k=) flag:
+
+#+begin_stdout
+## UNSAFE: This will bypass TLS validation entirely, allowing any certificate.
+curl --insecure ${WHOAMI_URL}
+#+end_stdout
+
+To fix this, you can add the root CA to your system trust store:
+
+#+begin_stdout
+## Only do this if you're really sure you've secured your passwords!
+step-cli certificate install ${ROOT_STEP_CA_CERT}
+#+end_stdout
+
+*** Test mTLS
+
+If your server requires mTLS, but you haven't provided your client
+certificate and key, you'll get this error:
+
+#+begin_stdout
+#+end_stdout
