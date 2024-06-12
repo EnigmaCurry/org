@@ -126,7 +126,7 @@ You will need the following hardware:
  * A USB drive for copying the .iso installer to.
  * A [[https://solokeys.com/][solokey]] or other FIDO2 compatible hardware authentication key.
    (This is optional, but highly recommended for storing secure shell
-   keys, PGP keys, and logging into websites with Webauthn.)
+   keys, PGP keys, sudo 2FA, and logging into websites with Webauthn.)
 
 * Install Linux (Fedora Atomic)
 :PROPERTIES:
@@ -647,21 +647,21 @@ disappears.
 :EXPORT_FILE_NAME: toolbox
 :END:
 
-[[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][Toolbox]] is an integral part of Fedora Atomic, being one of the main
-methods of installing software, it lets you run your applications
-inside of [[https://podman.io][Podman]] containers. Toolbox can actually be used on any Linux
-system that is capable of running Podman, but is especially useful on
-Atomic hosts. Toolbox is more tightly integrated with your host OS
-than Docker or Podman containers normally are. Toolbox containers
-share the same =/home= directory with the host (bind mounted), and
-they live in the same network and process namespace as the host (ie.
-you can run =ps= or =kill= from inside the toolbox, and it will
-see/affect the host.) Toolbox containers are not sandboxed like normal
-Docker containers are, but they are a convenience for
-installing/removing software on Atomic hosts, because theres not
-really any other way (since the host filesystem is read-only). The
-applications you install in the container will live only inside the
-toolbox.
+[[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][Toolbox]] (Toolbx) is an integral part of Fedora Atomic, being one of
+the main methods of installing software, it lets you run your
+applications inside of [[https://podman.io][Podman]] containers. Toolbox can actually be used
+on any Linux system that is capable of running Podman, but it is
+especially useful on Atomic hosts. Toolbox is more tightly integrated
+with your host OS than Docker or Podman containers normally are.
+Toolbox containers share the same =/home= directory with the host
+(bind mounted), and they live in the same network and process
+namespace as the host (ie. you can run =ps= or =kill= from inside the
+toolbox, and it will see/affect the host.) Toolbox containers are not
+sandboxed like normal Docker containers are, but they are a
+convenience for installing/removing software on Atomic hosts, since
+the host filesystem is read-only (but read-write inside of a container).
+The applications you install in the container will live only inside
+the toolbox.
 
 The killer feature of a toolbox is that it lets you try things out,
 and if you want to start over, you can just delete the toolbox
@@ -679,9 +679,7 @@ we will use on a daily basis.
 toolbox create dev
 #+end_run
 
-This will create a new toolbox container called =dev= based upon the
-same Fedora version as the host (the toolbox itself is not Atomic
-though, but the normal Fedora Workstation version instead.)
+This will create a new toolbox container called =dev=.
 
 To enter the toolbox run:
 
@@ -694,26 +692,31 @@ software:
 
 #+attr_shortcode: :title Run this in the dev toolbox :style secondary
 #+begin_run
-sudo dnf install keychain htop
+sudo dnf install keychain htop gettext
 sudo dnf groupinstall "Development Tools" "Development Libraries"
 #+end_run
 
+By default, the container image toolbox selects is the image of Fedora
+Workstation, based upon the same version as the host (eg. If the host
+is running Fedora Atomic Sway 40, the toolbox will run Fedora
+Workstation 40.)
+
 *** Arch Linux toolbox
 
-You are not limited to running Fedora toolboxes, in fact you can run
-any container image you want, or even build your own from a
-=Dockerfile=. Here is a Dockerfile for Arch Linux you can use to build
-an Arch Linux toolbox container:
+You are not limited to using the default toolbox image, in fact you
+can run any container image you want, or even build your own from a
+=Dockerfile=. Here is how to build a custom Arch Linux container
+image:
 
 #+begin_run
-ARCH_BUILD=~/toolbox/arch
+IMAGE=arch
 (set -e
-mkdir -p ${ARCH_BUILD}
-cat << 'EOF' > ${ARCH_BUILD}/Dockerfile
+mkdir -p ~/toolbox/${IMAGE}
+cat << 'EOF' > ~/toolbox/${IMAGE}/Dockerfile
 ## http://book.rymcg.tech/linux-workstation/config/toolbox/#arch-linux-toolbox
 FROM docker.io/archlinux/archlinux:latest
 ENV NAME=arch-toolbox VERSION=rolling
-LABEL com.github.containers.toolbox="true"
+LABEL com.github.containers.toolbox="true" name=${IMAGE}-toolbox
 RUN pacman -Syu --noconfirm \
     && pacman  -S --noconfirm sudo inetutils less \
        git base-devel go \
@@ -727,7 +730,7 @@ RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
     && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
 CMD ["bash"]
 EOF
-podman build -t arch ${ARCH_BUILD}
+podman build -t ${IMAGE} ~/toolbox/${IMAGE}
 )
 #+end_run
 
@@ -768,6 +771,82 @@ toolbox rm --force arch
 #+end_run
 
 (force is only required if the toolbox is currently running.)
+
+*** Host spawn
+
+[[https://github.com/1player/host-spawn/tree/master][host-spawn]] is a program you can install inside of a toolbox, to run
+commands on the host.
+
+**** Install host-spawn inside Fedora container
+
+#+attr_shortcode: :style secondary :title Run this in your toolbox container:
+#+begin_run
+sudo dnf install host-spawn
+#+end_run
+
+**** Install host-spawn inside Arch Linux container
+
+#+attr_shortcode: :style secondary :title Build and install host-spawn on Arch Linux
+#+begin_run
+(set -e
+BUILD_DIR=~/aur/host-spawn
+rm -f ${BUILD_DIR}/*.zst
+mkdir -p ${BUILD_DIR}
+cat << 'EOF' > ${BUILD_DIR}/PKGBUILD
+pkgname=host-spawn-git
+pkgver=v1.6.0.r0.ge150d2c
+pkgrel=1
+pkgdesc='Run commands on your host machine from inside your flatpak sandbox, toolbox or distrobox containers.'
+arch=('any')
+url="https://github.com/1player/host-spawn"
+license=('MIT-0')
+source=("${pkgname%-git}::git+https://github.com/1player/host-spawn.git")
+depends=('go')
+makedepends=('git')
+conflicts=("${pkgname%-git}")
+provides=("${pkgname%-git}")
+package() {
+  cd "${pkgname%-git}"
+  ./build.sh $(uname -m)
+  install -Dm 555 build/host-spawn-$(uname -m) \
+    "${pkgdir}"/usr/bin/host-spawn
+}
+pkgver() {
+  cd "${pkgname%-git}"
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+sha256sums=('SKIP')
+EOF
+cd ${BUILD_DIR}
+makepkg
+sudo pacman -U host-spawn-*.zst
+)
+#+end_run
+
+**** Run host programs
+
+Once you install =host-spawn= inside your container, you can use it to
+run any host command:
+
+#+attr_shortcode: :style secondary :title Run this in your toolbox container:
+#+begin_run
+host-spawn toolbox list
+#+end_run
+
+This will invoke =toolbox= */on the host/*.
+
+**** Create host program shims
+
+#+attr_shortcode: :style secondary :title Run this in your toolbox container:
+#+begin_run
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/toolbox
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/podman
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
+#+end_run
+
+This will allow you to run the host programs =toolbox=, =podman= and
+=flatpak=, from inside the container, without needing to run
+=host-spawn= directly.
 
 ** Emacs
 :PROPERTIES:
@@ -1867,7 +1946,7 @@ armor errors. YMMV.
 #+begin_notice
 On a Debian workstation, creating a config for qemu-bridge-helper was
 required, and modifying it to run setuid root to prevent user
-permission error (=failed to create tun device: Operation not permitted:
+permission error (=failed to create tun device:= =Operation not permitted:
 Transport endpoint is not connected=):
 
 #+begin_run
