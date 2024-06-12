@@ -260,18 +260,23 @@ Let it finish downloading the new image, and then reboot again.
 :EXPORT_FILE_NAME: layering-packages
 :END:
 
-See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]]. For most packages,
-you should not install them this way, but you should prefer installing
-them inside of a /linux-workstation/config/toolbox / distrobox container instead. On the Fedora
-Atomic host, you should install (layer) only those packages that
-cannot be run from a container (or you really just want to run them
-natively for some reason).
+See the [[https://docs.fedoraproject.org/en-US/iot/add-layered/][Fedora docs for Adding Layered Packages]].
+
+#+attr_shortcode: :style warning
+#+begin_notice
+On a Fedora Atomic host, you should only layer packages as a last
+resort. You should prefer running apps from a container ([[/linux-workstation/config/toolbox][toolbox]])
+instead. Layering packages should be reserved only for those
+applications that need to interact with the system in a way that using
+containers would be inconvenient or impossible.
+#+end_notice
 
 *** Layer packages with rpm-ostree
 
-To create efficient layers, *you should try to install everything in
-one go*, using as few layers as possible. Here is a list of packages
-you might want to add all together as one layer:
+To create efficient layers, and to lessen the burden of several
+reboots, *you should try to install everything in one go*, using as
+few layers as possible. Here is a list of packages you might want to
+add all together as one layer:
 
 #+begin_run
 sudo rpm-ostree install wdisplays qemu-kvm libvirt virt-manager \
@@ -281,9 +286,18 @@ sudo rpm-ostree install wdisplays qemu-kvm libvirt virt-manager \
      distrobox file-roller thunar-volman pamu2fcfg pam-u2f fido2-tools
 #+end_run
 
-[[https://fedoraproject.org/atomic-desktops/sway/][Fedora Atomic Sway edition (Sericea) already includes a lot of
-packages layered on top of the core Fedora Atomic.]] So before you
+#+attr_shortcode: :style info
+#+begin_notice
+Many of the subsequent chapters rely on these dependencies, so you
+should definitely install them if you are following this book completely.
+#+end_notice
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Fedora Atomic Sway edition (Sericea) already includes [[https://fedoraproject.org/atomic-desktops/sway/][a lot of
+packages]] layered on top of the core Fedora Atomic. So before you
 install new things, check what comes preinstalled.
+#+end_notice
 
 *** System reboot is required to load new packages
 
