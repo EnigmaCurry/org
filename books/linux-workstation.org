@@ -196,6 +196,11 @@ top right corner of the default Sway desktop. Click on it, and drop
 down into the menu called =Available networks= and choose your WiFi
 access point.
 
+*** Open a terminal
+
+Press =Ctrl-Enter= to open a terminal window. Read the chapter on [[/linux-workstation/config/sway][Sway]]
+to learn how to use the rest of your system.
+
 * Upgrading
 :PROPERTIES:
 :EXPORT_FILE_NAME: upgrading
@@ -250,6 +255,8 @@ Atomic host, you should install (layer) only those packages that
 cannot be run from a container (or you really just want to run them
 natively for some reason).
 
+*** Layer packages with rpm-ostree
+
 To create efficient layers, *you should try to install everything in
 one go*, using as few layers as possible. Here is a list of packages
 you might want to add all together as one layer:
@@ -265,6 +272,15 @@ sudo rpm-ostree install wdisplays qemu-kvm libvirt virt-manager \
 [[https://fedoraproject.org/atomic-desktops/sway/][Fedora Atomic Sway edition (Sericea) already includes a lot of
 packages layered on top of the core Fedora Atomic.]] So before you
 install new things, check what comes preinstalled.
+
+*** System reboot is required to load new packages
+
+Everytime you install packages with =rpm-ostree=, you must reboot your
+system to load them:
+
+#+begin_run
+sudo systemctl reboot
+#+end_run
 
 ** Examples of applications you might want to layer
 
@@ -306,6 +322,7 @@ Your user home directories (=/var/home/=) and system configuration
 #+begin_run
 sudo rpm-ostree reset
 sudo rpm-ostree cleanup -r
+sudo systemctl reboot
 #+end_run
 #+end_notice
 
