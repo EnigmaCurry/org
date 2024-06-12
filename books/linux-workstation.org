@@ -698,8 +698,10 @@ any container image you want, or even build your own from a
 =Dockerfile=. Here is a Dockerfile for Arch Linux you can use to build
 an Arch Linux toolbox container:
 
-#+attr_shortcode: :file Dockerfile
-#+begin_edit
+#+begin_run
+TMP_BUILD=$(mktemp -d)
+(set -e
+cat << EOF > ${TMP_BUILD}/Dockerfile
 FROM docker.io/archlinux/archlinux:latest
 ENV NAME=arch-toolbox VERSION=rolling
 LABEL com.github.containers.toolbox="true" \
@@ -717,13 +719,9 @@ RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
     && sudo -u nobody makepkg -s \
     && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
 CMD ["bash"]
-#+end_edit
-
-Write this to a file named =Dockerfile= and open your host terminal to
-the same directory. Then run this command to build the container:
-
-#+begin_run
-podman build -t arch .
+EOF
+podman build -t arch ${TMP_BUILD}
+)
 #+end_run
 
 Now you can create a new toolbox based on the new image (both called
@@ -788,7 +786,7 @@ toolbox enter dev
 
 Install Emacs:
 
-#+attr_shortcode: :title run this inside the toolbox:
+#+attr_shortcode: :style secondary :title Run this inside the toolbox:
 #+begin_run
 sudo dnf install emacs
 #+end_run
@@ -801,14 +799,12 @@ the host, you will need a little script installed on the host.
 You can create this script and put it in =/usr/local/bin/emacs=. Run
 this on the host (not in the toolbox), to create it as the root user:
 
-#+attr_shortcode: :file /usr/local/bin/emacs
-#+begin_edit
+#+begin_run
+cat << EOF | sudo tee /usr/local/bin/emacs
 #!/bin/bash
 ## Run Emacs in the dev toolbox and pass it any args:
 toolbox run -c dev emacs $@
-#+end_edit
-
-#+begin_run
+EOF
 sudo chmod a+x /usr/local/bin/emacs
 #+end_run
 
@@ -851,7 +847,7 @@ rm ~/.emacs ~/.emacs.d -rf
 [[https://github.com/EnigmaCurry/emacs][My Emacs config is on github]]. Install it with the following script:
 
 #+begin_run
-REMOTE=git@github.com:EnigmaCurry/emacs.git
+REMOTE=https://github.com/EnigmaCurry/emacs.git
 REPO=${HOME}/git/vendor/enigmacurry/emacs
 BRANCH=straight
 
