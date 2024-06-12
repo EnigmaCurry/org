@@ -648,20 +648,20 @@ disappears.
 :END:
 
 [[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][Toolbox]] is an integral part of Fedora Atomic, being one of the main
-methods of installing software (the alternative being Flatpak), it
-lets you run your applications inside of [[https://podman.io][Podman]] containers. Toolbox
-can actually be used on any Linux system that is capable of running
-Podman, but is especially useful on Atomic hosts. Toolbox is more
-tightly integrated with your host OS than Docker or Podman containers
-normally are. Toolbox containers share the same =/home= directory with
-the host (bind mounted), and they live in the same network and process
-namespace as the host (ie. you can run =ps= or =kill= from inside the
-toolbox, and it will see/affect the host.) Toolbox containers are not
-sandboxed like normal Docker containers are, but they are a
-convenience for installing/removing software on Atomic hosts, because
-theres not really any other way (since the host filesystem is
-read-only). The applications you install in the container will live
-only inside the toolbox.
+methods of installing software, it lets you run your applications
+inside of [[https://podman.io][Podman]] containers. Toolbox can actually be used on any Linux
+system that is capable of running Podman, but is especially useful on
+Atomic hosts. Toolbox is more tightly integrated with your host OS
+than Docker or Podman containers normally are. Toolbox containers
+share the same =/home= directory with the host (bind mounted), and
+they live in the same network and process namespace as the host (ie.
+you can run =ps= or =kill= from inside the toolbox, and it will
+see/affect the host.) Toolbox containers are not sandboxed like normal
+Docker containers are, but they are a convenience for
+installing/removing software on Atomic hosts, because theres not
+really any other way (since the host filesystem is read-only). The
+applications you install in the container will live only inside the
+toolbox.
 
 The killer feature of a toolbox is that it lets you try things out,
 and if you want to start over, you can just delete the toolbox
@@ -706,14 +706,14 @@ any container image you want, or even build your own from a
 an Arch Linux toolbox container:
 
 #+begin_run
-TMP_BUILD=$(mktemp -d)
+ARCH_BUILD=~/toolbox/arch
 (set -e
-cat << EOF > ${TMP_BUILD}/Dockerfile
+mkdir -p ${ARCH_BUILD}
+cat << 'EOF' > ${ARCH_BUILD}/Dockerfile
+## http://book.rymcg.tech/linux-workstation/config/toolbox/#arch-linux-toolbox
 FROM docker.io/archlinux/archlinux:latest
 ENV NAME=arch-toolbox VERSION=rolling
-LABEL com.github.containers.toolbox="true" \
-  name="$NAME" \
-  version="$VERSION"
+LABEL com.github.containers.toolbox="true"
 RUN pacman -Syu --noconfirm \
     && pacman  -S --noconfirm sudo inetutils less \
        git base-devel go \
@@ -727,7 +727,7 @@ RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
     && pacman -U --noconfirm yay-bin-*.pkg.tar.zst
 CMD ["bash"]
 EOF
-podman build -t arch ${TMP_BUILD}
+podman build -t arch ${ARCH_BUILD}
 )
 #+end_run
 
