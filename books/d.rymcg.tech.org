@@ -888,40 +888,52 @@ Install [[https://github.com/EnigmaCurry/d.rymcg.tech#readme][d.rymcg.tech]] and
 
 #+attr_shortcode: :title If you run Fedora workstations, run this as root
 #+begin_run
-dnf install bash gettext openssl git xdg-utils jq sshfs curl \
-            inotify-tools httpd-tools make wireguard-tools
+sudo dnf install bash gettext openssl git xdg-utils jq sshfs curl \
+                 inotify-tools httpd-tools make wireguard-tools
 #+end_run
 
 #+attr_shortcode: :title If you run Debian/Ubuntu workstations, run this as root
 #+begin_run
-apt-get install bash build-essential gettext git openssl \
-        apache2-utils xdg-utils jq sshfs wireguard curl \
-        inotify-tools
+sudo apt-get install bash build-essential gettext git openssl \
+                     apache2-utils xdg-utils jq sshfs wireguard curl \
+                     inotify-tools
 #+end_run
 
 #+attr_shortcode: :title If you run Arch Linux workstations, run this as root
 #+begin_run
-pacman -S bash base-devel gettext git openssl apache xdg-utils \
-          jq sshfs wireguard-tools curl inotify-tools
+sudo pacman -S bash base-devel gettext git openssl apache xdg-utils \
+               jq sshfs wireguard-tools curl inotify-tools
 #+end_run
 
 *** Clone d.rymcg.tech repository
 
 #+begin_run
+ROOT_DIR=${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
-   ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+   ${ROOT_DIR}
 #+end_run
 
 #+attr_shortcode: :style warning
 #+begin_notice
-By convention, *you should not change the clone path*. It is
-intentionally placed in a vendor neutral path location for all to use.
-But if you're adamant to do so, it should still work, regardless of
-where you put it. But watch out, as this may break documentation, and
-for some external projects that assume =ROOT_DIR= is using the
-conventional path. For compatability reasons, consider making a
-symlink from =${HOME}/git/vendor/enigmacurry/d.rymcg.tech= pointing to
-your actual clone path.
+By convention, *you should not change the  =ROOT_DIR= clone path*. It
+is intentionally placed in a vendor neutral path location for all to
+use. But, if you really want to change it, it should still work,
+regardless of where you put it. But watch out, as this may break
+documentation, and for some external projects that assume =ROOT_DIR=
+is using the conventional path. For compatability reasons, consider
+making a symlink pointing to your actual clone path:
+
+#+begin_run
+## Only run this if you customized ROOT_DIR
+(set -e
+test -z "${ROOT_DIR}" && echo -e "\nROOT_DIR is unset. Exiting." && exit 1
+test "${ROOT_DIR}" == "${HOME}/git/vendor/enigmacurry/d.rymcg.tech" && \
+  echo -e "\nROOT_DIR is the default path: ${ROOT_DIR}" && \
+  exit 1
+mkdir -p ~/git/vendor/enigmacurry
+ln -s ${ROOT_DIR} ~/git/vendor/enigmacurry/d.rymcg.tech
+)
+#+end_run
 #+end_notice
 
 *** Setup =d.rymcg.tech= command line tool
@@ -961,7 +973,7 @@ d
 #+begin_stdout
 Found ROOT_DIR=/var/home/ryan/git/vendor/enigmacurry/d.rymcg.tech
 
-\## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
+## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
 cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory
 create [PROJECT] [TEMPLATE]   Create a new external project from a template
 make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
@@ -970,7 +982,7 @@ new-context                   Create a new Docker context
 ssh [COMMAND ...]             Run command or shell on active docker context SSH host
 completion                    Setup TAB completion in your shell
 
-\## Documentation sub-commands:
+## Documentation sub-commands:
 help                          Show this help screen
 list                          List available d.rymcg.tech projects
                               (not including external projects, unless you symlink them into ROOT_DIR)
