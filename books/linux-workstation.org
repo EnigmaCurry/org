@@ -213,6 +213,24 @@ access point.
 
 Press =Win+Enter= to open a terminal window.
 
+
+**** Set Hostname
+
+By default, the hostname of the new workstation is =fedora=. If you
+want to change it, now is a good time:
+
+#+begin_run
+HOST=foo
+sudo hostnamectl set-hostname ${HOST}
+#+end_run
+
+Close the terminal, press =Ctrl+D=. Open a new terminal, press
+=Win+Enter=. The new hostname should be reflected in the Bash prompt.
+
+#+begin_stdout
+[ryan@foo ~]$ 
+#+end_stdout
+
 **** Open other apps like web browsers
 
  * Press =Win+D= to open the =drun= menu.
@@ -1085,19 +1103,19 @@ memory, but you still need to hold the identity of it in the
 ssh-agent.)
 
 Keychain is a program that helps you setup the ssh-agent. Install
-=keychain=:
+=keychain= in each of your toolboxes and/or workstations:
 
-#+attr_shortcode: :title Run this on your Fedora workstations:
+#+attr_shortcode: :title Run this on your Fedora workstations: :style secondary
 #+begin_run
 sudo dnf install keychain
 #+end_run
 
-#+attr_shortcode: :title Run this on your Debian / Ubuntu workstations:
+#+attr_shortcode: :title Run this on your Debian / Ubuntu workstations: :style secondary
 #+begin_run
 sudo apt install keychain
 #+end_run
 
-#+attr_shortcode: :title Run this on your Arch Linux workstations:
+#+attr_shortcode: :title Run this on your Arch Linux workstations: :style secondary
 #+begin_run
 sudo pacman -S keychain
 #+end_run
@@ -1320,7 +1338,9 @@ python -m venv ${SOLO_ROOT}/env
 ${SOLO_ROOT}/env/bin/pip3 install -e ${SOLO_ROOT}/solo1-cli
 #+end_run
 
-***** Add =solo= alias to your .bashrc
+***** Create =solo= alias
+
+You can add this alias to your =~/.bashrc= or =~/.bashrc.local=:
 
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
@@ -1687,7 +1707,8 @@ sudo ~doctl/doctl completion bash | sudo tee /etc/profile.d/doctl_completion.sh
 **** Create app alias for normal user account
 
 In your normal workstation account, create this alias in your
-=~/.bashrc= to make it more convenient to run doctl via =sudo=:
+=~/.bashrc= (or =~/.bashrc.local=) to make it more convenient to run
+doctl via =sudo=:
 
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
