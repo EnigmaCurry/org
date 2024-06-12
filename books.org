@@ -1,15 +1,19 @@
 #+hugo_base_dir: ./hugo
 #+hugo_section: /
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi toc env
 
 * book.rymcg.tech
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :END:
+
+#+attr_shortcode: :style info
+#+begin_notice
 This repository contains a collection of books written by EnigmaCurry.
 
 This content is open-source, CC BY 4.0. See [[file:~/git/vendor/enigmacurry/license.org][LICENSE]] for attribution rules.
+#+end_notice
 
 ** Navigation
 
@@ -17,32 +21,136 @@ This website is presented as a book of books, so you can read
 everything from beginning to end. Use your keyboard left/right arrow
 keys to flip through the pages.
 
+#+begin_notice
 [[/img/site/arrow_keys.webp]]
+#+end_notice
 
 If you are using a touch screen interface, use the arrow buttons at
 the top right of the page.
 
+#+begin_notice
 [[/img/site/arrows.webp]]
-
+#+end_notice
 ** Table of contents
 
 The menu bar on the left contains the index of all the books, with the
 titles as top level headings. On smaller screens, you may need to
 expand this menu using the top left hamburger menu.
 
+#+begin_notice
 [[/img/site/hamburger.webp]]
-
+#+end_notice
 At the top left of every page (and just to the right of the sidebar),
 there is a button to show the outline of the current page.
 
+#+begin_notice
 [[/img/site/toc.webp]]
+#+end_notice
 
 ** Search
 
 Use the search box in the left hand menu to search all of the books on
 the site.
 
+#+begin_notice
 [[/img/site/search.webp]]
+#+end_notice
+
+** Shell command blocks
+
+Throughout these books, you will find literal command blocks that you
+should copy and paste to run in your Bash shell.
+
+Commands that are to be run on your primary workstation are in blue:
+
+#+begin_run
+whoami
+hostname
+#+end_run
+
+You will also sometimes see the /example/ output that a command
+prints:
+
+#+begin_stdout
+ryan
+toolbox
+#+end_stdout
+
+Pay attention to the color and the title of the box to provide
+important context. Commands that are to be run on a different machine,
+or in a container, etc. are usually orange:
+
+#+attr_shortcode: :style secondary :title Run this inside the container foo:
+#+begin_run
+whoami
+hostname
+#+end_run
+
+#+begin_stdout
+root
+foo
+#+end_stdout
+
+** Config blocks
+
+Temporary shell variables are used to carry common config values
+across multiple command blocks. You can copy and paste them just like
+you do when running a command, but they are used only for
+configuration before running another command:
+
+#+begin_env
+COLOR=orange
+FOOD="milk chocolate covered raisins"
+#+end_env
+
+Subsequent code blocks can reference these temporary variables:
+
+#+begin_run
+echo "Favorite color : ${COLOR}"
+echo "Favorite food  : ${FOOD}"
+#+end_run
+
+#+begin_stdout
+Favorite color : orange
+Favorite food  : milk chocolate covered raisins
+#+end_stdout
+
+** Use Bash 5.1+
+
+The comamnds written in this book are tested with Bash version 5.2:
+
+#+begin_stdout
+$ bash --version | head -1
+GNU bash, version 5.2.26(1)-release
+#+end_stdout
+
+*** Bracketed Paste
+
+Since Bash 5.1, *an important feature has been turned on by default:
+[[https://en.wikipedia.org/wiki/Bracketed-paste][bracketed paste]]*. This lets you copy and paste multi-line commands,
+from this web page, into your terminal, and edit the entire command
+directly on the command line, before anything is run. It gives you a
+chance to read the entire command block that you paste, to be sure its
+all correct, /before/ you run it. When you're ready, you press the
+=Enter= key, and then the whole block is run. To cancel before running
+it, press =Ctrl-C=.
+
+Before Bash 5.1, unless you specifically turned this feature on,
+*commands that you paste would be run /immediately/*, which is such an
+insecure anti-feature for a default setting!
+
+#+attr_shortcode: :style warning
+#+begin_notice
+If you need to be running an old version of Bash, you should at least
+turn on bracketed paste:
+
+#+begin_run
+## Only necessary for Bash < 5.1:
+echo "bind 'set enable-bracketed-paste on'" >> ~/.bashrc
+bind 'set enable-bracketed-paste on'
+#+end_run
+#+end_notice
+
 
 * Footnotes
 * COMMENT Local Variables                          :ARCHIVE:
