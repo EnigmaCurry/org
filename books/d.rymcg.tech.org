@@ -793,6 +793,19 @@ If you're on Arch Linux, this is known to be a good configuration:
 sudo pacman -S docker docker-compose docker-buildx
 #+end_run
 
+#+attr_shortcode: :style secondary :title Docker on Fedora 40
+#+begin_notice
+On Fedora 40 I am still evaluating whether the docker packages
+provided by the Fedora package repositories is OK or not. I know that
+redhat made a lot of changes. You probably want to install from the
+official Docker package repository instead.
+
+#+attr_shortcode: :title Install Docker client tools on Fedora
+#+begin_run
+sudo dnf install docker docker-compose
+#+end_run
+#+end_notice
+
 **** Install from upstream Docker package repository
 
 The Docker organization provides several up-to-date packages for
@@ -835,12 +848,20 @@ sudo sh install-docker.sh
 Your workstation is the /manager/ of /remote/ Docker hosts, so it
 should not run the Docker daemon itself, but only the client.
 
-Run the following commands to disable the Docker daemon:
+#+attr_shortcode: :style info :title Disable Docker on native host
+#+begin_notice
+If you installed Docker tools only inside a toolbox container, then
+you don't need to take any action (because systemd is not activated in
+toolbox).
+
+However, if you installed Docker tools on a native host, run the
+following commands to disable the Docker daemon:
 
 #+begin_run
 sudo systemctl disable --now docker
 sudo systemctl mask docker
 #+end_run
+#+end_notice
 
 #+attr_shortcode: :style tip
 #+begin_notice
