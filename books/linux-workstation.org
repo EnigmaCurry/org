@@ -1713,7 +1713,18 @@ doctl via =sudo=:
 #+attr_shortcode: :file ~/.bashrc
 #+begin_edit
 ## DigitalOcean client (dotcl):
-alias doctl='sudo -u doctl ~doctl/doctl'
+DOCTL_SUDO="sudo -u doctl"
+if command -v host-spawn >/dev/null; then
+    if [ -n "${TOOLBOX_CONTAINER}" ]; then
+        DOCTL_HOME=$(host-spawn getent passwd doctl | cut -d: -f6)
+        DOCTL_SUDO="host-spawn ${DOCTL_SUDO}"
+    else
+        DOCTL_HOME=~doctl
+    fi
+else
+    DOCTL_HOME=~doctl
+fi
+alias doctl="${DOCTL_SUDO} ${DOCTL_HOME}/doctl"
 ## Bash completion for dotcl:
 BASH_COMPLETION=/etc/profile.d/bash_completion.sh
 DOCTL_COMPLETION=/etc/profile.d/doctl_completion.sh
