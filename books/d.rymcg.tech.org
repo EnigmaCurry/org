@@ -779,6 +779,15 @@ you're only installing Docker Engine for its client tools (eg. the
 =docker= command).
 
 *** Various ways to install Docker Engine
+**** Install from upstream Docker package repository
+
+The Docker organization provides several up-to-date packages for
+various Linux distributions:
+
+ * [[https://docs.docker.com/engine/install/fedora/][Fedora]]
+ * [[https://docs.docker.com/engine/install/debian/][Debian]]
+ * [[https://docs.docker.com/engine/install/ubuntu/][Ubuntu]]
+
 **** Try your system package manager
 
 Some Linux distributions have decent packages for up-to-date Docker
@@ -786,34 +795,21 @@ versions. Some other distributions lag behind by several versions, or
 may even introduce non-standard changes of their own. Your mileage may
 vary with packages provided by your operating system.
 
-If you're on Arch Linux, this is known to be a good configuration:
+If you're on Arch Linux, you are good to go, because it tracks
+up-to-date upstream versions:
 
 #+attr_shortcode: :title Run this on your Arch Linux workstations:
 #+begin_run
 sudo pacman -S docker docker-compose docker-buildx
 #+end_run
 
-#+attr_shortcode: :style secondary :title Docker on Fedora 40
+#+attr_shortcode: :style warning :title Docker tools on Fedora 40
 #+begin_notice
-On Fedora 40 I am still evaluating whether the docker packages
-provided by the Fedora package repositories is OK or not. I know that
-redhat made a lot of changes. You probably want to install from the
-official Docker package repository instead.
-
-#+attr_shortcode: :title Install Docker client tools on Fedora
-#+begin_run
-sudo dnf install docker docker-compose
-#+end_run
+On Fedora (40), the docker packages from the default repository are
+too old, especially the =docker-compose= package. You should only
+install it from the upstream (docker.com) package repository explained
+in the previous section!
 #+end_notice
-
-**** Install from upstream Docker package repository
-
-The Docker organization provides several up-to-date packages for
-various Linux distributions:
-
- * [[https://docs.docker.com/engine/install/debian/][Debian]]
- * [[https://docs.docker.com/engine/install/ubuntu/][Ubuntu]]
- * [[https://docs.docker.com/engine/install/fedora/][Fedora]]
 
 **** Use the generic Docker installer to install the latest version
 
@@ -831,28 +827,31 @@ sudo sh install-docker.sh
  1. Docker Desktop isn't open source. 
  2. Docker Desktop runs a VM to run the Docker daemon on localhost.
     (we don't want that, since we will use a remote Docker context
-    instead.)
+    instead.) Furthermore, the VM that it creates, runs from the same
+    user account as you normally use, so its storage system is not
+    secured.
  3. Docker Desktop does not support host mode networking, so it
     wouldn't have worked with our Traefik config anyway. (This
     situation may have changed in more recent versions of Docker
     Desktop 4.29+).
- 4. Docker Desktop provide the same =docker= client tools, so it will
-    actually still work, if thats the package you prefer to install.
-    Just be sure to disable the VM that it creates by default, you
-    will /not/ need it! Keep your workstation clean, don't run
-    containers / VMs on it!
+ 4. Docker Desktop does provide the same =docker= client tools, so it
+    will actually still work, if thats the package you prefer to
+    install. Just be sure to disable the VM that it creates by
+    default, you will /not/ need it!
 
+If you really want to run VMs on your workstation, read the Linux
+Workstation book's chapter [[/linux-workstation/kvm-libvirt][KVM / Libvirt]].
     
 *** Disable Docker daemon on your workstation
 
-Your workstation is the /manager/ of /remote/ Docker hosts, so it
-should not run the Docker daemon itself, but only the client.
+Your workstation is the manager of /remote/ Docker hosts, so it should
+not run the Docker daemon (server) itself. It should only run the
+docker /client/.
 
 #+attr_shortcode: :style info :title Disable Docker on native host
 #+begin_notice
-If you installed Docker tools only inside a toolbox container, then
-you don't need to take any action (because systemd is not activated in
-toolbox).
+If you installed Docker inside of a toolbox container, then you don't
+need to take any action (because systemd is not activated in toolbox).
 
 However, if you installed Docker tools on a native host, run the
 following commands to disable the Docker daemon:
@@ -865,16 +864,24 @@ sudo systemctl mask docker
 
 #+attr_shortcode: :style tip
 #+begin_notice
-There is a vestigal Docker context named "default" left on your system
-(see =docker context ls=), and this context was originally used to
-manage the Docker daemon of the local host
-(=unix:///var/run/docker.sock=). However, this will be of no use to
-you now, since the Docker daemon is now completely disabled on the
-workstation. Furthermore, the "default" context cannot be deleted, so
-its best to just ignore it (the =d.rymcg.tech= CLI won't even show
-it). In the next couple of steps, you'll create and activate new
-*remote SSH contexts* that you'll use instead of the "default"
-context.
+There is a vestigal Docker context named "default" left on your system:
+
+#+begin_stdout
+$ docker context ls
+...
+default              Current DOCKER_HOST based configuration   unix:///var/run/docker.sock
+...
+#+end_stdout
+
+
+This context was originally used to manage the Docker daemon of the
+local host (=unix:///var/run/docker.sock=). However, this will be of
+no use to you now, since the Docker daemon is now completely disabled
+on your workstation. Unfortunately, the "default" context cannot be
+deleted, so its best to just ignore it (the =d.rymcg.tech= CLI won't
+even show it). In the next couple of steps, you'll create and activate
+new *remote SSH contexts* and you'll use those instead of the
+"default" context.
 #+end_notice
 
 ** Install d.rymcg.tech tools
@@ -1129,9 +1136,20 @@ to your active docker context.
 docker run hello-world
 #+end_run
 
+#+begin_stdout
+...
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+...
+#+end_stdout
+
 #+begin_run
 docker ps
 #+end_run
+
+#+begin_stdout
+CONTAINER ID   IMAGE     COMMAND  CREATED  STATUS     PORTS     NAMES
+#+end_stdout
 
 ** Setup d.rymcg.tech per Docker context
 :PROPERTIES:
@@ -1561,12 +1579,16 @@ applications.
 Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.
 
-: Enter the main domain (CN) for this certificate
-: : prod.example.com
+#+begin_stdout
+Enter the main domain (CN) for this certificate
+: prod.example.com
+#+end_stdout
 
-: Now enter additional domains (SANS), one per line:
-: Enter a secondary domain (enter blank to skip)
-: : whoami.prod.example.com
+#+begin_stdout
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+: whoami.prod.example.com
+#+end_stdout
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1880,8 +1902,10 @@ applications.
 Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.
 
-: Enter the main domain (CN) for this certificate
-: : prod.example.com
+#+begin_stdout
+Enter the main domain (CN) for this certificate
+: prod.example.com
+#+end_stdout
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -1893,9 +1917,11 @@ certificate. In the special case of DNS-01, you are allowed to use a
 SANS.
 #+end_notice
 
-: Now enter additional domains (SANS), one per line:
-: Enter a secondary domain (enter blank to skip)
-: : *.prod.example.com
+#+begin_stdout
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+: *.prod.example.com
+#+end_stdout
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -2156,8 +2182,10 @@ applications.
 Each certificate needs a main name (CN), which should be the main
 domain name of the certificate.
 
-: Enter the main domain (CN) for this certificate
-: : prod.example.com
+#+begin_stdout
+Enter the main domain (CN) for this certificate
+: prod.example.com
+#+end_stdout
 
 #+attr_shortcode: :style info
 #+begin_notice
@@ -2168,9 +2196,11 @@ certificate. The record for =whoami= is required for the next chapter,
 [[/d.rymcg.tech/whoami][Whoami]].
 #+end_notice
 
-: Now enter additional domains (SANS), one per line:
-: Enter a secondary domain (enter blank to skip)
-: : whoami.prod.example.com
+#+begin_stdout
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+: whoami.prod.example.com
+#+end_stdout
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -3078,9 +3108,9 @@ you want for your user certificates. However, here is a good naming
 convention you may want to use, as a subdomain of the app you are
 creating the certificates for:
 
-#+begin_stdout
+#+begin_src
 NAME.clients.app.example.com
-#+end_stdout
+#+end_src
 
 If you create your client certificates like that, they will retain a
 relation back to where they are supposed to go. However, if a user
@@ -3089,30 +3119,32 @@ needs access to multiple apps, they will need to manage certificates.
 A better way might be to create a central store where users have
 unique IDs inside of your organization:
 
-#+begin_stdout
+#+begin_src
 NAME.users.example.com
-#+end_stdout
+#+end_src
 
 *** Testing TLS with curl
 
 Assuming you have already deployed [whoami](../whoami) and configured
 it for mTLS, and you have the following config:
 
-#+begin_stdout
+#+begin_env
 ROOT_STEP_CA_CERT=~/.step/certs/root_ca.crt
 CLIENT_CERT=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.crt
 CLIENT_KEY=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.key
 
 WHOAMI_URL=https://whoami.example.com
-#+end_stdout
+#+end_env
 
 *** Test the root CA
 
 If your system has no trust of the Step-CA root certificate, curl will
 show you this error, which is normal of any "self-signed" certificate:
 
-#+begin_stdout
+#+begin_run
 $ curl ${WHOAMI_URL}
+#+end_run
+#+begin_stdout
 curl: (60) SSL certificate problem: unable to get local issuer certificate
 More details here: https://curl.se/docs/sslcerts.html
 
@@ -3125,17 +3157,34 @@ It means that curl is politely refusing to show you the content
 because the certificate is not trusted. However, you can bypass the
 check with the =--insecure= (or =-k=) flag:
 
-#+begin_stdout
+#+begin_run
 ## UNSAFE: This will bypass TLS validation entirely, allowing any certificate.
 curl --insecure ${WHOAMI_URL}
-#+end_stdout
+#+end_run
 
-To fix this, you can add the root CA to your system trust store:
+#+begin_run
+## SAFE: Pass the root CA cert directly to curl:
+curl --cacert ${ROOT_STEP_CA_CERT} ${WHOAMI_URL}
+#+end_run
 
-#+begin_stdout
+#+attr_shortcode: :style warning :title Add root CA to your system trust store
+#+begin_notice
+You can also add the root CA to your system trust store, so most
+programs will trust the CA by default. If you do this, you need to be
+extra sure that you have secured the private key, as this is a good
+way to get pwned.
+
+#+begin_run
 ## Only do this if you're really sure you've secured your passwords!
 step-cli certificate install ${ROOT_STEP_CA_CERT}
-#+end_stdout
+#+end_run
+
+#+begin_run
+## SAFE: Uses your system trust store, which now contains your CA:
+curl ${WHOAMI_URL}
+#+end_run
+
+#+end_notice
 
 *** Test mTLS
 
@@ -3144,3 +3193,4 @@ certificate and key, you'll get this error:
 
 #+begin_stdout
 #+end_stdout
+
