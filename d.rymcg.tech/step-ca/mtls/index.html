@@ -27,19 +27,19 @@ Endpoint: https://ca.example.com Fingerprint: get this by running make inspect-f
     <meta itemprop="description" content="Enable mTLS in Trafeik config Traefik needs to install the root CA certificate in order to trust your client certificates.
 In the d make traefik config menu, choose Configure Certificate Authorities (CA). You need to import your Step-CA root certificate into your Traefik container’s trust store. Choose one of the options that does this, and it will prompt you for the endpoint and fingerprint.
 Endpoint: https://ca.example.com Fingerprint: get this by running make inspect-fingerprint in the step-ca project.">
-    <meta itemprop="wordCount" content="932">
+    <meta itemprop="wordCount" content="1029">
     <title>Mutual TLS :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1718258815" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718258815" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1718258815" rel="stylesheet">
-    <link href="/css/auto-complete.css?1718258815" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718258815" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1718258815" rel="stylesheet">
-    <link href="/css/fonts.css?1718258815" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718258815" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1718258815" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1718258815" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1718258815" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1718258815" rel="stylesheet">
-    <link href="/css/print.css?1718258815" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1718258815"></script>
+    <link href="/css/fontawesome-all.min.css?1718294442" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1718294442" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1718294442" rel="stylesheet">
+    <link href="/css/auto-complete.css?1718294442" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1718294442" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1718294442" rel="stylesheet">
+    <link href="/css/fonts.css?1718294442" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1718294442" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1718294442" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1718294442" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1718294442" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1718294442" rel="stylesheet">
+    <link href="/css/print.css?1718294442" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1718294442"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -229,53 +229,47 @@ not need to have DNS. You are free to make up whatever domain names
 you want for your user certificates. However, here is a good naming
 convention you may want to use, as a subdomain of the app you are
 creating the certificates for:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-NAME.clients.app.example.com
-</pre>
-    </div>
-</div>
-
-<p>If you create your client certificates like that, they will retain a
+<div class="highlight wrap-code"><pre tabindex="0"><code class="language-nil" data-lang="nil">NAME.clients.app.example.com</code></pre></div><p>If you create your client certificates like that, they will retain a
 relation back to where they are supposed to go. However, if a user
 needs access to multiple apps, they will need to manage certificates.</p>
 <p>A better way might be to create a central store where users have
 unique IDs inside of your organization:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-NAME.users.example.com
-</pre>
-    </div>
-</div>
-
-<h2 id="testing-tls-with-curl">Testing TLS with curl</h2>
+<div class="highlight wrap-code"><pre tabindex="0"><code class="language-nil" data-lang="nil">NAME.users.example.com</code></pre></div><h2 id="testing-tls-with-curl">Testing TLS with curl</h2>
 <p>Assuming you have already deployed <a href="/d.rymcg.tech/whoami/index.html">whoami</a> and configured
 it for mTLS, and you have the following config:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+<div class="box notices cstyle env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i> [bash]: Set temporary environment variables</div>
     <div class="box-content">
-        <pre>
+        <code><pre>
 ROOT_STEP_CA_CERT=~/.step/certs/root_ca.crt
 CLIENT_CERT=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.crt
 CLIENT_KEY=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs/tony.clients.whoami.example.com.key
 
 WHOAMI_URL=https://whoami.example.com
-</pre>
+</pre></code>
     </div>
 </div>
 
 <h2 id="test-the-root-ca">Test the root CA</h2>
 <p>If your system has no trust of the Step-CA root certificate, curl will
 show you this error, which is normal of any &ldquo;self-signed&rdquo; certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+$ curl ${WHOAMI_URL}
+</pre></code>
+    </div>
+</div>
+
+
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-$ curl ${WHOAMI_URL}
 curl: (60) SSL certificate problem: unable to get local issuer certificate
 More details here: https://curl.se/docs/sslcerts.html
 
@@ -289,27 +283,65 @@ how to fix it, please visit the web page mentioned above.
 <p>It means that curl is politely refusing to show you the content
 because the certificate is not trusted. However, you can bypass the
 check with the <code>--insecure</code> (or <code>-k</code>) flag:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
-        <pre>
+        <code><pre>
 ## UNSAFE: This will bypass TLS validation entirely, allowing any certificate.
 curl --insecure ${WHOAMI_URL}
-</pre>
+</pre></code>
     </div>
 </div>
 
-<p>To fix this, you can add the root CA to your system trust store:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
-        <pre>
+        <code><pre>
+## SAFE: Pass the root CA cert directly to curl:
+curl --cacert ${ROOT_STEP_CA_CERT} ${WHOAMI_URL}
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Add root CA to your system trust store</div>
+  <div class="box-content">
+
+<p>You can also add the root CA to your system trust store, so most
+programs will trust the CA by default. If you do this, you need to be
+extra sure that you have secured the private key, as this is a good
+way to get pwned.</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
 ## Only do this if you're really sure you've secured your passwords!
 step-cli certificate install ${ROOT_STEP_CA_CERT}
-</pre>
+</pre></code>
     </div>
 </div>
-
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+## SAFE: Uses your system trust store, which now contains your CA:
+curl ${WHOAMI_URL}
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
 <h2 id="test-mtls">Test mTLS</h2>
 <p>If your server requires mTLS, but you haven&rsquo;t provided your client
 certificate and key, you&rsquo;ll get this error:</p>
@@ -339,12 +371,12 @@ certificate and key, you&rsquo;ll get this error:</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1718258815" defer></script>
-        <script src="/js/lunr/lunr.min.js?1718258815" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1718258815" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1718258815" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1718258815" defer></script>
-        <script src="/js/search.js?1718258815" defer></script>
+        <script src="/js/auto-complete.js?1718294442" defer></script>
+        <script src="/js/lunr/lunr.min.js?1718294442" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1718294442" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1718294442" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1718294442" defer></script>
+        <script src="/js/search.js?1718294442" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -493,14 +525,14 @@ certificate and key, you&rsquo;ll get this error:</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Jun 13, 2024 at 6:06am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Jun 13, 2024 at 4:00pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1718258815" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1718258815" defer></script>
-    <script src="/js/theme.js?1718258815" defer></script>
+    <script src="/js/clipboard.min.js?1718294442" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1718294442" defer></script>
+    <script src="/js/theme.js?1718294442" defer></script>
   </body>
 </html>
