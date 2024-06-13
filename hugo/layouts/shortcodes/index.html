@@ -1,14 +1,20 @@
 <div class="index">
-<h2>Index</h2>
-{{- $_hugo_config := `{ "version": 1 }` }}
-{{- partial "shortcodes/children.html" (dict
-"page"           .Page
-"stuff"          .Inner
-"containerstyle" (.Get "containerstyle")
-"description"    (.Get "description")
-"depth"          (.Get "depth")
-"showhidden"     (.Get "showhidden")
-"sort"           (.Get "sort")
-"style"          (.Get "style")
-) }}
+    {{- $title := (.Get "title" | default "null") }}
+    {{- if (eq $title "null") }}
+    <h2>Index</h2>
+    {{- else if (eq $title "false") }}
+    {{- else }}
+    <h2>{{ $title }}</h2>
+    {{- end }}
+    {{- $_hugo_config := `{ "version": 1 }` }}
+    {{- partial "shortcodes/children.html" (dict
+    "page"           .Page
+    "stuff"          .Inner
+    "containerstyle" (.Get "containerstyle")
+    "description"    (.Get "description")
+    "depth"          (.Get "depth")
+    "showhidden"     (.Get "showhidden")
+    "sort"           (.Get "sort")
+    "style"          (.Get "style")
+    ) }}
 </div>
