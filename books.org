@@ -102,13 +102,15 @@ is hovering over it.)
 [[/img/site/copy-to-clipboard.webp]]
 #+end_notice
 
-Paste the copied command block into your terminal, edit it necessary,
-and then press =Enter= to run it.
+Paste the copied command block into your terminal, edit it as
+necessary, and then press =Enter= to run it.
 
 You will also sometimes see the /example/ output that a command
 prints:
 
 #+begin_stdout
+# This is an example of the stdout of the previous command.
+# Your output may differ:
 ryan
 toolbox
 #+end_stdout
@@ -154,7 +156,7 @@ Favorite food  : milk chocolate covered raisins
 
 **** Edit file blocks
 
-Sometimes it's easiest to edit a file by hand. These turquoise blocks
+Sometimes it's easiest to edit a file by hand. These green blocks
 invite you to edit the given file, with your preferred text editor:
 
 #+attr_shortcode: :file /tmp/foo.txt
@@ -164,12 +166,15 @@ this text goes into /tmp/foo.txt
 
 ** Use Bash 5.1+
 
-The commands written in this book are tested with Bash version 5.2:
+#+begin_run
+$ bash --version | head -1
+#+end_run
 
 #+begin_stdout
-$ bash --version | head -1
 GNU bash, version 5.2.26(1)-release
 #+end_stdout
+
+The commands written in this book are tested with Bash version 5.2:
 
 *** Bracketed Paste
 
@@ -177,14 +182,33 @@ Since Bash 5.1, *an important feature has been turned on by default:
 [[https://en.wikipedia.org/wiki/Bracketed-paste][bracketed paste]]*. This lets you copy and paste multi-line commands,
 from this web page, into your terminal, and edit the entire command
 directly on the command line, before anything is run. It gives you a
-chance to read the entire command block that you paste, to be sure its
-all correct, /before/ you run it. When you're ready, you press the
-=Enter= key, and then the whole block is run. To cancel before running
-it, press =Ctrl-C=.
+chance to read, /and edit/, the entire command block that you paste,
+to be sure its all correct, /before/ you run it. When you're ready,
+you press the =Enter= key, and then the whole block is run. To cancel,
+press =Ctrl-C=.
 
-Before Bash 5.1, unless you specifically turned this feature on,
-*commands that you paste would be run /immediately/*, which is such an
-insecure anti-feature for a default setting!
+ * When you paste a block into Bash, it is automatically highlighted
+   in inverse color. This should indicate to you that the command has
+   not yet been run.
+ * You can edit the entire multiline code block, but you need to be
+   careful, *do not press the up or down arrow keys*, because this will
+   cancel the command and begin searching your command history
+   instead.
+ * Use the linear left/right movement keys for [[https://tiswww.cwru.edu/php/chet/readline/rluserman.html][readline]] mode:
+
+   * Left / Right arrow keys to move the cursor one character at a
+     time.
+   * Ctrl + Left/Right arrow keys, move by words at a time.
+   * Ctrl-A moves the cursor to the very beginning of the block.
+   * Ctrl-E moves the cursor to the very end of the block.
+   * Ctrl-K will "kill" the text after the cursor.
+   * To cancel the command before running it, press =Ctrl-C=.
+   * To run the reviewed command, press =Enter=.
+
+Before Bash 5.1, unless
+you specifically turned this feature on, *commands that you paste
+would be run /immediately/*, which is such an insecure anti-feature
+for a default setting!
 
 #+attr_shortcode: :style warning
 #+begin_notice
