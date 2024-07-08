@@ -96,7 +96,9 @@ coreutils, a display manager, web browser, terminal apps etc. However,
 the base image is still pretty bare bones. Except for a few
 directories, the root filesystem is immutable, so the process of
 installing packages might be a bit different than what you are familar
-with. If you want to install something that isn't in the base image,
+with.
+
+If you want to install something that isn't in the base image,
 you have a few different options:
 
  * Podman or Docker containers (including toolbox and distrobox).
@@ -158,8 +160,26 @@ sudo dd if=~/Downloads/Fedora-Sericea-ostree-x86_64-40-1.14.iso \
 
 #+attr_shortcode: :style info
 #+begin_notice
-Replace ~/dev/sdX~ with your device name, and double check the =.iso=
-filename you downloaded, it may have changed.
+Replace ~/dev/sdX~ with your actual device name. If you don't know the
+device name, run this:
+
+#+begin_run
+lsblk | grep disk
+#+end_run
+
+#+begin_stdout
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda       8:0    0  1.8T  0 disk 
+sdb       8:16   0   64G  0 disk 
+#+end_stdout
+
+You can probably make the identification of the device based upon the
+reported size, but if not, you can compare the list with the device
+plugged in, and again after unplugging it, and see which device is
+missing.
+
+Double check the filename of the =.iso= file that you downloaded, it
+may have changed.
 #+end_notice
 
 #+attr_shortcode: :style tip
@@ -171,7 +191,7 @@ If you are borrowing a Windows computer, then download a program like
 *** Boot the installer
 
 Boot the target workstation computer using the USB drive. It will boot
-into the Anaconda install wizard. Just follow the prompts to install
+into the [[https://fedoraproject.org/wiki/Anaconda/Introduction][Anaconda]] install wizard. Just follow the prompts to install
 it, it should be straight forward, and it is exactly the same as any
 other Fedora / Redhat install.
 
@@ -717,8 +737,10 @@ software:
 
 #+attr_shortcode: :title Run this in the dev toolbox :style secondary
 #+begin_run
-sudo dnf install keychain htop gettext libwebp-tools
+sudo dnf install keychain htop gettext libwebp-tools flatpak-xdg-utils
 sudo dnf groupinstall "Development Tools" "Development Libraries"
+# Make xdg-open open the host web browser:
+sudo ln -s /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
 #+end_run
 
 By default, the container image toolbox selects is the image of Fedora
