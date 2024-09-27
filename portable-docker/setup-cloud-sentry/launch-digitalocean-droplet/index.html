@@ -5,33 +5,49 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="TODO">
+    <meta name="description" content="Create a droplet (VPS) This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.
+Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.
+Tip If you have the doctl client setup:
+List all your SSH keys:
+[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Launch DigitalOcean droplet :: book.rymcg.tech">
-    <meta name="twitter:description" content="TODO">
+    <meta name="twitter:description" content="Create a droplet (VPS) This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.
+Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.
+Tip If you have the doctl client setup:
+List all your SSH keys:
+[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:">
     <meta property="og:url" content="https://book.rymcg.tech/portable-docker/setup-cloud-sentry/launch-digitalocean-droplet/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
     <meta property="og:title" content="Launch DigitalOcean droplet :: book.rymcg.tech">
-    <meta property="og:description" content="TODO">
+    <meta property="og:description" content="Create a droplet (VPS) This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.
+Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.
+Tip If you have the doctl client setup:
+List all your SSH keys:
+[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
     <meta itemprop="name" content="Launch DigitalOcean droplet :: book.rymcg.tech">
-    <meta itemprop="description" content="TODO">
-    <meta itemprop="wordCount" content="1">
+    <meta itemprop="description" content="Create a droplet (VPS) This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.
+Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.
+Tip If you have the doctl client setup:
+List all your SSH keys:
+[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:">
+    <meta itemprop="wordCount" content="1335">
     <title>Launch DigitalOcean droplet :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727419630" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727419630" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727419630" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727419630" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727419630" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727419630" rel="stylesheet">
-    <link href="/css/fonts.css?1727419630" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727419630" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727419630" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727419630" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727419630" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727419630" rel="stylesheet">
-    <link href="/css/print.css?1727419630" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727419630"></script>
+    <link href="/css/fontawesome-all.min.css?1727466677" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727466677" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1727466677" rel="stylesheet">
+    <link href="/css/auto-complete.css?1727466677" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727466677" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1727466677" rel="stylesheet">
+    <link href="/css/fonts.css?1727466677" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727466677" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1727466677" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1727466677" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1727466677" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1727466677" rel="stylesheet">
+    <link href="/css/print.css?1727466677" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1727466677"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -63,7 +79,20 @@
             </div>
             <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
               <div class="topbar-content">
-                <div class="topbar-content-wrapper"> 
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#public-docker-server">Create a droplet (VPS)</a>
+      <ul>
+        <li><a href="#setup-your-ssh-key-on-digitalocean">Setup your SSH key on DigitalOcean</a></li>
+        <li><a href="#create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</a></li>
+        <li><a href="#creating-a-digitalocean-droplet-for-a-docker-server">Creating a DigitalOcean droplet for a Docker server</a></li>
+        <li><a href="#apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</a></li>
+        <li><a href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></li>
+        <li><a href="#congratulations">Congratulations</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
                 </div>
               </div>
             </div>
@@ -71,11 +100,11 @@
           <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/index.html"><span itemprop="name">Portable Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/setup-cloud-sentry/index.html"><span itemprop="name">Setup your cloud server sentry</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/setup-cloud-sentry/index.html"><span itemprop="name">Setup cloud server sentry</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Launch DigitalOcean droplet</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/setup-cloud-sentry/index.html" title="Setup your cloud server sentry (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/setup-cloud-sentry/public-docker-server/index.html" title="Create a droplet (VPS) (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
             <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/setup-cloud-sentry/setup-docker-context/index.html" title="Setup Docker context on the Pi (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
@@ -99,7 +128,444 @@
 
 <h1 id="launch-digitalocean-droplet">Launch DigitalOcean droplet</h1>
 
-<p>TODO</p>
+<h2 id="public-docker-server">Create a droplet (VPS)</h2>
+<p>This chapter will show you how to create a DigitalOcean droplet (VPS)
+to use as the wireguard enabled proxy server.</p>
+<h3 id="setup-your-ssh-key-on-digitalocean">Setup your SSH key on DigitalOcean</h3>
+<p>If you have not yet setup an SSH key on your workstation, read about
+that in <a href="/linux-workstation/config/ssh/index.html#create-ssh-keys">the Linux Workstation book</a> and set that up first.</p>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>If you have the <a href="/linux-workstation/app-users/digitalocean/index.html">doctl client</a> setup:</p>
+<p>List all your SSH keys:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute ssh-key list
+</pre></code>
+    </div>
+</div>
+<p>Configure the SSH public key file you want to use:</p>
+<div class="box notices cstyle env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i> [bash]: Set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+SSH_KEY=~/.ssh/id_ed25519.pub
+</pre></code>
+    </div>
+</div>
+<p>Install the public key on DigitalOcean:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+(set -e
+test -f ${SSH_KEY} || (echo "SSH key not found: ${SSH_KEY}" && exit 1)
+SSH_TMP=$(mktemp) && chmod a+r ${SSH_TMP}
+cat ${SSH_KEY} > ${SSH_TMP}
+doctl compute ssh-key import ${USER}@${HOSTNAME} --public-key-file ${SSH_TMP}
+rm -f ${SSH_TMP}
+)
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to do this in the DigitalOcean cloud console</div>
+  <div class="box-content">
+
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/" rel="external" target="_blank">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Settings</code> in the menu.</li>
+<li>Click on the <code>Security</code> tab.</li>
+<li>Click on the <code>Add SSH Key</code> button.</li>
+<li>Paste your public SSH key into the box. (copy your pub key from the
+output of <code>ssh-add -L</code>.)</li>
+<li>Enter a key name, I recommend this be the name of your workstation
+computer.</li>
+<li>Finish adding the key, click <code>Add SSH Key</code>.</li>
+</ul>
+</div>
+</div>
+<h3 id="create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>If you have the <a href="/linux-workstation/app-users/digitalocean/index.html">doctl client</a> setup:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute firewall list
+</pre></code>
+    </div>
+</div>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+(set -e
+FIREWALL_ID=$(doctl compute firewall create \
+    --name "ssh-web-https-wireguard" \
+    --inbound-rules "protocol:tcp,ports:22,address:0.0.0.0/0" \
+    --no-header --format ID)
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:80,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:443,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:udp,ports:51820,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:tcp,ports:0,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:udp,ports:0,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:icmp,ports:0,address:0.0.0.0/0"
+echo ${FIREWALL_ID}
+)
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to do this in the DigitalOcean cloud console</div>
+  <div class="box-content">
+
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/" rel="external" target="_blank">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Click the <code>Firewalls</code> tab.</li>
+<li>Click <code>Create Firewall</code>.</li>
+<li>Enter the name, eg. <code>ssh-web-https-wireguard</code>.</li>
+<li>Enter the following rules:
+<ul>
+<li>SSH:
+<ul>
+<li>Type: <code>SSH</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>22</code></li>
+<li>Sources: All IPv4, All IPv6, or a specific static IP address if
+you want to be more secure.</li>
+</ul>
+</li>
+<li>HTTP:
+<ul>
+<li>Type: <code>HTTP</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>80</code></li>
+<li>Sources: All IPv4, All IPv6.</li>
+</ul>
+</li>
+<li>HTTPS:
+<ul>
+<li>Type: <code>HTTP</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>443</code></li>
+<li>Sources: All IPv4, All IPv6.</li>
+</ul>
+</li>
+<li>Wireguard VPN (optional):
+<ul>
+<li>Type: <code>Custom</code></li>
+<li>Protocol: <code>UDP</code></li>
+<li>Port Range: <code>51820</code></li>
+<li>Sources: All IPv4, All IPv6.</li>
+</ul>
+</li>
+<li>Click <code>Create Firewall</code>.</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<h3 id="creating-a-digitalocean-droplet-for-a-docker-server">Creating a DigitalOcean droplet for a Docker server</h3>
+<p>DigitalOcean provides a Docker image with which to create a droplet
+(DigitalOcean&rsquo;s name for their own VPS product).</p>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>If you have the <a href="/linux-workstation/app-users/digitalocean/index.html">doctl client</a> setup:</p>
+<p>Set variables to configure the droplet:</p>
+<div class="box notices cstyle env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i> [bash]: Set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+NAME=docker-dev
+IMAGE=debian-12-x64
+REGION=nyc1
+SIZE=s-1vcpu-2gb
+SSH_KEY=~/.ssh/id_ed25519.pub
+SSH_FINGERPRINT=$(ssh-keygen -E md5 -l -f ${SSH_KEY} | grep -Po "MD5:\K[a-f0-9\:]+")
+</pre></code>
+    </div>
+</div>
+<p>Create the droplet:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+DROPLET_ID=$(doctl compute droplet create \
+    "${NAME}" \
+    --image "${IMAGE}" \
+    --size "${SIZE}" \
+    --region "${REGION}" \
+    --ssh-keys "${SSH_FINGERPRINT}" \
+    --tag-names "doctl-${USERNAME}@${HOST}" \
+    --wait --no-header --format ID)
+echo ${DROPLET_ID}
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to do this in the DigitalOcean cloud console</div>
+  <div class="box-content">
+
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/" rel="external" target="_blank">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Droplets</code> in the menu.</li>
+<li>Click <code>Create Droplet</code>.</li>
+<li>Choose a Region (eg. New York), where the droplet will be created.</li>
+<li>Underneath the heading <code>Choose an image</code>, choose <code>Debian</code> (select
+the latest version).</li>
+<li>Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
+size production installs. (It is tested working on as little as
+512MB ram, <a href="https://blog.rymcg.tech/blog/linux/zram/" rel="external" target="_blank">if you enable zram</a> and/or create a 1GB swapfile. Do not
+abuse swap space like this in production! However I think its fine
+for development use, but you may occasionally run into low memory
+issues if less than 1GB.)</li>
+<li>Optional: Add a block storage device, in order to store your Docker
+volumes. (This is useful to store data separate from the droplet
+lifecycle, or to have a larger amount of storage than the droplet
+size gives you for the root filesystem. If your basic droplet size
+is already sufficient, and you perform regular backups, this might
+not be needed.)</li>
+<li>Select your SSH key for the root user.</li>
+<li>Set the hostname for the docker server. The name should be short
+and typeable, as it will become a part of the canononical service
+URLs. For this example, we choose <code>prod</code>.</li>
+<li>Verify everything&rsquo;s correct, and then click <code>Create Dropet</code>.</li>
+</ul>
+</div>
+</div>
+<h3 id="apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</h3>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>If you have the <a href="/linux-workstation/app-users/digitalocean/index.html">doctl client</a> setup:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+FIREWALL_ID=$(doctl compute firewall list | grep ssh-web-https-wireguard | cut -d " " -f1)
+doctl compute firewall add-droplets \
+    "${FIREWALL_ID}" \
+    --droplet-ids "${DROPLET_ID}"
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to do this in the DigitalOcean cloud console</div>
+  <div class="box-content">
+
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/" rel="external" target="_blank">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Find the firewall template you created, and click it.</li>
+<li>Click on the firewall&rsquo;s <code>Droplets</code> tab.</li>
+<li>Click <code>Add Droplets</code> and search for the droplet you created and select it.</li>
+<li>Click <code>Add Droplet</code> to add the firewall to the droplet.</li>
+</ul>
+</div>
+</div>
+<h3 id="create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</h3>
+<p>For the purposes of documentation, assume you you own the domain
+<code>example.com</code> and you have created the Docker server named <code>prod</code>. You
+should replace <code>example.com</code> with your actual domain name, and <code>prod</code>
+with your actual docker instance name/stage.</p>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>If you have the <a href="/linux-workstation/app-users/digitalocean/index.html">doctl client</a> setup:</p>
+<p>List all domains:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute domain list
+</pre></code>
+    </div>
+</div>
+<div class="box notices cstyle env">
+    <div class="box-label"><i class="fa-fw fas fa-keyboard"></i> [bash]: Set temporary environment variables</div>
+    <div class="box-content">
+        <code><pre>
+ROOT_DOMAIN=example.com
+HOST=docker-dev
+HOST_IP=$(doctl compute droplet get --no-header --format "Public IPv4" ${DROPLET_ID})
+TTL=1800
+</pre></code>
+    </div>
+</div>
+<p>List all records for <code>ROOT_DOMAIN</code>:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute domain records list ${ROOT_DOMAIN}
+</pre></code>
+    </div>
+</div>
+<p>Create Host record:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+</pre></code>
+    </div>
+</div>
+<p>Create Wildcard subdomain record:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "*.${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to do this in the DigitalOcean cloud console</div>
+  <div class="box-content">
+
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/" rel="external" target="_blank">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Click the <code>Domains</code> tab.</li>
+<li>Find the domain you created earlier, and click it.</li>
+<li>Create an <code>A</code> record:
+<ul>
+<li>Hostname: enter the subdomain name without the domain part (eg.
+<code>prod</code>, the name of your docker server, without the
+<code>.example.com</code> suffix).</li>
+<li>Will direct to: select the droplet you created from the list.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Create another <code>A</code> record, for the wildcard:
+<ul>
+<li>Hostname: enter the same name as before but prepend <code>*.</code> in front
+of it (eg. if the server is named <code>prod</code>, create a record for
+<code>*.prod</code>, without the <code>.example.com</code> suffix).</li>
+<li>Will direct to: select the same droplet as before.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Optional: create additional records on the root domain. If you
+don&rsquo;t want the docker instance name in the subdomain you give to
+people (eg. <code>www.prod.example.com</code>), you could create additional
+(non-wildcard) records on the root domain now (eg.
+<code>www.example.com</code>, or even just <code>example.com</code>). However, it would
+be wasteful to put a wildcard record on the root domain
+(<code>*.example.com</code>) because then the domain could only be used with a
+single Docker instance, therefore all records on the root should be
+non-wildcard, and this means you must add them one by one.</li>
+</ul>
+</div>
+</div>
+
+<div class="box notices cstyle secondary">
+  <div class="box-label">Test DNS</div>
+  <div class="box-content">
+
+<p>Test that your wildcard record actually works. Use the <code>dig</code> command
+(For Debian/Ubuntu install the <code>dnsutils</code> package. For Arch Linux
+install <code>bind-tools</code>. For Fedora install <code>bind-utils</code>.)</p>
+<p>Pick some random subdomain off your domain:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+dig laksdflkweieri.prod.example.com
+</pre></code>
+    </div>
+</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+;; ANSWER SECTION:
+laksdflkweieri.prod.example.com.    3600    IN      A       153.114.12.78
+</pre>
+    </div>
+</div>
+<p>Since you created the wildcard record for <code>*.prod.example.com</code> dig
+should return your Docker server&rsquo;s IP address in the <code>ANSWER SECTION</code>
+of the output. You can test all your other records the same way.</p>
+<p>If you run into DNS caching problems, verify with the source DNS
+server directly:</p>
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+</pre></code>
+    </div>
+</div>
+</div>
+</div>
+<h3 id="congratulations">Congratulations</h3>
+<p>You have now finished installation of a remote host running Debian.</p>
+<p>You must now configure your workstation to remotely control your
+remote Docker context.</p>
 
             <footer class="footline">
             </footer>
@@ -126,12 +592,12 @@
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727419630" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727419630" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727419630" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727419630" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727419630" defer></script>
-        <script src="/js/search.js?1727419630" defer></script>
+        <script src="/js/auto-complete.js?1727466677" defer></script>
+        <script src="/js/lunr/lunr.min.js?1727466677" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1727466677" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1727466677" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1727466677" defer></script>
+        <script src="/js/search.js?1727466677" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -232,11 +698,13 @@
           <li data-nav-id="/portable-docker/setup-raspberry-pi/build-your-pi/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/build-your-pi/index.html">Build your Raspberry Pi</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/install-raspbian/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/install-raspbian/index.html">Install Raspbian</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/setup-networking/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/setup-networking/index.html">Setup networking</a></li>
+          <li data-nav-id="/portable-docker/setup-raspberry-pi/setup-ssh/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/setup-ssh/index.html">Setup SSH</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/install-docker/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/install-docker/index.html">Install Docker</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/install-d-rymcg-tech/index.html">Install d.rymcg.tech</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/install-traefik/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/install-traefik/index.html">Install Traefik</a></li>
           <li data-nav-id="/portable-docker/setup-raspberry-pi/install-whoami/index.html" class=""><a class="padding" href="/portable-docker/setup-raspberry-pi/install-whoami/index.html">Install Whoami</a></li></ul></li>
-          <li data-nav-id="/portable-docker/setup-cloud-sentry/index.html" class="parent alwaysopen"><a class="padding" href="/portable-docker/setup-cloud-sentry/index.html">Setup your cloud server sentry</a><ul id="R-subsections-4c4f1bb23d42747bfae4e9d56ac11801" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/setup-cloud-sentry/index.html" class="parent alwaysopen"><a class="padding" href="/portable-docker/setup-cloud-sentry/index.html">Setup cloud server sentry</a><ul id="R-subsections-4c4f1bb23d42747bfae4e9d56ac11801" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/setup-cloud-sentry/public-docker-server/index.html" class=""><a class="padding" href="/portable-docker/setup-cloud-sentry/public-docker-server/index.html">Create a droplet (VPS)</a></li>
           <li data-nav-id="/portable-docker/setup-cloud-sentry/launch-digitalocean-droplet/index.html" class="active"><a class="padding" href="/portable-docker/setup-cloud-sentry/launch-digitalocean-droplet/index.html">Launch DigitalOcean droplet</a></li>
           <li data-nav-id="/portable-docker/setup-cloud-sentry/setup-docker-context/index.html" class=""><a class="padding" href="/portable-docker/setup-cloud-sentry/setup-docker-context/index.html">Setup Docker context on the Pi</a></li>
           <li data-nav-id="/portable-docker/setup-cloud-sentry/install-traefik-and-whoami/index.html" class=""><a class="padding" href="/portable-docker/setup-cloud-sentry/install-traefik-and-whoami/index.html">Install Traefik and Whoami</a></li></ul></li>
@@ -305,14 +773,14 @@
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Sep 27, 2024 at 6:47am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Sep 27, 2024 at 7:51pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727419630" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727419630" defer></script>
-    <script src="/js/theme.js?1727419630" defer></script>
+    <script src="/js/clipboard.min.js?1727466677" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1727466677" defer></script>
+    <script src="/js/theme.js?1727466677" defer></script>
   </body>
 </html>
