@@ -11,18 +11,20 @@
 :EXPORT_HUGO_WEIGHT: 3000
 :END:
 
-This book serves as a guide to installing Docker on a small, portable
-Linux device (eg. Raspberry Pi), and deploying some web service
-containers on it. You'll also create and configure a public cloud
-server (eg. DigitalOcean droplet). The cloud server’s sole purpose is
-to host a WireGuard VPN and proxy, enabling the Raspberry Pi to
-securely connect from any location.
+[[/img/portable-docker/treasure.webp]]
+
+This book serves as your guide to installing Docker on a small,
+portable Linux device (eg. Raspberry Pi), and deploying some web
+service containers on it, using Traefik. You'll also create and
+configure a public cloud server (eg. DigitalOcean droplet), whose sole
+purpose is to host a VPN (WireGuard) and public gateway (Traefik),
+enabling the Raspberry Pi to securely connect from any location.
 
 Through the encrypted tunnel established by this connection, the Pi
 can publish services to the internet, even when operating behind a
 restrictive firewall, such as public WiFi, mobile hotspots, and
 carrier-grade NAT. As long as you can get unblocked /outgoing/
-internet access, you can host your public roaming server from
+internet access, you can self-host a roaming public server from
 anywhere!
 
 #+attr_shortcode: :icon code-branch :style primary :href https://github.com/EnigmaCurry/d.rymcg.tech#readme
@@ -45,6 +47,9 @@ index
 :EXPORT_FILE_NAME: introduction
 :EXPORT_HUGO_WEIGHT: 100
 :END:
+
+[[/img/portable-docker/pi5-assembled.webp]]
+
 * Setup DNS
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup-dns
@@ -328,7 +333,7 @@ images and data will live.
 :EXPORT_HUGO_WEIGHT: 220
 :END:
 
-The best way to install Raspbian onto an sd-card, is to use the
+The best way to install Raspbian onto an SD-card, is to use the
 [[https://www.raspberrypi.com/documentation/computers/getting-started.html][rpi-imager program]] from another computer. This allows you to setup the
 user account, network settings, and SSH credentials all from the
 imager software.
@@ -356,7 +361,8 @@ imager software.
    * On the =General= tab:
    
      * Enter the hostname
-     * Enter a username and password.
+     * Enter a username and password (This book uses the username
+       =pi=).
      * Optionally setup the Wifi (I just use ethernet instead).
      * Set locale settings. I set mine to UTC.
      
@@ -375,26 +381,10 @@ imager software.
        
  * Click =Yes= to the question =Would you like to apply OS custom settings=.
  
- * Confirm you would like to write to the sd-card and wait for it to complete.
+ * Confirm you would like to write to the SD-card and wait for it to complete.
  
- * Once complete, unplug the sd-card, put it into the raspberry pi,
+ * Once complete, unplug the SD-card, put it into the raspberry pi,
    plug in the ethernet, and power it on.
-
-*** Setup ssh config on your workstation
-
-To connect to the pi remotely via SSH, you will need an SSH config
-file on your workstation (eg. your laptop).
-
- * Create an SSH config entry in =$HOME/.ssh/config= like so (replace =X.X.X.X= with the ip address of the pi):
-
-: Host pi
-:   Hostname X.X.X.X
-:   User pi
-:   ControlMaster auto
-:   ControlPersist yes
-:   ControlPath /tmp/ssh-%u-%r@%h:%p
-
- * Now test SSH connection works and SSH into the pi (eg =ssh pi=)
 
 *** Setup Log2Ram
 
@@ -438,33 +428,56 @@ sudo chattr +i /etc/resolv.conf
 
 =chattr +i= prevents DHCP from overwriting this file in the future.
 
-** Install Docker
+** Setup SSH
 :PROPERTIES:
-:EXPORT_FILE_NAME: install-docker
-:EXPORT_HUGO_WEIGHT: 240
+:EXPORT_FILE_NAME: setup-ssh
+:EXPORT_HUGO_WEIGHT: 231
 :END:
-*** Install Docker
 
- * On the pi, install docker:
+The Docker context is controlled exclusively through SSH, as the
+=root= user. This requires setting up some keys to allow the =pi= user
+to access the =root= user's account.
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run   
-curl -sSL https://get.docker.com | sh
-#+end_run
+Although you will not need to interact with the =root= user's shell
+directly, the =pi= user will be granted full access to =root= via SSH.
 
- * Test docker is working: 
+#+attr_shortcode: :style warning :title Docker == root == pi
+#+begin_notice
+SSH is used here almost like =sudo=. The =pi= user should be treated
+with the same respect as the =root= user, as it will be granted full
+=root= access through SSH (to localhost).
+#+end_notice
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-sudo docker run hello-world
-#+end_run
+*** Create a new SSH key
 
-  * If working, you should see a =Hello from Docker!= message and some other help info.
+You need to create a new SSH key for the =pi= user.
 
-*** Setup SSH Docker context
+#+attr_shortcode: :style warning :title Unencrypted SSH keys are used for convenience
+#+begin_notice
+To connect to the Docker context requires that your SSH key be already
+/decrypted/.
 
-[[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of an SSH [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]], rather than
-the default socket context.
+There's only two ways to do that:
+
+ * Create an /unencrypted/ SSH key, so that no passphrase is ever
+    required.
+ -or-
+ * Setup an ssh-agent to decrypt and load the unencrypted key into
+    resident memory, so that your key can be used without requiring a
+    passphrase.
+
+For the sake of convenience, this guide will use the first method, and
+create a new /unencrypted/ SSH key, living in the pi user's home
+directory: =/home/pi/.ssh/id_ed25519=. The security of this key
+depends upon the physical and network security of the device
+(including SD-card). Any user gaining entry to the =pi= user's account
+will have access to the key, and no passphrase is required to use the
+key.
+
+If you wish to enhance the security of your SSH key, please read the
+[[https://wiki.archlinux.org/title/SSH_keys][Arch Wiki article on SSH keys]], which covers generating secure SSH
+keys, setting a passphrase, and setting up an ssh-agent with [[https://wiki.archlinux.org/title/SSH_keys#Keychain][Keychain]].
+#+end_notice
 
 Create a new SSH key (without a passphrase):
 
@@ -473,7 +486,14 @@ Create a new SSH key (without a passphrase):
 ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
 #+end_run
 
-Add the key to the root user's =/root/.ssh.authorized_keys= file:
+*** Authorize the key of the pi user to connect as root
+
+All interaction with Docker is done over SSH as the =root= user, so
+for the =pi= user to control Docker, they need to be able to SSH to
+=localhost= as the =root= user.
+
+Add the =pi= user's key to the root user's
+=/root/.ssh.authorized_keys= file:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -513,15 +533,44 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 If it worked, you should see the output of =whoami= which should print
 the username =root= (which is the user configured by SSH).
 
-Create a new docker SSH context using the SSH config you had just
-created (=pi=):
+
+** Install Docker
+:PROPERTIES:
+:EXPORT_FILE_NAME: install-docker
+:EXPORT_HUGO_WEIGHT: 240
+:END:
+*** Install Docker
+
+ * On the pi, install docker:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run   
+curl -sSL https://get.docker.com | sh
+#+end_run
+
+ * Test docker is working: 
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo docker run hello-world
+#+end_run
+
+  * If working, you should see a =Hello from Docker!= message and some other help info.
+
+*** Setup Docker context (SSH)
+
+[[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of a [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]] via SSH, rather than
+the default socket context.
+
+Create a new docker context, named =pi=, using the SSH config you had
+just created (also called =pi=):
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
 docker context create pi --docker "host=ssh://pi"
 #+end_run
 
-Switch to use the SSH context as the default:
+Switch to use the new SSH context as the default:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -537,21 +586,24 @@ docker info | grep -iE "(Name|Context)"
 
 This should print the proper context: =pi=.
 
+If it worked, the =pi= user is now fully equipped to run any docker comamnd as =root=.
+
 ** Install d.rymcg.tech
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-d-rymcg-tech
 :EXPORT_HUGO_WEIGHT: 250
 :END:
 
-*** Install prerequisites
+*** Install dependencies
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-sudo apt-get install bash build-essential gettext git openssl \
-apache2-utils xdg-utils jq sshfs wireguard curl inotify-tools w3m
+sudo apt-get install bash build-essential gettext \
+     git openssl apache2-utils xdg-utils jq sshfs \
+     wireguard curl inotify-tools w3m
 #+end_run
 
-*** Clone the d.rymcg.tech git repository
+*** Clone the git repository
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -1073,13 +1125,12 @@ To check the Traefik logs, do similar:
 d make traefik logs
 #+end_run
 
-* Setup cloud sentry server
+* Setup cloud server sentry
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup-cloud-sentry
 :EXPORT_HUGO_WEIGHT: 300
 :END:
-TODO
-** Setup your cloud server sentry
+** Setup cloud server sentry
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 301
@@ -1093,7 +1144,334 @@ index
 :EXPORT_FILE_NAME: launch-digitalocean-droplet
 :EXPORT_HUGO_WEIGHT: 310
 :END:
-TODO
+*** Create a droplet (VPS)
+:PROPERTIES:
+:EXPORT_FILE_NAME: public-docker-server
+:END:
+
+This chapter will show you how to create a DigitalOcean droplet (VPS)
+to use as the wireguard enabled proxy server.
+
+**** Setup your SSH key on DigitalOcean
+
+If you have not yet setup an SSH key on your workstation, read about
+that in [[/linux-workstation/config/ssh/#create-ssh-keys][the Linux Workstation book]] and set that up first.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+List all your SSH keys:
+#+begin_run
+doctl compute ssh-key list
+#+end_run
+
+Configure the SSH public key file you want to use:
+
+#+begin_env
+SSH_KEY=~/.ssh/id_ed25519.pub
+#+end_env
+
+Install the public key on DigitalOcean:
+
+#+begin_run
+(set -e
+test -f ${SSH_KEY} || (echo "SSH key not found: ${SSH_KEY}" && exit 1)
+SSH_TMP=$(mktemp) && chmod a+r ${SSH_TMP}
+cat ${SSH_KEY} > ${SSH_TMP}
+doctl compute ssh-key import ${USER}@${HOSTNAME} --public-key-file ${SSH_TMP}
+rm -f ${SSH_TMP}
+)
+#+end_run
+
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Settings= in the menu.
+ * Click on the =Security= tab.
+ * Click on the =Add SSH Key= button.
+ * Paste your public SSH key into the box. (copy your pub key from the
+   output of ~ssh-add -L~.)
+ * Enter a key name, I recommend this be the name of your workstation
+   computer.
+ * Finish adding the key, click =Add SSH Key=.
+#+end_notice
+
+**** Create a DigitalOcean firewall template
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+#+begin_run
+doctl compute firewall list
+#+end_run
+
+#+begin_run
+(set -e
+FIREWALL_ID=$(doctl compute firewall create \
+    --name "ssh-web-https-wireguard" \
+    --inbound-rules "protocol:tcp,ports:22,address:0.0.0.0/0" \
+    --no-header --format ID)
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:80,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:tcp,ports:443,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --inbound-rules "protocol:udp,ports:51820,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:tcp,ports:0,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:udp,ports:0,address:0.0.0.0/0"
+doctl compute firewall add-rules "${FIREWALL_ID}" \
+    --outbound-rules "protocol:icmp,ports:0,address:0.0.0.0/0"
+echo ${FIREWALL_ID}
+)
+#+end_run
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Networking= in the menu.
+ * Click the =Firewalls= tab.
+ * Click =Create Firewall=.
+ * Enter the name, eg. =ssh-web-https-wireguard=.
+ * Enter the following rules:
+   * SSH:
+     * Type: =SSH=
+     * Protocol: =TCP=
+     * Port Range: =22=
+     * Sources: All IPv4, All IPv6, or a specific static IP address if
+       you want to be more secure.
+   * HTTP:
+     * Type: =HTTP=
+     * Protocol: =TCP=
+     * Port Range: =80=
+     * Sources: All IPv4, All IPv6.
+   * HTTPS:
+     * Type: =HTTP=
+     * Protocol: =TCP=
+     * Port Range: =443=
+     * Sources: All IPv4, All IPv6.
+   * Wireguard VPN (optional):
+     * Type: =Custom=
+     * Protocol: =UDP=
+     * Port Range: =51820=
+     * Sources: All IPv4, All IPv6.
+  * Click =Create Firewall=.
+#+end_notice
+
+**** Creating a DigitalOcean droplet for a Docker server
+
+DigitalOcean provides a Docker image with which to create a droplet
+(DigitalOcean's name for their own VPS product).
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+Set variables to configure the droplet:
+
+#+begin_env
+NAME=docker-dev
+IMAGE=debian-12-x64
+REGION=nyc1
+SIZE=s-1vcpu-2gb
+SSH_KEY=~/.ssh/id_ed25519.pub
+SSH_FINGERPRINT=$(ssh-keygen -E md5 -l -f ${SSH_KEY} | grep -Po "MD5:\K[a-f0-9\:]+")
+#+end_env
+
+Create the droplet:
+
+#+begin_run
+DROPLET_ID=$(doctl compute droplet create \
+    "${NAME}" \
+    --image "${IMAGE}" \
+    --size "${SIZE}" \
+    --region "${REGION}" \
+    --ssh-keys "${SSH_FINGERPRINT}" \
+    --tag-names "doctl-${USERNAME}@${HOST}" \
+    --wait --no-header --format ID)
+echo ${DROPLET_ID}
+#+end_run
+
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Droplets= in the menu.
+ * Click =Create Droplet=.
+ * Choose a Region (eg. New York), where the droplet will be created.
+ * Underneath the heading =Choose an image=, choose =Debian= (select
+   the latest version).
+ * Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
+   size production installs. (It is tested working on as little as
+   512MB ram, [[https://blog.rymcg.tech/blog/linux/zram/][if you enable zram]] and/or create a 1GB swapfile. Do not
+   abuse swap space like this in production! However I think its fine
+   for development use, but you may occasionally run into low memory
+   issues if less than 1GB.)
+ * Optional: Add a block storage device, in order to store your Docker
+   volumes. (This is useful to store data separate from the droplet
+   lifecycle, or to have a larger amount of storage than the droplet
+   size gives you for the root filesystem. If your basic droplet size
+   is already sufficient, and you perform regular backups, this might
+   not be needed.)
+ * Select your SSH key for the root user.
+ * Set the hostname for the docker server. The name should be short
+   and typeable, as it will become a part of the canononical service
+   URLs. For this example, we choose =prod=.
+ * Verify everything's correct, and then click =Create Dropet=.
+#+end_notice
+
+**** Apply the DigitalOcean droplet firewall
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+#+begin_run
+FIREWALL_ID=$(doctl compute firewall list | grep ssh-web-https-wireguard | cut -d " " -f1)
+doctl compute firewall add-droplets \
+    "${FIREWALL_ID}" \
+    --droplet-ids "${DROPLET_ID}"
+#+end_run
+#+end_notice
+
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Networking= in the menu.
+ * Find the firewall template you created, and click it.
+ * Click on the firewall's =Droplets= tab.
+ * Click =Add Droplets= and search for the droplet you created and select it.
+ * Click =Add Droplet= to add the firewall to the droplet.
+#+end_notice
+
+**** Create wildcard DNS records for the droplet
+
+For the purposes of documentation, assume you you own the domain
+=example.com= and you have created the Docker server named =prod=. You
+should replace =example.com= with your actual domain name, and =prod=
+with your actual docker instance name/stage.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
+
+List all domains:
+
+#+begin_run
+doctl compute domain list
+#+end_run
+
+#+begin_env
+ROOT_DOMAIN=example.com
+HOST=docker-dev
+HOST_IP=$(doctl compute droplet get --no-header --format "Public IPv4" ${DROPLET_ID})
+TTL=1800
+#+end_env
+
+List all records for =ROOT_DOMAIN=:
+
+#+begin_run
+doctl compute domain records list ${ROOT_DOMAIN}
+#+end_run
+
+Create Host record:
+
+#+begin_run
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+#+end_run
+
+Create Wildcard subdomain record:
+
+#+begin_run
+doctl compute domain records create \
+    "${ROOT_DOMAIN}" \
+    --record-type A \
+    --record-name "*.${HOST}" \
+    --record-data ${HOST_IP} \
+    --record-ttl ${TTL} \
+    --record-tag "doctl-${USERNAME}@${HOST}"
+#+end_run
+
+#+end_notice
+#+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
+#+begin_notice
+ * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ * Click =Networking= in the menu.
+ * Click the =Domains= tab.
+ * Find the domain you created earlier, and click it.
+ * Create an =A= record:
+   * Hostname: enter the subdomain name without the domain part (eg.
+     =prod=, the name of your docker server, without the
+     =.example.com= suffix).
+   * Will direct to: select the droplet you created from the list.
+   * Click =Create Record=.
+ * Create another =A= record, for the wildcard:
+   * Hostname: enter the same name as before but prepend =*.= in front
+     of it (eg. if the server is named =prod=, create a record for
+     =*.prod=, without the =.example.com= suffix).
+   * Will direct to: select the same droplet as before.
+   * Click =Create Record=.
+ * Optional: create additional records on the root domain. If you
+   don't want the docker instance name in the subdomain you give to
+   people (eg. =www.prod.example.com=), you could create additional
+   (non-wildcard) records on the root domain now (eg.
+   =www.example.com=, or even just =example.com=). However, it would
+   be wasteful to put a wildcard record on the root domain
+   (=*.example.com=) because then the domain could only be used with a
+   single Docker instance, therefore all records on the root should be
+   non-wildcard, and this means you must add them one by one.
+#+end_notice
+
+#+attr_shortcode: :style secondary :title Test DNS
+#+begin_notice
+Test that your wildcard record actually works. Use the =dig= command
+(For Debian/Ubuntu install the =dnsutils= package. For Arch Linux
+install =bind-tools=. For Fedora install =bind-utils=.)
+
+Pick some random subdomain off your domain:
+
+#+begin_run
+dig laksdflkweieri.prod.example.com
+#+end_run
+
+#+begin_stdout
+;; ANSWER SECTION:
+laksdflkweieri.prod.example.com.    3600    IN      A       153.114.12.78
+#+end_stdout
+
+Since you created the wildcard record for =*.prod.example.com= dig
+should return your Docker server's IP address in the =ANSWER SECTION=
+of the output. You can test all your other records the same way.
+
+If you run into DNS caching problems, verify with the source DNS
+server directly:
+
+#+begin_run
+dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+#+end_run
+#+end_notice
+
+**** Congratulations
+
+You have now finished installation of a remote host running Debian.
+
+You must now configure your workstation to remotely control your
+remote Docker context.
+
+
 ** Setup Docker context on the Pi
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-docker-context
