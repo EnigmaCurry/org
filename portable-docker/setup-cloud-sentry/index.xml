@@ -3,37 +3,30 @@
   <channel>
     <title>Setup cloud server sentry :: book.rymcg.tech</title>
     <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/index.html</link>
-    <description> Index Create a droplet (VPS) Launch DigitalOcean droplet Setup Docker context on the Pi Install Traefik and Whoami </description>
+    <description> Index Launch DigitalOcean droplet Configure the droplet on the Pi Configure d.rymcg.tech for the sentry </description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <atom:link href="https://book.rymcg.tech/portable-docker/setup-cloud-sentry/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>Create a droplet (VPS)</title>
-      <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/public-docker-server/index.html</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/public-docker-server/index.html</guid>
-      <description>This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.&#xA;Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.&#xA;Tip If you have the doctl client setup:&#xA;List all your SSH keys:&#xA;[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:</description>
-    </item>
     <item>
       <title>Launch DigitalOcean droplet</title>
       <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/launch-digitalocean-droplet/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/launch-digitalocean-droplet/index.html</guid>
-      <description>Create a droplet (VPS) This chapter will show you how to create a DigitalOcean droplet (VPS) to use as the wireguard enabled proxy server.&#xA;Setup your SSH key on DigitalOcean If you have not yet setup an SSH key on your workstation, read about that in the Linux Workstation book and set that up first.&#xA;Tip If you have the doctl client setup:&#xA;List all your SSH keys:&#xA;[bash]: Run this on your workstation: doctl compute ssh-key list Configure the SSH public key file you want to use:</description>
+      <description>Setup your SSH key on DigitalOcean How to do this in the DigitalOcean cloud console Login to the DigitalOcean cloud console. Click Settings in the menu. Click on the Security tab. Click on the Add SSH Key button. Paste your public SSH key into the box. (copy the contents of ~/.ssh/id_ed25519.pub.) Enter a key name, I recommend this be the same as the hostname of your raspberry pi. Finish adding the key, click Add SSH Key.</description>
     </item>
     <item>
-      <title>Setup Docker context on the Pi</title>
+      <title>Configure the droplet on the Pi</title>
       <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/setup-docker-context/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/setup-docker-context/index.html</guid>
-      <description>TODO</description>
+      <description>You now need to be able to control the droplet’s root user from the Raspberry Pi’s pi user. Create a new SSH config entry for the sentry (replace sentry.example.com with your own droplet’s DNS name):&#xA;Append to the SSH config on the Pi Run this on the Raspberry Pi cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config Host sentry User root Hostname sentry.example.com ControlMaster auto ControlPersist yes ControlPath /tmp/ssh-%u-%r@%h:%p EOF Test the connection from the Pi to the sentry Run this on the Raspberry Pi ssh sentry whoami The first time you connect, you must confirm the host fingerprint (type yes):</description>
     </item>
     <item>
-      <title>Install Traefik and Whoami</title>
-      <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/install-traefik-and-whoami/index.html</link>
+      <title>Configure d.rymcg.tech for the sentry</title>
+      <link>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/configure-d-rymcg-tech-for-sentry/index.html</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/install-traefik-and-whoami/index.html</guid>
-      <description>TODO</description>
+      <guid>https://book.rymcg.tech/portable-docker/setup-cloud-sentry/configure-d-rymcg-tech-for-sentry/index.html</guid>
+      <description>Ensure you use the correct Docker context Run this on the Raspberry Pi d context use sentry Run the main config The main config must be run for each new context you create: (stdout) &gt; This will make a configuration for the current docker context (sentry). Proceed? Yes ROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com) : sentry.example.com Run this on the Raspberry Pi d make - config Insatall Traefik This is a very similar process as when you installed Traefik on the Raspberry Pi:</description>
     </item>
   </channel>
 </rss>
