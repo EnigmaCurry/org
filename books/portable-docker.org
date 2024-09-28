@@ -50,6 +50,47 @@ index
 
 [[/img/portable-docker/pi5-assembled.webp]]
 
+Here is my Raspberry Pi 5, which is a small form factor Linux
+computer, running [[https://www.raspberrypi.com/software/][Raspberry Pi OS]] and [[https://docs.docker.com/engine/][Docker]]. It has been outfitted
+with an NVME SSD attached via the expandable PCI-E bus. It has 8GB of
+RAM, and 1TB of fast storage.
+
+I use this as a tiny web server, that I can take anywhere I go.
+
+It normally sits in one place for a long time. But sometimes it needs
+to be picked up, and installed in a new place. I need it to be able to
+get the network up, and have it resume all of its previous functions,
+and even using the same IP address as before. It needs to be plug and
+play, with minimal disruption to the clients that expect this server
+to be online and available, no matter what kind of internet connection
+I have it connected to, it should be quick to get this server back online.
+
+To accomplish this feat, we need to setup another server that has a static IP
+address, accessible from the public internet. I use a DigitalOcean
+droplet, which is a type of Virtual Private Server (VPS), which exists
+in the public cloud. It is always on, and anyone in the world can
+connect to it (HTTP). However, the droplet does not serve any
+applications by itself, it only creates the public Traefik proxy
+(ingress), which forwards incoming connections through a backdoor VPN
+connection, that the Raspberry Pi automatically re-establishes when it
+comes online.
+
+[[/img/portable-docker/vpn-string-along.webp]]
+
+The Raspberry Pi should acquire whatever kind of internet connection
+is locally available by DHCP, so it won't have a static IP address
+yet. Once it's online, it creates a VPN connection to the droplet via
+[[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the Pi is assigned a static
+private IP address that only the droplet can communicate with.
+
+*** Next steps
+
+ * Setup DNS
+ * Setup Raspberry Pi
+ * Setup Droplet
+ * Setup Wireguard
+ * Install apps and services
+
 * Setup DNS
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup-dns
@@ -63,6 +104,8 @@ index
 
 Before you can configure any hardware, you need to setup the domain
 name service of your own domain.
+
+[[/img/portable-docker/dns.webp]]
 
 #+begin_index
 index
@@ -225,24 +268,30 @@ account's DNS settings on your behalf:
    update the token periodically.
  * Select =Custom Scopes= so you can choose the fine-grained
    permissions.
- * The only permission that needs to be selected is =domain= (you may
-   also choose finer grained permissions of =update=, =read=, and
-   =create=, but not =delete=).
+ * The only permission that needs to be selected is =domain=.
  * Click =Generate Token=.
  * Copy the generated token to a temporary buffer/notepad. You will
    need to reference this token in the next section, when it asks for
    the =DO_AUTH_TOKEN= variable.
 
+You will also need to generate an additional API token for the sentry
+droplet (you could use the same API token from above, but its best to
+create a new token for each new instance).
+
+ * Create an additional token, this one named =sentry.example.com
+   ACME= or similar.
+ 
 * Setup Raspberry Pi
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup-raspberry-pi
-:EXPORT_HUGO_WEIGHT: 200
+:EXPORT_HUGO_WEIGHT: 200 
 :END:
 ** Setup Raspberry Pi
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 201
 :END:
+[[/img/portable-docker/rpi-handover.webp]]
 #+attr_shortcode: :depth 999
 #+begin_index
 index
@@ -899,9 +948,9 @@ enter a blank response, so just press Enter on the blank line.
 
 #+begin_stdout
 Main domain:
- pi5.forwarding.network
+ pi5.example.com
 Secondary (SANS) domains:
- *.pi5.forwarding.network
+ *.pi5.example.com
 #+end_stdout
 
 Finally a summary of the certificate request is printed.
@@ -1136,6 +1185,8 @@ d make traefik logs
 :EXPORT_HUGO_WEIGHT: 301
 :END:
 #+attr_shortcode: :depth 999
+[[/img/portable-docker/flight.webp]]
+
 #+begin_index
 index
 #+end_index
@@ -1144,93 +1195,21 @@ index
 :EXPORT_FILE_NAME: launch-digitalocean-droplet
 :EXPORT_HUGO_WEIGHT: 310
 :END:
-*** Create a droplet (VPS)
-:PROPERTIES:
-:EXPORT_FILE_NAME: public-docker-server
-:END:
-
-This chapter will show you how to create a DigitalOcean droplet (VPS)
-to use as the wireguard enabled proxy server.
-
 **** Setup your SSH key on DigitalOcean
-
-If you have not yet setup an SSH key on your workstation, read about
-that in [[/linux-workstation/config/ssh/#create-ssh-keys][the Linux Workstation book]] and set that up first.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
-
-List all your SSH keys:
-#+begin_run
-doctl compute ssh-key list
-#+end_run
-
-Configure the SSH public key file you want to use:
-
-#+begin_env
-SSH_KEY=~/.ssh/id_ed25519.pub
-#+end_env
-
-Install the public key on DigitalOcean:
-
-#+begin_run
-(set -e
-test -f ${SSH_KEY} || (echo "SSH key not found: ${SSH_KEY}" && exit 1)
-SSH_TMP=$(mktemp) && chmod a+r ${SSH_TMP}
-cat ${SSH_KEY} > ${SSH_TMP}
-doctl compute ssh-key import ${USER}@${HOSTNAME} --public-key-file ${SSH_TMP}
-rm -f ${SSH_TMP}
-)
-#+end_run
-
-#+end_notice
 
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
- * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
- * Click =Settings= in the menu.
- * Click on the =Security= tab.
- * Click on the =Add SSH Key= button.
- * Paste your public SSH key into the box. (copy your pub key from the
-   output of ~ssh-add -L~.)
- * Enter a key name, I recommend this be the name of your workstation
-   computer.
- * Finish adding the key, click =Add SSH Key=.
+ - Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
+ - Click =Settings= in the menu.
+ - Click on the =Security= tab.
+ - Click on the =Add SSH Key= button.
+ - Paste your public SSH key into the box. (copy the contents of =~/.ssh/id_ed25519.pub=.)
+ - Enter a key name, I recommend this be the same as the hostname of
+   your raspberry pi.
+ - Finish adding the key, click =Add SSH Key=.
 #+end_notice
 
 **** Create a DigitalOcean firewall template
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
-
-#+begin_run
-doctl compute firewall list
-#+end_run
-
-#+begin_run
-(set -e
-FIREWALL_ID=$(doctl compute firewall create \
-    --name "ssh-web-https-wireguard" \
-    --inbound-rules "protocol:tcp,ports:22,address:0.0.0.0/0" \
-    --no-header --format ID)
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --inbound-rules "protocol:tcp,ports:80,address:0.0.0.0/0"
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --inbound-rules "protocol:tcp,ports:443,address:0.0.0.0/0"
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --inbound-rules "protocol:udp,ports:51820,address:0.0.0.0/0"
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --outbound-rules "protocol:tcp,ports:0,address:0.0.0.0/0"
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --outbound-rules "protocol:udp,ports:0,address:0.0.0.0/0"
-doctl compute firewall add-rules "${FIREWALL_ID}" \
-    --outbound-rules "protocol:icmp,ports:0,address:0.0.0.0/0"
-echo ${FIREWALL_ID}
-)
-#+end_run
-#+end_notice
 
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
@@ -1256,49 +1235,18 @@ echo ${FIREWALL_ID}
      * Protocol: =TCP=
      * Port Range: =443=
      * Sources: All IPv4, All IPv6.
-   * Wireguard VPN (optional):
+   * Wireguard VPN:
      * Type: =Custom=
      * Protocol: =UDP=
      * Port Range: =51820=
      * Sources: All IPv4, All IPv6.
+   * ICMP:
+     * /Optional/ to allow ping response
+     * Type: ICMP
   * Click =Create Firewall=.
 #+end_notice
 
-**** Creating a DigitalOcean droplet for a Docker server
-
-DigitalOcean provides a Docker image with which to create a droplet
-(DigitalOcean's name for their own VPS product).
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
-
-Set variables to configure the droplet:
-
-#+begin_env
-NAME=docker-dev
-IMAGE=debian-12-x64
-REGION=nyc1
-SIZE=s-1vcpu-2gb
-SSH_KEY=~/.ssh/id_ed25519.pub
-SSH_FINGERPRINT=$(ssh-keygen -E md5 -l -f ${SSH_KEY} | grep -Po "MD5:\K[a-f0-9\:]+")
-#+end_env
-
-Create the droplet:
-
-#+begin_run
-DROPLET_ID=$(doctl compute droplet create \
-    "${NAME}" \
-    --image "${IMAGE}" \
-    --size "${SIZE}" \
-    --region "${REGION}" \
-    --ssh-keys "${SSH_FINGERPRINT}" \
-    --tag-names "doctl-${USERNAME}@${HOST}" \
-    --wait --no-header --format ID)
-echo ${DROPLET_ID}
-#+end_run
-
-#+end_notice
+**** Create the DigitalOcean droplet
 
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
@@ -1308,38 +1256,23 @@ echo ${DROPLET_ID}
  * Choose a Region (eg. New York), where the droplet will be created.
  * Underneath the heading =Choose an image=, choose =Debian= (select
    the latest version).
- * Choose a droplet size. 2GB RAM and 50GB disk recommended for medium
-   size production installs. (It is tested working on as little as
-   512MB ram, [[https://blog.rymcg.tech/blog/linux/zram/][if you enable zram]] and/or create a 1GB swapfile. Do not
-   abuse swap space like this in production! However I think its fine
-   for development use, but you may occasionally run into low memory
-   issues if less than 1GB.)
- * Optional: Add a block storage device, in order to store your Docker
-   volumes. (This is useful to store data separate from the droplet
-   lifecycle, or to have a larger amount of storage than the droplet
-   size gives you for the root filesystem. If your basic droplet size
-   is already sufficient, and you perform regular backups, this might
-   not be needed.)
- * Select your SSH key for the root user.
+ * Choose a droplet size. For a wireguard proxy by itself, 1GB should
+   be fine. 2GB RAM and 50GB disk recommended for medium size
+   production installs with some apps installed on the droplet itself.
+   (It is also tested working on as little as 512MB ram,
+   [[https://blog.rymcg.tech/blog/linux/zram/][if you enable zram]]
+   and/or create a 1GB swapfile. Do not abuse swap space like this in
+   production! However I think its fine for development use, but you
+   may occasionally run into low memory issues if less than 1GB.)
+ * Select the SSH key uploaded from the pi user to use as the root
+   user on the droplet.
  * Set the hostname for the docker server. The name should be short
    and typeable, as it will become a part of the canononical service
-   URLs. For this example, we choose =prod=.
+   URLs. For this example, we choose =sentry=.
  * Verify everything's correct, and then click =Create Dropet=.
 #+end_notice
 
 **** Apply the DigitalOcean droplet firewall
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
-
-#+begin_run
-FIREWALL_ID=$(doctl compute firewall list | grep ssh-web-https-wireguard | cut -d " " -f1)
-doctl compute firewall add-droplets \
-    "${FIREWALL_ID}" \
-    --droplet-ids "${DROPLET_ID}"
-#+end_run
-#+end_notice
 
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
@@ -1353,86 +1286,33 @@ doctl compute firewall add-droplets \
 
 **** Create wildcard DNS records for the droplet
 
-For the purposes of documentation, assume you you own the domain
-=example.com= and you have created the Docker server named =prod=. You
-should replace =example.com= with your actual domain name, and =prod=
-with your actual docker instance name/stage.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you have the [[/linux-workstation/app-users/digitalocean][doctl client]] setup:
-
-List all domains:
-
-#+begin_run
-doctl compute domain list
-#+end_run
-
-#+begin_env
-ROOT_DOMAIN=example.com
-HOST=docker-dev
-HOST_IP=$(doctl compute droplet get --no-header --format "Public IPv4" ${DROPLET_ID})
-TTL=1800
-#+end_env
-
-List all records for =ROOT_DOMAIN=:
-
-#+begin_run
-doctl compute domain records list ${ROOT_DOMAIN}
-#+end_run
-
-Create Host record:
-
-#+begin_run
-doctl compute domain records create \
-    "${ROOT_DOMAIN}" \
-    --record-type A \
-    --record-name "${HOST}" \
-    --record-data ${HOST_IP} \
-    --record-ttl ${TTL} \
-    --record-tag "doctl-${USERNAME}@${HOST}"
-#+end_run
-
-Create Wildcard subdomain record:
-
-#+begin_run
-doctl compute domain records create \
-    "${ROOT_DOMAIN}" \
-    --record-type A \
-    --record-name "*.${HOST}" \
-    --record-data ${HOST_IP} \
-    --record-ttl ${TTL} \
-    --record-tag "doctl-${USERNAME}@${HOST}"
-#+end_run
-
-#+end_notice
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
  * Click the =Domains= tab.
  * Find the domain you created earlier, and click it.
- * Create an =A= record:
+ * Create an =A= record for the sentry:
    * Hostname: enter the subdomain name without the domain part (eg.
-     =prod=, the name of your docker server, without the
+     =sentry=, the name of your docker server, without the
      =.example.com= suffix).
    * Will direct to: select the droplet you created from the list.
    * Click =Create Record=.
- * Create another =A= record, for the wildcard:
+ * Create another =A= record, for the wildcard of the sentry:
    * Hostname: enter the same name as before but prepend =*.= in front
-     of it (eg. if the server is named =prod=, create a record for
-     =*.prod=, without the =.example.com= suffix).
+     of it (eg. if the server is named =sentry=, create a record for
+     =*.sentry=, without the =.example.com= suffix).
    * Will direct to: select the same droplet as before.
    * Click =Create Record=.
- * Optional: create additional records on the root domain. If you
-   don't want the docker instance name in the subdomain you give to
-   people (eg. =www.prod.example.com=), you could create additional
-   (non-wildcard) records on the root domain now (eg.
-   =www.example.com=, or even just =example.com=). However, it would
-   be wasteful to put a wildcard record on the root domain
-   (=*.example.com=) because then the domain could only be used with a
-   single Docker instance, therefore all records on the root should be
-   non-wildcard, and this means you must add them one by one.
+ * Create another =A= record, for the Raspberry Pi:
+   * Hostname: eg. =pi5.example.com=.
+   * Will direct to to: select the same droplet as before.
+   * Click =Create Record=.
+ * Create another =A= record, for the wildcard of the Raspberry Pi:
+   * Hostname: eg. =*.pi5.example.com=.
+   * Will direct to to: select the same droplet as before.
+   * Click =Create Record=.
+ * Create any more =A= records that you may need.
 #+end_notice
 
 #+attr_shortcode: :style secondary :title Test DNS
@@ -1444,15 +1324,15 @@ install =bind-tools=. For Fedora install =bind-utils=.)
 Pick some random subdomain off your domain:
 
 #+begin_run
-dig laksdflkweieri.prod.example.com
+dig laksdflkweieri.sentry.example.com
 #+end_run
 
 #+begin_stdout
 ;; ANSWER SECTION:
-laksdflkweieri.prod.example.com.    3600    IN      A       153.114.12.78
+laksdflkweieri.sentry.example.com.    3600    IN      A       153.114.12.78
 #+end_stdout
 
-Since you created the wildcard record for =*.prod.example.com= dig
+Since you created the wildcard record for =*.sentry.example.com= dig
 should return your Docker server's IP address in the =ANSWER SECTION=
 of the output. You can test all your other records the same way.
 
@@ -1460,37 +1340,383 @@ If you run into DNS caching problems, verify with the source DNS
 server directly:
 
 #+begin_run
-dig @ns1.digitalocean.com laksdflkweieri.prod.example.com
+dig @ns1.digitalocean.com laksdflkweieri.sentry.example.com
 #+end_run
 #+end_notice
 
-**** Congratulations
+**** Next steps
 
-You have now finished installation of a remote host running Debian.
+ * Install Docker
+ * Configure VPN
 
-You must now configure your workstation to remotely control your
-remote Docker context.
-
-
-** Setup Docker context on the Pi
+** Configure the droplet on the Pi
 :PROPERTIES:
 :EXPORT_FILE_NAME: setup-docker-context
 :EXPORT_HUGO_WEIGHT: 320
 :END:
-TODO
-** Install Traefik and Whoami
+
+You now need to be able to control the droplet's =root= user from the
+ Raspberry Pi's =pi= user. Create a new SSH config entry for the
+ sentry (replace =sentry.example.com= with your own droplet's DNS
+ name):
+
+*** Append to the SSH config on the Pi
+ 
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+cat &lt;&lt;EOF &gt&gt ~/.ssh/config
+Host sentry
+    User root
+    Hostname sentry.example.com
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+*** Test the connection from the Pi to the sentry
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+ssh sentry whoami
+#+end_run
+
+The first time you connect, you must confirm the host fingerprint (type =yes=):
+
+#+begin_stdout
+The authenticity of host 'sentry' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'pi5' (ED25519) to the list of known hosts.
+#+end_stdout
+
+On the final line, it will print the output of the command you
+requested, which should print the username =root= :
+
+#+begin_stdout
+root
+#+end_stdout
+
+*** Create a new Docker context for the sentry
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context new
+#+end_run
+
+#+begin_stdout
+? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y 
+
+? You must specify the SSH config entry to use  
+> I already have an SSH host entry in ~/.ssh/config that I want to use
+  I want to make a new SSH host entry in ~/.ssh/config
+
+? Choose an existing SSH Host config  
+  pi
+> sentry
+
+> Do you want to switch to the new sentry context now? Yes
+#+end_stdout
+
+*** Install Docker on the sentry
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d install-docker
+#+end_run
+
+#+begin_stdout
+? This will install Docker on the host of your remote Docker context.. Proceed? Yes
+#+end_stdout
+
+*** Test the docker context is functional
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+docker info | grep Context
+#+end_run
+
+#+begin_stdout
+ Context:    sentry
+#+end_stdout
+
+#+attr_shortcode: :title Switch between Docker contexts :style info
+#+begin_notice
+You should now have two configured Docker contexts on your Pi:
+ * =pi=
+ * =sentry=
+
+You can switch between these two contexts using =d context=. The
+currently selected context specifies which Docker server is currently
+being operated on.
+#+end_notice
+
+** Configure d.rymcg.tech for the sentry
 :PROPERTIES:
-:EXPORT_FILE_NAME: install-traefik-and-whoami
-:EXPORT_HUGO_WEIGHT: 330
+:EXPORT_FILE_NAME: configure-d-rymcg-tech-for-sentry
+:EXPORT_HUGO_WEIGHT: 325
 :END:
-TODO
-* Configure Wireguard tunnel
+
+*** Ensure you use the correct Docker context
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context use sentry
+#+end_run
+
+*** Run the main config
+
+The main config must be run for each new context you create:
+
+#+begin_stdout
+> This will make a configuration for the current docker context (sentry). Proceed? Yes
+
+ROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com)
+: sentry.example.com
+#+end_stdout
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make - config
+#+end_run
+
+*** Insatall Traefik
+
+This is a very similar process as when you installed Traefik on the
+Raspberry Pi:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Create the traefik user:
+
+#+begin_stdout
+? Traefik Configuration:  
+> Traefik user
+#+end_stdout
+
+Configure ACME:
+
+#+begin_stdout
+? Traefik TLS config:  
+  Configure certificate authorities (CA)
+> Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+#+end_stdout
+
+Choose Let's Encrypt:
+
+#+begin_stdout
+? Which ACME provider do you want to use?  
+> Let's Encrypt (ACME)
+  Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+#+end_stdout
+
+Choose the Production environment:
+
+#+begin_stdout
+? Which LE environment do you want to use?  
+> Production (recommended!)
+  Staging (untrusted / testing)
+#+end_stdout
+
+Choose the DNS-01 challenge type:
+
+#+begin_stdout
+? Which type of ACME challenge should be used?  
+  TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+> DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+#+end_stdout
+
+Skip entering an email unless you want to.
+
+Enter the LEGO provider code:
+
+#+begin_stdout
+Find the provider code of your supported DNS provider here:
+https://go-acme.github.io/lego/dns/#dns-providers
+
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+: digitalocean
+#+end_stdout
+
+Enter the variable /name/ literal DO_AUTH_TOKEN:
+
+#+begin_stdout
+# For DigitalOcean, literally enter DO_AUTH_TOKEN here.
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+: DO_AUTH_TOKEN
+TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+: 
+#+end_stdout
+
+Enter a blank for the second var name, because there isn't one.
+
+Now enter the variable /value/ for DO_AUTH_TOKEN (this should actually
+be the secret [[https://cloud.digitalocean.com/account/api/tokens/new][personal access token that you generate on DigitalOcean]]):
+#+begin_stdout
+Now to enter the values for the custom DNS API variables:
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (eg. your-actual-digitalocean-token-here)
+: dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#+end_stdout
+
+Create a new TLS certificate:
+
+#+begin_stdout
+? Traefik TLS config:  
+  Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+> Configure TLS certificates (make certs)
+
+? Configure Traefik TLS certificates  
+  Manage all certificates.
+> Create a new certificate.
+  Done / Go back
+
+Enter the main domain (CN) for this certificate (eg. `d.rymcg.tech` or `*.d.rymcg.tech`)
+: sentry.example.com
+
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+: *.sentry.example.com
+Enter a secondary domain (enter blank to skip)
+: 
+
+Main domain:
+ sentry.example.com
+Secondary (SANS) domains:
+ *.sentry.example.com
+#+end_stdout
+
+*** Install Traefik
+
+Press =ESC= three times to go back to the main menu.
+
+Install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+When done, press =ESC= to quit the Traefik config program.
+
+*** Install whoami
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make whoami config
+#+end_run
+
+#+begin_stdout
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+: whoami.sentry.example.com
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+> No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make whoami install
+#+end_run
+
+#+attr_shortcode: :style info :title Whoami on the sentry
+#+begin_notice
+This instance of whoami runs on the droplet, and it is only to test
+the connectivity of the public droplet itself. We still have not yet
+exposed the whoami running on the Raspberry Pi publicly.
+#+end_notice
+
+
+*** Wait a few minutes for the TLS certificate to generate
+
+*** Test the whoami instance
+
+You can open the page in =w3m=:
+
+#+begin_run
+d make whoami open
+#+end_run
+
+Or test it with curl:
+
+#+begin_run
+curl https:://whoami.sentry.example.com
+#+end_run
+
+Note that if the TLS certificate has not been issued yet, you will get
+this error from curl (and a similar error in =w3m=):
+
+#+begin_stdout
+curl: (60) SSL certificate problem: self-signed certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+#+end_stdout
+
+Simply wait a bit longer for the TLS cert to issue, or check the logs
+for errors (=d make traefik logs service=traefik=). You can also tell
+curl to ignore the error:
+
+#+begin_run
+## This is insecure, but fine for testing:
+curl -k https://whoami.sentry.example.com
+#+end_run
+
+A valid whoami response page looks like similar to this:
+
+#+begin_stdout
+Name: default
+Hostname: 52a9750ecaa4
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:56082
+GET / HTTP/1.1
+Host: whoami.sentry.example.com
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: X.X.X.X
+X-Forwarded-Host: whoami.sentry.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: sentry
+X-Real-Ip: X.X.X.X
+#+end_stdout
+
+*** Next steps 
+
+ * Configure the WireGuard VPN
+
+* Configure Wireguard VPN
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: configure-wireguard-tunnel
 :EXPORT_HUGO_WEIGHT: 400
 :END:
 TODO
-** Configure Wireguard tunnel
+** Configure WireGuard VPN
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 401
@@ -1504,19 +1730,306 @@ index
 :EXPORT_FILE_NAME: configure-sentry-wireguard-server
 :EXPORT_HUGO_WEIGHT: 410
 :END:
-TODO
-** Configure pi wireguard client
+
+*** Ensure you use the correct context
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context use sentry
+#+end_run
+
+*** Reconfigure Traefik to enable WireGuard server
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+  Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+> Configure wireguard VPN
+
+? Should this Traefik instance connect to a wireguard VPN?  
+  No, Traefik should use the host network directly.
+> Yes, and this Traefik instance should start the wireguard server.
+  Yes, but this Traefik instance needs credentials to connect to an outside VPN.
+
+? Should Traefik bind itself exclusively to the VPN interface?  
+> No, Traefik should work on all interfaces (including the VPN).
+  Yes, Traefik should only listen on the VPN interface.
+
+TRAEFIK_VPN_HOST: Enter the public Traefik VPN hostname (eg. vpn.example.com)
+: sentry.example.com
+TRAEFIK_VPN_SUBNET: Enter the Traefik VPN private subnet (no mask) (eg. 10.13.16.0)
+: 10.13.16.0
+TRAEFIK_VPN_ADDRESS: Enter the Traefik VPN private IP address (eg. 10.13.16.1)
+: 10.13.16.1
+TRAEFIK_VPN_PORT: Enter the Traefik VPN TCP port number (eg. 51820)
+: 51820
+Enter the Traefik VPN peers list
+: pi
+#+end_stdout
+
+Press =ESC= three times to back out of the main menu and quit the
+program.
+
+*** Reconfigure Traefik to add a Layer 7 route to the Raspberry Pi
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+> Do you want to enable the layer 7 TLS proxy? Yes
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: whoami.pi5.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+##
+## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
+
+> Do you want to enable Proxy Protocol for this route? No
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint              Destination_address  Destination_port  Proxy_protocol
+----------              -------------------  ----------------  --------------
+whoami.pi5.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to back out to the main menu and quit the
+program.
+
+*** Reinstall traefik using the new config
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_run
+
+Once installed press =ESC= to quit the config tool.
+
+You may also run the install command from the terminal:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik install
+#+end_run
+
+*** Find the wireguard peer config
+
+You can check the wireguard service is now started:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik show-wireguard-peers
+#+end_run
+
+#+begin_stdout
+## /config/peer_pi/peer_pi.conf
+[Interface]
+Address = 10.13.16.2
+PrivateKey = 2E1vQHCS5JuaoRrt21GO0bYVrafOhplrGNFqoFBivEY=
+ListenPort = 51820
+DNS = 10.13.16.1
+
+[Peer]
+PublicKey = AZiNh/5sk71QTy6Rk0ygzIUsSGAX8/s3EeGN6lT9oj0=
+PresharedKey = tEIW8FuxR6I+Qu79bORatbD+JgNPeigNvc9V18f7to8=
+Endpoint = sentry.example.com:51820
+AllowedIPs = 10.13.16.0/24
+#+end_stdout
+
+Copy the output you see into a tempory buffer / notepad, you will need
+to copy this information in the next chapter.
+
+** Configure Raspberry Pi WireGuard client
 :PROPERTIES:
-:EXPORT_FILE_NAME: configure-pi-wireguard-client
+:EXPORT_FILE_NAME: configure-raspberry-pi-wireguard-client
 :EXPORT_HUGO_WEIGHT: 420
 :END:
-TODO
-** Configure routes for Whoami
-:PROPERTIES:
-:EXPORT_FILE_NAME: configure-routes-for-whoami
-:EXPORT_HUGO_WEIGHT: 430
-:END:
-TODO
+
+*** Ensure you use the correct Docker context
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context use pi
+#+end_run
+
+*** Reconfigure Traefik to enable WireGuard client
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+  Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+> Configure wireguard VPN
+
+? Should this Traefik instance connect to a wireguard VPN?  
+  No, Traefik should use the host network directly.
+  Yes, and this Traefik instance should start the wireguard server.
+> Yes, but this Traefik instance needs credentials to connect to an outside VPN.
+
+? Should Traefik bind itself exclusively to the VPN interface?  
+> No, Traefik should work on all host interfaces (including the VPN).
+  Yes, Traefik should only listen on the VPN interface.
+
+TRAEFIK_VPN_CLIENT_INTERFACE_ADDRESS: Enter the wireguard client Interface Address (eg. 10.13.16.2)
+: 10.13.16.2
+TRAEFIK_VPN_CLIENT_INTERFACE_PRIVATE_KEY: Enter the wireguard PrivateKey (ends with =)
+: 2E1vQHCS5JuaoRrt21GO0bYVrafOhplrGNFqoFBivEY=
+TRAEFIK_VPN_CLIENT_INTERFACE_LISTEN_PORT: Enter the wireguard listen port (eg. 51820)
+: 51820
+TRAEFIK_VPN_CLIENT_PEER_PUBLIC_KEY: Enter the Peer PublicKey (ends with =)
+: AZiNh/5sk71QTy6Rk0ygzIUsSGAX8/s3EeGN6lT9oj0=
+TRAEFIK_VPN_CLIENT_PEER_PRESHARED_KEY: Enter the Peer PresharedKey (ends with =)
+: tEIW8FuxR6I+Qu79bORatbD+JgNPeigNvc9V18f7to8=
+TRAEFIK_VPN_CLIENT_PEER_ENDPOINT: Enter the Peer Endpoint (host:port)
+: sentry.example.com:51820
+TRAEFIK_VPN_CLIENT_PEER_ALLOWED_IPS: Enter the Peer AllowedIPs (eg. 10.13.16.1/32)
+: 10.13.16.1/32
+#+end_stdout
+
+*** Reinstall Traefik
+
+Press =ESC= twice to go back to the main menu, then re-install:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Once reinstalled, press =ESC= to quit the config tool.
+
+*** Test VPN connectivity
+
+Check the logs:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik logs service=wireguard
+#+end_run
+
+#+begin_stdout
+wireguard-client-1  | 2024-09-28T08:42:09.445201647Z **** All tunnels are now active ****
+#+end_stdout
+
+Enter the wireguard client shell to test networking parameters:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make traefik shell service=wireguard-client
+#+end_run
+
+Show the connected wireguard peers:
+
+#+attr_shortcode: :title Run this in the Wireguard Client shell :style info
+#+begin_run
+wg
+#+end_run
+
+#+attr_shortcode: :title Look for the last handshake time :style info
+#+begin_notice
+The output of =wg= should show the peer and the =latest handshake=
+time, for example:
+
+: latest handshake: 45 seconds ago
+
+If you do not see a handshake time, then there is some kind of problem
+connecting to the WireGuard server that you need to resolve.
+#+end_notice
+
+Ping the Wireguard server (=10.13.16.1=):
+
+#+attr_shortcode: :title Run this in the Wireguard Client shell :style info
+#+begin_run
+ping -c3 10.13.16.1
+#+end_run
+
+When you are done using the shell press =Ctrl-D= or type =exit= to
+quit.
+
+*** Check the whoami is available publicly
+
+In the last chapter you created a layer 7 route for the URL
+=https://whoami.pi5.example.com=. Now that your wireguard connection
+is active on both ends, this service should now be available publicly.
+
 * Install web services
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install-web-services
@@ -1527,6 +2040,9 @@ TODO
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 501
 :END:
+
+[[/img/portable-docker/surf.webp]]
+
 #+attr_shortcode: :depth 999
 #+begin_index
 index
