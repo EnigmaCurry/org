@@ -87,6 +87,46 @@ private IP address that only the droplet can communicate with.
 
 [[/img/portable-docker/vpn-diagram.webp]]
 
+The cloud server (DigitalOcean droplet) forwards incoming connections
+from the internet to the Raspberry Pi, over the WireGuard VPN
+connection. Traefik is used on the cloud server to create routes for
+your services. Traefik supports the following route types:
+
+ * HTTP Layer 7 (Routes a domain name [TLS SNI] over port 443)
+ * TCP Layer 4 (Routes an IP address + TCP Port # to a specific
+   backend host IP address on a specific TCP Port #)
+ * UDP Layer 4 - TODO (unimplemented but doable)
+
+This lets you route virtually any kind of service, from the public
+cloud, to your Raspberry Pi sitting on your desk.
+
+*** d.rymcg.tech
+
+[[https://github.com/EnigmaCurry/d.rymcg.tech][d.rymcg.tech]] is a configuration manager for Docker, as well as a
+collection of open source web services, with Docker Compose wrappers,
+and config templates. It contains an extensive configuration wizard
+for [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik#readme][Traefik]], with an idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes Docker
+Compose projects both easy to document, as well as to use.
+
+Traditionally, d.rymcg.tech suggests to install itself /on a separate
+workstation/, and to never actually login to your Docker server, but
+rather remotely control it from your workstation. This is how you
+follow the good DevOps practice, summed up by the metaphor: "Treat
+your infrastructure like cattle, not like pets." However, this
+strategy has the drawback that if you lose your workstation, it makes
+it diffcult to adminster the server. So in this book, we will make an
+important compromise and exception to the normal rule.
+
+In this book, d.rymcg.tech will be installed /to the same server/ that
+runs Docker. This way, everything you need is installed on the
+Raspberry Pi itself. To gain access, from any other workstation, you
+only need to setup an SSH client, along with an authorized key. You
+can login to the Pi and perform all maintainance locally, without
+needing to manage a separate workstation. Your portable Docker server
+is therefore a /pet/ Docker server, with your "workstation" being
+located in the home directory of the =pi= user, colocated on the
+Raspberry Pi itself.
+
 *** Next steps
 
  * Setup DNS
