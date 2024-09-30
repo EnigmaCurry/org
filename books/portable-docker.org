@@ -15,10 +15,12 @@
 
 This book serves as your guide to installing Docker on a small,
 portable Linux device (eg. Raspberry Pi), and deploying some web
-service containers on it, using Traefik. You'll also create and
-configure a public cloud server (eg. DigitalOcean droplet), whose sole
-purpose is to host a VPN (WireGuard) and public gateway (Traefik),
-enabling the Raspberry Pi to securely connect from any location.
+service containers on it.
+
+You'll also create and configure a public cloud server (eg.
+DigitalOcean droplet), whose sole purpose is to host a VPN (WireGuard)
+and public gateway (Traefik), enabling the Raspberry Pi to securely
+connect from any location.
 
 Through the encrypted tunnel established by this connection, the Pi
 can publish services to the internet, even when operating behind a
@@ -280,7 +282,10 @@ create a new token for each new instance).
 
  * Create an additional token, this one named =sentry.example.com
    ACME= or similar.
- 
+ * Copy this token to a temporary buffer/notepad as well, you'll need
+   it when setting up the sentry droplet.
+
+   
 * Setup Raspberry Pi
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup-raspberry-pi
@@ -317,42 +322,60 @@ purchased separately:
 #+begin_notice
 [[/img/portable-docker/geeekpi5case.webp]]
 #+end_notice
-This kit comes with the NVME shield, which is the adapter to install
-on top of the Raspberry Pi 5 motherboard. This allows you to plug in a
-full size NVME SSD. The metal case fits the extended height neccessary
-to fit the NVME shield and SSD. The kit also includes the required
-heatsink and power supply.
+This kit comes with the NVME shield, which is an adapter (hat) to
+install on top of the Raspberry Pi 5 motherboard. This allows you to
+plug in a full size NVME SSD into the Raspberry Pi's PCI-E bus. The
+metal case fits the extended height neccessary to fit the NVME shield
+and SSD inside. The kit also includes the required heatsink for the
+motherboard, a power supply, and the flat ribbon cable (not shown)
+that connects the shield to the motherboard's PCI-E port.
 
 #+attr_shortcode: :title Sandisk SD card (32GB)
 #+begin_notice
 [[/img/portable-docker/sandisk-32GB-sdcard.webp]]
 #+end_notice
 
-The SD card is used as the root filesystem for Raspbian. It doesn't
-need to be very big, as you won't be storing very much data on this.
-Booting from the SD-card is slower than NVME, but the advantage of it
-is that you can simply swap SD-cards to temporarily use the pi for a
-different purpose, without disrupting access to your NVME storage.
+The SD card is used as the root filesystem for Raspberry Pi OS
+(formerly named Raspbian). The capacity of the card doesn't need to be
+very big, as you won't be storing very much data on this.
+
+Booting from the SD-card is a bit slower than NVME, but the advantage
+of it is that you can simply swap SD-cards, and temporarily use the pi
+for a different purpose, all without disrupting access to your NVME
+storage.
+
+SD-cards are more prone to failure than NVME, especially if you write
+too much data to them, so this is minimized as much as possible.
+=/tmp= will be mounted on tmpfs, and =/var/log= will run on log2ram,
+which are both stored in RAM, so the only writes that should happen on
+the SD-card should be OS updates.
 
 #+attr_shortcode: :title Samsung 990EVO NVME SSD
 #+begin_notice
 [[/img/portable-docker/samsung-990EVO-NVME.webp]]
 #+end_notice
 
-The NVME SSD is much faster, and far more reliable, than the SD card.
-This storage will be used exclusively for the Docker storage system
+The NVME SSD is much faster, and far more reliable, than the SD-card.
+This device will be used exclusively for the Docker storage system
 (mounted at =/var/lib/docker=). This is where all of your container
-images and data will live.
+images will be built/downloaded, and where the volumes holding your
+app data will live.
 
 *** Putting everything together
 
- * Read the directions that come with the case.
- * Install the heatsink to the Pi 5 motherboard first.
- * Install the motherboard into the bottom part of the case.
- * Install the NVME shield on top of the Pi motherboard. The hat plugs
-   into the GPIO pins of the motherboard, and risers sandwich things
+ * *Read the directions that come with the Geeekpi case*, the rest of
+   this list is just a summary.
+ * Install the heatsink to the Pi 5 motherboard.
+ * Attach one end of the ribbon cable to the PCI-E port and lock it
+   into place.
+ * Attach the other end of the ribbon cable to the NVME shield and
+   lock it into place.
+ * Install the NVME shield on top of the Pi motherboard, plugging into
+   the GPIO ports, and using the taller risers to sandwich things
    together.
- * Install the NVME into the NVME shield.
+ * Install the motherboard into the bottom part of the case, using the
+   smaller risers to support the motherboard from below.
+ * Install the NVME SSD into the NVME shield.
  * Screw on the top part of the case.
  * Install the SD-card into the slot on the bottom edge.
 
@@ -376,13 +399,15 @@ images and data will live.
 [[/img/portable-docker/pi5-assembled.webp]]
 #+end_notice
 
-** Install Raspbian
+** Install Raspberry Pi OS
 :PROPERTIES:
 :EXPORT_FILE_NAME: install-raspbian
 :EXPORT_HUGO_WEIGHT: 220
 :END:
 
-The best way to install Raspbian onto an SD-card, is to use the
+[[/img/portable-docker/penguin.webp]]
+
+The best way to install Raspberry Pi OS onto an SD-card, is to use the
 [[https://www.raspberrypi.com/documentation/computers/getting-started.html][rpi-imager program]] from another computer. This allows you to setup the
 user account, network settings, and SSH credentials all from the
 imager software.
@@ -435,10 +460,71 @@ imager software.
  * Once complete, unplug the SD-card, put it into the raspberry pi,
    plug in the ethernet, and power it on.
 
+*** Create SSH config on your workstation
+
+You should try to connect to the Raspberry Pi from another computer
+(which from now is to be refered to as your "workstation").
+
+To do so, you will need to create an SSH config on your workstation,
+containing the temporary local IP address of the Raspberry Pi. This
+config is somewhat temporary, and once DNS is setup later on, it can
+be replaced with a permanent hostname config.
+
+#+begin_run
+cat &lt;&lt;EOF &gt&gt ~/.ssh/config
+Host pi
+    User pi
+    Hostname X.X.X.X
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+Replace =X.X.X.X= with the local IP address assigned to the Raspberry
+Pi.
+
+Test that the SSH connection works:
+
+#+begin_run
+ssh pi
+#+end_run
+
+The first time you connect, it will ask you to confirm the remote host
+ssh key, you should simply type =yes= to trust whatever it says, and
+it will trust it automatically from now on.
+
+If the connection is successful, you should now be logged into the
+remote shell console of the Raspberry Pi.
+
 *** Setup Log2Ram
 
 You can increase the expected lifespan of your SD card by installing
 [[https://github.com/azlux/log2ram#log2ram][log2ram]]
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+echo "deb [signed-by=/usr/share/keyrings/azlux-archive-keyring.gpg] http://packages.azlux.fr/debian/ bookworm main" | sudo tee /etc/apt/sources.list.d/azlux.list
+sudo wget -O /usr/share/keyrings/azlux-archive-keyring.gpg  https://azlux.fr/repo.gpg
+sudo apt update
+sudo apt install log2ram
+#+end_run
+
+After installing log2ram, reboot the pi:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo reboot
+#+end_run
+
+After reboot, you will find =/var/log/= is mounted as type =log2ram=:
+
+#+begin_stdout
+ryan@pi5:~ $ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+...
+log2ram         128M   14M  115M  11% /var/log
+#+end_stdout
 
 ** Setup networking
 :PROPERTIES:
@@ -450,8 +536,6 @@ You can increase the expected lifespan of your SD card by installing
 
 You may have already configured the WiFi in the rpi-imager options,
 but if not, you can do so after its been installed.
-
-SSH into the pi, and then run:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -781,6 +865,8 @@ readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
 :EXPORT_HUGO_WEIGHT: 260
 :END:
 
+[[/img/portable-docker/gopher.webp]]
+
 [[https://doc.traefik.io/traefik/][Traefik]] is the application proxy (HTTP / TCP / UDP) that is the
 entrypoint, and router, for all of your web services. Traefik
 facilitates automatic TLS certificate requests via Let's Encrypt, and
@@ -853,6 +939,52 @@ v Logging level
 
 Select the =Traefik user= option to create the traefik user on the
 host.
+
+***** Entrypoints (including dashboard)
+
+The following entrypoints are defined by default:
+
+#+begin_stdout
+Entrypoint  Listen_address  Listen_port  Protocol  Upstream_proxy
+----------  --------------  -----------  --------  --------------
+web         0.0.0.0         80           tcp       
+websecure   0.0.0.0         443          tcp       
+#+end_stdout
+
+You will need to reconfigure the =websecure= entrypoint, to enable the
+=Proxy Protocol=:
+
+#+begin_stdout
+? Traefik entrypoint config  
+  Show enabled entrypoints
+> Configure stock entrypoints
+  Configure custom entrypoints
+
+? Select entrypoint to configure:  
+  dashboard : Traefik dashboard (only accessible from 127.0.0.1:8080 and requires HTTP basic auth)
+  web : HTTP (unencrypted; used to redirect requests to use HTTPS)
+> websecure : HTTPS (TLS encrypted HTTP)
+  web_plain : HTTP (unencrypted; specifically NOT redirected to websecure; must use different port than web)
+  mqtt : MQTT (mosquitto) pub-sub service
+  ssh : SSH (forgejo) git (ssh) entrypoint
+v xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
+
+> Do you want to enable the websecure entrypoint? Yes
+Set TRAEFIK_WEBSECURE_ENTRYPOINT_ENABLED=true
+TRAEFIK_WEBSECURE_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (eg. 0.0.0.0)
+: 0.0.0.0
+TRAEFIK_WEBSECURE_ENTRYPOINT_PORT: Enter the host port to listen on (eg. 443)
+: 443
+
+? Is this entrypoint downstream from another trusted proxy?  
+  No, clients dial directly to this server. (Turn off Proxy Protocol)
+> Yes, clients are proxied through a trusted server. (Turn on Proxy Protocol)
+
+TRAEFIK_WEBSECURE_ENTRYPOINT_PROXY_PROTOCOL_TRUSTED_IPS: Enter the comma separated list of trusted upstream proxy servers (CIDR)
+: 10.13.16.1/32
+#+end_stdout
+
+Press =ESC= two times to get back to the traefik config menu.
 
 ***** TLS certificates and authorities
 
@@ -1030,12 +1162,12 @@ Host: whoami.example.com
 User-Agent: curl/7.88.1
 Accept: */*
 Accept-Encoding: gzip
-X-Forwarded-For: 10.93.23.114
+X-Forwarded-For: 198.51.100.1
 X-Forwarded-Host: whoami.example.com
 X-Forwarded-Port: 443
 X-Forwarded-Proto: https
 X-Forwarded-Server: docker
-X-Real-Ip: 10.93.23.114
+X-Real-Ip: 198.51.100.1
 #+end_stdout
 
 This output is useful for end-to-end testing, to verify that the
@@ -1045,7 +1177,7 @@ headers to incoming requests, and so whoami is a nice way to verify
 that those are working too. Finally, the connection test will confirm
 whether or not the TLS certificate is installed correctly.
 
-*** Quickstart
+*** Install
 
 Create a new config:
 
@@ -1715,13 +1847,16 @@ X-Real-Ip: X.X.X.X
 :EXPORT_HUGO_SECTION_FRAG: configure-wireguard-tunnel
 :EXPORT_HUGO_WEIGHT: 400
 :END:
-TODO
+
 ** Configure WireGuard VPN
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 401
 :END:
 #+attr_shortcode: :depth 999
+
+[[/img/portable-docker/tunnel.webp]]
+
 #+begin_index
 index
 #+end_index
@@ -1730,6 +1865,8 @@ index
 :EXPORT_FILE_NAME: configure-sentry-wireguard-server
 :EXPORT_HUGO_WEIGHT: 410
 :END:
+
+[[/img/portable-docker/dragon.webp]]
 
 *** Ensure you use the correct context
 
@@ -1837,7 +1974,7 @@ Enter the destination TCP port to forward to:
 ##
 ## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
 
-> Do you want to enable Proxy Protocol for this route? No
+> Do you want to enable Proxy Protocol for this route? Yes
 
 ## Layer 7 TLS Proxy is ENABLED.
 ## Configured Layer 7 Routes:
@@ -1901,6 +2038,8 @@ to copy this information in the next chapter.
 :EXPORT_FILE_NAME: configure-raspberry-pi-wireguard-client
 :EXPORT_HUGO_WEIGHT: 420
 :END:
+
+[[/img/portable-docker/castle.webp]]
 
 *** Ensure you use the correct Docker context
 
@@ -2024,7 +2163,7 @@ ping -c3 10.13.16.1
 When you are done using the shell press =Ctrl-D= or type =exit= to
 quit.
 
-*** Check the whoami is available publicly
+*** Check that whoami is available publicly
 
 In the last chapter you created a layer 7 route for the URL
 =https://whoami.pi5.example.com=. Now that your wireguard connection
