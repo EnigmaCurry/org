@@ -27,19 +27,19 @@ It normally sits in one place for a long time. But sometimes it needs to be pick
     <meta itemprop="description" content="Here is my Raspberry Pi 5, which is a small form factor Linux computer, running Raspberry Pi OS and Docker. It has been outfitted with an NVME SSD attached via the expandable PCI-E bus. It has 8GB of RAM, and 1TB of fast storage.
 I use this as a tiny web server, that I can take anywhere I go.
 It normally sits in one place for a long time. But sometimes it needs to be picked up, and installed in a new place.">
-    <meta itemprop="wordCount" content="321">
+    <meta itemprop="wordCount" content="656">
     <title>Introduction :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727737272" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727737272" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727737272" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727737272" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727737272" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727737272" rel="stylesheet">
-    <link href="/css/fonts.css?1727737272" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727737272" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727737272" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727737272" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727737272" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727737272" rel="stylesheet">
-    <link href="/css/print.css?1727737272" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727737272"></script>
+    <link href="/css/fontawesome-all.min.css?1727739465" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727739465" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1727739465" rel="stylesheet">
+    <link href="/css/auto-complete.css?1727739465" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727739465" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1727739465" rel="stylesheet">
+    <link href="/css/fonts.css?1727739465" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727739465" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1727739465" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1727739465" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1727739465" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1727739465" rel="stylesheet">
+    <link href="/css/print.css?1727739465" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1727739465"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..';
@@ -73,6 +73,7 @@ It normally sits in one place for a long time. But sometimes it needs to be pick
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
+    <li><a href="#d-dot-rymcg-dot-tech">d.rymcg.tech</a></li>
     <li><a href="#next-steps">Next steps</a></li>
   </ul>
 </nav>
@@ -145,6 +146,41 @@ private IP address that only the droplet can communicate with.</p>
 <figure><img src="/img/portable-docker/vpn-diagram.webp"/>
 </figure>
 
+<p>The cloud server (DigitalOcean droplet) forwards incoming connections
+from the internet to the Raspberry Pi, over the WireGuard VPN
+connection. Traefik is used on the cloud server to create routes for
+your services. Traefik supports the following route types:</p>
+<ul>
+<li>HTTP Layer 7 (Routes a domain name [TLS SNI] over port 443)</li>
+<li>TCP Layer 4 (Routes an IP address + TCP Port # to a specific
+backend host IP address on a specific TCP Port #)</li>
+<li>UDP Layer 4 - TODO (unimplemented but doable)</li>
+</ul>
+<p>This lets you route virtually any kind of service, from the public
+cloud, to your Raspberry Pi sitting on your desk.</p>
+<h2 id="d-dot-rymcg-dot-tech">d.rymcg.tech</h2>
+<p><a href="https://github.com/EnigmaCurry/d.rymcg.tech" rel="external" target="_blank">d.rymcg.tech</a> is a configuration manager for Docker, as well as a
+collection of open source web services, with Docker Compose wrappers,
+and config templates. It contains an extensive configuration wizard
+for <a href="https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik#readme" rel="external" target="_blank">Traefik</a>, with an idiomatic <a href="https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction" rel="external" target="_blank">command line tool</a>, which makes Docker
+Compose projects both easy to document, as well as to use.</p>
+<p>Traditionally, d.rymcg.tech suggests to install itself <em>on a separate
+workstation</em>, and to never actually login to your Docker server, but
+rather remotely control it from your workstation. This is how you
+follow the good DevOps practice, summed up by the metaphor: &ldquo;Treat
+your infrastructure like cattle, not like pets.&rdquo; However, this
+strategy has the drawback that if you lose your workstation, it makes
+it diffcult to adminster the server. So in this book, we will make an
+important compromise and exception to the normal rule.</p>
+<p>In this book, d.rymcg.tech will be installed <em>to the same server</em> that
+runs Docker. This way, everything you need is installed on the
+Raspberry Pi itself. To gain access, from any other workstation, you
+only need to setup an SSH client, along with an authorized key. You
+can login to the Pi and perform all maintainance locally, without
+needing to manage a separate workstation. Your portable Docker server
+is therefore a <em>pet</em> Docker server, with your &ldquo;workstation&rdquo; being
+located in the home directory of the <code>pi</code> user, colocated on the
+Raspberry Pi itself.</p>
 <h2 id="next-steps">Next steps</h2>
 <ul>
 <li>Setup DNS</li>
@@ -179,12 +215,12 @@ private IP address that only the droplet can communicate with.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727737272" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727737272" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727737272" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727737272" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727737272" defer></script>
-        <script src="/js/search.js?1727737272" defer></script>
+        <script src="/js/auto-complete.js?1727739465" defer></script>
+        <script src="/js/lunr/lunr.min.js?1727739465" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1727739465" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1727739465" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1727739465" defer></script>
+        <script src="/js/search.js?1727739465" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -326,14 +362,14 @@ private IP address that only the droplet can communicate with.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Sep 30, 2024 at 11:01pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Sep 30, 2024 at 11:37pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727737272" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727737272" defer></script>
-    <script src="/js/theme.js?1727737272" defer></script>
+    <script src="/js/clipboard.min.js?1727739465" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1727739465" defer></script>
+    <script src="/js/theme.js?1727739465" defer></script>
   </body>
 </html>
