@@ -1983,28 +1983,16 @@ Entrypoint              Destination_address  Destination_port  Proxy_protocol
 whoami.pi5.example.com  10.13.16.2           443               2
 #+end_stdout
 
-Press =ESC= three times to back out to the main menu and quit the
-program.
+Press =ESC= multiple times to back out to the main menu. On the main
+menu, select =Install=, to re-install Traefik:
 
-*** Reinstall traefik using the new config
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
+#+begin_stdout
 ? Traefik:  
   Config
 > Install (make install)
   Admin
   Exit (ESC)
-#+end_run
-
-Once installed press =ESC= to quit the config tool.
-
-You may also run the install command from the terminal:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d make traefik install
-#+end_run
+#+end_stdout
 
 *** Find the wireguard peer config
 
@@ -2302,7 +2290,7 @@ Press =ESC= three times to go back to the main menu, and re-install Traefik:
   Exit (ESC)
 #+end_stdout
 
-Press =ESC= to quit the config tool.
+After installation, press =ESC= to quit the config tool.
 
 
 *** Finish
@@ -2321,4 +2309,121 @@ configuration to secure the admin user account.
 :EXPORT_FILE_NAME: yourls
 :EXPORT_HUGO_WEIGHT: 520
 :END:
-TODO
+
+*** Configure Yourls
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context use pi
+
+d make yourls config
+#+end_run
+
+Follow the prompts to configure the domain name and admin user
+authentication.
+
+#+begin_stdout
+YOURLS_TRAEFIK_HOST: Enter the YOURLS domain name (eg. yourls.example.com)
+: yourls.pi5.forwarding.network
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+> No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+
+YOURLS_USER: Enter the admin username for your YOURLS instance
+: admin
+YOURLS_PASS: Enter the password for 'admin'
+: 528e0e36fc170 
+#+end_stdout
+
+Choose your own a secure passphrase!
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d make yourls install wait
+#+end_run
+
+Wait for the services to start and report themselves as healthy:
+
+#+begin_stdout
+Waiting until all services are started and become healthy ...
+All services healthy.
+#+end_stdout
+
+*** Add a new route on the sentry (droplet)
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d context use sentry
+
+d make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: yourls.pi5.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint              Destination_address  Destination_port  Proxy_protocol
+----------              -------------------  ----------------  --------------
+yourls.pi5.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Finish
+
+#+attr_shortcode: :title Immediately secure the admin account :style warning
+#+begin_notice
+You should immediately open the URL in your web browser:
+=https://yourls.pi5.example.com/admin= and complete the initial
+configuration to finsh installation.
+#+end_notice
+
