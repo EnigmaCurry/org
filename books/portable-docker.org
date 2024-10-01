@@ -67,23 +67,25 @@ I use this as a tiny web server that I can take anywhere I go.
 
 It normally sits in one place for a long time. But sometimes it needs
 to be picked up and installed in a new place. I need it to be able to
-get the network up, have it resume all of its previous functions,
-and even use the same IP address as before. It needs to be plug and
-play with minimal disruption to the clients that expect this server
-to be online and available. No matter what kind of internet connection
-I have it connected to it should be quick to get this server back online.
+get the network up, have it resume all of its previous functions, and
+even use the same IP address as before. It needs to be plug and play
+with minimal disruption to the clients that expect this server to be
+online and available. No matter what kind of internet connection I
+have it connected to, it should be quick to get this server back
+online.
 
 ** Sentry Droplet
 
-To accomplish this feat, we need to setup another server that has a
-static IP address and accessible from the public internet. I use a
-DigitalOcean droplet, which is a type of Virtual Private Server (VPS),
-which exists in the public cloud. It is always on and anyone in the
-world can connect to it (via HTTP). However, the droplet does not
-serve any applications by itself; it only creates the public Traefik
-proxy which forwards incoming connections (ingress) through a backdoor
-VPN connection. The Raspberry Pi re-establishes this connection
-automatically whenever it comes online.
+To accomplish this feat, we need to set up another server (to be named
+=sentry=) that has a static IP address and accessible from the public
+internet. I use a DigitalOcean droplet, which is a type of Virtual
+Private Server (VPS), which exists in the public cloud. The sentry is
+always on and anyone in the world can connect to it (via HTTP).
+However, the sentry does not serve any applications by itself; it only
+creates the public Traefik proxy which forwards incoming connections
+(ingress) through a backdoor VPN connection to the Raspberry Pi. The
+Pi initiates this connection automatically whenever it boots and comes
+online.
 
 ** Wireguard VPN
 
@@ -121,44 +123,68 @@ easy to document, as well as to use.
 Traditionally, d.rymcg.tech suggests to install itself /on a separate
 workstation/, and urges you to never actually login to your Docker
 server, but rather remotely control it from your workstation. This is
-how you follow the good DevOps practice, summed up by the metaphor:
-"Treat your infrastructure like cattle, not like pets." However, this
-strategy has the drawback that if you lose your workstation, it makes
-it diffcult to adminster the server (you would have to recreate your
-=.env= files from backup, or from scratch). So in this book, we will
-make an important compromise and an exception to the normal rule.
+one of the ways to follow the good DevOps practice, summed up by the
+metaphor: "Treat your infrastructure like cattle, not like pets."
+However, this strategy has the drawback that if you lose your
+workstation, it makes it diffcult to adminster the server (you would
+have to recreate your =.env= files on a new workstation, from backup,
+or from scratch).
 
+To avoid this complexity, and to make it easier to maintain after long
+periods of inactivity, we will make an important compromise and an
+exception to the normal rule:
+
+#+attr_shortcode: :title The Raspberry Pi serves the role of workstation and server :style info
+#+begin_notice
 In this book, d.rymcg.tech will be installed /to the same server/ that
-runs Docker. This way, everything you need is installed on the
-Raspberry Pi itself. To gain access from any other workstation, you
-only need to setup an SSH client, along with an authorized key. You
-can login to the Pi and perform all maintainance locally, without
-needing to manage a separate workstation. Your portable Docker server
-is therefore a /pet/ Docker server, with your "workstation" being
-located in the home directory of the =pi= user, colocated on the
-Raspberry Pi itself.
+runs Docker, rather than a separate workstation. That way you've got
+everything together in one little box.
+#+end_notice
+
+This way, everything you need is installed on the Raspberry Pi itself.
+To gain access from any other workstation, you only need to set up an
+SSH client, along with an authorized key. You can login to the Pi and
+perform all maintainance locally, without needing to manage a separate
+workstation. Your portable Docker server is therefore a /pet/ Docker
+server, with your "workstation" being located in the home directory of
+the =pi= user, colocated on the Raspberry Pi itself.
+
+**** Editing files on the Pi
+
+One consequence of this choice is that unless you hook up a display
+and keyboard to the Raspberry Pi, you'll eventually encounter the need
+to edit some files remotely on the Pi. You have a few options in that
+regard:
+
+ * Learn how to use one of the many terminal mode text editors (Emacs,
+   Vim, nano, etc.) and edit the files through an SSH console directly
+   on the Pi.
+ * Setup your personal computer with an editor that works over SSH
+   (Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc.)
+ * Edit the files locally and copy the files with scp, [[https://wiki.archlinux.org/title/Rsync][rsync]], or
+   [[https://blog.rymcg.tech/blog/linux/rclone_sync/][rclone]].
 
 ** Next steps
 
- * Setup DNS
- * Setup Raspberry Pi
- * Setup Droplet
- * Setup Wireguard
+ * Set up DNS
+ * Set up Raspberry Pi
+ * Set up Droplet
+ * Set up Wireguard
  * Install apps and services
 
-* Setup DNS
+* Set up DNS
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: setup-dns
+:EXPORT_HUGO_SECTION_FRAG: set-up-dns
 :EXPORT_HUGO_WEIGHT: 150
 :END:
-** Setup DNS
+** Set up DNS
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 151
 :END:
 
-Before you can configure any hardware, you need to setup the domain
-name service of your own domain.
+Before you can configure any hardware, you need to set up the domain
+name service (DNS) of your domain.
 
 [[/img/portable-docker/dns.webp]]
 
@@ -177,6 +203,8 @@ register your domain name (e.g., =example.com=). This will be the
 domain name used for all of your service links, and it is what your
 users will need to type into their web browsers (or click on) to visit
 your pages.
+
+[[/img/portable-docker/hello-traefik.webp]]
 
 Public domain names are a scarce resource. Because of their scarcity,
 you must pay for your domain registrations, doing so in 1 year
@@ -236,7 +264,7 @@ supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
 #+end_notice
 
 Wait a few minutes for the change to take effect, then you can verify
-the setting from your workstation, using the =whois= command:
+the setting from your workstation using the =whois= command:
 
 #+begin_run
 whois example.com
@@ -250,19 +278,21 @@ Name Server: ns2.digitalocean.com
 Name Server: ns3.digitalocean.com
 #+end_stdout
 
-The output shows a report for your domain registration, including the
+The output shows a report for your domain registration including the
 list of the new nameservers.
 
-If you don'y have =whois= installed, you can use [[https://www.registry.google/whois-lookup/][the web version provided by google]].
+If you don'y have =whois= installed you can use [[https://www.registry.google/whois-lookup/][the web version provided by google]].
 
-** Add domain to DigitalOcean DNS
+** Add the domain to DigitalOcean DNS
 :PROPERTIES:
 :EXPORT_FILE_NAME: create-digitalocean-api-token
 :EXPORT_HUGO_WEIGHT: 161
 :END:
 
 The [[https://www.rfc-editor.org/rfc/rfc1035][Domain Name System]] is how you can associate one of your
-sub-domains with an actual IP address on the internet.
+sub-domains with an actual IP address on the Internet.
+
+[[/img/portable-docker/hello-docker.webp]]
 
 #+attr_shortcode: :style secondary :title Choose a supported DNS provider
 #+begin_notice
@@ -271,7 +301,7 @@ you may choose a different provider if you prefer, but it needs to be
 supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
 
 Sign up for a [[https://m.do.co/c/d827a13964d7][DigitalOcean account]] (using this referral link helps
-support this site), and follow along to setup your domain's DNS.
+support this site), and follow along to set up your domain's DNS.
 #+end_notice
 
 *** Add your domain name
@@ -304,6 +334,9 @@ example.com.             2400    IN      NS      ns2.digitalocean.com.
 :EXPORT_FILE_NAME: create-digitalocean-api-token-for-acme-challenge
 :EXPORT_HUGO_WEIGHT: 255
 :END:
+
+[[/img/portable-docker/api.webp]]
+
 #+attr_shortcode: :style secondary :title Choose a supported DNS provider
 #+begin_notice
 This book uses DigitalOcean as the DNS provider in all examples, but
@@ -343,12 +376,12 @@ create a new token for each new instance).
    you'll need this second token when setting up the sentry droplet.
 
    
-* Setup Raspberry Pi
+* Set up Raspberry Pi
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: setup-raspberry-pi
+:EXPORT_HUGO_SECTION_FRAG: set-up-raspberry-pi
 :EXPORT_HUGO_WEIGHT: 200 
 :END:
-** Setup Raspberry Pi
+** Set up Raspberry Pi
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 201
@@ -465,7 +498,7 @@ app data will live.
 [[/img/portable-docker/penguin.webp]]
 
 The best way to install Raspberry Pi OS onto an SD-card, is to use the
-[[https://www.raspberrypi.com/documentation/computers/getting-started.html][rpi-imager program]] from another computer. This allows you to setup the
+[[https://www.raspberrypi.com/documentation/computers/getting-started.html][rpi-imager program]] from another computer. This allows you to set up the
 user account, network settings, and SSH credentials all from the
 imager software.
 
@@ -494,7 +527,7 @@ imager software.
      * Enter the hostname
      * Enter a username and password (This book uses the username
        =pi=).
-     * Optionally setup the Wi-Fi (I just use ethernet instead).
+     * Optionally set up the Wi-Fi (I just use ethernet instead).
      * Set locale settings. I set mine to UTC.
      
    * On the =Services= tab:
@@ -527,7 +560,7 @@ You should try to connect to the Raspberry Pi from another computer
 
 To do so, you will need to create an SSH config on your workstation,
 containing the temporary local IP address of the Raspberry Pi. This
-config is somewhat temporary, and once DNS is setup later on, it can
+config is somewhat temporary, and once DNS is set up later on, it can
 be replaced with a permanent hostname config.
 
 #+begin_run
@@ -557,7 +590,7 @@ it will trust it automatically from now on.
 If the connection is successful, you should now be logged into the
 remote shell console of the Raspberry Pi.
 
-*** Setup Log2Ram
+*** Set up Log2Ram
 
 You can increase the expected lifespan of your SD card by installing
 [[https://github.com/azlux/log2ram#log2ram][log2ram]]
@@ -586,11 +619,13 @@ Filesystem      Size  Used Avail Use% Mounted on
 log2ram         128M   14M  115M  11% /var/log
 #+end_stdout
 
-** Setup networking
+** Set up networking
 :PROPERTIES:
-:EXPORT_FILE_NAME: setup-networking
+:EXPORT_FILE_NAME: set-up-networking
 :EXPORT_HUGO_WEIGHT: 230
 :END:
+
+[[/img/portable-docker/networking.webp]]
 
 *** Wi-Fi
 
@@ -629,9 +664,9 @@ sudo chattr +i /etc/resolv.conf
    when you can't find an ethernet LAN with DHCP.
  * [[https://www.raspberrypi.com/documentation/computers/configuration.html#wireless-networking-command-line][Official Raspberry Pi Networking guide]]
 
-** Setup SSH
+** Set up SSH
 :PROPERTIES:
-:EXPORT_FILE_NAME: setup-ssh
+:EXPORT_FILE_NAME: set-up-ssh
 :EXPORT_HUGO_WEIGHT: 231
 :END:
 
@@ -663,7 +698,7 @@ There's only two ways to do that:
  * Create an /unencrypted/ SSH key, so that no passphrase is ever
     required.
  -or-
- * Setup an ssh-agent to decrypt and load the unencrypted key into
+ * Set up an ssh-agent to decrypt and load the unencrypted key into
     resident memory, so that your key can be used without requiring a
     passphrase.
 
@@ -758,7 +793,7 @@ sudo docker run hello-world
 
   * If working, you should see a =Hello from Docker!= message and some other help info.
 
-*** Setup Docker context (SSH)
+*** Set up Docker context (SSH)
 
 [[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of a [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]] via SSH, rather than
 the default socket context.
@@ -907,7 +942,7 @@ context                       View or set the current Docker context
 new-context                   Create a new Docker context
 tmp-context                   Use a temporary Docker context in a sub-shell
 ssh [COMMAND ...]             Run command or shell on active docker context SSH host
-completion                    Setup TAB completion in your shell
+completion                    Set up TAB completion in your shell
 install                       Install an app interactively
 install-docker                Install Docker Engine on the host
 status                        Show status of all installed services
@@ -1282,7 +1317,7 @@ Install whoami:
 d make whoami install
 #+end_run
 
-**** Setup temporary DNS override
+**** Set up temporary DNS override
 
 The =whoami= service is not public yet, it is currently only
 accessible from the same local network (LAN). For testing purposes,
@@ -1376,12 +1411,12 @@ To check the Traefik logs, do similar:
 d make traefik logs
 #+end_run
 
-* Setup cloud server sentry
+* Set up cloud server sentry
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: setup-cloud-sentry
+:EXPORT_HUGO_SECTION_FRAG: set-up-cloud-sentry
 :EXPORT_HUGO_WEIGHT: 300
 :END:
-** Setup cloud server sentry
+** Set up cloud server sentry
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 301
@@ -1397,7 +1432,10 @@ index
 :EXPORT_FILE_NAME: launch-digitalocean-droplet
 :EXPORT_HUGO_WEIGHT: 310
 :END:
-**** Setup your SSH key on DigitalOcean
+
+[[/img/portable-docker/launch-droplet.webp]]
+
+**** Set up your SSH key on DigitalOcean
 
 #+attr_shortcode: :style info :title How to do this in the DigitalOcean cloud console
 #+begin_notice
@@ -1553,7 +1591,7 @@ dig @ns1.digitalocean.com laksdflkweieri.sentry.example.com
 
 ** Configure the droplet on the Pi
 :PROPERTIES:
-:EXPORT_FILE_NAME: setup-docker-context
+:EXPORT_FILE_NAME: set-up-docker-context
 :EXPORT_HUGO_WEIGHT: 320
 :END:
 
@@ -1562,6 +1600,8 @@ You now need to be able to control the droplet's =root= user from the
  sentry (replace =sentry.example.com= with your own droplet's DNS
  name):
 
+[[/img/portable-docker/configure.webp]]
+ 
 *** Append to the SSH config on the Pi
  
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
