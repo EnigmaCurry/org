@@ -70,22 +70,22 @@ to be picked up and installed in a new place. I need it to be able to
 get the network up, have it resume all of its previous functions, and
 even use the same IP address as before. It needs to be plug and play
 with minimal disruption to the clients that expect this server to be
-online and available. No matter what kind of internet connection I
-have it connected to, it should be quick to get this server back
+online and available. No matter what kind of connection to the
+Internet it has available, it should be quick to get this server back
 online.
 
 ** Sentry Droplet
 
 To accomplish this feat, we need to set up another server (to be named
-=sentry=) that has a static IP address and accessible from the public
-internet. I use a DigitalOcean droplet, which is a type of Virtual
-Private Server (VPS), which exists in the public cloud. The sentry is
-always on and anyone in the world can connect to it (via HTTP).
-However, the sentry does not serve any applications by itself; it only
-creates the public Traefik proxy which forwards incoming connections
-(ingress) through a backdoor VPN connection to the Raspberry Pi. The
-Pi initiates this connection automatically whenever it boots and comes
-online.
+=sentry=) that has a static IP address and is accessible from the
+public internet. I use a DigitalOcean droplet, which is a type of
+Virtual Private Server (VPS), which exists in the public cloud. The
+sentry is always on and anyone in the world can connect to it (via
+HTTP). However, the sentry does not serve any applications by itself;
+it only creates the public [[https://doc.traefik.io/traefik/][Traefik]] proxy which forwards incoming
+connections (ingress) through a backdoor VPN connection to the
+Raspberry Pi. The Pi initiates this connection automatically whenever
+it boots and comes online.
 
 ** Wireguard VPN
 
@@ -99,14 +99,15 @@ private IP address that only the droplet can communicate with.
 
 [[/img/portable-docker/vpn-diagram.webp]]
 
-The cloud server (DigitalOcean droplet) forwards incoming connections
-from the internet to the Raspberry Pi over the WireGuard VPN
-connection. Traefik is used on the cloud server to create routes for
-your services. Traefik supports the following route types:
+The cloud server (sentry) forwards incoming connections from the
+Internet to the Raspberry Pi over the WireGuard VPN connection.
+Traefik is used on the cloud server to create routes for your
+services. Traefik supports the following route types:
 
- * HTTP Layer 7 (Routes a domain name [TLS SNI] over port 443)
- * TCP Layer 4 (Routes an IP address + TCP Port # to a specific
-   backend host IP address on a specific TCP Port #)
+ * HTTP Layer 7 (Routes a domain name [TLS SNI] + HTTP path over port
+   443 to a backend HTTP server)
+ * TCP Layer 4 (Routes a TCP ADDRESS:PORT to a specific
+   backend ADDRESS:PORT)
  * UDP Layer 4 - TODO (unimplemented but doable)
 
 This lets you route virtually any kind of service from the public
@@ -375,7 +376,6 @@ create a new token for each new instance).
  * Copy this token to the same temporary buffer/notepad as before,
    you'll need this second token when setting up the sentry droplet.
 
-   
 * Set up Raspberry Pi
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: set-up-raspberry-pi
@@ -1191,6 +1191,42 @@ Secondary (SANS) domains:
 Finally a summary of the certificate request is printed.
 
  * Press the =ESC= key three times to go back to the main menu.
+
+***** Error page template
+
+You can customize the [[https://github.com/tarampampam/error-pages#-templates][Traefik error page template]] by selecing a custom
+theme:
+
+[[/img/portable-docker/404.webp]]
+
+#+begin_stdout
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Error page template
+  Logging level
+  Access logs
+
+? Select an error page theme (https://github.com/tarampampam/error-pages#-templates)  
+^ hacker-terminal
+  cats
+  lost-in-space
+  app-down
+  connection
+> matrix
+  orient
+#+end_stdout
+
+Since this theme is only used for the 404s and other errors coming
+from Traefik directly (and not for any errors coming from the apps
+themselves), the choice here is not purely aesthetic: as long as you
+choose /unique/ error page template themes for each Traefik server
+instance (e.g., =pi=, =sentry=), you will gain extra debugging
+knowledge of knowing /which/ Traefik instance is returning a
+particular error.
+
 
 *** Install Traefik
 
