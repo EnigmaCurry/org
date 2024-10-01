@@ -50,6 +50,12 @@ index
 :EXPORT_HUGO_WEIGHT: 100
 :END:
 
+#+begin_toc
+table of contents
+#+end_toc
+
+** Raspberry Pi
+
 [[/img/portable-docker/pi5-assembled.webp]]
 
 Here is my Raspberry Pi 5, which is a small form factor Linux
@@ -67,6 +73,8 @@ play, with minimal disruption to the clients that expect this server
 to be online and available, no matter what kind of internet connection
 I have it connected to, it should be quick to get this server back online.
 
+** Sentry Droplet
+
 To accomplish this feat, we need to setup another server that has a static IP
 address, accessible from the public internet. I use a DigitalOcean
 droplet, which is a type of Virtual Private Server (VPS), which exists
@@ -76,6 +84,8 @@ applications by itself, it only creates the public Traefik proxy
 (ingress), which forwards incoming connections through a backdoor VPN
 connection, that the Raspberry Pi automatically re-establishes when it
 comes online.
+
+** Wireguard VPN
 
 [[/img/portable-docker/vpn-string-along.webp]]
 
@@ -100,7 +110,7 @@ your services. Traefik supports the following route types:
 This lets you route virtually any kind of service, from the public
 cloud, to your Raspberry Pi sitting on your desk.
 
-*** d.rymcg.tech
+** d.rymcg.tech
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech][d.rymcg.tech]] is a configuration manager for Docker, as well as a
 collection of open source web services, with Docker Compose wrappers,
@@ -127,7 +137,7 @@ is therefore a /pet/ Docker server, with your "workstation" being
 located in the home directory of the =pi= user, colocated on the
 Raspberry Pi itself.
 
-*** Next steps
+** Next steps
 
  * Setup DNS
  * Setup Raspberry Pi
@@ -162,9 +172,10 @@ index
 :END:
 
 To host a web service, one of the first things you will need is to
-register your domain name. This will be the domain name used for all
-of your service links, and it is what your users will need to type
-into their browsers (or click on) to visit your pages.
+register your domain name (e.g., =example.com=). This will be the
+domain name used for all of your service links, and it is what your
+users will need to type into their web browsers (or click on) to visit
+your pages.
 
 Public domain names are a scarce resource. Because of their scarcity,
 you must pay for your domain registrations, doing so in 1 year
@@ -189,7 +200,7 @@ will be similar regardless of the domain provider you pick.
 #+begin_notice
  * Sign up for an account at [[https://www.gandi.net/][Gandi.net]]
  * Once signed in, from your dashboard, click =Register=.
- * Search for any domain name you like, eg. =your-name.com=.
+ * Search for any domain name you like, e.g., =your-name.com=.
  * Add your domain to the shopping cart, go to checkout, and complete
    your purchase.
  * Once you have purchased the domain, it should show up in your
@@ -240,6 +251,8 @@ Name Server: ns3.digitalocean.com
 
 The output shows a report for your domain registration, including the
 list of the new nameservers.
+
+If you don'y have =whois= installed, you can use [[https://www.registry.google/whois-lookup/][the web version provided by google]].
 
 ** Add domain to DigitalOcean DNS
 :PROPERTIES:
@@ -305,8 +318,8 @@ account's DNS settings on your behalf:
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean console]].
  * Click on =API= in the left hand menu, near the bottom of the list.
  * On the =Tokens= tab, click =Generate New Token=.
- * Enter a descriptive name indicating the owner of the token (eg. a
-   subdomain), and its purpose (eg. ACME): =pi5.example.com ACME=.
+ * Enter a descriptive name indicating the owner of the token (e.g., a
+   subdomain), and its purpose (e.g., ACME): =pi5.example.com ACME=.
  * Set the expiration period you want to use. Use =No expire= if you
    just want to set it and forget it, otherwise you will need to
    update the token periodically.
@@ -319,13 +332,14 @@ account's DNS settings on your behalf:
    the =DO_AUTH_TOKEN= variable.
 
 You will also need to generate an additional API token for the sentry
-droplet (you could use the same API token from above, but its best to
+droplet (you could reuse the same API token from above, but its best to
 create a new token for each new instance).
 
  * Create an additional token, this one named =sentry.example.com
    ACME= or similar.
- * Copy this token to a temporary buffer/notepad as well, you'll need
-   it when setting up the sentry droplet.
+ * Set a =Custom scope= = =domain=.
+ * Copy this token to the same temporary buffer/notepad as before,
+   you'll need this second token when setting up the sentry droplet.
 
    
 * Setup Raspberry Pi
@@ -467,7 +481,7 @@ imager software.
    
  * Click on the menu labeled =Storage=.
    * Choose the Storage device to install to.
-   * You may need to change the ownership of the device (eg. I had to
+   * You may need to change the ownership of the device (e.g., I had to
      do =sudo chown ryan /dev/sdb= first).
      
  * Click =Next=.
@@ -486,9 +500,12 @@ imager software.
    
      * Click =Enable SSH=
      * Choose =Allow pulbic-key authentication only=
+     * If you don't have an SSH key yet, read the [[/linux-workstation/config/ssh/][SSH chapter of the Linux Workstation book]].
      * Paste the list of your SSH public keys into the box. (Find them
        on your workstation by running =ssh-add -L= or look in
-       =~/.ssh/*.pub=)
+       =~/.ssh/id_ed25519.pub=)
+     * The SSH key is important to protect, as this is the only way to
+       remotely SSH into the Raspberry Pi
        
    * On the =Options= tab:
    
@@ -602,6 +619,14 @@ sudo chattr +i /etc/resolv.conf
 #+end_run
 
 =chattr +i= prevents DHCP from overwriting this file in the future.
+
+*** Links
+
+ * [[https://raspberrypi-guide.github.io/networking][The Raspberry Pi Guide - For scientists and anyone else]] - this
+   shares how to configure many different network scenarios, including
+   a direct ethernet cable between your workstation and the pi, useful
+   when you can't find an ethernet LAN with DHCP.
+ * [[https://www.raspberrypi.com/documentation/computers/configuration.html#wireless-networking-command-line][Official Raspberry Pi Networking guide]]
 
 ** Setup SSH
 :PROPERTIES:
@@ -819,7 +844,7 @@ selection wizards in Bash a lot nicer.
 **** Choose the root domain name for this server
 
 #+begin_stdout
-ROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com)
+ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
 : d.example.com
 #+end_stdout
 
@@ -828,7 +853,7 @@ subdomain name) that you want to use as the root domain for all of
 your services on this server.
 
 For example, if you entered =example.com=, you will later install apps
-(eg. =whoami=) with subdomains like =whoami.example.com=. Choosing a
+(e.g., =whoami=) with subdomains like =whoami.example.com=. Choosing a
 deeper subdomain has the benefit of being able to share a single root
 domain name amongst several Docker instances, therefore with the
 example of =d.example.com= the service would be deployed like
@@ -1013,9 +1038,9 @@ v xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
 
 > Do you want to enable the websecure entrypoint? Yes
 Set TRAEFIK_WEBSECURE_ENTRYPOINT_ENABLED=true
-TRAEFIK_WEBSECURE_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (eg. 0.0.0.0)
+TRAEFIK_WEBSECURE_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (e.g., 0.0.0.0)
 : 0.0.0.0
-TRAEFIK_WEBSECURE_ENTRYPOINT_PORT: Enter the host port to listen on (eg. 443)
+TRAEFIK_WEBSECURE_ENTRYPOINT_PORT: Enter the host port to listen on (e.g., 443)
 : 443
 
 ? Is this entrypoint downstream from another trusted proxy?  
@@ -1041,7 +1066,7 @@ Press =ESC= two times to get back to the traefik config menu.
 ****** TRAEFIK_ACME_DNS_PROVIDER     
    * Enter the ACME DNS provider: =digitalocean=
 #+begin_stdout
-TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (e.g., digitalocean)
 : digitalocean
 #+end_stdout
 
@@ -1056,7 +1081,7 @@ TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digita
 #+begin_stdout
 You need to enter the NAMES of these variables that your provider needs.
 You can enter up to 5 variable names and/or leave them blank
-TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (e.g., DO_AUTH_TOKEN)
 : DO_AUTH_TOKEN
 #+end_stdout
      
@@ -1079,7 +1104,7 @@ Token that you generated in one the previous sections.
   
 #+begin_stdout
 Now to enter the values for the custom DNS API variables:
-DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (eg. your-actual-digitalocean-token-here)
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
 : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #+end_stdout
 
@@ -1093,7 +1118,7 @@ DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (eg. your-actual-digitalocean-t
 
 > Configure Traefik TLS certificates Create a new certificate.
 Set TRAEFIK_ACME_CERT_DOMAINS=[["",[]]]
-Enter the main domain (CN) for this certificate (eg. `d.rymcg.tech` or `*.d.rymcg.tech`)
+Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
 : d.example.com
 #+end_stdout
 
@@ -1182,6 +1207,8 @@ traefik-traefik-1      .env_pi_default  traefik-traefik                 running
 table of contents
 #+end_toc
 
+[[/img/portable-docker/whoami.webp]]
+
 *** What is Whoami?
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/whoami#readme][Whoami]] is a web application that simply outputs the request headers
@@ -1232,7 +1259,7 @@ should be the fully qualified domain name that the whoami app will use
 for its URL:
 
 #+begin_stdout
-WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
 ​: whoami.d.example.com
 #+end_stdout
 
@@ -1391,7 +1418,7 @@ index
  * Click =Networking= in the menu.
  * Click the =Firewalls= tab.
  * Click =Create Firewall=.
- * Enter the name, eg. =ssh-web-https-wireguard=.
+ * Enter the name, e.g., =ssh-web-https-wireguard=.
  * Enter the following rules:
    * SSH:
      * Type: =SSH=
@@ -1427,7 +1454,7 @@ index
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Droplets= in the menu.
  * Click =Create Droplet=.
- * Choose a Region (eg. New York), where the droplet will be created.
+ * Choose a Region (e.g., New York), where the droplet will be created.
  * Underneath the heading =Choose an image=, choose =Debian= (select
    the latest version).
  * Choose a droplet size. For a wireguard proxy by itself, 1GB should
@@ -1467,23 +1494,23 @@ index
  * Click the =Domains= tab.
  * Find the domain you created earlier, and click it.
  * Create an =A= record for the sentry:
-   * Hostname: enter the subdomain name without the domain part (eg.
+   * Hostname: enter the subdomain name without the domain part (e.g.,
      =sentry=, the name of your docker server, without the
      =.example.com= suffix).
    * Will direct to: select the droplet you created from the list.
    * Click =Create Record=.
  * Create another =A= record, for the wildcard of the sentry:
    * Hostname: enter the same name as before but prepend =*.= in front
-     of it (eg. if the server is named =sentry=, create a record for
+     of it (e.g., if the server is named =sentry=, create a record for
      =*.sentry=, without the =.example.com= suffix).
    * Will direct to: select the same droplet as before.
    * Click =Create Record=.
  * Create another =A= record, for the Raspberry Pi:
-   * Hostname: eg. =pi5.example.com=.
+   * Hostname: e.g., =pi5.example.com=.
    * Will direct to to: select the same droplet as before.
    * Click =Create Record=.
  * Create another =A= record, for the wildcard of the Raspberry Pi:
-   * Hostname: eg. =*.pi5.example.com=.
+   * Hostname: e.g., =*.pi5.example.com=.
    * Will direct to to: select the same droplet as before.
    * Click =Create Record=.
  * Create any more =A= records that you may need.
@@ -1644,7 +1671,7 @@ The main config must be run for each new context you create:
 #+begin_stdout
 > This will make a configuration for the current docker context (sentry). Proceed? Yes
 
-ROOT_DOMAIN: Enter the root domain for this context (eg. d.example.com)
+ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
 : sentry.example.com
 #+end_stdout
 
@@ -1721,7 +1748,7 @@ Enter the LEGO provider code:
 Find the provider code of your supported DNS provider here:
 https://go-acme.github.io/lego/dns/#dns-providers
 
-TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (e.g., digitalocean)
 : digitalocean
 #+end_stdout
 
@@ -1729,7 +1756,7 @@ Enter the variable /name/ literal DO_AUTH_TOKEN:
 
 #+begin_stdout
 # For DigitalOcean, literally enter DO_AUTH_TOKEN here.
-TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (e.g., DO_AUTH_TOKEN)
 : DO_AUTH_TOKEN
 TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
 : 
@@ -1741,7 +1768,7 @@ Now enter the variable /value/ for DO_AUTH_TOKEN (this should actually
 be the secret [[https://cloud.digitalocean.com/account/api/tokens/new][personal access token that you generate on DigitalOcean]]):
 #+begin_stdout
 Now to enter the values for the custom DNS API variables:
-DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (eg. your-actual-digitalocean-token-here)
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
 : dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #+end_stdout
 
@@ -1758,7 +1785,7 @@ Create a new TLS certificate:
 > Create a new certificate.
   Done / Go back
 
-Enter the main domain (CN) for this certificate (eg. `d.rymcg.tech` or `*.d.rymcg.tech`)
+Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
 : sentry.example.com
 
 Now enter additional domains (SANS), one per line:
@@ -1797,7 +1824,7 @@ d make whoami config
 #+end_run
 
 #+begin_stdout
-WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
 : whoami.sentry.example.com
 
 ? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
@@ -1954,13 +1981,13 @@ d make traefik config
 > No, Traefik should work on all interfaces (including the VPN).
   Yes, Traefik should only listen on the VPN interface.
 
-TRAEFIK_VPN_HOST: Enter the public Traefik VPN hostname (eg. vpn.example.com)
+TRAEFIK_VPN_HOST: Enter the public Traefik VPN hostname (e.g., vpn.example.com)
 : sentry.example.com
-TRAEFIK_VPN_SUBNET: Enter the Traefik VPN private subnet (no mask) (eg. 10.13.16.0)
+TRAEFIK_VPN_SUBNET: Enter the Traefik VPN private subnet (no mask) (e.g., 10.13.16.0)
 : 10.13.16.0
-TRAEFIK_VPN_ADDRESS: Enter the Traefik VPN private IP address (eg. 10.13.16.1)
+TRAEFIK_VPN_ADDRESS: Enter the Traefik VPN private IP address (e.g., 10.13.16.1)
 : 10.13.16.1
-TRAEFIK_VPN_PORT: Enter the Traefik VPN TCP port number (eg. 51820)
+TRAEFIK_VPN_PORT: Enter the Traefik VPN TCP port number (e.g., 51820)
 : 51820
 Enter the Traefik VPN peers list
 : pi
@@ -2115,11 +2142,11 @@ d make traefik config
 > No, Traefik should work on all host interfaces (including the VPN).
   Yes, Traefik should only listen on the VPN interface.
 
-TRAEFIK_VPN_CLIENT_INTERFACE_ADDRESS: Enter the wireguard client Interface Address (eg. 10.13.16.2)
+TRAEFIK_VPN_CLIENT_INTERFACE_ADDRESS: Enter the wireguard client Interface Address (e.g., 10.13.16.2)
 : 10.13.16.2
 TRAEFIK_VPN_CLIENT_INTERFACE_PRIVATE_KEY: Enter the wireguard PrivateKey (ends with =)
 : 2E1vQHCS5JuaoRrt21GO0bYVrafOhplrGNFqoFBivEY=
-TRAEFIK_VPN_CLIENT_INTERFACE_LISTEN_PORT: Enter the wireguard listen port (eg. 51820)
+TRAEFIK_VPN_CLIENT_INTERFACE_LISTEN_PORT: Enter the wireguard listen port (e.g., 51820)
 : 51820
 TRAEFIK_VPN_CLIENT_PEER_PUBLIC_KEY: Enter the Peer PublicKey (ends with =)
 : AZiNh/5sk71QTy6Rk0ygzIUsSGAX8/s3EeGN6lT9oj0=
@@ -2127,7 +2154,7 @@ TRAEFIK_VPN_CLIENT_PEER_PRESHARED_KEY: Enter the Peer PresharedKey (ends with =)
 : tEIW8FuxR6I+Qu79bORatbD+JgNPeigNvc9V18f7to8=
 TRAEFIK_VPN_CLIENT_PEER_ENDPOINT: Enter the Peer Endpoint (host:port)
 : sentry.example.com:51820
-TRAEFIK_VPN_CLIENT_PEER_ALLOWED_IPS: Enter the Peer AllowedIPs (eg. 10.13.16.1/32)
+TRAEFIK_VPN_CLIENT_PEER_ALLOWED_IPS: Enter the Peer AllowedIPs (e.g., 10.13.16.1/32)
 : 10.13.16.1/32
 #+end_stdout
 
@@ -2233,7 +2260,7 @@ d make immich config
 
 
 #+begin_stdout
-IMMICH_TRAEFIK_HOST: Enter the Immich domain name (eg. immich.example.com)
+IMMICH_TRAEFIK_HOST: Enter the Immich domain name (e.g., immich.example.com)
 : immich.pi5.example.com
 
 ? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
@@ -2365,7 +2392,7 @@ Follow the prompts to configure the domain name and admin user
 authentication.
 
 #+begin_stdout
-YOURLS_TRAEFIK_HOST: Enter the YOURLS domain name (eg. yourls.example.com)
+YOURLS_TRAEFIK_HOST: Enter the YOURLS domain name (e.g., yourls.example.com)
 : yourls.pi5.forwarding.network
 
 ? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
