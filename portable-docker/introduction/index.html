@@ -23,19 +23,19 @@ I use this as a tiny web server that I can take anywhere I go.">
     <meta itemprop="name" content="Introduction :: book.rymcg.tech">
     <meta itemprop="description" content="Raspberry Pi Sentry Droplet WireGuard VPN d.rymcg.tech Next steps Raspberry Pi Here is my Raspberry Pi 5, which is a small form factor Linux computer, running Raspberry Pi OS and Docker. It has been outfitted with an NVME SSD attached via the expandable PCI-E bus. It has 8GB of RAM and 1TB of fast storage.
 I use this as a tiny web server that I can take anywhere I go.">
-    <meta itemprop="wordCount" content="851">
+    <meta itemprop="wordCount" content="947">
     <title>Introduction :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727830122" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727830122" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727830122" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727830122" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727830122" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727830122" rel="stylesheet">
-    <link href="/css/fonts.css?1727830122" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727830122" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727830122" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727830122" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727830122" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727830122" rel="stylesheet">
-    <link href="/css/print.css?1727830122" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727830122"></script>
+    <link href="/css/fontawesome-all.min.css?1727848393" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727848393" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1727848393" rel="stylesheet">
+    <link href="/css/auto-complete.css?1727848393" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727848393" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1727848393" rel="stylesheet">
+    <link href="/css/fonts.css?1727848393" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727848393" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1727848393" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1727848393" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1727848393" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1727848393" rel="stylesheet">
+    <link href="/css/print.css?1727848393" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1727848393"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..';
@@ -143,11 +143,11 @@ RAM and 1TB of fast storage.</p>
 <p>It normally sits in one place for a long time. But sometimes it needs
 to be picked up and installed in a new place. I need it to be able to
 get the network up, have it resume all of its previous functions, and
-even use the same IP address as before. It needs to be plug and play
-with minimal disruption to the clients that expect this server to be
-online and available. No matter what kind of connection to the
-Internet it has available, it should be quick to get this server back
-online.</p>
+even use the same IP address as before. Traveling with this device
+should be a plug and play experience, with minimal disruption to the
+clients that expect this server to be online and available. No matter
+what kind of connection to the Internet it has available, it should be
+quick to get this server back online.</p>
 <h2 id="sentry-droplet">Sentry Droplet</h2>
 <p>To accomplish this feat, we need to set up another server (to be named
 <code>sentry</code>) that has a static IP address and is accessible from the
@@ -159,32 +159,35 @@ it only creates the public <a href="https://doc.traefik.io/traefik/" rel="extern
 incoming connections through a backdoor VPN connection to the
 Raspberry Pi. The Pi automatically initiates this connection to the
 sentry whenever it boots and becomes online.</p>
-<h2 id="wireguard-vpn">WireGuard VPN</h2>
-<figure><img src="/img/portable-docker/vpn-string-along.webp"/>
-</figure>
-
-<p>The Raspberry Pi should acquire whatever kind of Internet connection
-is locally available by DHCP, so it won&rsquo;t have a static IP address
-yet. Once it&rsquo;s online, it creates a VPN connection to the sentry via
-<a href="https://www.wireguard.com/" rel="external" target="_blank">WireGuard</a>. Once connected to the VPN, the Pi is assigned a static
-private IP address that only the sentry can communicate with.</p>
 <figure><img src="/img/portable-docker/vpn-diagram.webp"/>
 </figure>
 
-<p>The cloud server (sentry) forwards incoming connections from the
-Internet to the Raspberry Pi over the WireGuard VPN connection.
-Traefik is used on the cloud server to create routes for your
-services. Traefik supports the following route types:</p>
+<h2 id="wireguard-vpn">WireGuard VPN</h2>
+<p>The Raspberry Pi should acquire whatever kind of Internet connection
+is locally available via DHCP, therefore it won&rsquo;t have a static IP
+address initially. Once it&rsquo;s online, it creates an outbound VPN
+connection to the sentry via <a href="https://www.wireguard.com/" rel="external" target="_blank">WireGuard</a>. Once connected to the VPN, the
+Pi is assigned a static private IP address that only the sentry can
+communicate with.</p>
+<p>The sentry forwards incoming connections from the Internet to the
+Raspberry Pi over the WireGuard VPN connection. Traefik is used on
+both the sentry and Raspberry Pi to create the full public route to
+each of your services. Traefik supports the following types of routes:</p>
 <ul>
-<li>HTTP Layer 7 (Routes a domain name [TLS SNI] + HTTP path over port
-443 to a backend HTTP server)</li>
-<li>TCP Layer 4 (Routes a TCP ADDRESS:PORT to a specific
-backend ADDRESS:PORT)</li>
-<li>UDP Layer 4 - TODO (unimplemented but doable)</li>
+<li>HTTP Layer 7 (Routes an incoming HTTP request, which is a domain
+name [TLS SNI], and optional HTTP path, over port 443 to a backend
+HTTP server based on these criteria)</li>
+<li>TCP Layer 4 (Routes a unique TCP ADDRESS:PORT combination to a
+unique backend ADDRESS:PORT combination)</li>
+<li>UDP Layer 4 - TODO (unimplemented, but doable)</li>
 </ul>
-<p>This lets you route virtually any kind of service from the public
-cloud to your Raspberry Pi sitting on your desk.</p>
+<p>This lets you publicly route virtually any service directly to your
+Raspberry Pi, whether it&rsquo;s sitting at your desk, or taken to an
+impromptu getaway location.</p>
 <h2 id="d-dot-rymcg-dot-tech">d.rymcg.tech</h2>
+<figure><img src="/img/portable-docker/vpn-string-along.webp"/>
+</figure>
+
 <p><a href="https://github.com/EnigmaCurry/d.rymcg.tech" rel="external" target="_blank">d.rymcg.tech</a> is a configuration manager for Docker, as well as a
 collection of open source web services and config templates. It
 contains an extensive configuration wizard for <a href="https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik#readme" rel="external" target="_blank">Traefik</a> and an
@@ -204,26 +207,30 @@ periods of inactivity, we will make an important compromise and an
 exception to the normal rule:</p>
 
 <div class="box notices cstyle info">
-  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> The Raspberry Pi serves the role of workstation and server</div>
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> The Raspberry Pi serves the role of workstation AND server</div>
   <div class="box-content">
 
-<p>In this book, d.rymcg.tech will be installed <em>to the same server</em> that
-runs Docker, rather than a separate workstation. That way you&rsquo;ve got
-everything together in one little box.</p>
+<p>In this book, the configuration tools (d.rymcg.tech) will be installed
+<em>to the same server</em> that runs Docker, rather than the usual
+reccomendation to do so on a separate workstation. This way you&rsquo;ve got
+everything together in one little portable box. If you had a whole
+fleet of Raspberry Pis to manage, this would be a terrible idea, but
+you will likely start this journey with only one Pi, so this is a good
+initial compromise to make. If you want to build a proper workstation,
+read the <a href="/linux-workstation/index.html">Linux Workstation</a> book and the main <a href="https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme" rel="external" target="_blank">d.rymcg.tech README</a>.</p>
 </div>
 </div>
-<p>This way, everything you need is installed on the Raspberry Pi itself.
-To gain access from any other workstation, you only need to set up an
-SSH client, along with an authorized key. You can login to the Pi and
-perform all maintainance locally, without needing to manage a separate
-workstation. Your portable Docker server is therefore a <em>pet</em> Docker
-server, with your &ldquo;workstation&rdquo; being located in the home directory of
-the <code>pi</code> user, colocated on the Raspberry Pi itself.</p>
+<p>Unless you want to plug a display and keyboard into the Pi, you still
+need to travel with another computer (e.g., laptop) and to set up an
+SSH key on it to remotely log in to the Pi, but thats it. Log in to
+the Pi via SSH and perform all configuration and maintainance, without
+needing to manage a separate workstation. Your portable Docker server
+is therefore a <em>pet</em> Docker server plus workstation, with all the
+configuration sitting in the home directory of the <code>pi</code> user.</p>
 <h4 id="editing-files-on-the-pi">Editing files on the Pi</h4>
-<p>One consequence of this choice is that unless you hook up a display
-and keyboard to the Raspberry Pi, you&rsquo;ll eventually encounter the need
-to edit some files remotely on the Pi. You have a few options in that
-regard:</p>
+<p>Eventually you might need to edit a <code>.env</code> file by hand, and so you
+need to know how to edit files remotely over SSH, so you have a few
+options in that regard:</p>
 <ul>
 <li>Learn how to use one of the many terminal mode text editors (Emacs,
 Vim, nano, etc.) and edit the files through an SSH console directly
@@ -267,12 +274,12 @@ on the Pi.</li>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727830122" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727830122" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727830122" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727830122" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727830122" defer></script>
-        <script src="/js/search.js?1727830122" defer></script>
+        <script src="/js/auto-complete.js?1727848393" defer></script>
+        <script src="/js/lunr/lunr.min.js?1727848393" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1727848393" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1727848393" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1727848393" defer></script>
+        <script src="/js/search.js?1727848393" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -414,14 +421,14 @@ on the Pi.</li>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 2, 2024 at 12:48am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 2, 2024 at 5:53am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727830122" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727830122" defer></script>
-    <script src="/js/theme.js?1727830122" defer></script>
+    <script src="/js/clipboard.min.js?1727848393" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1727848393" defer></script>
+    <script src="/js/theme.js?1727848393" defer></script>
   </body>
 </html>
