@@ -68,11 +68,11 @@ I use this as a tiny web server that I can take anywhere I go.
 It normally sits in one place for a long time. But sometimes it needs
 to be picked up and installed in a new place. I need it to be able to
 get the network up, have it resume all of its previous functions, and
-even use the same IP address as before. It needs to be plug and play
-with minimal disruption to the clients that expect this server to be
-online and available. No matter what kind of connection to the
-Internet it has available, it should be quick to get this server back
-online.
+even use the same IP address as before. Traveling with this device
+should be a plug and play experience, with minimal disruption to the
+clients that expect this server to be online and available. No matter
+what kind of connection to the Internet it has available, it should be
+quick to get this server back online.
 
 ** Sentry Droplet
 
@@ -87,33 +87,38 @@ incoming connections through a backdoor VPN connection to the
 Raspberry Pi. The Pi automatically initiates this connection to the
 sentry whenever it boots and becomes online.
 
+[[/img/portable-docker/vpn-diagram.webp]]
+
 ** WireGuard VPN
+
+The Raspberry Pi should acquire whatever kind of Internet connection
+is locally available via DHCP, therefore it won't have a static IP
+address initially. Once it's online, it creates an outbound VPN
+connection to the sentry via [[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the
+Pi is assigned a static private IP address that only the sentry can
+communicate with.
+
+The sentry forwards incoming connections from the Internet to the
+Raspberry Pi over the WireGuard VPN connection. Traefik is used on
+both the sentry and Raspberry Pi to create the full public route to
+each of your services. Traefik supports the following types of routes:
+
+ * HTTP Layer 7 (Routes an incoming HTTP request, which is a domain
+   name [TLS SNI], and optional HTTP path, over port 443 to a backend
+   HTTP server based on these criteria)
+ * TCP Layer 4 (Routes a unique TCP ADDRESS:PORT combination to a
+   unique backend ADDRESS:PORT combination)
+ * UDP Layer 4 - TODO (unimplemented, but doable)
+
+This lets you publicly route virtually any service directly to your
+Raspberry Pi, whether it's sitting at your desk, or taken to an
+impromptu getaway location.
+
+** d.rymcg.tech
+
 
 [[/img/portable-docker/vpn-string-along.webp]]
 
-The Raspberry Pi should acquire whatever kind of Internet connection
-is locally available by DHCP, so it won't have a static IP address
-yet. Once it's online, it creates a VPN connection to the sentry via
-[[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the Pi is assigned a static
-private IP address that only the sentry can communicate with.
-
-[[/img/portable-docker/vpn-diagram.webp]]
-
-The cloud server (sentry) forwards incoming connections from the
-Internet to the Raspberry Pi over the WireGuard VPN connection.
-Traefik is used on the cloud server to create routes for your
-services. Traefik supports the following route types:
-
- * HTTP Layer 7 (Routes a domain name [TLS SNI] + HTTP path over port
-   443 to a backend HTTP server)
- * TCP Layer 4 (Routes a TCP ADDRESS:PORT to a specific
-   backend ADDRESS:PORT)
- * UDP Layer 4 - TODO (unimplemented but doable)
-
-This lets you route virtually any kind of service from the public
-cloud to your Raspberry Pi sitting on your desk.
-
-** d.rymcg.tech
 
 [[https://github.com/EnigmaCurry/d.rymcg.tech][d.rymcg.tech]] is a configuration manager for Docker, as well as a
 collection of open source web services and config templates. It
@@ -135,27 +140,31 @@ To avoid this complexity, and to make it easier to maintain after long
 periods of inactivity, we will make an important compromise and an
 exception to the normal rule:
 
-#+attr_shortcode: :title The Raspberry Pi serves the role of workstation and server :style info
+#+attr_shortcode: :title The Raspberry Pi serves the role of workstation AND server :style info
 #+begin_notice
-In this book, d.rymcg.tech will be installed /to the same server/ that
-runs Docker, rather than a separate workstation. That way you've got
-everything together in one little box.
+In this book, the configuration tools (d.rymcg.tech) will be installed
+/to the same server/ that runs Docker, rather than the usual
+reccomendation to do so on a separate workstation. This way you've got
+everything together in one little portable box. If you had a whole
+fleet of Raspberry Pis to manage, this would be a terrible idea, but
+you will likely start this journey with only one Pi, so this is a good
+initial compromise to make. If you want to build a proper workstation,
+read the [[/linux-workstation/][Linux Workstation]] book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
 #+end_notice
 
-This way, everything you need is installed on the Raspberry Pi itself.
-To gain access from any other workstation, you only need to set up an
-SSH client, along with an authorized key. You can login to the Pi and
-perform all maintainance locally, without needing to manage a separate
-workstation. Your portable Docker server is therefore a /pet/ Docker
-server, with your "workstation" being located in the home directory of
-the =pi= user, colocated on the Raspberry Pi itself.
+Unless you want to plug a display and keyboard into the Pi, you still
+need to travel with another computer (e.g., laptop) and to set up an
+SSH key on it to remotely log in to the Pi, but thats it. Log in to
+the Pi via SSH and perform all configuration and maintainance, without
+needing to manage a separate workstation. Your portable Docker server
+is therefore a /pet/ Docker server plus workstation, with all the
+configuration sitting in the home directory of the =pi= user.
 
 **** Editing files on the Pi
 
-One consequence of this choice is that unless you hook up a display
-and keyboard to the Raspberry Pi, you'll eventually encounter the need
-to edit some files remotely on the Pi. You have a few options in that
-regard:
+Eventually you might need to edit a =.env= file by hand, and so you
+need to know how to edit files remotely over SSH, so you have a few
+options in that regard:
 
  * Learn how to use one of the many terminal mode text editors (Emacs,
    Vim, nano, etc.) and edit the files through an SSH console directly
@@ -241,7 +250,7 @@ will be similar regardless of the domain provider you pick.
 
 *** Transfer DNS to DigitalOcean
 
-#+attr_shortcode: :style secondary :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose a supported DNS provider
 #+begin_notice
 This book uses DigitalOcean as the DNS provider in all examples, but
 you may choose a different provider if you prefer, but it needs to be
@@ -282,7 +291,7 @@ Name Server: ns3.digitalocean.com
 The output shows a report for your domain registration including the
 list of the new nameservers.
 
-If you don'y have =whois= installed you can use [[https://www.registry.google/whois-lookup/][the web version provided by google]].
+If you don't have =whois= installed, you can use [[https://www.registry.google/whois-lookup/][the web version provided by google]].
 
 ** Add the domain to DigitalOcean DNS
 :PROPERTIES:
@@ -295,7 +304,7 @@ sub-domains with an actual IP address on the Internet.
 
 [[/img/portable-docker/hello-docker.webp]]
 
-#+attr_shortcode: :style secondary :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose a supported DNS provider
 #+begin_notice
 This book uses DigitalOcean as the DNS provider in all examples, but
 you may choose a different provider if you prefer, but it needs to be
@@ -312,7 +321,7 @@ support this site), and follow along to set up your domain's DNS.
  * Select the =Domains= tab.
  * Enter your domain name, and click =Add Domain=.
 
-Wait a few minutes for the setting to take effect, then you can verify
+*Wait a few minutes* for the setting to take effect, then you can verify
 the domain name is added:
 
 #+begin_run
@@ -330,6 +339,11 @@ example.com.             2400    IN      NS      ns3.digitalocean.com.
 example.com.             2400    IN      NS      ns2.digitalocean.com.
 #+end_stdout
 
+The number in the second column is the TTL (Time To Live) which is the
+number of seconds that the record is cached in the queried DNS server.
+If you jump the gun and check this too quickly before the changes
+takes effect, you may need to wait for this TTL to reset.
+
 ** Generate DigitalOcean API token for ACME challenge
 :PROPERTIES:
 :EXPORT_FILE_NAME: create-digitalocean-api-token-for-acme-challenge
@@ -338,17 +352,19 @@ example.com.             2400    IN      NS      ns2.digitalocean.com.
 
 [[/img/portable-docker/api.webp]]
 
-#+attr_shortcode: :style secondary :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose a supported DNS provider
 #+begin_notice
 This book uses DigitalOcean as the DNS provider in all examples, but
 you may choose a different provider if you prefer, but it needs to be
 supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
 #+end_notice
 
-DNS is also a part of the TLS certificate request process (ACME DNS-01
-challenge). You will need to procure a DigitalOcean Personal Access
-Token, which is used for programatic control of your DigitalOcean
-account's DNS settings on your behalf:
+DNS is also a part of the TLS certificate request process with [[https://letsencrypt.org/getting-started/][Let's
+Encrypt]] (via [[https://letsencrypt.org/docs/challenge-types/][ACME DNS-01 challenge]]). Traefik interacts with Let's
+Encrypt on your behalf, automatically requesting TLS certificates to
+be created for your services. To allow this, you will need to procure
+a DigitalOcean Personal Access Token, which grants programatic control
+of your DigitalOcean account's DNS settings:
 
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean console]].
  * Click on =API= in the left hand menu, near the bottom of the list.
@@ -366,16 +382,19 @@ account's DNS settings on your behalf:
    need to reference this token in the next section, when it asks for
    the =DO_AUTH_TOKEN= variable.
 
-You will also need to generate an additional API token for the sentry
-droplet (you could reuse the same API token from above, but its best to
-create a new token for each new instance).
+You will also need to generate an API token for the sentry droplet.
 
- * Create an additional token, this one named =sentry.example.com
-   ACME= or similar.
+ * Create the second token named =sentry.example.com ACME= or similar.
  * Set a =Custom scope= = =domain=.
  * Copy this token to the same temporary buffer/notepad as before,
-   you'll need this second token when setting up the sentry droplet.
+   you'll need it when setting up the sentry droplet.
 
+#+attr_shortcode: :style tip
+#+begin_notice
+You could reuse the same API token on both Pi and sentry, but its reccomended 
+to create a unique token for each host.
+#+end_notice
+ 
 * Set up Raspberry Pi
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: set-up-raspberry-pi
@@ -713,6 +732,9 @@ key.
 If you wish to enhance the security of your SSH key, please read the
 [[https://wiki.archlinux.org/title/SSH_keys][Arch Wiki article on SSH keys]], which covers generating secure SSH
 keys, setting a passphrase, and setting up an ssh-agent with [[https://wiki.archlinux.org/title/SSH_keys#Keychain][Keychain]].
+
+You may also protect the integrity of the SD-card (at rest) with [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][full
+disk encryption and remote unlock via SSH]].
 #+end_notice
 
 Create a new SSH key (without a passphrase):
@@ -729,7 +751,7 @@ for the =pi= user to control Docker, they need to be able to SSH to
 =localhost= as the =root= user.
 
 Add the =pi= user's key to the root user's
-=/root/.ssh.authorized_keys= file:
+=/root/.ssh/authorized_keys= file:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -793,6 +815,12 @@ sudo docker run hello-world
 
   * If working, you should see a =Hello from Docker!= message and some other help info.
 
+#+attr_shortcode: :style tip
+#+begin_notice
+Normally, you shouldn't use =sudo docker=. In the next section you
+will create a Docker context for the =pi= user to use directly.
+#+end_notice
+  
 *** Set up Docker context (SSH)
 
 [[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of a [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]] via SSH, rather than
@@ -834,7 +862,8 @@ If it worked, the =pi= user is now fully equipped to run any docker comamnd as =
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-sudo apt-get install bash build-essential gettext \
+sudo apt-get update && \
+sudo apt-get install -y bash build-essential gettext \
      git openssl apache2-utils xdg-utils jq sshfs \
      wireguard curl inotify-tools w3m
 #+end_run
@@ -849,16 +878,66 @@ git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
 cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
 #+end_run
 
+*** Configure Bash shell integration
+
+Configure the =pi= user's =~/.bashrc= file:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
+export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
+eval "$(d.rymcg.tech completion bash)"
+__d.rymcg.tech_cli_alias d
+EOF
+#+end_run
+
+Once finished, logout of the Pi and log back in.
+
+Now you should have a new alias named =d= that controls the
+=d.rymcg.tech= toolset. Check out the main help screen:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d
+#+end_run
+
+#+begin_stdout
+## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
+cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory (or given subdirectory)
+make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
+context                       View or set the current Docker context
+new-context                   Create a new Docker context
+tmp-context                   Use a temporary Docker context in a sub-shell
+config                        Configure the current Docker context
+ssh [COMMAND ...]             Run command or shell on active docker context SSH host
+completion                    Setup TAB completion in your shell
+install                       Install an app interactively
+install-docker                Install Docker Engine on the host
+status                        Show status of all installed services
+audit                         Print security audit of running containers
+
+## Documentation sub-commands:
+help                          Show this help screen
+list                          List available d.rymcg.tech projects
+                              (not including external projects, unless you symlink them into ROOT_DIR)
+readme                        Open the main d.rymcg.tech README.md in your browser
+readme [PROJECT]              Open the README.md for the given project name
+readme digitalocean           Open root documentation file: DIGITALOCEAN.md
+readme security               Open root documentation file: SECURITY.md
+readme aws                    Open root documentation file: AWS.md
+readme license                Open root documentation file: LICENSE.txt
+readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
+readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
+#+end_stdout
+
 *** Run the main config
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-## Run this in the root source directory of d.rymcg.tech:
-make config
+d config
 #+end_run
 
 *** Follow the interactive prompts to finish configuration
-
 **** Install script-wizard
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_stdout
@@ -876,7 +955,6 @@ selection wizards in Bash a lot nicer.
 #+begin_stdout
 ? This will make a configuration for the current docker context (pi). Proceed? (Y/n)  y
 #+end_stdout
-
 **** Choose the root domain name for this server
 
 #+begin_stdout
@@ -911,56 +989,7 @@ convenience feature, but you may not want it. Its not really a
 security concern, because the same password is also availalbe in the
 .env file for the project anyway, so go ahead an enable it.
 
-*** Configure Bash shell integration
 
-Configure the =pi= user's =~/.bashrc= file:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
-export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
-eval "$(d.rymcg.tech completion bash)"
-__d.rymcg.tech_cli_alias d
-EOF
-#+end_run
-
-Once finished, logout and log back in.
-
-Now you have a new alias named =d= that controls =d.rymcg.tech=. Check
-out the main help screen:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d
-#+end_run
-
-#+begin_stdout
-## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
-cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory (or given subdirectory)
-make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
-context                       View or set the current Docker context
-new-context                   Create a new Docker context
-tmp-context                   Use a temporary Docker context in a sub-shell
-ssh [COMMAND ...]             Run command or shell on active docker context SSH host
-completion                    Set up TAB completion in your shell
-install                       Install an app interactively
-install-docker                Install Docker Engine on the host
-status                        Show status of all installed services
-audit                         Print security audit of running containers
-
-## Documentation sub-commands:
-help                          Show this help screen
-list                          List available d.rymcg.tech projects
-                              (not including external projects, unless you symlink them into ROOT_DIR)
-readme                        Open the main d.rymcg.tech README.md in your browser
-readme [PROJECT]              Open the README.md for the given project name
-readme digitalocean           Open root documentation file: DIGITALOCEAN.md
-readme security               Open root documentation file: SECURITY.md
-readme aws                    Open root documentation file: AWS.md
-readme license                Open root documentation file: LICENSE.txt
-readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
-readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
-#+end_stdout
 
 ** Install Traefik
 :PROPERTIES:
@@ -1134,8 +1163,7 @@ TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave b
 
 #+attr_shortcode: :style secondary :title DO_AUTH_TOKEN
 #+begin_notice
-The value of DO_AUTH_TOKEN should be the DigitalOcean Personal Access
-Token that you generated in one the previous sections.
+The value of DO_AUTH_TOKEN should be the DigitalOcean Personal Access Token
 #+end_notice
   
 #+begin_stdout
@@ -1260,7 +1288,7 @@ You can check to see that Traefik has started:
 d make traefik status
 #+end_run
 
-You should see two services running, =traefik=, and
+You should see two services running: =traefik= and
 =traefik-error-pages=, both in state =running=:
 
 #+begin_stdout
@@ -1468,8 +1496,6 @@ index
 :EXPORT_FILE_NAME: launch-digitalocean-droplet
 :EXPORT_HUGO_WEIGHT: 310
 :END:
-
-[[/img/portable-docker/launch-droplet.webp]]
 
 **** Set up your SSH key on DigitalOcean
 
