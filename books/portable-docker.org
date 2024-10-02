@@ -26,7 +26,7 @@ Through the encrypted tunnel established by this connection, the Pi
 can publish services to the Internet even when operating behind a
 restrictive firewall, such as public Wi-Fi, mobile hotspots, or
 carrier-grade NAT. As long as you can get unblocked /outgoing/
-internet access, you can self-host a roaming public server from
+Internet access, you can self-host a roaming public server from
 anywhere!
 
 #+attr_shortcode: :icon code-branch :style primary :href https://github.com/EnigmaCurry/d.rymcg.tech#readme
@@ -78,24 +78,24 @@ online.
 
 To accomplish this feat, we need to set up another server (to be named
 =sentry=) that has a static IP address and is accessible from the
-public internet. I use a DigitalOcean droplet, which is a type of
+public Internet. I use a DigitalOcean droplet, which is a type of
 Virtual Private Server (VPS), which exists in the public cloud. The
 sentry is always on and anyone in the world can connect to it (via
 HTTP). However, the sentry does not serve any applications by itself;
-it only creates the public [[https://doc.traefik.io/traefik/][Traefik]] proxy which forwards incoming
-connections (ingress) through a backdoor VPN connection to the
-Raspberry Pi. The Pi initiates this connection automatically whenever
-it boots and comes online.
+it only creates the public [[https://doc.traefik.io/traefik/][Traefik]] proxy (ingress) which forwards
+incoming connections through a backdoor VPN connection to the
+Raspberry Pi. The Pi automatically initiates this connection to the
+sentry whenever it boots and becomes online.
 
-** Wireguard VPN
+** WireGuard VPN
 
 [[/img/portable-docker/vpn-string-along.webp]]
 
-The Raspberry Pi should acquire whatever kind of internet connection
+The Raspberry Pi should acquire whatever kind of Internet connection
 is locally available by DHCP, so it won't have a static IP address
-yet. Once it's online, it creates a VPN connection to the droplet via
+yet. Once it's online, it creates a VPN connection to the sentry via
 [[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the Pi is assigned a static
-private IP address that only the droplet can communicate with.
+private IP address that only the sentry can communicate with.
 
 [[/img/portable-docker/vpn-diagram.webp]]
 
@@ -169,8 +169,8 @@ regard:
 
  * Set up DNS
  * Set up Raspberry Pi
- * Set up Droplet
- * Set up Wireguard
+ * Set up Sentry Droplet
+ * Set up WireGuard
  * Install apps and services
 
 * Set up DNS
@@ -1032,7 +1032,7 @@ Traefik must be re-installed to apply any changes.
   Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
 v Logging level
 [↑↓ to move, enter to select, type to filter, ESC to cancel]
@@ -1204,7 +1204,7 @@ theme:
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Advanced Routing (Layer 7 / Layer 4 / WireGuard)
 > Error page template
   Logging level
   Access logs
@@ -1447,12 +1447,12 @@ To check the Traefik logs, do similar:
 d make traefik logs
 #+end_run
 
-* Set up cloud server sentry
+* Set up sentry Droplet
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: set-up-cloud-sentry
 :EXPORT_HUGO_WEIGHT: 300
 :END:
-** Set up cloud server sentry
+** Set up sentry Droplet
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 301
@@ -1511,7 +1511,7 @@ index
      * Protocol: =TCP=
      * Port Range: =443=
      * Sources: All IPv4, All IPv6.
-   * Wireguard VPN:
+   * WireGuard VPN:
      * Type: =Custom=
      * Protocol: =UDP=
      * Port Range: =51820=
@@ -1988,7 +1988,7 @@ X-Real-Ip: X.X.X.X
 
  * Configure the WireGuard VPN
 
-* Configure Wireguard VPN
+* Configure WireGuard VPN
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: configure-wireguard-tunnel
 :EXPORT_HUGO_WEIGHT: 400
@@ -2039,7 +2039,7 @@ d make traefik config
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
   Logging level
   Access logs
@@ -2091,7 +2091,7 @@ d make traefik config
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
   Logging level
   Access logs
@@ -2200,7 +2200,7 @@ d make traefik config
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
   Logging level
   Access logs
@@ -2271,7 +2271,7 @@ d make traefik shell service=wireguard-client
 
 Show the connected wireguard peers:
 
-#+attr_shortcode: :title Run this in the Wireguard Client shell :style info
+#+attr_shortcode: :title Run this in the WireGuard Client shell :style info
 #+begin_run
 wg
 #+end_run
@@ -2287,9 +2287,9 @@ If you do not see a handshake time, then there is some kind of problem
 connecting to the WireGuard server that you need to resolve.
 #+end_notice
 
-Ping the Wireguard server (=10.13.16.1=):
+Ping the WireGuard server (=10.13.16.1=):
 
-#+attr_shortcode: :title Run this in the Wireguard Client shell :style info
+#+attr_shortcode: :title Run this in the WireGuard Client shell :style info
 #+begin_run
 ping -c3 10.13.16.1
 #+end_run
@@ -2391,7 +2391,7 @@ d make traefik config
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
   Logging level
   Access logs
@@ -2518,7 +2518,7 @@ d make traefik config
 ^ Entrypoints (including dashboard)
   TLS certificates and authorities
   Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
   Error page template
   Logging level
   Access logs
