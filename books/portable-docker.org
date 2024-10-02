@@ -8,7 +8,7 @@
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :linkTitle Portable Docker
-:EXPORT_HUGO_WEIGHT: 3000
+:EXPORT_HUGO_WEIGHT: 300
 :END:
 
 [[/img/portable-docker/treasure.webp]]
@@ -78,14 +78,14 @@ quick to get this server back online.
 
 To accomplish this feat, we need to set up another server (to be named
 =sentry=) that has a static IP address and is accessible from the
-public Internet. I use a DigitalOcean droplet, which is a type of
-Virtual Private Server (VPS), which exists in the public cloud. The
-sentry is always on and anyone in the world can connect to it (via
-HTTP). However, the sentry does not serve any applications by itself;
-it only creates the public [[https://doc.traefik.io/traefik/][Traefik]] proxy (ingress) which forwards
-incoming connections through a backdoor VPN connection to the
-Raspberry Pi. The Pi automatically initiates this connection to the
-sentry whenever it boots and becomes online.
+public Internet. I use a [[https://m.do.co/c/d5da28d3d99d][DigitalOcean droplet]] (affiliate link helps
+support this book), which is a type of Virtual Private Server (VPS)
+and exists in the public cloud. The sentry is always on and anyone in
+the world can connect to it (via HTTP). However, the sentry does not
+serve any applications by itself; it only creates the public [[https://doc.traefik.io/traefik/][Traefik]]
+proxy (ingress) which forwards incoming connections through a backdoor
+VPN connection to the Raspberry Pi. The Pi automatically initiates
+this connection to the sentry whenever it boots and becomes online.
 
 [[/img/portable-docker/vpn-diagram.webp]]
 
@@ -126,39 +126,54 @@ contains an extensive configuration wizard for [[https://github.com/EnigmaCurry/
 idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes Docker Compose projects both
 easy to document, as well as to use.
 
-Traditionally, d.rymcg.tech suggests to install itself /on a separate
-workstation/, and urges you to never actually login to your Docker
-server, but rather remotely control it from your workstation. This is
-one of the ways to follow the good DevOps practice, summed up by the
-metaphor: "Treat your infrastructure like cattle, not like pets."
-However, this strategy has the drawback that if you lose your
-workstation, it makes it diffcult to adminster the server (you would
-have to recreate your =.env= files on a new workstation, from backup,
-or from scratch).
+** Your workstation
 
-To avoid this complexity, and to make it easier to maintain after long
-periods of inactivity, we will make an important compromise and an
-exception to the normal rule:
+Traditionally, d.rymcg.tech suggests to install itself /on a separate
+workstation/ and urges you to never actually login to your Docker
+server, but rather to exclusively control it remotely from your
+workstation. This is one of the ways to follow the good DevOps
+practice, summed up by the metaphor: "Treat your infrastructure like
+cattle, not like pets." However, this strategy has the drawback that
+if you lose access to your workstation, it makes it diffcult to
+adminster the server (you would have to recreate your =.env= files on
+a new workstation, from backup, or from scratch).
+
+To avoid this complexity, and to require keeping everything portable
+in one package, as well as to make it easier to maintain after long
+periods of inactivity and forgetfulness, we will make an important
+compromise and an exception to the normal DevOps rule:
 
 #+attr_shortcode: :title The Raspberry Pi serves the role of workstation AND server :style info
 #+begin_notice
 In this book, the configuration tools (d.rymcg.tech) will be installed
 /to the same server/ that runs Docker, rather than the usual
-reccomendation to do so on a separate workstation. This way you've got
-everything together in one little portable box. If you had a whole
-fleet of Raspberry Pis to manage, this would be a terrible idea, but
-you will likely start this journey with only one Pi, so this is a good
-initial compromise to make. If you want to build a proper workstation,
-read the [[/linux-workstation/][Linux Workstation]] book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
+recomendation to do so on a separate workstation. Comingling the roles
+of server and workstation means you've got everything together in one
+little portable box, and it will make everything easier to get started
+with. Your portable Pi is therefore a /pet/ Docker server, plus
+workstation, all in one.
+
+If you had a whole fleet of Raspberry Pis to manage, this would be a
+terrible idea, because you would be missing the centralized
+workstation to control them all, and you'd have to login to each one
+of them and configure them directly. However, you will likely start
+this journey with only one Pi to manage, so this is a good initial
+compromise to make. If you want to build a proper workstation that can
+control several servers from one location, read the [[/linux-workstation/][Linux Workstation]]
+book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
+
+If you are going to seriously travel with this device, you should
+consider [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][installing full disk encryption]] and requiring remote SSH
+unlock on boot, but this is an advanced topic that is outside the
+scope of this book.
 #+end_notice
 
-Unless you want to plug a display and keyboard into the Pi, you still
-need to travel with another computer (e.g., laptop) and to set up an
-SSH key on it to remotely log in to the Pi, but thats it. Log in to
-the Pi via SSH and perform all configuration and maintainance, without
-needing to manage a separate workstation. Your portable Docker server
-is therefore a /pet/ Docker server plus workstation, with all the
-configuration sitting in the home directory of the =pi= user.
+** Your console client
+
+So, if the workstation is on the Raspberry Pi, you're still going to
+need to travel with another computer (e.g., a laptop) and set that up
+with an SSH key on it, so you can remotely log in to the Pi (unless
+you want to carry a display and keyboard to plug into it directly).
 
 **** Editing files on the Pi
 
@@ -416,7 +431,8 @@ index
 :EXPORT_HUGO_WEIGHT: 210
 :END:
 
-These are the parts you will need to source for this build:
+These are the parts you will need to source for this build (purchase
+price ~$240 USD):
 
 #+attr_shortcode: :title Raspberry Pi 5 motherboard
 #+begin_notice
@@ -427,7 +443,7 @@ motherboard separately. If buying a pre-made kit, make sure it
 includes an NVME shield to plug in an NVME SSD. Otherwise, this can be
 purchased separately:
 
-#+attr_shortcode: :title Geeekpi case, heatsink, NVME shield, and power supply
+#+attr_shortcode: :title Geeekpi / 52Pi case, heatsink, NVME shield, and power supply
 #+begin_notice
 [[/img/portable-docker/geeekpi5case.webp]]
 #+end_notice
@@ -459,6 +475,14 @@ too much data to them, so this is minimized as much as possible.
 which are both stored in RAM, so the only writes that should happen on
 the SD-card should be OS updates.
 
+#+attr_shortcode: :title SD-card adapter
+#+begin_notice
+[[/img/portable-docker/sd-card-adapter.webp]]
+#+end_notice
+
+The micro SD-card comes with a full size SD-card adapter, but you may
+also need a USB adapter, in order to write the image.
+
 #+attr_shortcode: :title Samsung 990EVO NVME SSD
 #+begin_notice
 [[/img/portable-docker/samsung-990EVO-NVME.webp]]
@@ -470,9 +494,18 @@ This device will be used exclusively for the Docker storage system
 images will be built/downloaded, and where the volumes holding your
 app data will live.
 
+#+attr_shortcode: :title NVME heatsink
+#+begin_notice
+[[/img/portable-docker/nvme-heatsink.webp]]
+#+end_notice
+
+You should purchase separately an NVME heatsink to go on the top of
+your NVME drive, and there is a little bit of room left in the case to
+fit one.
+
 *** Putting everything together
 
- * *Read the directions that come with the Geeekpi case*, the rest of
+ * *Read the directions that come with the Geeekpi / 52Pi case*, the rest of
    this list is just a summary.
  * Install the heatsink to the Pi 5 motherboard.
  * Attach one end of the ribbon cable to the PCI-E port and lock it
@@ -488,22 +521,27 @@ app data will live.
  * Screw on the top part of the case.
  * Install the SD-card into the slot on the bottom edge.
 
-#+attr_shortcode: :title Pi 5 installed on risers inside Geeekpi case, NVME shield installed on top
+#+attr_shortcode: :title Pi 5 heatsink and risers installed
 #+begin_notice
-[[/img/portable-docker/pi5-profile.webp]]
+[[/img/portable-docker/pi-heatsink.webp]]
 #+end_notice
 
-#+attr_shortcode: :title NVME SSD installed in the NVME shield
+#+attr_shortcode: :title Ribbon cable and GPIO pins connect NVME shield to Pi motherboard
+#+begin_notice
+[[/img/portable-docker/ribbon-cable.webp]]
+#+end_notice
+
+#+attr_shortcode: :title NVME SSD installed in the NVME shield and motherboard secured in the bottom part of case
 #+begin_notice
 [[/img/portable-docker/pi5-nvme.webp]]
 #+end_notice
 
-#+attr_shortcode: :title SD-card installed
+#+attr_shortcode: :title top part of the case screwed on top and SD-card installed
 #+begin_notice
 [[/img/portable-docker/pi5-sdcard.webp]]
 #+end_notice
 
-#+attr_shortcode: :title The fully assembled Raspberry Pi 5
+#+attr_shortcode: :title The fully assembled Raspberry Pi 5 (NVME heatsink not shown)
 #+begin_notice
 [[/img/portable-docker/pi5-assembled.webp]]
 #+end_notice
@@ -572,6 +610,33 @@ imager software.
  * Once complete, unplug the SD-card, put it into the raspberry pi,
    plug in the ethernet, and power it on.
 
+*** Find the local IP address of the Pi on your LAN
+
+Once the Pi is powered on, and is connected to your LAN, you need to
+figure out what its IP address is. There are a number of ways to do
+that:
+
+ * If your network has configured multicast DNS (mDNS), you can find
+   the IP address by the hostname you set in the imager (e.g., =pi5=),
+   appended with the domain =.local=:
+
+#+begin_run
+ping -c3 pi5.local
+#+end_run
+
+ * From any Linux computer attached to the same LAN, run =arp -a= to
+   find and list local devices. Try doing this before and after you
+   turn on the Pi, and then spot the difference.
+
+#+begin_run
+arp -a
+#+end_run
+ * If you have a central LAN router + DHCP server, check the console
+   of the router for the newly added device.
+ * Plug a monitor into the (micro) HDMI port of the Raspberry Pi, and
+   the IP address will be printed to the console when it boots.
+   
+
 *** Create SSH config on your workstation
 
 You should try to connect to the Raspberry Pi from another computer
@@ -637,6 +702,68 @@ Filesystem      Size  Used Avail Use% Mounted on
 ...
 log2ram         128M   14M  115M  11% /var/log
 #+end_stdout
+
+*** Format and mount SSD storage
+
+**** Identify the device name of the NVME SSD:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo fdisk -l | grep -A5 nvme
+#+end_run
+
+#+begin_stdout
+Disk /dev/nvme0n1: 931.51 GiB, 1000204886016 bytes, 1953525168 sectors
+Disk model: Samsung SSD 990 EVO 1TB                 
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+#+end_stdout
+
+This shows the device is named =/dev/nvme0n1=.
+
+**** Partition the device
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo parted /dev/nvme0n1 --script mklabel gpt
+sudo parted /dev/nvme0n1 --script mkpart primary ext4 0% 100%
+#+end_run
+
+**** Create filesystem
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo mkfs.ext4 /dev/nvme0n1p1
+#+end_run
+
+**** Mount the filesystem
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo mkdir -p /var/lib/docker
+
+echo "/dev/nvme0n1p1  /var/lib/docker  ext4  defaults  0  3" | sudo tee -a /etc/fstab
+
+sudo systemctl daemon-reload
+sudo mount /var/lib/docker
+#+end_run
+
+**** Verify the mounted storage
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+df -h /var/lib/docker
+#+end_run
+
+#+begin_stdout
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1  916G   28K  870G   1% /var/lib/docker
+#+end_stdout
+
+This shows the correct partition =/dev/nvme0n1p1= mounted at the
+correct path =/var/lib/docker= and showing the correct size of the
+NVME SSD (=916G=; it's always a bit smaller than advertised.)
 
 ** Set up networking
 :PROPERTIES:
