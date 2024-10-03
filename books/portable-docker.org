@@ -1126,13 +1126,13 @@ security concern, because the same password is also availalbe in the
 
 [[/img/portable-docker/gopher.webp]]
 
-[[https://doc.traefik.io/traefik/][Traefik]] is the application proxy (HTTP / TCP / UDP) that is the
-entrypoint, and router, for all of your web services. Traefik
-facilitates automatic TLS certificate requests via Let's Encrypt, and
-handles transport security for all of your applications. Traefik is
-configured to support several authentication + sentry authorization
-mechanisms, including: HTTP Basic Auth, OAuth2, mutual TLS, and IP
-address filtering.
+[[https://doc.traefik.io/traefik/][Traefik]] is an ingress application proxy and router for all of your web
+services (HTTP / TCP / UDP). Traefik facilitates automatic TLS
+certificate management via [[https://letsencrypt.org/getting-started/][Let's Encrypt]], and handles transport
+security for all of your applications. Traefik is configured to
+support several authentication and sentry authorization mechanisms,
+including: HTTP Basic Auth, OAuth2, mutual TLS, and IP address
+filtering.
 
 *** Basic Traefik config
 
@@ -1158,7 +1158,7 @@ This presents the interactive configuration menu for Traefik:
 #+end_stdout
 
 You can use the up and down arrow keys to choose the selection, and
-you may type to narrow the list. Select the =Config= entry and press
+you may type any substring to narrow the list. Select the =Config= entry and press
 the =Enter= key.
 
 **** Traefik Config
@@ -1196,10 +1196,32 @@ v Logging level
 
 ***** Traefik user
 
-Select the =Traefik user= option to create the traefik user on the
+#+begin_stdout
+? Traefik Configuration:  
+> Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+#+end_stdout
+
+Select the =Traefik user= option to create the =traefik= user on the
 host.
 
 ***** Entrypoints (including dashboard)
+
+#+begin_stdout
+? Traefik Configuration:  
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+#+end_stdout
 
 The following entrypoints are defined by default:
 
@@ -1242,6 +1264,9 @@ TRAEFIK_WEBSECURE_ENTRYPOINT_PORT: Enter the host port to listen on (e.g., 443)
 TRAEFIK_WEBSECURE_ENTRYPOINT_PROXY_PROTOCOL_TRUSTED_IPS: Enter the comma separated list of trusted upstream proxy servers (CIDR)
 : 10.13.16.1/32
 #+end_stdout
+
+=10.13.16.1/32= is the correct (default) IP address of the sentry
+WireGuard peer.
 
 Press =ESC= two times to get back to the traefik config menu.
 
@@ -1290,7 +1315,7 @@ TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave b
 
 Now to enter the values for the custom DNS API variables:
 DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
-: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+: dop_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 #+end_stdout
 
 ***** Request TLS certificates
@@ -1309,8 +1334,11 @@ DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean
 
 Next enter the domain names you want listed on this certificate:
 
- * =d.example.com=
- * =*.d.example.com=
+ * =d.example.com= (this is your main domain name CN record for the server.)
+ * =*.d.example.com= (this is your various app sub-domains wildcard
+   SANS record, matching e.g., =whoami.d.example.com=)
+ * Any other domains you want listed on the same certificate.
+   
 
 #+begin_stdout
 
@@ -1326,7 +1354,7 @@ Enter a secondary domain (enter blank to skip)
 #+end_stdout
 
 It will continue asking you to enter additional SANS domains until you
-enter a blank response, so just press Enter on the blank line.
+enter a blank response to signify you are done.
 
 ***** Certificate summary
 
