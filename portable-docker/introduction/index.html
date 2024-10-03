@@ -23,19 +23,19 @@ I use this as a tiny web server that I can take anywhere I go.">
     <meta itemprop="name" content="Introduction :: book.rymcg.tech">
     <meta itemprop="description" content="Raspberry Pi Sentry Droplet WireGuard VPN d.rymcg.tech Your workstation Your console client Next steps Raspberry Pi Here is my Raspberry Pi 5, which is a small form factor Linux computer, running Raspberry Pi OS and Docker. It has been outfitted with an NVME SSD attached via the expandable PCI-E bus. It has 8GB of RAM and 1TB of fast storage.
 I use this as a tiny web server that I can take anywhere I go.">
-    <meta itemprop="wordCount" content="1054">
+    <meta itemprop="wordCount" content="1108">
     <title>Introduction :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727926295" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727926295" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727926295" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727926295" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727926295" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727926295" rel="stylesheet">
-    <link href="/css/fonts.css?1727926295" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727926295" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727926295" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727926295" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727926295" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727926295" rel="stylesheet">
-    <link href="/css/print.css?1727926295" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727926295"></script>
+    <link href="/css/fontawesome-all.min.css?1727935963" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727935963" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1727935963" rel="stylesheet">
+    <link href="/css/auto-complete.css?1727935963" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727935963" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1727935963" rel="stylesheet">
+    <link href="/css/fonts.css?1727935963" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727935963" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1727935963" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1727935963" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1727935963" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1727935963" rel="stylesheet">
+    <link href="/css/print.css?1727935963" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1727935963"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..';
@@ -202,13 +202,14 @@ easy to document, as well as to use.</p>
 workstation</em> and urges you to never actually login to your Docker
 server, but rather to exclusively control it remotely from your
 workstation. This is one of the ways to follow the good DevOps
-practice, summed up by the metaphor: &ldquo;Treat your infrastructure like
-cattle, not like pets.&rdquo; However, this strategy has the drawback that
-if you lose access to your workstation, it makes it diffcult to
-adminster the server (you would have to recreate your <code>.env</code> files on
-a new workstation, from backup, or from scratch).</p>
-<p>To avoid this complexity, and to require keeping everything portable
-in one package, as well as to make it easier to maintain after long
+practice summed up by the metaphor:</p>
+<p>&ldquo;Treat your infrastructure like cattle, not like pets.&rdquo;</p>
+<p>However, the cattle ranching strategy has the drawback that if you
+lose access to your workstation, it makes it diffcult to adminster the
+remaining server (you would have to recreate your <code>.env</code> files on a
+new workstation, from backup, or from scratch).</p>
+<p>To avoid this complexity and to require keeping everything portable in
+one package, as well as to make it easier to maintain after long
 periods of inactivity and forgetfulness, we will make an important
 compromise and an exception to the normal DevOps rule:</p>
 
@@ -216,21 +217,21 @@ compromise and an exception to the normal DevOps rule:</p>
   <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> The Raspberry Pi serves the role of workstation AND server</div>
   <div class="box-content">
 
-<p>In this book, the configuration tools (d.rymcg.tech) will be installed
-<em>to the same server</em> that runs Docker, rather than the usual
+<p><strong>In this book</strong>, the configuration tools (d.rymcg.tech) will be
+installed <em>to the same server</em> that runs Docker, rather than the usual
 recomendation to do so on a separate workstation. Comingling the roles
-of server and workstation means you&rsquo;ve got everything together in one
-little portable box, and it will make everything easier to get started
-with. Your portable Pi is therefore a <em>pet</em> Docker server, plus
-workstation, all in one.</p>
+of server and workstation on the Pi means you&rsquo;ll have everything
+together in one little box and it will make everything easier to get
+(re)started with. Your portable Pi is therefore a <em>pet</em> Docker server,
+plus workstation, all in one.</p>
 <p>If you had a whole fleet of Raspberry Pis to manage, this would be a
 terrible idea, because you would be missing the centralized
 workstation to control them all, and you&rsquo;d have to login to each one
-of them and configure them directly. However, you will likely start
-this journey with only one Pi to manage, so this is a good initial
-compromise to make. If you want to build a proper workstation that can
-control several servers from one location, read the <a href="/linux-workstation/index.html">Linux Workstation</a>
-book and the main <a href="https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme" rel="external" target="_blank">d.rymcg.tech README</a>.</p>
+of them individually and configure them directly. However, you will
+likely start this journey with only one Pi to manage, so this is a
+good initial compromise to make. If you want to build a proper
+workstation that can control several servers from one location, read
+the <a href="/linux-workstation/index.html">Linux Workstation</a> book and the main <a href="https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme" rel="external" target="_blank">d.rymcg.tech README</a>.</p>
 <p>If you are going to seriously travel with this device, you should
 consider <a href="https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994" rel="external" target="_blank">installing full disk encryption</a> and requiring remote SSH
 unlock on boot, but this is an advanced topic that is outside the
@@ -238,10 +239,15 @@ scope of this book.</p>
 </div>
 </div>
 <h2 id="your-console-client">Your console client</h2>
-<p>So, if the workstation is on the Raspberry Pi, you&rsquo;re still going to
-need to travel with another computer (e.g., a laptop) and set that up
-with an SSH key on it, so you can remotely log in to the Pi (unless
-you want to carry a display and keyboard to plug into it directly).</p>
+<p>Unless you want to carry a display and keyboard to plug directly into
+the Raspberry Pi, you&rsquo;re still going to need to travel with another
+computer (e.g., a laptop) and set that up with an SSH key on it, so
+that you can remotely log in to the Pi.</p>
+<p>You can use any sort of computer, as long as its capable of running a
+terminal and an SSH client. If it runs Linux, MacOS, or Windows,
+you&rsquo;ll also be able to use this computer to run the <a href="https://www.raspberrypi.com/software/" rel="external" target="_blank">rpi-imager</a>
+application for preparing the SD-card. Most Linux distros have this
+available in their package manager.</p>
 <h4 id="editing-files-on-the-pi">Editing files on the Pi</h4>
 <p>Eventually you might need to edit a <code>.env</code> file by hand, and so you
 need to know how to edit files remotely over SSH, so you have a few
@@ -250,9 +256,12 @@ options in that regard:</p>
 <li>Learn how to use one of the many terminal mode text editors (Emacs,
 Vim, nano, etc.) and edit the files through an SSH console directly
 on the Pi.</li>
-<li>Setup your personal computer with an editor that works over SSH
-(Emacs&rsquo; <a href="https://www.gnu.org/software/tramp/" rel="external" target="_blank">TRAMP</a>, VS Code&rsquo;s <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh" rel="external" target="_blank">Remote SSH</a>, Vim&rsquo;s <a href="https://www.vim.org/scripts/script.php?script_id=1075" rel="external" target="_blank">Netrw</a> etc.)</li>
-<li>Edit the files locally and copy the files with scp, <a href="https://wiki.archlinux.org/title/Rsync" rel="external" target="_blank">rsync</a>, or
+<li>Setup your personal workstation with an editor that works over SSH
+(Emacs&rsquo; <a href="https://www.gnu.org/software/tramp/" rel="external" target="_blank">TRAMP</a>, VS Code&rsquo;s
+<a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh" rel="external" target="_blank">Remote
+SSH</a>, Vim&rsquo;s <a href="https://www.vim.org/scripts/script.php?script_id=1075" rel="external" target="_blank">Netrw</a> etc.)</li>
+<li>Edit the files locally and copy the files with scp,
+<a href="https://wiki.archlinux.org/title/Rsync" rel="external" target="_blank">rsync</a>, or
 <a href="https://blog.rymcg.tech/blog/linux/rclone_sync/" rel="external" target="_blank">rclone</a>.</li>
 </ul>
 <h2 id="next-steps">Next steps</h2>
@@ -289,12 +298,12 @@ on the Pi.</li>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727926295" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727926295" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727926295" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727926295" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727926295" defer></script>
-        <script src="/js/search.js?1727926295" defer></script>
+        <script src="/js/auto-complete.js?1727935963" defer></script>
+        <script src="/js/lunr/lunr.min.js?1727935963" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1727935963" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1727935963" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1727935963" defer></script>
+        <script src="/js/search.js?1727935963" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -436,14 +445,14 @@ on the Pi.</li>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 3, 2024 at 3:31am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 3, 2024 at 6:12am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727926295" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727926295" defer></script>
-    <script src="/js/theme.js?1727926295" defer></script>
+    <script src="/js/clipboard.min.js?1727935963" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1727935963" defer></script>
+    <script src="/js/theme.js?1727935963" defer></script>
   </body>
 </html>
