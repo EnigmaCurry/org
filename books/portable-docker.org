@@ -71,8 +71,8 @@ get the network up, have it resume all of its previous functions, and
 even use the same IP address as before. Traveling with this device
 should be a plug and play experience, with minimal disruption to the
 clients that expect this server to be online and available. No matter
-what kind of connection to the Internet it has available, it should be
-quick to get this server back online.
+what kind of Internet connection it has, it should be quick to get
+this server back online.
 
 ** Sentry Droplet
 
@@ -91,12 +91,12 @@ this connection to the sentry whenever it boots and becomes online.
 
 ** WireGuard VPN
 
-The Raspberry Pi should acquire whatever kind of Internet connection
-is locally available via DHCP, therefore it won't have a static IP
-address initially. Once it's online, it creates an outbound VPN
-connection to the sentry via [[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the
-Pi is assigned a static private IP address that only the sentry can
-communicate with.
+The Raspberry Pi should use whatever kind of Internet connection you
+plug the ethernet into via DHCP (or you may configure Wi-Fi),
+therefore it won't have a static IP address initially. Once it's
+online, it creates an outbound VPN connection to the sentry via
+[[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the Pi is assigned a static
+private IP address that only the sentry can communicate with.
 
 The sentry forwards incoming connections from the Internet to the
 Raspberry Pi over the WireGuard VPN connection. Traefik is used on
@@ -108,7 +108,7 @@ each of your services. Traefik supports the following types of routes:
    HTTP server based on these criteria)
  * TCP Layer 4 (Routes a unique TCP ADDRESS:PORT combination to a
    unique backend ADDRESS:PORT combination)
- * UDP Layer 4 - TODO (unimplemented, but doable)
+ * UDP Layer 4 - TODO (unimplemented, but similar to TCP)
 
 This lets you publicly route virtually any service directly to your
 Raspberry Pi, whether it's sitting at your desk, or taken to an
@@ -126,23 +126,24 @@ contains an extensive configuration wizard for [[https://github.com/EnigmaCurry/
 idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes Docker Compose projects both
 easy to document, as well as to use.
 
-** Your workstation
+** The dual roles of the Raspberry Pi
 
 Traditionally, d.rymcg.tech suggests to install itself /on a separate
-workstation/ and urges you to never actually login to your Docker
+workstation/ and urges you to never actually log in to your Docker
 server, but rather to exclusively control it remotely from your
 workstation. This is one of the ways to follow the good DevOps
 practice summed up by the metaphor:
 
+#+begin_quote
 "Treat your infrastructure like cattle, not like pets."
+#+end_quote
 
 However, the cattle ranching strategy has the drawback that if you
 lose access to your workstation, it makes it diffcult to adminster the
 remaining server (you would have to recreate your =.env= files on a
 new workstation, from backup, or from scratch).
 
-To avoid this complexity and to require keeping everything portable in
-one package, as well as to make it easier to maintain after long
+To avoid this complexity and to make it easier to maintain after long
 periods of inactivity and forgetfulness, we will make an important
 compromise and an exception to the normal DevOps rule:
 
@@ -150,20 +151,30 @@ compromise and an exception to the normal DevOps rule:
 #+begin_notice
 *In this book*, the configuration tools (d.rymcg.tech) will be
 installed /to the same server/ that runs Docker, rather than the usual
-recomendation to do so on a separate workstation. Comingling the roles
-of server and workstation on the Pi means you'll have everything
+recomendation to do so on a separate workstation. Co-mingling the
+roles of server and workstation on the Pi means you'll have everything
 together in one little box and it will make everything easier to get
-(re)started with. Your portable Pi is therefore a /pet/ Docker server,
-plus workstation, all in one.
+(re)acquainted with.
+
+#+begin_quote
+Your portable Pi is treated as a /pet/ Docker server (not cattle), you
+must name it and interact with it directly via SSH console.
+#+end_quote
+
+If you reference any other d.rymcg.tech documentation, and it's
+talking about "your workstation", for the purposes of this book, you
+should understand that this means for you to use the =pi= user on the
+Raspberry Pi, not your personal workstation.
 
 If you had a whole fleet of Raspberry Pis to manage, this would be a
-terrible idea, because you would be missing the centralized
-workstation to control them all, and you'd have to login to each one
-of them individually and configure them directly. However, you will
-likely start this journey with only one Pi to manage, so this is a
-good initial compromise to make. If you want to build a proper
-workstation that can control several servers from one location, read
-the [[/linux-workstation/][Linux Workstation]] book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
+terrible idea, because you would be missing the centralized (cattle
+ranching) workstation to control all of them, and you'd have to login
+to each one of them individually and configure them directly. However,
+you will likely start this journey with only one Pi to manage, so
+treating it as a pet is a good initial compromise to make. If you want
+to build a proper workstation that can control several servers from
+one location, read the [[/linux-workstation/][Linux Workstation]] book and the main
+[[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
 
 If you are going to seriously travel with this device, you should
 consider [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][installing full disk encryption]] and requiring remote SSH
@@ -171,43 +182,56 @@ unlock on boot, but this is an advanced topic that is outside the
 scope of this book.
 #+end_notice
 
-** Your console client
+** Your personal workstation
 
 Unless you want to carry a display and keyboard to plug directly into
 the Raspberry Pi, you're still going to need to travel with another
 computer (e.g., a laptop) and set that up with an SSH key on it, so
 that you can remotely log in to the Pi.
 
-You can use any sort of computer, as long as its capable of running a
-terminal and an SSH client. If it runs Linux, MacOS, or Windows,
-you'll also be able to use this computer to run the [[https://www.raspberrypi.com/software/][rpi-imager]]
-application for preparing the SD-card. Most Linux distros have this
-available in their package manager.
+You can use any sort of personal computer, as long as its capable of
+running a terminal and an SSH client. If it runs Linux, MacOS, or
+Windows, you'll also be able to use this computer to run the
+[[https://www.raspberrypi.com/software/][rpi-imager]] application for preparing the SD-card. Most Linux distros
+have this available in their package manager.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you don't yet have an SSH key on your personal computer, the [[/linux-workstation][Linux
+Workstation]] book has a [[/linux-workstation/config/ssh/][chapter about SSH]], covering both traditional
+SSH keys and agents, as well as the open hardware security token
+Solokey.
+#+end_notice
 
 **** Editing files on the Pi
 
 Eventually you might need to edit a =.env= file by hand, and so you
-need to know how to edit files remotely over SSH, so you have a few
-options in that regard:
+need to know how to edit files remotely over SSH. You have a few
+different options in that regard:
 
- * Learn how to use one of the many terminal mode text editors (Emacs,
-   Vim, nano, etc.) and edit the files through an SSH console directly
-   on the Pi.
- * Setup your personal workstation with an editor that works over SSH
-   (Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's
-   [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote
-   SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc.)
- * Edit the files locally and copy the files with scp,
-   [[https://wiki.archlinux.org/title/Rsync][rsync]], or
-   [[https://blog.rymcg.tech/blog/linux/rclone_sync/][rclone]].
+ 1. Learn how to use one of the many terminal mode text editors (e.g.,
+    Emacs, Vim, nano, etc.) and edit the files through an SSH console
+    directly on the Pi. *This is the most secure option, as the files
+    never leave the Pi.*
+ 2. Edit the files directly on your personal workstation and set up
+    your editor so that it that saves files transparently over SSH
+    (e.g., Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's
+    [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote
+    SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc, or universally via [[https://wiki.archlinux.org/title/SSHFS][sshfs]].)
+ 3. Edit the files directly on your personal workstation and use
+    synchronization tools like [[https://blog.rymcg.tech/blog/linux/rclone_sync/][rclone]], rsync, dropbox etc, however
+    this method is the least secure because it leaves several copies
+    of the files outside of the Pi itself, and important secrets may
+    be leaked as a result.
 
 ** Next steps
 
- * Set up DNS
- * Set up Raspberry Pi
- * Set up Sentry Droplet
- * Set up WireGuard
- * Install apps and services
+ * Set up DNS.
+ * Set up Raspberry Pi.
+ * Set up Sentry Droplet.
+ * Set up WireGuard.
+ * Install core services.
+ * Install apps.
 
 * Set up DNS
 :PROPERTIES:
@@ -397,7 +421,7 @@ of your DigitalOcean account's DNS settings:
  * Click on =API= in the left hand menu, near the bottom of the list.
  * On the =Tokens= tab, click =Generate New Token=.
  * Enter a descriptive name indicating the owner of the token (e.g., a
-   subdomain), and its purpose (e.g., ACME): =pi5.example.com ACME=.
+   subdomain), and its purpose (e.g., ACME): =pi.example.com ACME=.
  * Set the expiration period you want to use. Use =No expire= if you
    just want to set it and forget it, otherwise you will need to
    update the token periodically.
@@ -427,7 +451,8 @@ to create a unique token for each host.
  * Set up Rasbperry Pi.
  * Set up sentry Droplet.
  * Configure WireGuard VPN.
- * Install web services.
+ * Install core services     
+ * Install apps.
 
 * Set up Raspberry Pi
 :PROPERTIES:
@@ -603,11 +628,10 @@ software.
  
    * On the =General= tab:
    
-     * Enter the hostname
-     * Enter a username and password (This book uses the username
-       =pi=).
+     * Enter the hostname (e.g., =pi=).
+     * Enter a username and password (e.g., =pi=).
      * Optionally set up the Wi-Fi (I just use ethernet instead).
-     * Set locale settings. I set mine to UTC.
+     * Set locale settings. (e.g., UTC).
      
    * On the =Services= tab:
    
@@ -639,11 +663,11 @@ figure out what its IP address is. There are a number of ways to do
 that:
 
  * If your network has configured multicast DNS (mDNS), you can find
-   the IP address by the hostname you set in the imager (e.g., =pi5=),
+   the IP address by the hostname you set in the imager (e.g., =pi=),
    appended with the domain =.local=:
 
 #+begin_run
-ping -c3 pi5.local
+ping -c3 pi.local
 #+end_run
 
  * From any Linux computer attached to the same LAN, run =arp -a= to
@@ -1033,9 +1057,16 @@ Configure the =pi= user's =~/.bashrc= file:
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
 cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
+
+## d.rymcg.tech cli tool:
 export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
 eval "$(d.rymcg.tech completion bash)"
 __d.rymcg.tech_cli_alias d
+
+## Add d.rymcg.tech alias for each Docker context:
+__d.rymcg.tech_context_alias pi
+__d.rymcg.tech_context_alias sentry
+
 EOF
 #+end_run
 
@@ -1078,11 +1109,38 @@ readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
 readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
 #+end_stdout
 
+There are two additional aliases created for each of the Docker contexts:
+
+ * =pi=
+ * =sentry=
+
+These aliases can be used to directly interact with that particular
+context without requiring the use of setting the context first (e.g.,
+=d context use= is unnecessary). These aliases will be used throughout
+this book.
+
+You can see how they each of the aliases are constructed:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+alias d
+alias pi
+alias sentry
+#+end_run
+
+#+begin_stdout
+alias d='D_RYMCG_TECH_CLI_ALIAS=d d.rymcg.tech '
+alias pi='D_RYMCG_TECH_CONTEXT_ALIAS=pi d.rymcg.tech tmp-context pi d.rymcg.tech'
+alias sentry='D_RYMCG_TECH_CONTEXT_ALIAS=sentry d.rymcg.tech tmp-context sentry d.rymcg.tech'
+#+end_stdout
+
+Full tab completion is supported for all of the aliases.
+
 *** Run the main config
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d config
+pi config
 #+end_run
 
 *** Follow the interactive prompts to finish configuration
@@ -1159,7 +1217,7 @@ filtering.
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik config
+pi make traefik config
 #+end_run
 
 This presents the interactive configuration menu for Traefik:
@@ -1455,7 +1513,7 @@ You can check to see that Traefik has started:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik status
+pi make traefik status
 #+end_run
 
 You should see two services running: =traefik= and
@@ -1522,7 +1580,7 @@ Create a new config:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make whoami config
+pi make whoami config
 #+end_run
 
 The first question the config asks for is =WHOAMI_TRAEFIK_HOST= which
@@ -1550,7 +1608,7 @@ Install whoami:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make whoami install
+pi make whoami install
 #+end_run
 
 **** Set up temporary DNS override
@@ -1575,7 +1633,7 @@ Replace =whoami.pi.example.com= with the same domain name you set for =WHOAMI_TR
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make whoami open
+pi make whoami open
 #+end_run
 
 #+attr_shortcode: :style tip
@@ -1649,7 +1707,7 @@ You can further verify the TLS certificate is issued correctly:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d script tls_debug whoami.pi.example.com
+pi script tls_debug whoami.pi.example.com
 #+end_run
 
 #+begin_stdout
@@ -1670,21 +1728,22 @@ so as follows:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make whoami logs
+pi make whoami logs
 #+end_run
 
 To check the Traefik logs, do similar:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make traefik logs service=traefik
+pi make traefik logs service=traefik
 #+end_run
 
 *** Next steps
 
  * Set up the sentry Droplet.
  * Configure the WireGuard VPN.
- * Install web services.
+ * Install core services.
+ * Install apps.
 
 * Set up sentry Droplet
 :PROPERTIES:
@@ -1856,11 +1915,6 @@ dig @ns1.digitalocean.com laksdflkweieri.sentry.example.com
 #+end_run
 #+end_notice
 
-**** Next steps
-
- * Install Docker.
- * Configure VPN.
-
 ** Configure the droplet on the Pi
 :PROPERTIES:
 :EXPORT_FILE_NAME: set-up-docker-context
@@ -1941,7 +1995,7 @@ d context new
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d install-docker
+sentry install-docker
 #+end_run
 
 #+begin_stdout
@@ -1952,7 +2006,7 @@ d install-docker
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-docker info | grep Context
+d tmp-context sentry docker info | grep Context
 #+end_run
 
 #+begin_stdout
@@ -1976,13 +2030,6 @@ being operated on.
 :EXPORT_HUGO_WEIGHT: 325
 :END:
 
-*** Ensure you use the correct Docker context
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d context use sentry
-#+end_run
-
 *** Run the main config
 
 The main config must be run for each new context you create:
@@ -1996,7 +2043,7 @@ ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make - config
+sentry config
 #+end_run
 
 *** Install Traefik
@@ -2006,7 +2053,7 @@ Raspberry Pi:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik config
+sentry make traefik config
 #+end_run
 
 #+begin_stdout
@@ -2133,7 +2180,7 @@ When done, press =ESC= to quit the Traefik config program.
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make whoami config
+sentry make whoami config
 #+end_run
 
 #+begin_stdout
@@ -2150,7 +2197,7 @@ WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make whoami install
+sentry make whoami install
 #+end_run
 
 #+attr_shortcode: :style info :title Whoami on the sentry
@@ -2169,7 +2216,7 @@ You can open the page in =w3m=:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make whoami open
+sentry make whoami open
 #+end_run
 
 Or test it with curl:
@@ -2225,7 +2272,9 @@ X-Real-Ip: X.X.X.X
 
 *** Next steps 
 
- * Configure the WireGuard VPN
+ * Configure the WireGuard VPN.
+ * Install core services.
+ * Install apps.
 
 * Configure WireGuard VPN
 :PROPERTIES:
@@ -2253,18 +2302,11 @@ index
 
 [[/img/portable-docker/dragon.webp]]
 
-*** Ensure you use the correct context
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d context use sentry
-#+end_run
-
 *** Reconfigure Traefik to enable WireGuard server
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik config
+sentry make traefik config
 #+end_run
 
 #+begin_stdout
@@ -2312,15 +2354,9 @@ Enter the Traefik VPN peers list
 You can have as many peers as you want, use commas to seprate the
 names. Multiple peers can share the same sentry.
 
-Press =ESC= three times to back out of the main menu and quit the
-program.
+Press =ESC= two times to back out to the main menu.
 
 *** Reconfigure Traefik to add a Layer 7 route to the Raspberry Pi
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d make traefik config
-#+end_run
 
 #+begin_stdout
 ? Traefik:  
@@ -2352,7 +2388,7 @@ d make traefik config
   Disable layer 7 TLS Proxy
 
 Enter the public domain (SNI) for the route:
-: whoami.pi5.example.com
+: whoami.pi.example.com
 
 Enter the destination IP address to forward to:
 : 10.13.16.2
@@ -2368,7 +2404,7 @@ Enter the destination TCP port to forward to:
 ## Configured Layer 7 Routes:
 Entrypoint              Destination_address  Destination_port  Proxy_protocol
 ----------              -------------------  ----------------  --------------
-whoami.pi5.example.com  10.13.16.2           443               2
+whoami.pi.example.com  10.13.16.2           443               2
 #+end_stdout
 
 Press =ESC= multiple times to back out to the main menu. On the main
@@ -2388,7 +2424,7 @@ You can check the wireguard service is now started:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik show-wireguard-peers
+sentry make traefik show-wireguard-peers
 #+end_run
 
 #+begin_stdout
@@ -2417,18 +2453,11 @@ to copy this information in the next chapter.
 
 [[/img/portable-docker/castle.webp]]
 
-*** Ensure you use the correct Docker context
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d context use pi
-#+end_run
-
 *** Reconfigure Traefik to enable WireGuard client
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik config
+sentry make traefik config
 #+end_run
 
 #+begin_stdout
@@ -2497,7 +2526,7 @@ Check the logs:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik logs service=wireguard
+sentry make traefik logs service=wireguard
 #+end_run
 
 #+begin_stdout
@@ -2508,7 +2537,7 @@ Enter the wireguard client shell to test networking parameters:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make traefik shell service=wireguard-client
+sentry make traefik shell service=wireguard-client
 #+end_run
 
 Show the connected wireguard peers:
@@ -2542,18 +2571,354 @@ quit.
 *** Check that whoami is available publicly
 
 In the last chapter you created a layer 7 route for the URL
-=https://whoami.pi5.example.com=. Now that your wireguard connection
-is active on both ends, this service should now be available publicly.
+=https://whoami.pi.example.com=. Now that your wireguard connection
+is active on both ends, it should be publicly accessible. Test the URL
+in your personal web browser.
 
-* Install web services
+*** Next steps
+
+ * Install core services.
+ * Install apps.
+
+* Install core services
 :PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: install-web-services
+:EXPORT_HUGO_SECTION_FRAG: install-core-services
 :EXPORT_HUGO_WEIGHT: 500
 :END:
-** Install web services
+** Install core services
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 501
+:END:
+
+There are a few services you should install before any others, which
+we will call core services:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Forgejo
+:PROPERTIES:
+:EXPORT_FILE_NAME: forgejo
+:EXPORT_HUGO_WEIGHT: 520
+:END:
+
+[[https://forgejo.org/][Forgejo]] is a self-hosted git forge similar to [[https://docs.github.com/en/get-started/start-your-journey/about-github-and-git][GitHub]]. Forgejo is a
+fork of [[https://github.com/go-gitea/gitea?tab=readme-ov-file#gitea][Gitea]], which is a fork of [[https://github.com/gogs/gogs][Gogs]]. Installing Forgejo is useful
+for two unrelated purposes:
+
+ * Self-hosting your own git repositories.
+ * Providing an OAuth2 identity service for your organization,
+   facilitating single-sign on to all of your apps via Traefik
+   [[https://doc.traefik.io/traefik/middlewares/http/forwardauth/][forward-auth middleware]] ([[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik-forward-auth#readme][traefik-forward-auth]]).
+
+#+attr_shortcode: :style info :title Forgejo is fundamental infrastructure
+#+begin_notice
+You don't need to install Forgejo on every server you make, but having
+at least one instance in your domain is recommended.
+
+Even if you (or your users) have no need for storing git repositories,
+Forgejo is part of the fundamental infrastructure of securing other
+d.rymcg.tech apps via OAuth2. You can authenticate and authorize your
+users to access your apps via their Forgejo account (Sentry
+Authorization).
+#+end_notice
+
+*** Configure Forgejo
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi make forgejo config
+#+end_run
+
+Follow the prompts to configure the domain name and admin user
+authentication.
+
+#+begin_stdout
+FORGEJO_TRAEFIK_HOST: Enter your forgejo domain name (eg. git.example.com)
+: git.pi.example.com
+
+APP_NAME: Enter the service description (eg. "git thing")
+: pi5 git hosting
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+> No
+  Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+*** Install Forgejo
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi make forgejo install
+#+end_run
+
+*** Add a new route on the sentry (droplet)
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: git.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint           Destination_address  Destination_port  Proxy_protocol
+----------           -------------------  ----------------  --------------
+git.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+
+*** Finish Forgejo installation
+
+Immediately open the Foregjo application to finish the installation.
+Open your web browser to =https://git.pi.example.com=.
+
+This should show a page with the title =Initial configuration= at the
+top. The *only* thing you need to change on this page is the admin
+credentials found at the bottom (all of other settings are instead
+derived from the environment variables found in the Forgejo
+=.env_{CONTEXT}_{INSTANCE}= file created by d.rymcg.tech):
+
+[[/img/portable-docker/forgejo-admin-account-settings.webp]]
+
+ * You should create a dedicated admin account, separate from your
+   personal account.
+ * Click =Administrator account settings= to expand the section.
+ * Enter the =Adminstrator username=: =root=
+ * Enter the admin email address.
+ * Enter a secure passphrase and confirmation.
+ * Click the =Install Forgejo= button at the very bottom.
+
+Once logged in as =root=, you can create additional user accounts from
+the account icon in the top right, which expands a menu.
+
+[[/img/portable-docker/forgejo-admin-site-settings.webp]]
+
+ * Click =Site adminstration=.
+ * Click =Identity & access=.
+ * Click =User accounts=.
+
+[[/img/portable-docker/forgejo-admin-user-accounts.webp]]
+
+ * Click =Create User Account= and create your own personal account.
+ * Log out of the root account and test logging into the new account.
+
+*** Which account to use?
+
+ * You should use the =root= account for creating new OAuth2 apps and creating new users.
+ * You should use your personal account for storing your git
+   repositories, and for your identity when logging into other apps.
+
+** Traefik-Forward-Auth (Sentry Authorization)
+:PROPERTIES:
+:EXPORT_FILE_NAME: traefik-forward-auth
+:EXPORT_HUGO_WEIGHT: 530
+:END:
+
+*** Sentry Authorization
+
+Some apps may already have their own authentication mechanisms, while
+others may not. Sentry Authorization creates a common authentication
+and authorization framework /in front of/ your applications via
+Traefik middleware. Sentry Authorization happens /before/ any existing
+auth mechanisms in the app itself, and so it acts as a front door
+gatekeeper for your apps. It can't control what users are allowed to
+do once they get in, but it does control who is allowed in through the
+front door.
+
+ * Users are /authenticated/ via the [[/portable-docker/install-core-services/forgejo/index.html][Forgejo]] instance and [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik-forward-auth#traefik-forward-auth][traefik-forward-auth]].
+ * Users are /authorized/ by a group membership filter applied on a
+   per-app basis.
+
+*** Configure traefik-forward-auth
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make traefik-forward-auth config
+#+end_run
+
+#+begin_stdout
+TRAEFIK_FORWARD_AUTH_HOST: Enter the traefik-foward-auth host domain name (eg. auth.example.com)
+: auth.pi.example.com
+
+TRAEFIK_FORWARD_AUTH_COOKIE_DOMAIN: Enter the cookie domain name (ie ROOT domain) (eg. example.com)
+: pi.example.com
+
+? Select the OAuth provider to use  
+> gitea
+  github
+  google
+  discord
+
+TRAEFIK_FORWARD_AUTH_GITEA_DOMAIN: Enter your gitea domain name (eg. git.example.com)
+: git.pi.example.com
+#+end_stdout
+
+At this point it will open =w3m= to the gitea instance asking you to
+sign in. Because this isn't very user friendly, so just press =q= and
+then =y= to quit =w3m=.
+
+ * Open your preffered web browser and open up the gitea URL:
+   =https://git.pi.example.com=
+ * Make sure you are logged in as the =root= user.
+ * Open the root user settings page, click =Applications=.
+ * Fill in the section titled =Manage OAuth2 applications=:
+   * Enter an application name as a public identifier.
+   * Enter the redirect URI =https:://auth.pi.example.com/_oauth=.
+ * Click =Create Application=.
+
+[[/img/portable-docker/forgejo-admin-user-create-app.webp]]
+
+ * This will show you the OAuth2 client ID and secret:
+
+[[/img/portable-docker/forgejo-admin-user-app-secret.webp]]
+
+Back in your terminal session, it should be asking you to fill these
+same details in:
+
+#+begin_stdout
+TRAEFIK_FORWARD_AUTH_PROVIDERS_GENERIC_OAUTH_CLIENT_ID: Copy and Paste the OAuth2 client ID here
+: 38d6c7f7-c712-43a9-967c-27888819e85f
+
+TRAEFIK_FORWARD_AUTH_PROVIDERS_GENERIC_OAUTH_CLIENT_SECRET: Copy and Paste the OAuth2 client secret here
+: gto_4g54tazy7oyslypqhr7z7khundcmtwezlkdeyghe7ctj7k4gltvq
+
+TRAEFIK_FORWARD_AUTH_LOGOUT_REDIRECT: Enter the logout redirect URL
+: https://git.pi.example.com/logout
+#+end_stdout
+
+*** Install Traefik-Forward-Auth
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make traefik-forward-auth install
+#+end_run
+
+*** Add a new route on the sentry (droplet)
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: auth.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint           Destination_address  Destination_port  Proxy_protocol
+----------           -------------------  ----------------  --------------
+auth.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+* Install apps
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: install-web-services
+:EXPORT_HUGO_WEIGHT: 600
+:END:
+** Install apps
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 601
 :END:
 
 [[/img/portable-docker/surf.webp]]
@@ -2572,15 +2937,13 @@ index
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d context use pi
-
-d make immich config
+pi make immich config
 #+end_run
 
 
 #+begin_stdout
 IMMICH_TRAEFIK_HOST: Enter the Immich domain name (e.g., immich.example.com)
-: immich.pi5.example.com
+: immich.pi.example.com
 
 ? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
 > No
@@ -2603,7 +2966,7 @@ IMMICH_TRAEFIK_HOST: Enter the Immich domain name (e.g., immich.example.com)
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make immich install wait
+pi make immich install wait
 #+end_run
 
 Wait for the services to start and report themselves as healthy:
@@ -2617,9 +2980,7 @@ All services healthy.
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d context use sentry
-
-d make traefik config
+sentry make traefik config
 #+end_run
 
 #+begin_stdout
@@ -2650,7 +3011,7 @@ d make traefik config
   Disable layer 7 TLS Proxy
 
 Enter the public domain (SNI) for the route:
-: immich.pi5.example.com
+: immich.pi.example.com
 
 Enter the destination IP address to forward to:
 : 10.13.16.2
@@ -2664,8 +3025,8 @@ Enter the destination TCP port to forward to:
 ## Configured Layer 7 Routes:
 Entrypoint              Destination_address  Destination_port  Proxy_protocol
 ----------              -------------------  ----------------  --------------
-immich.pi5.example.com  10.13.16.2           443               2
-whoami.pi5.example.com  10.13.16.2           443               2
+immich.pi.example.com  10.13.16.2           443               2
+whoami.pi.example.com  10.13.16.2           443               2
 #+end_stdout
 
 Press =ESC= three times to go back to the main menu, and re-install Traefik:
@@ -2683,28 +3044,26 @@ After installation, press =ESC= to quit the config tool.
 
 *** Finish
 
-The app is now deployed at the URL you configured: =https://immich.pi5.example.com=
+The app is now deployed at the URL you configured: =https://immich.pi.example.com=
 
 #+attr_shortcode: :title Immediately secure the admin account :style warning
 #+begin_notice
 You should immediately open the URL in your web browser:
-=https://immich.pi5.example.com= and complete the initial
+=https://immich.pi.example.com= and complete the initial
 configuration to secure the admin user account.
 #+end_notice
 
 ** Yourls
 :PROPERTIES:
 :EXPORT_FILE_NAME: yourls
-:EXPORT_HUGO_WEIGHT: 520
+:EXPORT_HUGO_WEIGHT: 540
 :END:
 
 *** Configure Yourls
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d context use pi
-
-d make yourls config
+pi make yourls config
 #+end_run
 
 Follow the prompts to configure the domain name and admin user
@@ -2712,7 +3071,7 @@ authentication.
 
 #+begin_stdout
 YOURLS_TRAEFIK_HOST: Enter the YOURLS domain name (e.g., yourls.example.com)
-: yourls.pi5.forwarding.network
+: yourls.pi.example.com
 
 ? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
 > No
@@ -2730,7 +3089,7 @@ Choose your own a secure passphrase!
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d make yourls install wait
+pi make yourls install wait
 #+end_run
 
 Wait for the services to start and report themselves as healthy:
@@ -2744,9 +3103,7 @@ All services healthy.
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-d context use sentry
-
-d make traefik config
+sentry make traefik config
 #+end_run
 
 #+begin_stdout
@@ -2777,7 +3134,7 @@ d make traefik config
   Disable layer 7 TLS Proxy
 
 Enter the public domain (SNI) for the route:
-: yourls.pi5.example.com
+: yourls.pi.example.com
 
 Enter the destination IP address to forward to:
 : 10.13.16.2
@@ -2791,7 +3148,7 @@ Enter the destination TCP port to forward to:
 ## Configured Layer 7 Routes:
 Entrypoint              Destination_address  Destination_port  Proxy_protocol
 ----------              -------------------  ----------------  --------------
-yourls.pi5.example.com  10.13.16.2           443               2
+yourls.pi.example.com  10.13.16.2           443               2
 #+end_stdout
 
 Press =ESC= three times to go back to the main menu, and re-install Traefik:
@@ -2811,7 +3168,7 @@ After installation, press =ESC= to quit the config tool.
 #+attr_shortcode: :title Immediately secure the admin account :style warning
 #+begin_notice
 You should immediately open the URL in your web browser:
-=https://yourls.pi5.example.com/admin= and complete the initial
+=https://yourls.pi.example.com/admin= and complete the initial
 configuration to finsh installation.
 #+end_notice
 
