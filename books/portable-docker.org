@@ -132,35 +132,38 @@ Traditionally, d.rymcg.tech suggests to install itself /on a separate
 workstation/ and urges you to never actually login to your Docker
 server, but rather to exclusively control it remotely from your
 workstation. This is one of the ways to follow the good DevOps
-practice, summed up by the metaphor: "Treat your infrastructure like
-cattle, not like pets." However, this strategy has the drawback that
-if you lose access to your workstation, it makes it diffcult to
-adminster the server (you would have to recreate your =.env= files on
-a new workstation, from backup, or from scratch).
+practice summed up by the metaphor:
 
-To avoid this complexity, and to require keeping everything portable
-in one package, as well as to make it easier to maintain after long
+"Treat your infrastructure like cattle, not like pets."
+
+However, the cattle ranching strategy has the drawback that if you
+lose access to your workstation, it makes it diffcult to adminster the
+remaining server (you would have to recreate your =.env= files on a
+new workstation, from backup, or from scratch).
+
+To avoid this complexity and to require keeping everything portable in
+one package, as well as to make it easier to maintain after long
 periods of inactivity and forgetfulness, we will make an important
 compromise and an exception to the normal DevOps rule:
 
 #+attr_shortcode: :title The Raspberry Pi serves the role of workstation AND server :style info
 #+begin_notice
-In this book, the configuration tools (d.rymcg.tech) will be installed
-/to the same server/ that runs Docker, rather than the usual
+*In this book*, the configuration tools (d.rymcg.tech) will be
+installed /to the same server/ that runs Docker, rather than the usual
 recomendation to do so on a separate workstation. Comingling the roles
-of server and workstation means you've got everything together in one
-little portable box, and it will make everything easier to get started
-with. Your portable Pi is therefore a /pet/ Docker server, plus
-workstation, all in one.
+of server and workstation on the Pi means you'll have everything
+together in one little box and it will make everything easier to get
+(re)started with. Your portable Pi is therefore a /pet/ Docker server,
+plus workstation, all in one.
 
 If you had a whole fleet of Raspberry Pis to manage, this would be a
 terrible idea, because you would be missing the centralized
 workstation to control them all, and you'd have to login to each one
-of them and configure them directly. However, you will likely start
-this journey with only one Pi to manage, so this is a good initial
-compromise to make. If you want to build a proper workstation that can
-control several servers from one location, read the [[/linux-workstation/][Linux Workstation]]
-book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
+of them individually and configure them directly. However, you will
+likely start this journey with only one Pi to manage, so this is a
+good initial compromise to make. If you want to build a proper
+workstation that can control several servers from one location, read
+the [[/linux-workstation/][Linux Workstation]] book and the main [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
 
 If you are going to seriously travel with this device, you should
 consider [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][installing full disk encryption]] and requiring remote SSH
@@ -170,10 +173,16 @@ scope of this book.
 
 ** Your console client
 
-So, if the workstation is on the Raspberry Pi, you're still going to
-need to travel with another computer (e.g., a laptop) and set that up
-with an SSH key on it, so you can remotely log in to the Pi (unless
-you want to carry a display and keyboard to plug into it directly).
+Unless you want to carry a display and keyboard to plug directly into
+the Raspberry Pi, you're still going to need to travel with another
+computer (e.g., a laptop) and set that up with an SSH key on it, so
+that you can remotely log in to the Pi.
+
+You can use any sort of computer, as long as its capable of running a
+terminal and an SSH client. If it runs Linux, MacOS, or Windows,
+you'll also be able to use this computer to run the [[https://www.raspberrypi.com/software/][rpi-imager]]
+application for preparing the SD-card. Most Linux distros have this
+available in their package manager.
 
 **** Editing files on the Pi
 
@@ -184,9 +193,12 @@ options in that regard:
  * Learn how to use one of the many terminal mode text editors (Emacs,
    Vim, nano, etc.) and edit the files through an SSH console directly
    on the Pi.
- * Setup your personal computer with an editor that works over SSH
-   (Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc.)
- * Edit the files locally and copy the files with scp, [[https://wiki.archlinux.org/title/Rsync][rsync]], or
+ * Setup your personal workstation with an editor that works over SSH
+   (Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's
+   [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote
+   SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc.)
+ * Edit the files locally and copy the files with scp,
+   [[https://wiki.archlinux.org/title/Rsync][rsync]], or
    [[https://blog.rymcg.tech/blog/linux/rclone_sync/][rclone]].
 
 ** Next steps
@@ -561,14 +573,17 @@ fit one.
 
 [[/img/portable-docker/penguin.webp]]
 
-The best way to install Raspberry Pi OS onto an SD-card, is to use the
-[[https://www.raspberrypi.com/documentation/computers/getting-started.html][rpi-imager program]] from another computer. This allows you to set up the
-user account, network settings, and SSH credentials all from the
-imager software.
+The best way to install Raspberry Pi OS onto an SD-card, is to use
+[[https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system][rpi-imager]] from another computer. This allows you to set up the user
+account, network settings, and SSH credentials all from the imager
+software.
 
- * [[https://www.raspberrypi.com/software/][Download the Raspberry PI
-   Imager]] or install
-   =rpi-imager= from your package manager.
+
+*** rpi-imager
+
+ * On your personal workstation,
+   [[https://www.raspberrypi.com/software/][Download the Raspberry PI
+   Imager]] or install =rpi-imager= from your package manager.
  * Run =rpi-imager=.
  * Click on the menu labled =Rasperry Pi Device=.
    * Choose your model of raspberry pi.
@@ -644,15 +659,13 @@ arp -a
    the IP address will be printed to the console when it boots.
    
 
-*** Create SSH config on your workstation
+*** Create SSH config on your personal workstation
 
-You should try to connect to the Raspberry Pi from another computer
-(which from now is to be refered to as your "workstation").
-
-To do so, you will need to create an SSH config on your workstation,
-containing the temporary local IP address of the Raspberry Pi. This
-config is somewhat temporary, and once DNS is set up later on, it can
-be replaced with a permanent hostname config.
+To connect your personal workstation to your Raspberry Pi,
+you will need to create an SSH config on your workstation, containing
+the temporary local IP address of the Raspberry Pi. This config is
+somewhat temporary, and once DNS is set up later on, it can be
+replaced with a permanent hostname config.
 
 #+begin_run
 cat &lt;&lt;EOF &gt&gt ~/.ssh/config
@@ -803,6 +816,7 @@ majority of cases. However, you may wish to hardcode specific DNS servers instea
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
+sudo rm -f /etc/resolv.conf
 echo -e "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf
 sudo chattr +i /etc/resolv.conf
 #+end_run
@@ -1093,10 +1107,10 @@ selection wizards in Bash a lot nicer.
 
 #+begin_stdout
 ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
-: d.example.com
+: pi.example.com
 #+end_stdout
 
-Instead of =d.example.com= you should type the actual domain name (or
+Instead of =pi.example.com= you should type the actual domain name (or
 subdomain name) that you want to use as the root domain for all of
 your services on this server.
 
@@ -1104,9 +1118,9 @@ For example, if you entered =example.com=, you will later install apps
 (e.g., =whoami=) with subdomains like =whoami.example.com=. Choosing a
 deeper subdomain has the benefit of being able to share a single root
 domain name amongst several Docker instances, therefore with the
-example of =d.example.com= the service would be deployed like
-=whoami.d.example.com=, and a second Docker instance could use
-=d2.example.com=, with services like =whoami.d2.example.com=.
+example of =pi.example.com= the service would be deployed like
+=whoami.pi.example.com=, and a second Docker instance could use
+=pi2.example.com=, with services like =whoami.pi2.example.com=.
 
 **** Choose to save generated passwords.json files by default
 #+begin_stdout
@@ -1341,20 +1355,20 @@ DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean
 
 Next enter the domain names you want listed on this certificate:
 
- * =d.example.com= (this is your main domain name CN record for the server.)
- * =*.d.example.com= (this is your various app sub-domains wildcard
-   SANS record, matching e.g., =whoami.d.example.com=)
+ * =pi.example.com= (this is your main domain name CN record for the server.)
+ * =*.pi.example.com= (this is your various app sub-domains wildcard
+   SANS record, matching e.g., =whoami.pi.example.com=)
  * Any other domains you want listed on the same certificate.
    
 
 #+begin_stdout
 
 Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
-: d.example.com
+: pi.example.com
 
 Now enter additional domains (SANS), one per line:
 Enter a secondary domain (enter blank to skip)
-: *.d.example.com
+: *.pi.example.com
 
 Enter a secondary domain (enter blank to skip)
 : 
@@ -1367,9 +1381,9 @@ enter a blank response to signify you are done.
 
 #+begin_stdout
 Main domain:
- pi5.example.com
+ pi.example.com
 Secondary (SANS) domains:
- *.pi5.example.com
+ *.pi.example.com
 #+end_stdout
 
 Finally a summary of the certificate request is printed.
@@ -1472,7 +1486,7 @@ that it receives (reflecting them back to the requesting client):
 
 #+attr_shortcode: :title Run this later after you install it: :style none
 #+begin_run
-curl https://whoami.example.com
+curl https://whoami.pi.example.com
 #+end_run
 
 #+begin_stdout
@@ -1517,7 +1531,7 @@ for its URL:
 
 #+begin_stdout
 WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
-​: whoami.d.example.com
+​: whoami.pi.example.com
 #+end_stdout
 
 Optional authentication can be configured:
@@ -1548,11 +1562,12 @@ you need to set a temporary local DNS override in the Raspberry Pi's
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-echo "127.0.1.1       whoami.d.example.com" | sudo tee -a /etc/hosts
+echo "127.0.1.1       whoami.pi.example.com" | sudo tee -a /etc/hosts
 #+end_run
 
+#+attr_shortcode: :style tip
 #+begin_notice
-Replace whoami.d.exmaple.com with the same domain name you set for WHOAMI_TRAEFIK_HOST.
+Replace =whoami.pi.example.com= with the same domain name you set for =WHOAMI_TRAEFIK_HOST=.
 #+end_notice
 
 
@@ -1569,7 +1584,7 @@ The =open= target uses the =xdg-open= tool to automatically open your
 preferred web browser to the given application's URL. Since you are
 connected to the Raspberry Pi's text console over SSH, you are limited
 to text-mode browsers. [[https://w3m.sourceforge.net/][w3m]] will be used in this instance to display
-the page. To quit =w3m=, press =q=, then =y=.
+the page.
 #+end_notice
 
 #+begin_stdout
@@ -1580,13 +1595,13 @@ IP: ::1
 IP: 172.19.0.2
 RemoteAddr: 172.19.0.1:50156
 GET / HTTP/1.1
-Host: whoami.d.example.com
+Host: whoami.pi.example.com
 User-Agent: w3m/0.5.3+git20230121
 Accept: text/html, text/*;q=0.5, image/*, application/*
 Accept-Encoding: gzip, compress, bzip, bzip2, deflate
 Accept-Language: en;q=1.0
 X-Forwarded-For: 127.0.0.1
-X-Forwarded-Host: whoami.d.example.com
+X-Forwarded-Host: whoami.pi.example.com
 X-Forwarded-Port: 443
 X-Forwarded-Proto: https
 X-Forwarded-Server: pi5
@@ -1600,10 +1615,12 @@ If you see output like printed above, you have confirmed that Whoami
 and Traefik are functioning correctly. The status bar of =w3m= shows
 =Viewing[SSL]= which confirms that TLS is successfully working.
 
+To quit =w3m=, press =q=, then =y=.
+
 Alternatively, test it with curl:
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-curl https:://whoami.sentry.example.com
+curl https:://whoami.pi.example.com
 #+end_run
 
 If the TLS certificate has not been issued yet, you will get this
@@ -1625,14 +1642,14 @@ curl to ignore the error (=-k=):
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 ## This is insecure, but fine for testing:
-curl -k https://whoami.sentry.example.com
+curl -k https://whoami.pi.example.com
 #+end_run
 
 You can further verify the TLS certificate is issued correctly:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-openssl s_client -connect whoami.example.com:443 </dev/null
+d script tls_debug whoami.pi.example.com
 #+end_run
 
 #+begin_stdout
@@ -1643,8 +1660,8 @@ issuer=C = US, O = Let's Encrypt, CN = R10
 
  * If the issuer is =Let's Encrypt=, then the certificate is valid ✅.
  * If the issuer is =TRAEFIK DEFAULT CERT=, then there is some kind of
-   problem 💥, and you will need to inspect the logs.
-
+   problem 💥, and you will need to inspect the traefik logs (see next
+   section).
 
 **** View the logs
 
@@ -1660,7 +1677,7 @@ To check the Traefik logs, do similar:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
-d make traefik logs
+d make traefik logs service=traefik
 #+end_run
 
 *** Next steps
@@ -1699,9 +1716,9 @@ index
  - Click =Settings= in the menu.
  - Click on the =Security= tab.
  - Click on the =Add SSH Key= button.
- - Paste your public SSH key into the box. (copy the contents of =~/.ssh/id_ed25519.pub=.)
- - Enter a key name, I recommend this be the same as the hostname of
-   your raspberry pi.
+ - Paste the public SSH key of the =pi= user into the box. (copy the
+   contents of =~/.ssh/id_ed25519.pub= from the Raspberry Pi.)
+ - Enter a key name e.g., =pi@pi.example.com=.
  - Finish adding the key, click =Add SSH Key=.
 #+end_notice
 
@@ -1760,12 +1777,11 @@ index
    and/or create a 1GB swapfile. Do not abuse swap space like this in
    production! However I think its fine for development use, but you
    may occasionally run into low memory issues if less than 1GB.)
- * Select the SSH key uploaded from the pi user to use as the root
-   user on the droplet.
- * Set the hostname for the docker server. The name should be short
+ * Select the =pi= user's SSH key to access this droplet.
+ * Set the hostname for the Docker server. The name should be short
    and typeable, as it will become a part of the canononical service
    URLs. For this example, we choose =sentry=.
- * Verify everything's correct, and then click =Create Dropet=.
+ * Verify everything is correct, and then click =Create Dropet=.
 #+end_notice
 
 **** Apply the DigitalOcean droplet firewall
@@ -1774,7 +1790,7 @@ index
 #+begin_notice
  * Login to the [[https://cloud.digitalocean.com/][DigitalOcean cloud console]].
  * Click =Networking= in the menu.
- * Find the firewall template you created, and click it.
+ * Find the firewall template you created, and click on it.
  * Click on the firewall's =Droplets= tab.
  * Click =Add Droplets= and search for the droplet you created and select it.
  * Click =Add Droplet= to add the firewall to the droplet.
@@ -1801,11 +1817,11 @@ index
    * Will direct to: select the same droplet as before.
    * Click =Create Record=.
  * Create another =A= record, for the Raspberry Pi:
-   * Hostname: e.g., =pi5.example.com=.
+   * Hostname: e.g., =pi.example.com=.
    * Will direct to to: select the same droplet as before.
    * Click =Create Record=.
  * Create another =A= record, for the wildcard of the Raspberry Pi:
-   * Hostname: e.g., =*.pi5.example.com=.
+   * Hostname: e.g., =*.pi.example.com=.
    * Will direct to to: select the same droplet as before.
    * Click =Create Record=.
  * Create any more =A= records that you may need.
@@ -1871,6 +1887,12 @@ Host sentry
     ControlPath /tmp/ssh-%u-%r@%h:%p
 EOF
 #+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+The Hostname value should point to the same name you created the DNS
+entry for the sentry.
+#+end_notice
 
 *** Test the connection from the Pi to the sentry
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
@@ -2286,6 +2308,9 @@ TRAEFIK_VPN_PORT: Enter the Traefik VPN TCP port number (e.g., 51820)
 Enter the Traefik VPN peers list
 : pi
 #+end_stdout
+
+You can have as many peers as you want, use commas to seprate the
+names. Multiple peers can share the same sentry.
 
 Press =ESC= three times to back out of the main menu and quit the
 program.
