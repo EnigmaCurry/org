@@ -1499,6 +1499,7 @@ whether or not the TLS certificate is installed correctly.
 
 Create a new config:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 d make whoami config
 #+end_run
@@ -1526,6 +1527,7 @@ For now, choose =No=, to disable authentication.
 
 Install whoami:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 d make whoami install
 #+end_run
@@ -1547,7 +1549,7 @@ Replace whoami.d.exmaple.com with the same domain name you set for WHOAMI_TRAEFI
 #+end_notice
 
 
-**** Open whoami in the web browser
+**** Testing whoami
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -1591,6 +1593,34 @@ If you see output like printed above, you have confirmed that Whoami
 and Traefik are functioning correctly. The status bar of =w3m= shows
 =Viewing[SSL]= which confirms that TLS is successfully working.
 
+Alternatively, test it with curl:
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+curl https:://whoami.sentry.example.com
+#+end_run
+
+If the TLS certificate has not been issued yet, you will get this
+error from curl (and a similar error in =w3m=):
+
+#+begin_stdout
+curl: (60) SSL certificate problem: self-signed certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+#+end_stdout
+
+Simply wait a bit longer for the TLS cert to issue, or check the logs
+for errors (=d make traefik logs service=traefik=). You can also tell
+curl to ignore the error (=-k=):
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+## This is insecure, but fine for testing:
+curl -k https://whoami.sentry.example.com
+#+end_run
+
 You can further verify the TLS certificate is issued correctly:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
@@ -1614,12 +1644,14 @@ issuer=C = US, O = Let's Encrypt, CN = R10
 It may be necessary to inspect the applicaiton logs, which you can do
 so as follows:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 d make whoami logs
 #+end_run
 
 To check the Traefik logs, do similar:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 d make traefik logs
 #+end_run
@@ -2100,12 +2132,14 @@ exposed the whoami running on the Raspberry Pi publicly.
 
 You can open the page in =w3m=:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 d make whoami open
 #+end_run
 
 Or test it with curl:
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 curl https:://whoami.sentry.example.com
 #+end_run
@@ -2124,8 +2158,9 @@ how to fix it, please visit the web page mentioned above.
 
 Simply wait a bit longer for the TLS cert to issue, or check the logs
 for errors (=d make traefik logs service=traefik=). You can also tell
-curl to ignore the error:
+curl to ignore the error (=-k=):
 
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
 ## This is insecure, but fine for testing:
 curl -k https://whoami.sentry.example.com
