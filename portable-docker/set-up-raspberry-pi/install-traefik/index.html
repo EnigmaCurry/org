@@ -23,19 +23,19 @@ Basic Traefik config Run this on the Raspberry Pi d make traefik config This pre
     <meta itemprop="name" content="Install Traefik :: book.rymcg.tech">
     <meta itemprop="description" content="Traefik is the application proxy (HTTP / TCP / UDP) that is the entrypoint, and router, for all of your web services. Traefik facilitates automatic TLS certificate requests via Let’s Encrypt, and handles transport security for all of your applications. Traefik is configured to support several authentication &#43; sentry authorization mechanisms, including: HTTP Basic Auth, OAuth2, mutual TLS, and IP address filtering.
 Basic Traefik config Run this on the Raspberry Pi d make traefik config This presents the interactive configuration menu for Traefik:">
-    <meta itemprop="wordCount" content="1142">
+    <meta itemprop="wordCount" content="1103">
     <title>Install Traefik :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727912942" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727912942" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727912942" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727912942" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727912942" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727912942" rel="stylesheet">
-    <link href="/css/fonts.css?1727912942" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727912942" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727912942" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727912942" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727912942" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727912942" rel="stylesheet">
-    <link href="/css/print.css?1727912942" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727912942"></script>
+    <link href="/css/fontawesome-all.min.css?1727925453" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727925453" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1727925453" rel="stylesheet">
+    <link href="/css/auto-complete.css?1727925453" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727925453" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1727925453" rel="stylesheet">
+    <link href="/css/fonts.css?1727925453" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727925453" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1727925453" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1727925453" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1727925453" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1727925453" rel="stylesheet">
+    <link href="/css/print.css?1727925453" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1727925453"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -257,198 +257,124 @@ TRAEFIK_WEBSECURE_ENTRYPOINT_PROXY_PROTOCOL_TRUSTED_IPS: Enter the comma separat
 </div>
 
 <p>Press <code>ESC</code> two times to get back to the traefik config menu.</p>
-<h4 id="tls-certificates-and-authorities">TLS certificates and authorities</h4>
-<ul>
-<li>Select <code>TLS certificates and authorities</code>.</li>
-<li>Select <code>Configure ACME (Let's Encrypt or Step-CA)</code>.
-<ul>
-<li>Select <code>Let's Encrypt (ACME)</code>.</li>
-<li>Select <code>Production (recommended!)</code> to choose the production Lets
-Encrypt environment.</li>
-<li>Select <code>DNS-01</code> as the ACME challenge type.</li>
-<li>Enter an email address for ACME registration (100% optional)</li>
-</ul>
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>TRAEFIK_ACME_DNS_PROVIDER</p>
-<ul>
-<li>Enter the ACME DNS provider: <code>digitalocean</code></li>
-</ul>
+<h4 id="configure-acme">Configure ACME</h4>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-    TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (e.g., digitalocean)
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
 
-    : digitalocean
-    </pre>
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+> Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+
+? Which ACME provider do you want to use?
+> Let's Encrypt (ACME)
+  Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+
+? Which LE environment do you want to use?
+> Production (recommended!)
+  Staging (untrusted / testing)
+
+Which type of ACME challenge should be used?
+  TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+> DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+
+TRAEFIK_ACME_CA_EMAIL: Enter your email address (not required; blank to skip)
+
+:
+
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+
+: digitalocean
+
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+
+: DO_AUTH_TOKEN
+
+TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+
+:
+
+Now to enter the values for the custom DNS API variables:
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
+
+: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre>
     </div>
 </div>
 
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>TRAEFIK_ACME_DNS_VARNAME_1</p>
-<ul>
-<li>Enter the  VAR <em>name</em> that  the DigitalOcean LEGO  provider uses,
-which is literally: <code>DO_AUTH_TOKEN</code></li>
-<li>(<a href="https://go-acme.github.io/lego/dns/index.html" rel="external" target="_blank">If you use a
-different DNS provider, lookup the LEGO docs for the specific var
-names used by your provider.</a>)</li>
-</ul>
+<h4 id="request-tls-certificates">Request TLS certificates</h4>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-    You need to enter the NAMES of these variables that your provider needs.
-    You can enter up to 5 variable names and/or leave them blank
-    TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (e.g., DO_AUTH_TOKEN)
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+> Configure TLS certificates (make certs)
 
-    : DO_AUTH_TOKEN
-    </pre>
+? Configure Traefik TLS certificates
+  Manage all certificates.
+> Create a new certificate.
+  Done / Go back
+</pre>
     </div>
 </div>
 
-</li>
-</ul>
-<!--list-separator-->
+<p>Next enter the domain names you want listed on this certificate:</p>
 <ul>
-<li>
-<p>TRAEFIK_ACME_DNS_VARNAME_2</p>
-<ul>
-<li>Enter a blank value for the second VAR name, because there are no
-additional variables to enter:</li>
+<li><code>d.example.com</code></li>
+<li><code>*.d.example.com</code></li>
 </ul>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-    TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
 
-    :
-    </pre>
-    </div>
-</div>
+: d.example.com
 
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>DO_AUTH_TOKEN</p>
-<ul>
-<li>Enter the actual value for the <code>DO_AUTH_TOKEN</code>:</li>
-</ul>
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
 
-<div class="box notices cstyle secondary">
-  <div class="box-label">DO_AUTH_TOKEN</div>
-  <div class="box-content">
+: *.d.example.com
 
-<pre><code>The value of DO_AUTH_TOKEN should be the DigitalOcean Personal Access Token
-</code></pre>
-</div>
-</div>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-    Now to enter the values for the custom DNS API variables:
-    DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
+Enter a secondary domain (enter blank to skip)
 
-    : xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    </pre>
-    </div>
-</div>
-
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>Select <code>Configure TLS certificates (make certs)</code>.</p>
-<ul>
-<li>Select <code>Create a new certificate</code></li>
-</ul>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-    > Traefik Configuration: TLS certificates and authorities
-
-    > Traefik TLS config: Configure TLS certificates (make certs)
-
-    > Configure Traefik TLS certificates Create a new certificate.
-    Set TRAEFIK_ACME_CERT_DOMAINS=[["",[]]]
-    Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
-
-    : d.example.com
-    </pre>
-    </div>
-</div>
-
-<p>Instead of <code>d.example.com</code>, enter the same root domain name you chose
-before.</p>
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>Enter secondary (SANS) domains</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-    Now enter additional domains (SANS), one per line:
-    Enter a secondary domain (enter blank to skip)
-
-    : *.d.example.com
-    </pre>
-    </div>
-</div>
-
-<p>For the SANS domain, enter the wildcard subdomain of the same domain
-as before, like <code>*.d.example.com</code>.</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-    Enter a secondary domain (enter blank to skip)
-
-    :
-    </pre>
+:
+</pre>
     </div>
 </div>
 
 <p>It will continue asking you to enter additional SANS domains until you
 enter a blank response, so just press Enter on the blank line.</p>
-</li>
-</ul>
-<!--list-separator-->
-<ul>
-<li>
-<p>Certificate summary</p>
+<h4 id="certificate-summary">Certificate summary</h4>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-    Main domain:
-     pi5.example.com
-    Secondary (SANS) domains:
-     *.pi5.example.com
-    </pre>
+Main domain:
+ pi5.example.com
+Secondary (SANS) domains:
+ *.pi5.example.com
+</pre>
     </div>
 </div>
 
 <p>Finally a summary of the certificate request is printed.</p>
 <ul>
 <li>Press the <code>ESC</code> key three times to go back to the main menu.</li>
-</ul>
-</li>
 </ul>
 <h4 id="error-page-template">Error page template</h4>
 <p>You can customize the <a href="https://github.com/tarampampam/error-pages#-templates" rel="external" target="_blank">Traefik error page template</a> by selecing a custom
@@ -565,12 +491,12 @@ traefik-traefik-1      .env_pi_default  traefik-traefik                 running
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727912942" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727912942" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727912942" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727912942" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727912942" defer></script>
-        <script src="/js/search.js?1727912942" defer></script>
+        <script src="/js/auto-complete.js?1727925453" defer></script>
+        <script src="/js/lunr/lunr.min.js?1727925453" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1727925453" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1727925453" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1727925453" defer></script>
+        <script src="/js/search.js?1727925453" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -712,14 +638,14 @@ traefik-traefik-1      .env_pi_default  traefik-traefik                 running
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 2, 2024 at 11:49pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 3, 2024 at 3:17am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727912942" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727912942" defer></script>
-    <script src="/js/theme.js?1727912942" defer></script>
+    <script src="/js/clipboard.min.js?1727925453" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1727925453" defer></script>
+    <script src="/js/theme.js?1727925453" defer></script>
   </body>
 </html>
