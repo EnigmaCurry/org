@@ -10,30 +10,44 @@
 
 (message "Starting bootstrap process")
 (let
-  (
-    (bootstrap-file
+    (
+     (bootstrap-file
       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        user-emacs-directory))
-    (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-      (url-retrieve-synchronously
-        "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-        'silent
-        'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+       "straight/repos/straight.el/bootstrap.el"
+       user-emacs-directory))
+     (bootstrap-version 5))
+  (condition-case err
+      (progn
+        (unless (file-exists-p bootstrap-file)
+          (with-current-buffer
+              (url-retrieve-synchronously
+               "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+               'silent
+               'inhibit-cookies)
+            (goto-char (point-max))
+            (eval-print-last-sexp)))
+        (load bootstrap-file nil 'nomessage))
+    (error
+     (message "Error during bootstrap process: %s" err)
+     (print-straight-process-buffer)
+     (kill-emacs 1))))
 (message "Bootstrap process complete")
+
+;; Function to print the *straight-process* buffer if it exists
+(defun print-straight-process-buffer ()
+  "Print the contents of the *straight-process* buffer to stderr if it exists."
+  (let ((buffer (get-buffer "*straight-process*")))
+    (when buffer
+      (with-current-buffer buffer
+        (princ (buffer-string) #'external-debugging-output)))))
 
 ;; Use-package for all dependencies :: https://github.com/jwiegley/use-package
 (message "Installing use-package")
 (straight-use-package 'use-package)
-;; Make use-package use straight.el by default:
 (setq straight-use-package-by-default t)
 (message "use-package installed and configured")
 
+;; Example of ox-hugo configuration
 (message "Configuring ox-hugo")
 (use-package ox-hugo
   :after org
@@ -49,6 +63,7 @@
           ("edit" :raw t)
           ("env" :raw t)
           ("math" :raw t))))
+(message "ox-hugo configuration complete")
 
 (use-package f)
 
@@ -63,8 +78,5 @@
       (find-file e)
       (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)))
   (message "Build process complete"))
-
-;; Run this occasionally, to lock new package versions:
-;; (straight-freeze-versions)
 
 (message "init.el loading complete")
