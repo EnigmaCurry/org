@@ -6,10 +6,18 @@
 (message "Setting user-emacs-directory")
 (setq user-emacs-directory "~/git/vendor/enigmacurry/org/emacs.d")
 
-;; Use a mirror for nongnu-elpa
+;; Use melpa, gnu-elpa-mirror, and nongnu-elpa as recipe repositories
 (setq straight-recipe-repositories
       '(melpa gnu-elpa-mirror nongnu-elpa))
+
 ;; Override the default nongnu-elpa URL with a mirror
+(setq straight-recipe-overrides
+      '((nongnu-elpa . ((:type git
+                               :host github
+                               :repo "EnigmaCurry/nongnu-elpa"
+                               :branch "main")))))
+
+
 (setq straight-recipe-overrides
       '((nil . ((nongnu-elpa :type git :host github :repo "EnigmaCurry/nongnu-elpa")))))
 
