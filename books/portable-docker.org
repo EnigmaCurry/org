@@ -2606,13 +2606,14 @@ index
 :END:
 
 [[https://forgejo.org/][Forgejo]] is a self-hosted git forge similar to [[https://docs.github.com/en/get-started/start-your-journey/about-github-and-git][GitHub]]. Forgejo is a
-fork of [[https://github.com/go-gitea/gitea?tab=readme-ov-file#gitea][Gitea]], which is a fork of [[https://github.com/gogs/gogs][Gogs]]. Installing Forgejo is useful
-for two unrelated purposes:
+fork of [[https://github.com/go-gitea/gitea?tab=readme-ov-file#gitea][Gitea]], which is a fork of [[https://github.com/gogs/gogs][Gogs]].
+
+Installing Forgejo is useful for two unrelated purposes:
 
  * Self-hosting your own git repositories.
  * Providing an OAuth2 identity service for your organization,
-   facilitating single-sign on to all of your apps via Traefik
-   [[https://doc.traefik.io/traefik/middlewares/http/forwardauth/][forward-auth middleware]] ([[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik-forward-auth#readme][traefik-forward-auth]]).
+   facilitating single-sign on to all of your apps via Traefik's
+   [[https://doc.traefik.io/traefik/middlewares/http/forwardauth/][forward-auth middleware]].
 
 #+attr_shortcode: :style info :title Forgejo is fundamental infrastructure
 #+begin_notice
@@ -2623,7 +2624,7 @@ Even if you (or your users) have no need for storing git repositories,
 Forgejo is part of the fundamental infrastructure of securing other
 d.rymcg.tech apps via OAuth2. You can authenticate and authorize your
 users to access your apps via their Forgejo account (Sentry
-Authorization).
+Authorization), see the next chapter: [[/portable-docker/install-core-services/traefik-forward-auth][Traefik Forward Auth]].
 #+end_notice
 
 *** Configure Forgejo
@@ -2757,9 +2758,10 @@ the account icon in the top right, which expands a menu.
 
 *** Which account to use?
 
- * You should use the =root= account for creating new OAuth2 apps and creating new users.
+ * You should use the =root= account for creating new OAuth2 apps and
+   for creating new users.
  * You should use your personal account for storing your git
-   repositories, and for your identity when logging into other apps.
+   repositories and for your identity when logging into other apps.
 
 ** Traefik-Forward-Auth (Sentry Authorization)
 :PROPERTIES:
@@ -2910,6 +2912,152 @@ Press =ESC= three times to go back to the main menu, and re-install Traefik:
 
 After installation, press =ESC= to quit the config tool.
 
+*** Add user groups for Sentry Authorization
+
+With OAuth2 sentry authorization enabled, users are authorized to
+access apps only if they are a member of an authorized group for that
+app. You need to create the group membership lists in the Traefik
+config:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+  Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+> Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik middleware config:  
+  MaxMind geoIP locator
+> OAuth2 sentry authorization (make sentry)
+
+? Sentry Authorization Manager (main menu):  
+> Group Manager
+  User Manager
+  List all members
+  List authorized callback URLs
+  Quit
+
+> Sentry Authorization Manager (main menu): Group Manager
+? Choose a group to manage  
+> Create a new group
+
+? Enter the name of the group to create: whoami_test
+
+> Do you want to add users to this group now? Yes
+
+Enter the new user id(s) to add, one per line:
+? Enter a user ID (Press Esc or enter a blank value to finish)  me@example.com
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Replace =me@example.com= with the same *email address* that you used
+to sign up for your personal account in Forgejo. You can add more
+users to the group if you wish, when done enter a blank line.
+#+end_notice
+
+*** Re-configure whoami with Sentry Authorization (OAuth2)
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make whoami config
+#+end_run
+
+#+begin_stdout
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+: whoami.pi.example.com
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+
+? Which authorization group do you want to permit access to this app?  
+> whoami_test
+#+end_stdout
+
+Re-install whoami:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make whoami install
+#+end_run
+
+*** Test login for whoami
+
+Open the whoami app in your web browser: =https://whoami.pi.example.com=.
+
+You should be automatically redirected to the Foregjo app to login.
+
+The first time a Forgejo user authenticates to a sentry authorization
+protected app, they should see this prompt:
+
+[[/img/portable-docker/forgejo-authorize-app.webp]]
+
+Confirm by clicking the button =Authorize Application=.
+
+If the user is authorized, they should be automatically redirected
+back to the whoami app.
+
+The output of whoami now reflects the authorized user:
+
+#+begin_stdout
+Name: default
+Hostname: c863ccd86cec
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:38606
+GET / HTTP/1.1
+Host: whoami.pi.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.5
+Cookie: _forward_auth=xxxxxxxxxxxxxxxxxxxxxxxxxxx=|123456789|me@example.com
+Dnt: 1
+Priority: u=1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: same-site
+Sec-Fetch-User: ?1
+Te: trailers
+Upgrade-Insecure-Requests: 1
+X-Forwarded-For: 192.168.1.1
+X-Forwarded-Host: whoami.pi.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: pi
+X-Forwarded-User: me@example.com
+X-Real-Ip: 192.168.1.1
+#+end_stdout
+
+The request shows the new details:
+
+ * =Cookie= the cookie value is set by the traefik-forward-auth
+   middleware once the user is successfully authenticated.
+ * The =X-Forwarded-User= is passed to the application to identify the
+   validated user id (email address).
+
+*** Reconfigure other apps to use OAuth2
+
+All other apps may be protected with sentry authorization in the same manner as whoami.
+ 
 * Install apps
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install-web-services
