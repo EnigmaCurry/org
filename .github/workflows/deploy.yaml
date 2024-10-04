@@ -31,7 +31,16 @@ jobs:
         restore-keys: |
           hugo-themes-${{ runner.os }}-
 
-    # Install Emacs
+    # Cache Nix store
+    - name: Cache Nix store
+      uses: actions/cache@v3
+      with:
+        path: /nix/store
+        key: nix-store-${{ runner.os }}-${{ hashFiles('shell.nix') }}
+        restore-keys: |
+          nix-store-${{ runner.os }}-
+
+    # Install Emacs using Nix (via purcell/setup-emacs)
     - uses: purcell/setup-emacs@master
       with:
         version: 29.2
