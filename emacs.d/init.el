@@ -8,6 +8,14 @@
 
 (defvar bootstrap-version)
 
+;; Function to print the *straight-process* buffer if it exists
+(defun print-straight-process-buffer ()
+  "Print the contents of the *straight-process* buffer to stderr if it exists."
+  (let ((buffer (get-buffer "*straight-process*")))
+    (when buffer
+      (with-current-buffer buffer
+        (princ (buffer-string) #'external-debugging-output)))))
+
 (message "Starting bootstrap process")
 (let
     (
@@ -33,21 +41,12 @@
      (kill-emacs 1))))
 (message "Bootstrap process complete")
 
-;; Function to print the *straight-process* buffer if it exists
-(defun print-straight-process-buffer ()
-  "Print the contents of the *straight-process* buffer to stderr if it exists."
-  (let ((buffer (get-buffer "*straight-process*")))
-    (when buffer
-      (with-current-buffer buffer
-        (princ (buffer-string) #'external-debugging-output)))))
-
 ;; Use-package for all dependencies :: https://github.com/jwiegley/use-package
 (message "Installing use-package")
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 (message "use-package installed and configured")
 
-;; Example of ox-hugo configuration
 (message "Configuring ox-hugo")
 (use-package ox-hugo
   :after org
@@ -63,8 +62,8 @@
           ("edit" :raw t)
           ("env" :raw t)
           ("math" :raw t))))
-(message "ox-hugo configuration complete")
 
+(message "Loading f.el library")
 (use-package f)
 
 (defun build (root-dir)
