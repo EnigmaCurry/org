@@ -6,6 +6,13 @@
 (message "Setting user-emacs-directory")
 (setq user-emacs-directory "~/git/vendor/enigmacurry/org/emacs.d")
 
+;; Use a mirror for nongnu-elpa
+(setq straight-recipe-repositories
+      '(melpa gnu-elpa-mirror nongnu-elpa))
+;; Override the default nongnu-elpa URL with a mirror
+(setq straight-recipe-overrides
+      '((nil . ((nongnu-elpa :type git :host github :repo "EnigmaCurry/nongnu-elpa")))))
+
 (defvar bootstrap-version)
 
 ;; Function to print the *straight-process* buffer if it exists
