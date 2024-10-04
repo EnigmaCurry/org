@@ -11,28 +11,50 @@ jobs:
     permissions:
       contents: write
     steps:
+    - uses: actions/checkout@v4
+
+    # Cache Emacs packages in ~/.emacs.d/straight
+    - name: Cache Emacs packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.emacs.d/straight
+        key: emacs-packages-${{ runner.os }}-${{ hashFiles('**/straight/versions/default.el') }}
+        restore-keys: |
+          emacs-packages-${{ runner.os }}-
+
+    # Cache Hugo themes
+    - name: Cache Hugo themes
+      uses: actions/cache@v3
+      with:
+        path: hugo/themes
+        key: hugo-themes-${{ runner.os }}-${{ hashFiles('hugo/themes/**') }}
+        restore-keys: |
+          hugo-themes-${{ runner.os }}-
+
+    # Install Emacs
     - uses: purcell/setup-emacs@master
       with:
         version: 29.2
 
+    # Setup Hugo
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v2
       with:
         hugo-version: '0.123.7'
         extended: true
         
-    - uses: actions/checkout@v4
-
+    # Install dependencies (from Makefile)
     - name: Install
       run: 'make install'
-      
+
+    # Build the site (from Makefile)
     - name: Build
       run: 'make'
 
+    # Deploy to GitHub Pages
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./public
         cname: book.rymcg.tech
-
