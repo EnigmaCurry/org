@@ -2389,7 +2389,7 @@ X-Real-Ip: X.X.X.X
 :END:
 #+attr_shortcode: :depth 999
 
-[[/img/portable-docker/tunnel.webp]]
+[[/img/portable-docker/dragon.webp]]
 
 WireGuard will now be installed on the sentry and Raspberry Pi.
 WireGuard is a peer-to-peer connection, but for convience the sentry
@@ -2413,7 +2413,7 @@ index
 :EXPORT_HUGO_WEIGHT: 410
 :END:
 
-[[/img/portable-docker/dragon.webp]]
+[[/img/portable-docker/tunnel.webp]]
 
 *** Reconfigure Traefik to enable WireGuard server
 
@@ -2873,7 +2873,7 @@ Enter the destination TCP port to forward to:
 
 #+attr_shortcode: :style warning :title Disable Proxy Protocol for the public entrypoint
 #+begin_notice
-Make sure to disable Proxy Protocol, because SSH does not support it.
+Make sure to disable [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], because SSH does not support it.
 #+end_notice
 
 #+begin_stdout
@@ -2929,7 +2929,7 @@ ryan     pts/2    10.13.16.1       18:24    0.00s  0.01s  0.01s w
 
 #+attr_shortcode: :style tip
 #+begin_notice
-SSH does not support the Proxy Protocol, therfore there is no way to
+SSH does not support the [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], therfore there is no way to
 forward the real IP address of the client. The IP address of the SSH
 client will always appear to have the IP address of the sentry
 (=10.13.16.1=). You may enable the Traefik access logs on the sentry
@@ -2951,6 +2951,8 @@ and record the real IP address of the client at that point.
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 601
 :END:
+
+[[/img/portable-docker/core-services.webp]]
 
 There are a few services you should install before any others, which
 we will call core services:
@@ -3123,6 +3125,220 @@ the account icon in the top right, which expands a menu.
    for creating new users.
  * You should use your personal account for storing your git
    repositories and for your identity when logging into other apps.
+
+*** Enable access to repositories by SSH
+
+By default, Forgejo only supports cloning its hosted git repositories
+via HTTPS. To allow cloning by SSH, you must enable the Traefik SSH
+entrypoint:
+
+**** Enable the Traefik SSH entrypoint
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik entrypoint config  
+  Show enabled entrypoints
+> Configure stock entrypoints
+  Configure custom entrypoints
+
+? Select entrypoint to configure:  
+^ websecure : HTTPS (TLS encrypted HTTP)
+  web_plain : HTTP (unencrypted; specifically NOT redirected to websecure; must use different port than web)
+  mqtt : MQTT (mosquitto) pub-sub service
+> ssh : SSH (forgejo) git (ssh) entrypoint
+  xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
+  xmpp_s2s : XMPP (ejabberd) server-to-server entrypoint
+v mpd : Music Player Daemon (mopidy) control entrypoint
+
+> Do you want to enable the ssh entrypoint? Yes
+
+TRAEFIK_SSH_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (eg. 0.0.0.0)
+: 0.0.0.0
+
+TRAEFIK_SSH_ENTRYPOINT_PORT: Enter the host port to listen on (eg. 2222)
+: 2222
+
+? Is this entrypoint downstream from another trusted proxy?  
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through a trusted server. (Turn on Proxy Protocol)
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Do not enable Proxy Protocol
+#+begin_notice
+Do not enable Proxy Protocol, because it is not supported by SSH.
+#+end_notice
+
+Press =ESC= three times to go back to the main menu, then re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Once reinstalled, press =ESC= to exit the config tool.
+
+**** Create an entrypoint on the sentry
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+
+? Traefik Configuration:  
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Custom Entrypoints: <canceled>
+
+? Traefik entrypoint config  
+  Show enabled entrypoints
+  Configure stock entrypoints
+> Configure custom entrypoints
+
+? Traefik entrypoint config  
+  Show enabled entrypoints
+  Configure stock entrypoints
+> Configure custom entrypoints
+
+? Custom Entrypoints:  
+  List custom entrypoints
+> Add new custom entrypoint
+  Remove custom entrypoints
+
+Adding a custom TCP/UDP entrypoint - 
+
+ * Make sure to enable the port in all upstream firewalls.
+ * Make sure each entrypoint has a unique lower-case one-word name.
+
+Enter the new entrypoint name:
+: forgejo
+
+Enter the entrypoint listen address:
+: 0.0.0.0
+
+Enter the entrypoint port:
+: 2222
+
+Enter the protocol (tcp or udp):
+: tcp
+? Is this entrypoint downstream from another trusted proxy?  
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through another trusted proxy. (Turn on Proxoy Protocol)
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Do not enable Proxy Protocol
+#+begin_notice
+SSH does not support [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], so be sure to disable it.
+#+end_notice
+
+Press =ESC= three times to go back to the main menu.
+
+**** Create a route from the sentry to the Pi
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+  
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+  Configure layer 7 TLS proxy
+> Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 4 TCP/UDP Proxy:  
+  List layer 4 ingress routes
+> Add new layer 4 ingress route
+  Remove layer 4 ingress routes
+  Disable layer 4 TCP/UDP Proxy
+
+? Entrypoint  
+> forgejo
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 2222
+
+##
+## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
+
+> Do you want to enable Proxy Protocol for this route? No
+Set TRAEFIK_LAYER_4_TCP_UDP_PROXY_ROUTES=ssh_pi:10.13.16.2:22:0,forgejo:10.13.16.2:2222:0
+## Configured Layer 4 Routes:
+Entrypoint  Destination_address  Destination_port  Proxy_protocol
+----------  -------------------  ----------------  --------------
+forgejo     10.13.16.2           2222              0
+ssh_pi      10.13.16.2           22                0
+#+end_stdout
+
+Press =ESC= three times to go back to main menu, then re-install
+Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Once reinstalled, press =ESC= to exit the config tool.
+
+**** Test cloning a repository via SSH
+
+ * Login to your Forgejo instance
+ * Create a new repository
+ * On the repository page, click on SSH and copy the SSH URL.
+
+#+begin_run
+git clone ssh://git@git.pi.example.com:2222/username/repository.git
+#+end_run
 
 ** Traefik-Forward-Auth (sentry authorization)
 :PROPERTIES:
@@ -3418,7 +3634,11 @@ The request shows the new details:
 *** Reconfigure other apps to use OAuth2
 
 All other apps may be protected with sentry authorization in the same manner as whoami.
- 
+
+*** Next steps
+
+ * Install apps.
+
 * Install apps
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install-web-services
