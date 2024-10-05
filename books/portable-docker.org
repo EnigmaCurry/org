@@ -763,6 +763,65 @@ Filesystem      Size  Used Avail Use% Mounted on
 log2ram         128M   14M  115M  11% /var/log
 #+end_stdout
 
+
+*** Monitor kernel logs
+
+During the first day or so of setting this machine up, it is
+recommended to actively monitor the kernel logs, checking for errors.
+
+#+begin_run
+## Just leave this running in a separate terminal as you keep working..
+sudo dmesg -w
+#+end_run
+
+**** Disable power saving on NVME storage
+
+#+attr_shortcode: :style info :title How to disable power saving on the NVME drive
+#+begin_notice
+Out of two identical kits, I encountered one error in the kernel log
+on one machine but not on the other, so you may or may not run into
+this error:
+
+#+begin_stdout
+[  359.477209] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x11
+[  359.477218] nvme nvme0: Does your device have a faulty power saving mode enabled?
+[  359.477220] nvme nvme0: Try "nvme_core.default_ps_max_latency_us=0 pcie_aspm=off" and report a bug
+[  359.545210] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[  359.549032] nvme nvme0: Shutdown timeout set to 10 seconds
+[  359.722783] nvme nvme0: 4/0/0 default/read/poll queues
+#+end_stdout
+
+This error seems to indicate there is a faulty power saving feature in
+the NVME firmware or kernel code, or there might be a compatability
+issue with the shield. It can be fixed easily by following the advice
+to turn off the power saving feature of the NVME:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+sudo nano /boot/firmware/cmdline.txt
+#+end_run
+
+This file should contain a single long line of text. You should find
+the very end of the line, and add the following to the end of it:
+
+: nvme_core.default_ps_max_latency_us=0 pcie_aspm=off
+
+The whole line should now look like:
+
+: console=serial0,115200 console=tty1 root=PARTUUID=xxxxxxxx-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=US   nvme_core.default_ps_max_latency_us=0 pcie_aspm=off
+
+Press =Ctrl+S= to save the file. Press =Ctrl+X= to quit =nano=.
+
+Reboot the pi:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+sudo reboot
+#+end_run
+
+The error went away completely after this change.
+#+end_notice
+
 *** Format and mount SSD storage
 
 **** Identify the device name of the NVME SSD:
@@ -803,7 +862,7 @@ sudo mkfs.ext4 /dev/nvme0n1p1
 #+begin_run
 sudo mkdir -p /var/lib/docker
 
-echo "/dev/nvme0n1p1  /var/lib/docker  ext4  defaults  0  3" | sudo tee -a /etc/fstab
+echo "/dev/nvme0n1p1  /var/lib/docker  ext4  defaults,nofail  0  3" | sudo tee -a /etc/fstab
 
 sudo systemctl daemon-reload
 sudo mount /var/lib/docker
