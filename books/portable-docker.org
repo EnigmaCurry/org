@@ -103,16 +103,19 @@ Raspberry Pi over the WireGuard VPN connection. Traefik is used on
 both the sentry and Raspberry Pi to create the full public route to
 each of your services. Traefik supports the following types of routes:
 
- * HTTP Layer 7 (Routes an incoming HTTP request, which is a domain
-   name [TLS SNI], and optional HTTP path, over port 443 to a backend
-   HTTP server based on these criteria)
- * TCP Layer 4 (Routes a unique TCP ADDRESS:PORT combination to a
-   unique backend ADDRESS:PORT combination)
- * UDP Layer 4 - TODO (unimplemented, but similar to TCP)
+ * *HTTP Layer 7* Routes an incoming HTTP(s) request, which is a
+   domain name (or TLS SNI), and optional HTTP path, over port 443 to
+   a backend HTTP server based on these criteria.
+ * *TCP Layer 4 (no TLS inspection)* Routes a unique TCP ADDRESS:PORT combination
+   to a unique backend ADDRESS:PORT combination.
+ * *TCP Layer 4 (TLS-enabled)* - TODO - unimplemented, but routes a
+   TCP layer 4 connection based upon the domain name (by inspecting
+   the unencrypted TLS SNI header.)
+ * *UDP Layer 4* - TODO - unimplemented, but similar to non-TLS TCP.
 
-This lets you publicly route virtually any service directly to your
-Raspberry Pi, whether it's sitting at your desk or at an
-impromptu getaway location.
+Traefik can create a public route for virtually any service on your
+Raspberry Pi, whether it's sitting at your desk or at an impromptu
+getaway location.
 
 ** d.rymcg.tech
 
@@ -123,7 +126,7 @@ impromptu getaway location.
 [[https://github.com/EnigmaCurry/d.rymcg.tech][d.rymcg.tech]] is a configuration manager for Docker, as well as a
 collection of open source web services and config templates. It
 contains an extensive configuration wizard for [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik#readme][Traefik]] and an
-idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes Docker Compose projects both
+idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes [[https://docs.docker.com/compose/][Docker Compose]] projects both
 easy to document and use.
 
 ** The dual roles of the Raspberry Pi
@@ -228,8 +231,9 @@ different options:
 
  * Set up DNS.
  * Set up Raspberry Pi.
- * Set up Sentry Droplet.
- * Set up WireGuard.
+ * Set up sentry Droplet.
+ * Configure WireGuard VPN.
+ * Set up public SSH.
  * Install core services.
  * Install apps.
 
@@ -259,34 +263,39 @@ index
 :EXPORT_HUGO_WEIGHT: 160
 :END:
 
-To host a web service, one of the first things you will need is to
-register your domain name (e.g., =example.com=). This will be the
-domain name used for all of your service links, and it is what your
-users will need to type into their web browsers (or click on) to visit
-your pages.
+To host a web service, one of the first things you will need to do is
+to register your domain name (e.g., =example.com=). This will be the
+root domain name used for all of your service links and it is part of
+what your users will need to type into their web browsers (or click
+on) to visit your pages.
 
 [[/img/portable-docker/hello-traefik.webp]]
 
-Public domain names are a scarce resource. Because of their scarcity,
-you must pay for your domain registrations, doing so in 1 year
-increments. If domain names were free, all the good ones would be
-taken by now, but because they cost money, there are still some good
-enough ones left to be had. In return for your fee, you receive
-exclusive use of the domain name for the period that you paid for. You
-"own" the domain name, and its configuration, but you need to keep
-paying a registrar to keep the record active (so its more like
-renting). You can pre-pay for several years in advance, or just pay
-for one year at a time. If you stop paying, and the records expire,
-they will no longer resolve to your services, and you may lose control
-of the domain, possibly forever.
+*** Domain name registration
+
+The public domain name registration system is controlled as an
+artificially scarce resource that you must pay for the use of.
+
+If domain names were given out for free, all of the good ones would be
+taken by now, but due to the imposed registration costs, there are
+still some good names left to be had. In return for your fee, you
+receive exclusive control of the domain name for the period that you
+paid for.
+
+You can never truly own a domain name outright, because you need to
+keep paying the registrar to keep the record active, so it is best to
+consider a domain name as a rental service. You may pre-pay for
+several years in advance or just pay for one year at a time. If you
+stop paying and the record expires, the name will no longer resolve to
+your services and you may permanently lose control of the name.
 
 *** Register an Internet domain name
 
-You can buy (rent) a domain name from lots of places. For
-documentation purposes, we will use [[https://www.gandi.net][Gandi.net]], but these instructions
-will be similar regardless of the domain provider you pick.
+You can register a domain name from any registrar. For documentation
+purposes, we will use [[https://www.gandi.net][Gandi.net]], but these instructions will be
+similar regardless of the registrar you pick.
 
-#+attr_shortcode: :style info :title Setup on Gandi.net
+#+attr_shortcode: :style info :title Set up Gandi.net
 #+begin_notice
  * Sign up for an account at [[https://www.gandi.net/][Gandi.net]]
  * Once signed in, from your dashboard, click =Register=.
@@ -301,17 +310,20 @@ will be similar regardless of the domain provider you pick.
 
 *** Transfer DNS to DigitalOcean
 
-#+attr_shortcode: :style tip :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose any supported DNS provider
 #+begin_notice
-This book uses DigitalOcean as the DNS provider in all examples, but
-you may choose a different provider if you prefer, but it needs to be
-supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
+All examples in this book use DigitalOcean as the DNS provider. You
+may choose any DNS service that provides a programmatic API supported
+by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
+
+Sign up for a [[https://m.do.co/c/d827a13964d7][DigitalOcean account]] (using this referral link helps
+support this site).
 #+end_notice
 
-#+attr_shortcode: :style info :title Setup on Gandi.net
+#+attr_shortcode: :style info :title Set up Gandi.net
 #+begin_notice
 
- * Login to your [[https://admin.gandi.net][gandi.net]] dashboard.
+ * Login to your [[https://admin.gandi.net][Gandi.net]] dashboard.
  * Click the =Domain= tab.
  * Find your domain name in the list and click on it.
  * Click on the =Nameservers= tab.
@@ -350,16 +362,16 @@ If you don't have =whois= installed, you can use [[https://www.registry.google/w
 :EXPORT_HUGO_WEIGHT: 161
 :END:
 
-The [[https://www.rfc-editor.org/rfc/rfc1035][Domain Name System]] is how you can associate one of your
-sub-domains with an actual IP address on the Internet.
+The [[https://www.rfc-editor.org/rfc/rfc1035][Domain Name System]] is how you associate your (sub-)domains with an
+actual IP address on the Internet.
 
 [[/img/portable-docker/hello-docker.webp]]
 
-#+attr_shortcode: :style tip :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose any supported DNS provider
 #+begin_notice
-This book uses DigitalOcean as the DNS provider in all examples, but
-you may choose a different provider if you prefer, but it needs to be
-supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
+All examples in this book use DigitalOcean as the DNS provider. You
+may choose any DNS service that provides a programmatic API supported
+by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
 
 Sign up for a [[https://m.do.co/c/d827a13964d7][DigitalOcean account]] (using this referral link helps
 support this site), and follow along to set up your domain's DNS.
@@ -403,11 +415,14 @@ takes effect, you may need to wait for this TTL to reset.
 
 [[/img/portable-docker/api.webp]]
 
-#+attr_shortcode: :style tip :title Choose a supported DNS provider
+#+attr_shortcode: :style tip :title Choose any supported DNS provider
 #+begin_notice
-This book uses DigitalOcean as the DNS provider in all examples, but
-you may choose a different provider if you prefer, but it needs to be
-supported by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
+All examples in this book use DigitalOcean as the DNS provider. You
+may choose any DNS service that provides a programmatic API supported
+by [[https://go-acme.github.io/lego/dns/index.html][go-acme LEGO]].
+
+Sign up for a [[https://m.do.co/c/d827a13964d7][DigitalOcean account]] (using this referral link helps
+support this site), and follow along to create the required API token.
 #+end_notice
 
 DNS is also a part of the TLS certificate request process with [[https://letsencrypt.org/getting-started/][Let's
@@ -451,6 +466,7 @@ to create a unique token for each host.
  * Set up Rasbperry Pi.
  * Set up sentry Droplet.
  * Configure WireGuard VPN.
+ * Set up public SSH.
  * Install core services     
  * Install apps.
 
@@ -636,7 +652,7 @@ software.
    * On the =Services= tab:
    
      * Click =Enable SSH=
-     * Choose =Allow pulbic-key authentication only=
+     * Choose =Allow public-key authentication only=
      * If you don't have an SSH key yet, read the [[/linux-workstation/config/ssh/][SSH chapter of the Linux Workstation book]].
      * Paste the list of your SSH public keys into the box. (Find them
        on your workstation by running =ssh-add -L= or look in
@@ -1741,7 +1757,8 @@ pi make traefik logs service=traefik
 *** Next steps
 
  * Set up the sentry Droplet.
- * Configure the WireGuard VPN.
+ * Configure WireGuard VPN.
+ * Set up public SSH.
  * Install core services.
  * Install apps.
 
@@ -1789,7 +1806,7 @@ index
  * Click =Networking= in the menu.
  * Click the =Firewalls= tab.
  * Click =Create Firewall=.
- * Enter the name, e.g., =ssh-web-https-wireguard=.
+ * Enter the name, e.g., =sentry.example.com=.
  * Enter the following rules:
    * SSH:
      * Type: =SSH=
@@ -1797,24 +1814,47 @@ index
      * Port Range: =22=
      * Sources: All IPv4, All IPv6, or a specific static IP address if
        you want to be more secure.
+     * Description: This is so you can access the SSH console of the
+       public sentry.
    * HTTP:
      * Type: =HTTP=
      * Protocol: =TCP=
      * Port Range: =80=
      * Sources: All IPv4, All IPv6.
+     * Description: This is used solely to forward incoming HTTP
+       connections to HTTPS.
    * HTTPS:
      * Type: =HTTP=
      * Protocol: =TCP=
      * Port Range: =443=
      * Sources: All IPv4, All IPv6.
+     * Description: This allows incoming HTTPs connections.
    * WireGuard VPN:
      * Type: =Custom=
      * Protocol: =UDP=
      * Port Range: =51820=
-     * Sources: All IPv4, All IPv6.
+     * Sources: All IPv4, All IPv6, unless you know the Pi will only
+       connect from a set of specific IP addresses.
+     * Description: This allows incoming VPN connections from the Pi.
    * ICMP:
-     * /Optional/ to allow ping response
      * Type: ICMP
+     * Description: /Optional/ - to allow ping response to the public sentry.
+   * Public SSH to the Pi:
+     * Type: =Custom=
+     * Protocol: =TCP=
+     * Port Range: =2220=
+     * Sources: All IPv4, All IPv6, or a specific set of static IP
+       addresses if you want to be more secure.
+     * Description: /Optional/ - this is so you can access the SSH
+       console of the Raspberry Pi through the public sentry.
+   * Public SSH access for Forgejo (public git access):
+     * Type: =Custom=
+     * Protocol: =TCP=
+     * Port Range: =2222=
+     * Sources: All IPv4, All IPv6, or a specific set of static IP
+       addresses if you want to be more secure.
+     * Description: /Optional/ - this is so you can access the SSH console of the
+       Raspberry Pi through the public sentry.
   * Click =Create Firewall=.
 #+end_notice
 
@@ -2273,6 +2313,7 @@ X-Real-Ip: X.X.X.X
 *** Next steps 
 
  * Configure the WireGuard VPN.
+ * Set up public SSH.
  * Install core services.
  * Install apps.
 
@@ -2290,6 +2331,19 @@ X-Real-Ip: X.X.X.X
 #+attr_shortcode: :depth 999
 
 [[/img/portable-docker/tunnel.webp]]
+
+WireGuard will now be installed on the sentry and Raspberry Pi.
+WireGuard is a peer-to-peer connection, but for convience the sentry
+will be called the server and the Pi will be called the client.
+
+By default, the private VPN IP network is =10.13.16.1/24=, with static
+IP addresses assigned for each peer:
+
+ * Sentry WireGuard server : =10.13.16.1=
+ * Raspberry Pi WireGuard client : =10.13.16.2=
+
+The sentry can support up to 252 additional VPN clients, having
+consecutive IP addresses =10.13.16.3= through =10.13.16.254=.
 
 #+begin_index
 index
@@ -2351,10 +2405,26 @@ Enter the Traefik VPN peers list
 : pi
 #+end_stdout
 
-You can have as many peers as you want, use commas to seprate the
-names. Multiple peers can share the same sentry.
+You may enter up 253 peer names, separated by commas, with no spaces,
+e.g., =pi,pi2,phone1,toaster,garage=. Each client name should be a
+single word of letters and/or numbers.
 
 Press =ESC= two times to back out to the main menu.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You may also add additional clients at a later time, however you
+should not remove or change the order of the existing clients, so it
+is only safe to append to this list. If you need to remove a client,
+you should destroy all the clients and recreate them.
+
+#+attr_shortcode: :style warning :title Run this if you need to reset all the client keys
+#+begin_run
+## Resets all WireGuard keys:
+sentry make traefik destroy service=wireguard
+sentry make traefik install
+#+end_run
+#+end_notice
 
 *** Reconfigure Traefik to add a Layer 7 route to the Raspberry Pi
 
@@ -2577,18 +2647,250 @@ in your personal web browser.
 
 *** Next steps
 
+ * Set up public SSH.
+ * Install core services.
+ * Install apps.
+
+* Set up public SSH
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: set-up-public-ssh
+:EXPORT_HUGO_WEIGHT: 500
+:END:
+** Set up public SSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 501
+:END:
+
+Now that the VPN is active, you can create a public route to access
+the SSH console of the Raspberry Pi from anywhere.
+
+*** Ensure the SSH server is secure
+
+During the =rpi-imager= configuration, you should have selected the
+option for SSH to =Allow public-key authentication only=. You should
+double-check that this setting was applied:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+cat /etc/ssh/sshd_config | grep "^PasswordAuthentication"
+#+end_run
+
+#+begin_stdout
+PasswordAuthentication no
+#+end_stdout
+
+If correctly setup, it should show that =PasswordAuthentication= is
+disabled (thus requring the use of keys rather than passwords).
+
+*** Create the public SSH entrypoint
+
+The sentry is already running an SSH server on port =22=, so you need
+to use a different port to access SSH on the Pi. This example will use
+TCP port =2220=.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Don't forget to open TCP port 2220 in the DigitalOcean firewall.
+#+end_notice
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik entrypoint config  
+  Show enabled entrypoints
+  Configure stock entrypoints
+> Configure custom entrypoints
+
+? Custom Entrypoints:  
+  List custom entrypoints
+> Add new custom entrypoint
+  Remove custom entrypoints
+
+Adding a custom TCP/UDP entrypoint - 
+
+ * Make sure to enable the port in all upstream firewalls.
+ * Make sure each entrypoint has a unique lower-case one-word name.
+
+Enter the new entrypoint name:
+: ssh_pi
+
+Enter the entrypoint listen address:
+: 0.0.0.0
+
+Enter the entrypoint port:
+: 2220
+
+Enter the protocol (tcp or udp):
+: tcp
+
+? Is this entrypoint downstream from another trusted proxy?  
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through another trusted proxy. (Turn on Proxoy Protocol)
+
+? Custom Entrypoints:  
+> List custom entrypoints
+  Add new custom entrypoint
+  Remove custom entrypoints
+
+ssh_pi  0.0.0.0  2220  tcp
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Disable Proxy Protocol for the public entrypoint
+#+begin_notice
+Proxy protocol is not requried for any entrypoint on the sentry, so make sure it is disabled.
+#+end_notice
+
+Press =ESC= three times to go back to the main Traefik menu.
+
+*** Add a new route on the sentry (droplet)
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+  Configure layer 7 TLS proxy
+> Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+## Layer 4 TCP/UDP Proxy is DISABLED.
+? Do you want to enable the layer 4 TCP/UDP proxy? (y/N)  Yes
+
+? Layer 4 TCP/UDP Proxy:  
+  List layer 4 ingress routes
+> Add new layer 4 ingress route
+  Remove layer 4 ingress routes
+  Disable layer 4 TCP/UDP Proxy
+#+end_stdout
+
+Select the =ssh_pi= entrypoint and enter the forwarding destination
+(=10.13.16.2= which is the WireGuard VPN address of the Pi, port
+=22=):
+
+#+begin_stdout
+? Entrypoint  
+> ssh_pi
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 22
+
+> Do you want to enable Proxy Protocol for this route? No
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Disable Proxy Protocol for the public entrypoint
+#+begin_notice
+Make sure to disable Proxy Protocol, because SSH does not support it.
+#+end_notice
+
+#+begin_stdout
+## Configured Layer 4 Routes:
+Entrypoint  Destination_address  Destination_port  Proxy_protocol
+----------  -------------------  ----------------  --------------
+ssh_pi      10.13.16.2           22                0
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Reconfigure SSH clients
+
+On your personal workstation, you can create a new config for
+accessing the Pi through the public sentry.
+
+#+begin_run
+cat &lt;&lt;EOF &gt&gt ~/.ssh/config
+Host pi.example.com
+    User pi
+    Port 2220
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+**** Test the public SSH connection to the Pi
+
+#+begin_run
+ssh -t pi.example.com w
+#+end_run
+
+The =w= command prints a list of the currently logged in users, and
+their remote IP address (=-t= is important to ensure the current
+connection is included):
+
+#+begin_stdout
+18:24:29 up 5 days, 33 min,  1 user,  load average: 0.10, 0.07, 0.08
+USER     TTY      FROM             LOGIN@   IDLE   JCPU   PCPU WHAT
+ryan     pts/2    10.13.16.1       18:24    0.00s  0.01s  0.01s w
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+SSH does not support the Proxy Protocol, therfore there is no way to
+forward the real IP address of the client. The IP address of the SSH
+client will always appear to have the IP address of the sentry
+(=10.13.16.1=). You may enable the Traefik access logs on the sentry
+and record the real IP address of the client at that point.
+#+end_notice
+
+*** Next steps
+
  * Install core services.
  * Install apps.
 
 * Install core services
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install-core-services
-:EXPORT_HUGO_WEIGHT: 500
+:EXPORT_HUGO_WEIGHT: 600
 :END:
 ** Install core services
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_WEIGHT: 501
+:EXPORT_HUGO_WEIGHT: 601
 :END:
 
 There are a few services you should install before any others, which
@@ -2602,7 +2904,7 @@ index
 ** Forgejo
 :PROPERTIES:
 :EXPORT_FILE_NAME: forgejo
-:EXPORT_HUGO_WEIGHT: 520
+:EXPORT_HUGO_WEIGHT: 620
 :END:
 
 [[https://forgejo.org/][Forgejo]] is a self-hosted git forge similar to [[https://docs.github.com/en/get-started/start-your-journey/about-github-and-git][GitHub]]. Forgejo is a
@@ -2623,8 +2925,8 @@ at least one instance in your domain is recommended.
 Even if you (or your users) have no need for storing git repositories,
 Forgejo is part of the fundamental infrastructure of securing other
 d.rymcg.tech apps via OAuth2. You can authenticate and authorize your
-users to access your apps via their Forgejo account (Sentry
-Authorization), see the next chapter: [[/portable-docker/install-core-services/traefik-forward-auth][Traefik Forward Auth]].
+users to access your apps via their Forgejo account (sentry
+authorization), see the next chapter: [[/portable-docker/install-core-services/traefik-forward-auth][Traefik Forward Auth]].
 #+end_notice
 
 *** Configure Forgejo
@@ -2763,18 +3065,18 @@ the account icon in the top right, which expands a menu.
  * You should use your personal account for storing your git
    repositories and for your identity when logging into other apps.
 
-** Traefik-Forward-Auth (Sentry Authorization)
+** Traefik-Forward-Auth (sentry authorization)
 :PROPERTIES:
 :EXPORT_FILE_NAME: traefik-forward-auth
-:EXPORT_HUGO_WEIGHT: 530
+:EXPORT_HUGO_WEIGHT: 630
 :END:
 
-*** Sentry Authorization
+*** Sentry authorization
 
 Some apps may already have their own authentication mechanisms, while
-others may not. Sentry Authorization creates a common authentication
+others may not. Sentry authorization creates a common authentication
 and authorization framework /in front of/ your applications via
-Traefik middleware. Sentry Authorization happens /before/ any existing
+Traefik middleware. Sentry authorization happens /before/ any existing
 auth mechanisms in the app itself, and so it acts as a front door
 gatekeeper for your apps. It can't control what users are allowed to
 do once they get in, but it does control who is allowed in through the
@@ -2912,7 +3214,7 @@ Press =ESC= three times to go back to the main menu, and re-install Traefik:
 
 After installation, press =ESC= to quit the config tool.
 
-*** Add user groups for Sentry Authorization
+*** Add user groups for sentry authorization
 
 With OAuth2 sentry authorization enabled, users are authorized to
 access apps only if they are a member of an authorized group for that
@@ -2970,7 +3272,7 @@ to sign up for your personal account in Forgejo. You can add more
 users to the group if you wish, when done enter a blank line.
 #+end_notice
 
-*** Re-configure whoami with Sentry Authorization (OAuth2)
+*** Re-configure whoami with sentry authorization (OAuth2)
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
@@ -3061,15 +3363,19 @@ All other apps may be protected with sentry authorization in the same manner as 
 * Install apps
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install-web-services
-:EXPORT_HUGO_WEIGHT: 600
+:EXPORT_HUGO_WEIGHT: 7000
 :END:
 ** Install apps
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_WEIGHT: 601
+:EXPORT_HUGO_WEIGHT: 7001
 :END:
 
 [[/img/portable-docker/surf.webp]]
+
+You may install any of the [[https://github.com/EnigmaCurry/d.rymcg.tech?tab=readme-ov-file#install-applications][apps bundled with d.rymcg.tech]] or you can
+create your own. Included in this chapter are instructions for only a
+subset of the available apps.
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -3078,8 +3384,11 @@ index
 ** Immich
 :PROPERTIES:
 :EXPORT_FILE_NAME: immich
-:EXPORT_HUGO_WEIGHT: 510
+:EXPORT_HUGO_WEIGHT: 710
 :END:
+
+[[https://immich.app/][Immich]] is an open-source self-hosted photo and video management
+solution.
 
 *** Configure Immich
 
@@ -3204,8 +3513,10 @@ configuration to secure the admin user account.
 ** Yourls
 :PROPERTIES:
 :EXPORT_FILE_NAME: yourls
-:EXPORT_HUGO_WEIGHT: 540
+:EXPORT_HUGO_WEIGHT: 7100
 :END:
+
+[[https://yourls.org/][Yourls]] is a URL shortener.
 
 *** Configure Yourls
 
@@ -3319,4 +3630,3 @@ You should immediately open the URL in your web browser:
 =https://yourls.pi.example.com/admin= and complete the initial
 configuration to finsh installation.
 #+end_notice
-
