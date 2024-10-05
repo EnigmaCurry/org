@@ -35,19 +35,19 @@ rpi-imager On your personal workstation, Download the Raspberry PI Imager or ins
 Run rpi-imager.
 Click on the menu labled Rasperry Pi Device.
 Choose your model of raspberry pi.">
-    <meta itemprop="wordCount" content="908">
+    <meta itemprop="wordCount" content="1196">
     <title>Install Raspberry Pi OS :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1728156964" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728156964" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1728156964" rel="stylesheet">
-    <link href="/css/auto-complete.css?1728156964" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728156964" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1728156964" rel="stylesheet">
-    <link href="/css/fonts.css?1728156964" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728156964" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1728156964" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1728156964" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1728156964" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1728156964" rel="stylesheet">
-    <link href="/css/print.css?1728156964" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1728156964"></script>
+    <link href="/css/fontawesome-all.min.css?1728164797" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728164797" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1728164797" rel="stylesheet">
+    <link href="/css/auto-complete.css?1728164797" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728164797" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1728164797" rel="stylesheet">
+    <link href="/css/fonts.css?1728164797" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728164797" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1728164797" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1728164797" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1728164797" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1728164797" rel="stylesheet">
+    <link href="/css/print.css?1728164797" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1728164797"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -85,6 +85,11 @@ Choose your model of raspberry pi.">
     <li><a href="#find-the-local-ip-address-of-the-pi-on-your-lan">Find the local IP address of the Pi on your LAN</a></li>
     <li><a href="#create-ssh-config-on-your-personal-workstation">Create SSH config on your personal workstation</a></li>
     <li><a href="#set-up-log2ram">Set up Log2Ram</a></li>
+    <li><a href="#monitor-kernel-logs">Monitor kernel logs</a>
+      <ul>
+        <li><a href="#disable-power-saving-on-nvme-storage">Disable power saving on NVME storage</a></li>
+      </ul>
+    </li>
     <li><a href="#format-and-mount-ssd-storage">Format and mount SSD storage</a>
       <ul>
         <li><a href="#identify-the-device-name-of-the-nvme-ssd">Identify the device name of the NVME SSD:</a></li>
@@ -356,6 +361,75 @@ log2ram         128M   14M  115M  11% /var/log
     </div>
 </div>
 
+<h2 id="monitor-kernel-logs">Monitor kernel logs</h2>
+<p>During the first day or so of setting this machine up, it is
+recommended to actively monitor the kernel logs, checking for errors.</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label primary">
+        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-content">
+        <code><pre>
+## Just leave this running in a separate terminal as you keep working..
+sudo dmesg -w
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="disable-power-saving-on-nvme-storage">Disable power saving on NVME storage</h3>
+
+<div class="box notices cstyle info">
+  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> How to disable power saving on the NVME drive</div>
+  <div class="box-content">
+
+<p>Out of two identical kits, I encountered one error in the kernel log
+on one machine but not on the other, so you may or may not run into
+this error:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+[  359.477209] nvme nvme0: controller is down; will reset: CSTS=0xffffffff, PCI_STATUS=0x11
+[  359.477218] nvme nvme0: Does your device have a faulty power saving mode enabled?
+[  359.477220] nvme nvme0: Try "nvme_core.default_ps_max_latency_us=0 pcie_aspm=off" and report a bug
+[  359.545210] nvme 0000:01:00.0: enabling device (0000 -> 0002)
+[  359.549032] nvme nvme0: Shutdown timeout set to 10 seconds
+[  359.722783] nvme nvme0: 4/0/0 default/read/poll queues
+</pre>
+    </div>
+</div>
+<p>This error seems to indicate there is a faulty power saving feature in
+the NVME firmware or kernel code, or there might be a compatability
+issue with the shield. It can be fixed easily by following the advice
+to turn off the power saving feature of the NVME:</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+sudo nano /boot/firmware/cmdline.txt
+</pre></code>
+    </div>
+</div>
+<p>This file should contain a single long line of text. You should find
+the very end of the line, and add the following to the end of it:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>nvme_core.default_ps_max_latency_us=0 pcie_aspm=off</span></span></code></pre></div><p>The whole line should now look like:</p>
+<div class="highlight wrap-code"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>console=serial0,115200 console=tty1 root=PARTUUID=xxxxxxxx-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=US   nvme_core.default_ps_max_latency_us=0 pcie_aspm=off</span></span></code></pre></div><p>Press <code>Ctrl+S</code> to save the file. Press <code>Ctrl+X</code> to quit <code>nano</code>.</p>
+<p>Reboot the pi:</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+sudo reboot
+</pre></code>
+    </div>
+</div>
+<p>The error went away completely after this change.</p>
+</div>
+</div>
 <h2 id="format-and-mount-ssd-storage">Format and mount SSD storage</h2>
 <h3 id="identify-the-device-name-of-the-nvme-ssd">Identify the device name of the NVME SSD:</h3>
 
@@ -424,7 +498,7 @@ sudo mkfs.ext4 /dev/nvme0n1p1
         <code><pre>
 sudo mkdir -p /var/lib/docker
 
-echo "/dev/nvme0n1p1  /var/lib/docker  ext4  defaults  0  3" | sudo tee -a /etc/fstab
+echo "/dev/nvme0n1p1  /var/lib/docker  ext4  defaults,nofail  0  3" | sudo tee -a /etc/fstab
 
 sudo systemctl daemon-reload
 sudo mount /var/lib/docker
@@ -486,12 +560,12 @@ NVME SSD (<code>916G</code>; it&rsquo;s always a bit smaller than advertised.)</
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1728156964" defer></script>
-        <script src="/js/lunr/lunr.min.js?1728156964" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1728156964" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1728156964" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1728156964" defer></script>
-        <script src="/js/search.js?1728156964" defer></script>
+        <script src="/js/auto-complete.js?1728164797" defer></script>
+        <script src="/js/lunr/lunr.min.js?1728164797" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1728164797" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1728164797" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1728164797" defer></script>
+        <script src="/js/search.js?1728164797" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -637,14 +711,14 @@ NVME SSD (<code>916G</code>; it&rsquo;s always a bit smaller than advertised.)</
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 5, 2024 at 7:36pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 5, 2024 at 9:46pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1728156964" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1728156964" defer></script>
-    <script src="/js/theme.js?1728156964" defer></script>
+    <script src="/js/clipboard.min.js?1728164797" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1728164797" defer></script>
+    <script src="/js/theme.js?1728164797" defer></script>
   </body>
 </html>
