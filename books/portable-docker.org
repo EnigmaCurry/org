@@ -78,21 +78,21 @@ this server back online.
 
 To accomplish this feat, we need to set up another server (to be named
 =sentry=) that has a static IP address and is accessible from the
-public Internet. I use a [[https://m.do.co/c/d5da28d3d99d][DigitalOcean droplet]] (affiliate link helps
+public Internet. I use a [[https://m.do.co/c/d5da28d3d99d][DigitalOcean Droplet]] (affiliate link helps
 support this book), which is a type of Virtual Private Server (VPS)
 and exists in the public cloud. The sentry is always on and anyone in
 the world can connect to it (via HTTP). However, the sentry does not
 serve any applications by itself; it only creates the public [[https://doc.traefik.io/traefik/][Traefik]]
-proxy (ingress) which forwards incoming connections through a backdoor
+proxy (ingress), which forwards incoming connections through a backdoor
 VPN connection to the Raspberry Pi. The Pi automatically initiates
-this connection to the sentry whenever it boots and becomes online.
+this connection to the sentry whenever it boots and comes online.
 
 [[/img/portable-docker/vpn-diagram.webp]]
 
 ** WireGuard VPN
 
 The Raspberry Pi should use whatever kind of Internet connection you
-plug the ethernet into via DHCP (or you may configure Wi-Fi),
+plug the ethernet into via DHCP (or you may configure Wi-Fi);
 therefore it won't have a static IP address initially. Once it's
 online, it creates an outbound VPN connection to the sentry via
 [[https://www.wireguard.com/][WireGuard]]. Once connected to the VPN, the Pi is assigned a static
@@ -111,7 +111,7 @@ each of your services. Traefik supports the following types of routes:
  * UDP Layer 4 - TODO (unimplemented, but similar to TCP)
 
 This lets you publicly route virtually any service directly to your
-Raspberry Pi, whether it's sitting at your desk, or taken to an
+Raspberry Pi, whether it's sitting at your desk or at an
 impromptu getaway location.
 
 ** d.rymcg.tech
@@ -124,13 +124,13 @@ impromptu getaway location.
 collection of open source web services and config templates. It
 contains an extensive configuration wizard for [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/traefik#readme][Traefik]] and an
 idiomatic [[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master#command-line-interaction][command line tool]], which makes Docker Compose projects both
-easy to document, as well as to use.
+easy to document and use.
 
 ** The dual roles of the Raspberry Pi
 
-Traditionally, d.rymcg.tech suggests to install itself /on a separate
-workstation/ and urges you to never actually log in to your Docker
-server, but rather to exclusively control it remotely from your
+Traditionally, you would install d.rymcg.tech /on a separate
+workstation/ and never actually log in to your Docker
+server, but rather exclusively control it remotely from your
 workstation. This is one of the ways to follow the good DevOps
 practice summed up by the metaphor:
 
@@ -139,11 +139,11 @@ practice summed up by the metaphor:
 #+end_quote
 
 However, the cattle ranching strategy has the drawback that if you
-lose access to your workstation, it makes it diffcult to adminster the
+lose access to your workstation, it's diffcult to administer the
 remaining server (you would have to recreate your =.env= files on a
 new workstation, from backup, or from scratch).
 
-To avoid this complexity and to make it easier to maintain after long
+To avoid this complexity and make it easier to maintain after long
 periods of inactivity and forgetfulness, we will make an important
 compromise and an exception to the normal DevOps rule:
 
@@ -157,26 +157,25 @@ together in one little box and it will make everything easier to get
 (re)acquainted with.
 
 #+begin_quote
-Your portable Pi is treated as a /pet/ Docker server (not cattle), you
+Treat your portable Pi as a /pet/ Docker server (not cattle). You
 must name it and interact with it directly via SSH console.
 #+end_quote
 
-If you reference any other d.rymcg.tech documentation, and it's
-talking about "your workstation", for the purposes of this book, you
-should understand that this means for you to use the =pi= user on the
-Raspberry Pi, not your personal workstation.
+If you read any other d.rymcg.tech documentation and it references
+"your workstation," you should use the =pi= user on the Raspberry Pi,
+not your personal workstation.
 
 If you had a whole fleet of Raspberry Pis to manage, this would be a
 terrible idea, because you would be missing the centralized (cattle
-ranching) workstation to control all of them, and you'd have to login
-to each one of them individually and configure them directly. However,
+ranching) workstation to control all of them, and you'd have to log in
+to each one individually and configure them directly. However,
 you will likely start this journey with only one Pi to manage, so
 treating it as a pet is a good initial compromise to make. If you want
 to build a proper workstation that can control several servers from
 one location, read the [[/linux-workstation/][Linux Workstation]] book and the main
 [[https://github.com/enigmacurry/d.rymcg.tech?tab=readme-ov-file#readme][d.rymcg.tech README]].
 
-If you are going to seriously travel with this device, you should
+If you are going to travel frequently with this device, you should
 consider [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][installing full disk encryption]] and requiring remote SSH
 unlock on boot, but this is an advanced topic that is outside the
 scope of this book.
@@ -184,15 +183,15 @@ scope of this book.
 
 ** Your personal workstation
 
-Unless you want to carry a display and keyboard to plug directly into
+Unless you want to carry a display and keyboard to plug into
 the Raspberry Pi, you're still going to need to travel with another
-computer (e.g., a laptop) and set that up with an SSH key on it, so
-that you can remotely log in to the Pi.
+computer (e.g., a laptop) and set that up with an SSH key so
+you can remotely log in to the Pi.
 
-You can use any sort of personal computer, as long as its capable of
+You can use any sort of personal computer, as long as it's capable of
 running a terminal and an SSH client. If it runs Linux, MacOS, or
 Windows, you'll also be able to use this computer to run the
-[[https://www.raspberrypi.com/software/][rpi-imager]] application for preparing the SD-card. Most Linux distros
+[[https://www.raspberrypi.com/software/][rpi-imager]] application for preparing the SD card. Most Linux distros
 have this available in their package manager.
 
 #+attr_shortcode: :style tip
@@ -207,17 +206,18 @@ Solokey.
 
 Eventually you might need to edit a =.env= file by hand, and so you
 need to know how to edit files remotely over SSH. You have a few
-different options in that regard:
+different options:
 
- 1. Learn how to use one of the many terminal mode text editors (e.g.,
-    Emacs, Vim, nano, etc.) and edit the files through an SSH console
+ 1. Learn how to use one of the many terminal mode text editors
+    (e.g., Emacs, Vim, Nano, etc.) and edit the files through an SSH console
     directly on the Pi. *This is the most secure option, as the files
     never leave the Pi.*
  2. Edit the files directly on your personal workstation and set up
-    your editor so that it that saves files transparently over SSH
-    (e.g., Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's
+    your editor so that it saves files transparently over SSH. Example
+    configurations include Emacs' [[https://www.gnu.org/software/tramp/][TRAMP]], VS Code's
     [[https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh][Remote
-    SSH]], Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]] etc, or universally via [[https://wiki.archlinux.org/title/SSHFS][sshfs]].)
+    SSH]], or Vim's [[https://www.vim.org/scripts/script.php?script_id=1075][Netrw]]. For a universal solution that works with
+    any editor, use [[https://wiki.archlinux.org/title/SSHFS][sshfs]].
  3. Edit the files directly on your personal workstation and use
     synchronization tools like [[https://blog.rymcg.tech/blog/linux/rclone_sync/][rclone]], rsync, dropbox etc, however
     this method is the least secure because it leaves several copies
@@ -508,23 +508,23 @@ The SD card is used as the root filesystem for Raspberry Pi OS
 (formerly named Raspbian). The capacity of the card doesn't need to be
 very big, as you won't be storing very much data on this.
 
-Booting from the SD-card is a bit slower than NVME, but the advantage
-of it is that you can simply swap SD-cards, and temporarily use the pi
+Booting from the SD card is a bit slower than NVME, but the advantage
+of it is that you can simply swap SD cards, and temporarily use the pi
 for a different purpose, all without disrupting access to your NVME
 storage.
 
-SD-cards are more prone to failure than NVME, especially if you write
+SD cards are more prone to failure than NVME, especially if you write
 too much data to them, so this is minimized as much as possible.
 =/tmp= will be mounted on tmpfs, and =/var/log= will run on log2ram,
 which are both stored in RAM, so the only writes that should happen on
-the SD-card should be OS updates.
+the SD card should be OS updates.
 
-#+attr_shortcode: :title SD-card adapter
+#+attr_shortcode: :title SD card adapter
 #+begin_notice
 [[/img/portable-docker/sd-card-adapter.webp]]
 #+end_notice
 
-The micro SD-card comes with a full size SD-card adapter, but you may
+The micro SD card comes with a full size SD card adapter, but you may
 also need a USB adapter, in order to write the image.
 
 #+attr_shortcode: :title Samsung 990EVO NVME SSD
@@ -532,7 +532,7 @@ also need a USB adapter, in order to write the image.
 [[/img/portable-docker/samsung-990EVO-NVME.webp]]
 #+end_notice
 
-The NVME SSD is much faster, and far more reliable, than the SD-card.
+The NVME SSD is much faster, and far more reliable, than the SD card.
 This device will be used exclusively for the Docker storage system
 (mounted at =/var/lib/docker=). This is where all of your container
 images will be built/downloaded, and where the volumes holding your
@@ -563,7 +563,7 @@ fit one.
    smaller risers to support the motherboard from below.
  * Install the NVME SSD into the NVME shield.
  * Screw on the top part of the case.
- * Install the SD-card into the slot on the bottom edge.
+ * Install the SD card into the slot on the bottom edge.
 
 #+attr_shortcode: :title Pi 5 heatsink and risers installed
 #+begin_notice
@@ -580,7 +580,7 @@ fit one.
 [[/img/portable-docker/pi5-nvme.webp]]
 #+end_notice
 
-#+attr_shortcode: :title top part of the case screwed on top and SD-card installed
+#+attr_shortcode: :title top part of the case screwed on top and SD card installed
 #+begin_notice
 [[/img/portable-docker/pi5-sdcard.webp]]
 #+end_notice
@@ -598,7 +598,7 @@ fit one.
 
 [[/img/portable-docker/penguin.webp]]
 
-The best way to install Raspberry Pi OS onto an SD-card, is to use
+The best way to install Raspberry Pi OS onto an SD card, is to use
 [[https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system][rpi-imager]] from another computer. This allows you to set up the user
 account, network settings, and SSH credentials all from the imager
 software.
@@ -651,9 +651,9 @@ software.
        
  * Click =Yes= to the question =Would you like to apply OS custom settings=.
  
- * Confirm you would like to write to the SD-card and wait for it to complete.
+ * Confirm you would like to write to the SD card and wait for it to complete.
  
- * Once complete, unplug the SD-card, put it into the raspberry pi,
+ * Once complete, unplug the SD card, put it into the raspberry pi,
    plug in the ethernet, and power it on.
 
 *** Find the local IP address of the Pi on your LAN
@@ -897,7 +897,7 @@ For the sake of convenience, this guide will use the first method, and
 create a new /unencrypted/ SSH key, living in the pi user's home
 directory: =/home/pi/.ssh/id_ed25519=. The security of this key
 depends upon the physical and network security of the device
-(including SD-card). Any user gaining entry to the =pi= user's account
+(including SD card). Any user gaining entry to the =pi= user's account
 will have access to the key, and no passphrase is required to use the
 key.
 
@@ -905,7 +905,7 @@ If you wish to enhance the security of your SSH key, please read the
 [[https://wiki.archlinux.org/title/SSH_keys][Arch Wiki article on SSH keys]], which covers generating secure SSH
 keys, setting a passphrase, and setting up an ssh-agent with [[https://wiki.archlinux.org/title/SSH_keys#Keychain][Keychain]].
 
-You may also protect the integrity of the SD-card (at rest) with [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][full
+You may also protect the integrity of the SD card (at rest) with [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][full
 disk encryption and remote unlock via SSH]].
 #+end_notice
 
