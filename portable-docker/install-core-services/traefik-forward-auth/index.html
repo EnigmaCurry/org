@@ -19,19 +19,19 @@
     <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
     <meta itemprop="name" content="Traefik-Forward-Auth (Sentry Authorization) :: book.rymcg.tech">
     <meta itemprop="description" content="Sentry Authorization Some apps may already have their own authentication mechanisms, while others may not. Sentry Authorization creates a common authentication and authorization framework in front of your applications via Traefik middleware. Sentry Authorization happens before any existing auth mechanisms in the app itself, and so it acts as a front door gatekeeper for your apps. It can’t control what users are allowed to do once they get in, but it does control who is allowed in through the front door.">
-    <meta itemprop="wordCount" content="522">
+    <meta itemprop="wordCount" content="1038">
     <title>Traefik-Forward-Auth (Sentry Authorization) :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1727997310" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1727997310" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1727997310" rel="stylesheet">
-    <link href="/css/auto-complete.css?1727997310" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1727997310" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1727997310" rel="stylesheet">
-    <link href="/css/fonts.css?1727997310" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1727997310" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1727997310" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1727997310" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1727997310" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1727997310" rel="stylesheet">
-    <link href="/css/print.css?1727997310" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1727997310"></script>
+    <link href="/css/fontawesome-all.min.css?1728141408" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728141408" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1728141408" rel="stylesheet">
+    <link href="/css/auto-complete.css?1728141408" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728141408" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1728141408" rel="stylesheet">
+    <link href="/css/fonts.css?1728141408" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728141408" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1728141408" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1728141408" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1728141408" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1728141408" rel="stylesheet">
+    <link href="/css/print.css?1728141408" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1728141408"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -69,6 +69,10 @@
     <li><a href="#configure-traefik-forward-auth">Configure traefik-forward-auth</a></li>
     <li><a href="#install-traefik-forward-auth">Install Traefik-Forward-Auth</a></li>
     <li><a href="#add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</a></li>
+    <li><a href="#add-user-groups-for-sentry-authorization">Add user groups for Sentry Authorization</a></li>
+    <li><a href="#re-configure-whoami-with-sentry-authorization--oauth2">Re-configure whoami with Sentry Authorization (OAuth2)</a></li>
+    <li><a href="#test-login-for-whoami">Test login for whoami</a></li>
+    <li><a href="#reconfigure-other-apps-to-use-oauth2">Reconfigure other apps to use OAuth2</a></li>
   </ul>
 </nav>
                 </div>
@@ -301,6 +305,183 @@ auth.pi.example.com  10.13.16.2           443               2
 </div>
 
 <p>After installation, press <code>ESC</code> to quit the config tool.</p>
+<h2 id="add-user-groups-for-sentry-authorization">Add user groups for Sentry Authorization</h2>
+<p>With OAuth2 sentry authorization enabled, users are authorized to
+access apps only if they are a member of an authorized group for that
+app. You need to create the group membership lists in the Traefik
+config:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+> Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik middleware config:
+  MaxMind geoIP locator
+> OAuth2 sentry authorization (make sentry)
+
+? Sentry Authorization Manager (main menu):
+> Group Manager
+  User Manager
+  List all members
+  List authorized callback URLs
+  Quit
+
+> Sentry Authorization Manager (main menu): Group Manager
+? Choose a group to manage
+> Create a new group
+
+? Enter the name of the group to create: whoami_test
+
+> Do you want to add users to this group now? Yes
+
+Enter the new user id(s) to add, one per line:
+? Enter a user ID (Press Esc or enter a blank value to finish)  me@example.com
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Replace <code>me@example.com</code> with the same <strong>email address</strong> that you used
+to sign up for your personal account in Forgejo. You can add more
+users to the group if you wish, when done enter a blank line.</p>
+</div>
+</div>
+<h2 id="re-configure-whoami-with-sentry-authorization--oauth2">Re-configure whoami with Sentry Authorization (OAuth2)</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make whoami config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+
+: whoami.pi.example.com
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+
+? Which authorization group do you want to permit access to this app?
+> whoami_test
+</pre>
+    </div>
+</div>
+
+<p>Re-install whoami:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make whoami install
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="test-login-for-whoami">Test login for whoami</h2>
+<p>Open the whoami app in your web browser: <code>https://whoami.pi.example.com</code>.</p>
+<p>You should be automatically redirected to the Foregjo app to login.</p>
+<p>The first time a Forgejo user authenticates to a sentry authorization
+protected app, they should see this prompt:</p>
+<figure><img src="/img/portable-docker/forgejo-authorize-app.webp"/>
+</figure>
+
+<p>Confirm by clicking the button <code>Authorize Application</code>.</p>
+<p>If the user is authorized, they should be automatically redirected
+back to the whoami app.</p>
+<p>The output of whoami now reflects the authorized user:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Name: default
+Hostname: c863ccd86cec
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:38606
+GET / HTTP/1.1
+Host: whoami.pi.example.com
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-US,en;q=0.5
+Cookie: _forward_auth=xxxxxxxxxxxxxxxxxxxxxxxxxxx=|123456789|me@example.com
+Dnt: 1
+Priority: u=1
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: same-site
+Sec-Fetch-User: ?1
+Te: trailers
+Upgrade-Insecure-Requests: 1
+X-Forwarded-For: 192.168.1.1
+X-Forwarded-Host: whoami.pi.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: pi
+X-Forwarded-User: me@example.com
+X-Real-Ip: 192.168.1.1
+</pre>
+    </div>
+</div>
+
+<p>The request shows the new details:</p>
+<ul>
+<li><code>Cookie</code> the cookie value is set by the traefik-forward-auth
+middleware once the user is successfully authenticated.</li>
+<li>The <code>X-Forwarded-User</code> is passed to the application to identify the
+validated user id (email address).</li>
+</ul>
+<h2 id="reconfigure-other-apps-to-use-oauth2">Reconfigure other apps to use OAuth2</h2>
+<p>All other apps may be protected with sentry authorization in the same manner as whoami.</p>
 
             <footer class="footline">
             </footer>
@@ -327,12 +508,12 @@ auth.pi.example.com  10.13.16.2           443               2
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1727997310" defer></script>
-        <script src="/js/lunr/lunr.min.js?1727997310" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1727997310" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1727997310" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1727997310" defer></script>
-        <script src="/js/search.js?1727997310" defer></script>
+        <script src="/js/auto-complete.js?1728141408" defer></script>
+        <script src="/js/lunr/lunr.min.js?1728141408" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1728141408" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1728141408" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1728141408" defer></script>
+        <script src="/js/search.js?1728141408" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -477,14 +658,14 @@ auth.pi.example.com  10.13.16.2           443               2
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 3, 2024 at 11:15pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 5, 2024 at 3:16pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1727997310" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1727997310" defer></script>
-    <script src="/js/theme.js?1727997310" defer></script>
+    <script src="/js/clipboard.min.js?1728141408" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1728141408" defer></script>
+    <script src="/js/theme.js?1728141408" defer></script>
   </body>
 </html>
