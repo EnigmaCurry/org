@@ -3802,9 +3802,10 @@ your Docker volumes.
 
 *** Install a demo web server (thttpd)
 
-[[https://www.acme.com/software/thttpd/][Thttpd]] is a tiny static HTTP server and it will be used as a small
-demonstration of the effect of transferring files with SFTP. This same
-approach will work with any container's volume.
+[[https://www.acme.com/software/thttpd/][Thttpd]] is a tiny static HTTP server for hosting websites. It will be
+used for demonstration purposes in showing the effect of transferring
+files directly into its volume, via SFTP. This same approach will work
+with any Docker volume.
 
 **** Configure thttpd
 
@@ -3899,11 +3900,67 @@ Once re-installed, press =ESC= to quit the config tool.
 
 [[/img/portable-docker/thttpd-index.webp]]
 
-*** Install SFTP
+*** Configure SFTP
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make sftp config
+#+end_run
+
+#+begin_stdout
+SFTP_PORT: Enter the public SSH port (eg. 2223)
+: 2223
+
+SFTP_USERS: Enter the user:uid list (eg. ryan:1000,gary:1001)
+: www:54321
+#+end_stdout
+
+#+attr_shortcode: :style info :title Use the same UID as thttpd
+#+begin_notice
+The thttpd container has a user with UID =54321=, so the SFTP user
+(=www=) has to have the same UID =54321=.
+#+end_notice
+
+#+begin_stdout
+SFTP_VOLUMES: Enter the volume:user:mount list (can be blank)
+: thttpd_files:www:public_html
+#+end_stdout
+
+#+attr_shortcode: :style info :title SFTP_VOLUMES
+#+begin_notice
+The =SFTP_VOLUMES= setting is a list of 3-tuple separated by the
+character =:=
+
+ 1. The Docker volume to mount (e.g., =thttpd_files=)
+ 2. The SFTP user that should own the mountpoint (e.g., =www=.)
+ 3. An arbitrary mount point sub-directory, only visible to the SFTP
+    user
+
+In the example above, the Docker volume named =thttpd_files= is
+mounted inside the =www= user's SFTP home directory, in a
+sub-directory named =public_html=.
+
+The user may have access to multiple volumes, each with a different
+mount point. Additional volumes may be mounted as a comma separated
+list of 3-tuples:
+
+: thttpd_files:www:public_html,other_volume:www:other_files
+
+If mounting multiple volumes under one SFTP user, all volume files
+must share the same owner. If the files require different ownership,
+you must use different SFTP users.
+#+end_notice
+
+Install sftp:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make sftp install
+#+end_run
+
+*** Enable SFTP traffic
 
 **** Enable the SFTP entrypoint on the sentry
-
-Repeat the same process on the sentry:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
@@ -4019,64 +4076,6 @@ Press =ESC= three times to go back to the main menu, then re-install Traefik:
 
 Once re-installed, press =ESC= to exit the config tool.
 
-*** Configure SFTP
-
-#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
-#+begin_run
-pi make sftp config
-#+end_run
-
-#+begin_stdout
-SFTP_PORT: Enter the public SSH port (eg. 2223)
-: 2223
-
-SFTP_USERS: Enter the user:uid list (eg. ryan:1000,gary:1001)
-: www:54321
-#+end_stdout
-
-#+attr_shortcode: :style info :title Use the same UID as thttpd
-#+begin_notice
-The thttpd container has a user with UID =54321=, so the SFTP user
-(=www=) has to have the same UID =54321=.
-#+end_notice
-
-#+begin_stdout
-SFTP_VOLUMES: Enter the volume:user:mount list (can be blank)
-: thttpd_files:www:public_html
-#+end_stdout
-
-#+attr_shortcode: :style info :title SFTP_VOLUMES
-#+begin_notice
-The =SFTP_VOLUMES= setting is a list of 3-tuple separated by the
-character =:=
-
- 1. The Docker volume to mount (e.g., =thttpd_files=)
- 2. The SFTP user that should own the mountpoint (e.g., =www=.)
- 3. An arbitrary mount point sub-directory, only visible to the SFTP
-    user
-
-In the example above, the Docker volume named =thttpd_files= is
-mounted inside the =www= user's SFTP home directory, in a
-sub-directory named =public_html=.
-
-The user may have access to multiple volumes, each with a different
-mount point. Additional volumes may be mounted as a comma separated
-list of 3-tuples:
-
-: thttpd_files:www:public_html,other_volume:www:other_files
-
-If mounting multiple volumes under one SFTP user, all volume files
-must share the same owner. If the files require different ownership,
-you must use different SFTP users.
-#+end_notice
-
-Install sftp:
-
-#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
-#+begin_run
-pi make sftp install
-#+end_run
-
 *** Authorize your client's SSH public key
 
 Copy the contents of your SSH pubkey from your personal workstation to
@@ -4168,8 +4167,8 @@ The new page should now be public (e.g., =https://www.pi.example.com=):
 
 *** Use Rclone to synchronize whole directories to SFTP
 
-Unfortunately, the traditional tool =rsync= only works with SSH, not
-SFTP. An alternative tool named [[https://rclone.org/][Rclone]] can be used instead.
+Unfortunately, the traditional tool [[https://man.archlinux.org/man/rsync.1][rsync]] only works with SSH, not
+SFTP. An alternative tool named [[https://rclone.org/][Rclone]] can be used in place of it.
 
  * On your personal workstation, install =rclone= via your package
    manager (preferred) or [[https://rclone.org/install/][from the
@@ -4181,7 +4180,7 @@ SFTP. An alternative tool named [[https://rclone.org/][Rclone]] can be used inst
 mkdir -p ~/.config/rclone
 
 cat &lt;&lt;EOF &gt;&gt; ~/.config/rclone/rclone.conf
-[pi5]
+[pi]
 type = sftp
 host = pi.example.com
 user = www
@@ -4210,6 +4209,7 @@ rclone ls pi:
 Sync the current directory ( . ):
 
 #+begin_run
+## dangerous:
 rclone -v sync . pi:public_html/
 #+end_run
 
