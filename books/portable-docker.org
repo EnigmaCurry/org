@@ -3198,7 +3198,7 @@ Press =ESC= three times to go back to the main menu, then re-install Traefik:
 
 Once reinstalled, press =ESC= to exit the config tool.
 
-**** Create an entrypoint on the sentry
+**** TODO Create an entrypoint on the sentry
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
 #+begin_run
@@ -3663,7 +3663,7 @@ index
 ** Immich
 :PROPERTIES:
 :EXPORT_FILE_NAME: immich
-:EXPORT_HUGO_WEIGHT: 710
+:EXPORT_HUGO_WEIGHT: 7100
 :END:
 
 [[https://immich.app/][Immich]] is an open-source self-hosted photo and video management
@@ -3789,10 +3789,464 @@ You should immediately open the URL in your web browser:
 configuration to secure the admin user account.
 #+end_notice
 
+** SFTP (and Thttpd)
+:PROPERTIES:
+:EXPORT_FILE_NAME: sftp
+:EXPORT_HUGO_WEIGHT: 7200
+:END:
+
+[[https://www.rfc-editor.org/rfc/rfc4253][SFTP]] (SSH File Transfer Protocol) is a standard and secure method of
+transferring files. There are clients available for all platforms. You
+can configure an SFTP server to send and receive files directly with
+your Docker volumes.
+
+*** Install a demo web server (thttpd)
+
+[[https://www.acme.com/software/thttpd/][Thttpd]] is a tiny static HTTP server and it will be used as a small
+demonstration of the effect of transferring files with SFTP. This same
+approach will work with any container's volume.
+
+**** Configure thttpd
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make thttpd config
+#+end_run
+
+Thttpd will serve a website at a URL of your choosing:
+
+#+begin_stdout
+THTTPD_TRAEFIK_HOST: Enter the website domain name (eg. thttpd.example.com)
+: www.pi.example.com
+
+? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+> No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+Install thttpd:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make thttpd install
+#+end_run
+
+**** Configure the thttpd route on the sentry
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: www.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, then re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Once re-installed, press =ESC= to quit the config tool.
+
+**** Open the website in your browser
+
+ * Open =https://www.pi.example.com= in your web browser.
+ * Because there are no files uploaded yet, the page will show only an
+   index:
+
+[[/img/portable-docker/thttpd-index.webp]]
+
+*** Install SFTP
+
+**** Enable the SFTP entrypoint on the sentry
+
+Repeat the same process on the sentry:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+sentry make traefik config
+#+end_run
+
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik entrypoint config  
+  Show enabled entrypoints
+  Configure stock entrypoints
+> Configure custom entrypoints
+
+? Custom Entrypoints:  
+  List custom entrypoints
+> Add new custom entrypoint
+  Remove custom entrypoints
+
+Enter the new entrypoint name:
+: sftp
+
+Enter the entrypoint listen address:
+: 0.0.0.0
+
+Enter the entrypoint port:
+: 2223
+
+Enter the protocol (tcp or udp):
+: tcp
+? Is this entrypoint downstream from another trusted proxy?  
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through another trusted proxy. (Turn on Proxoy Protocol)
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Do not enable Proxy Protocol
+#+begin_notice
+SSH does not support [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], so be sure to disable it.
+#+end_notice
+
+Press =ESC= three times to go back to the main menu.
+
+**** Create the SFTP route on the sentry
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+  Configure layer 7 TLS proxy
+> Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 4 TCP/UDP Proxy:  
+  List layer 4 ingress routes
+> Add new layer 4 ingress route
+  Remove layer 4 ingress routes
+  Disable layer 4 TCP/UDP Proxy
+
+? Entrypoint  
+> sftp
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 2223
+
+> Do you want to enable Proxy Protocol for this route? No
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Do not enable Proxy Protocol
+#+begin_notice
+SSH does not support [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], so be sure to disable it.
+#+end_notice
+
+
+Press =ESC= three times to go back to the main menu, then re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+Once re-installed, press =ESC= to exit the config tool.
+
+*** Configure SFTP
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make sftp config
+#+end_run
+
+#+begin_stdout
+SFTP_PORT: Enter the public SSH port (eg. 2223)
+: 2223
+
+SFTP_USERS: Enter the user:uid list (eg. ryan:1000,gary:1001)
+: www:54321
+#+end_stdout
+
+#+attr_shortcode: :style info :title Use the same UID as thttpd
+#+begin_notice
+The thttpd container has a user with UID =54321=, so the SFTP user
+(=www=) has to have the same UID =54321=.
+#+end_notice
+
+#+begin_stdout
+SFTP_VOLUMES: Enter the volume:user:mount list (can be blank)
+: thttpd_files:www:public_html
+#+end_stdout
+
+#+attr_shortcode: :style info :title SFTP_VOLUMES
+#+begin_notice
+The =SFTP_VOLUMES= setting is a list of 3-tuple separated by the
+character =:=
+
+ 1. The Docker volume to mount (e.g., =thttpd_files=)
+ 2. The SFTP user that should own the mountpoint (e.g., =www=.)
+ 3. An arbitrary mount point sub-directory, only visible to the SFTP
+    user
+
+In the example above, the Docker volume named =thttpd_files= is
+mounted inside the =www= user's SFTP home directory, in a
+sub-directory named =public_html=.
+
+The user may have access to multiple volumes, each with a different
+mount point. Additional volumes may be mounted as a comma separated
+list of 3-tuples:
+
+: thttpd_files:www:public_html,other_volume:www:other_files
+
+If mounting multiple volumes under one SFTP user, all volume files
+must share the same owner. If the files require different ownership,
+you must use different SFTP users.
+#+end_notice
+
+Install sftp:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make sftp install
+#+end_run
+
+*** Authorize your client's SSH public key
+
+Copy the contents of your SSH pubkey from your personal workstation to
+your clipboard:
+
+#+begin_run
+cat ~/.ssh/id_ed25519.pub
+#+end_run
+
+Authorize the key to access the server:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make sftp ssh-authorize-key
+#+end_run
+
+Enter the information at the prompt:
+
+#+begin_stdout
+Which SSH username do you want to add a key for? : www
+Enter the SSH public key : xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#+end_stdout
+
+ * Enter the SSH username (e.g., =www=.)   
+ * Paste the SSH key from your clipboard, then press =Enter=.
+
+If you want to authorize multiple keys, repeat the last step. (If you
+want to remove all the authorized keys for a user, run =pi make sftp
+ssh-clear-id= and it will prompt for you to enter the username.)
+
+*** Configure your personal workstation as a client
+
+#+begin_run
+cat &lt;&lt;EOF &gt&gt ~/.ssh/config
+Host sftp.pi.example.com
+    User www
+    Port 2223
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+Test connecting:
+
+#+begin_run
+sftp sftp.pi.example.com
+#+end_run
+
+#+begin_stdout
+The authenticity of host '[sftp.pi.example.com]:2223 ([X.X.X.X]:2223)' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+This key is not known by any other names.
+
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+#+end_stdout
+
+If connected successfully, you should see the =sftp>= prompt. Type
+=ls= and you should see the =public_html= sub-directory listed:
+
+#+begin_stdout
+sftp> ls
+public_html
+#+end_stdout
+
+Press =Ctrl-D= to quit.
+
+*** Test uploading a new index.html to thttpd volume
+
+Create a temporary test folder on your personal workstation and create
+an index.html file:
+
+#+begin_run
+cd $(mktemp -d)
+echo '&lt;h1&gt;Hello, World!&lt;/h1&gt;' > index.html
+#+end_run
+
+Copy the files to the server into the =public_html= folder:
+
+#+begin_run
+scp index.html sftp.pi5.forwarding.network:public_html/
+#+end_run
+
+**** Refresh the website in your browser
+
+The new page should now be public (e.g., =https://www.pi.example.com=):
+
+[[/img/portable-docker/thttpd-hello-world.webp]]
+
+*** Use Rclone to synchronize whole directories to SFTP
+
+Unfortunately, the traditional tool =rsync= only works with SSH, not
+SFTP. An alternative tool named [[https://rclone.org/][Rclone]] can be used instead.
+
+ * On your personal workstation, install =rclone= via your package
+   manager (preferred) or [[https://rclone.org/install/][from the
+   official site]].
+
+**** Create rclone config file
+
+#+begin_run
+mkdir -p ~/.config/rclone
+
+cat &lt;&lt;EOF &gt;&gt; ~/.config/rclone/rclone.conf
+[pi5]
+type = sftp
+host = pi.example.com
+user = www
+port = 2223
+EOF
+#+end_run
+**** How to use rclone
+
+Read the [[https://rclone.org/docs/][rclone docs]] for comprehensive usage information.
+
+***** List all the remote files
+
+#+begin_run
+rclone ls pi:
+#+end_run
+
+#+begin_stdout
+        2 public_html/.gitignore
+       23 public_html/index.html
+#+end_stdout
+
+
+
+***** Syncronize a local directory to the remote public_html folder
+
+Sync the current directory ( . ):
+
+#+begin_run
+rclone -v sync . pi:public_html/
+#+end_run
+
+#+attr_shortcode: :style warning
+#+begin_notice
+This is a potentially destructive command: it makes the remote
+directory /exactly/ like your local directory. *All existing files in
+the remote destination directory are deleted if they do not exist
+locally*.
+#+end_notice
+
+#+attr_shortcode: :style tip
+#+begin_notice
+It is recommended to create an alias so that you don't fat-finger the
+=sync= command. For example, setup your local web root in your home
+directory =~/public_html=:
+
+#+begin_run
+mkdir -p ~/public_html
+#+end_run
+
+Next create this alias in your =~/.bashrc= file:
+
+: alias sync-web="rclone -v sync ~/public_html pi:public_html/"
+
+Then run the alias whenever you want to sync your local website to the
+remote public site:
+
+#+begin_run
+sync-web
+#+end_run
+#+end_notice
+
 ** Yourls
 :PROPERTIES:
 :EXPORT_FILE_NAME: yourls
-:EXPORT_HUGO_WEIGHT: 7100
+:EXPORT_HUGO_WEIGHT: 7300
 :END:
 
 [[https://yourls.org/][Yourls]] is a URL shortener.
