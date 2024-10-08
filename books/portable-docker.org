@@ -1679,7 +1679,7 @@ WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
 Optional authentication can be configured:
 
 #+begin_stdout
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?  
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?  
 > No
   Yes, with HTTP Basic Authentication
   Yes, with Oauth2
@@ -2295,7 +2295,7 @@ sentry make whoami config
 WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
 : whoami.sentry.example.com
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
 > No
   Yes, with HTTP Basic Authentication
   Yes, with Oauth2
@@ -2917,8 +2917,8 @@ the connection; it will always show the IP address of the tunnel
 
 [[/img/portable-docker/core-services.webp]]
 
-There are a few services you should install before any others, which
-we will call core services:
+There are a few services you should consider installing before any
+others, which we will call core services:
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -2970,7 +2970,7 @@ FORGEJO_TRAEFIK_HOST: Enter your forgejo domain name (eg. git.example.com)
 APP_NAME: Enter the service description (eg. "git thing")
 : pi5 git hosting
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
 > No
   Yes, with Mutual TLS (mTLS)
 #+end_stdout
@@ -3495,7 +3495,7 @@ v Logging level
 ? Choose a group to manage  
 > Create a new group
 
-? Enter the name of the group to create: whoami_test
+? Enter the name of the group to create: admin
 
 > Do you want to add users to this group now? Yes
 
@@ -3521,14 +3521,14 @@ pi make whoami config
 WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
 : whoami.pi.example.com
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
   No
   Yes, with HTTP Basic Authentication
 > Yes, with Oauth2
   Yes, with Mutual TLS (mTLS)
 
 ? Which authorization group do you want to permit access to this app?  
-> whoami_test
+> admin
 #+end_stdout
 
 Re-install whoami:
@@ -3644,7 +3644,7 @@ pi make immich config
 IMMICH_TRAEFIK_HOST: Enter the Immich domain name (e.g., immich.example.com)
 : immich.pi.example.com
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
 > No
   Yes, with HTTP Basic Authentication
   Yes, with Oauth2
@@ -3783,7 +3783,7 @@ Thttpd will serve a website at a URL of your choosing:
 THTTPD_TRAEFIK_HOST: Enter the website domain name (eg. thttpd.example.com)
 : www.pi.example.com
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
 > No
   Yes, with HTTP Basic Authentication
   Yes, with Oauth2
@@ -4207,10 +4207,273 @@ sync-web
 #+end_run
 #+end_notice
 
+** Homepage
+:PROPERTIES:
+:EXPORT_FILE_NAME: homepage
+:EXPORT_HUGO_WEIGHT: 7300
+:END:
+
+[[https://gethomepage.dev/][Homepage]] is a customizable dashboard for all of your self-hosted apps
+and services.
+
+*** Configure Homepage
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make homepage config
+#+end_run
+
+You need to configure two sub-domains, one for homepage itself, and
+one for its webhooks:
+
+#+begin_stdout
+HOMEPAGE_TRAEFIK_HOST: Enter the homepage domain name (eg. homepage.example.com)
+: homepage.pi.example.com
+
+HOMEPAGE_WEBHOOK_HOST: Enter the separate webhook domain name (eg. homepage-webhook.example.com)
+: homepage-webhook.pi.example.com
+#+end_stdout
+
+You can enable automatic service discovery by enabling the optional
+Docker support (recommended):
+
+#+begin_stdout
+> Do you want to enable docker service discovery? Yes
+#+end_stdout
+
+It is recommended to enable some form of [[/install-core-services/traefik-forward-auth/][sentry authorization]] to
+protect homepage, e.g., with OAuth2:
+
+#+begin_stdout
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?  
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+
+? Which authorization group do you want to permit access to this app?  
+> admin
+#+end_stdout
+
+
+**** HOMEPAGE_AUTO_CONFIG
+
+Homepage has optional auto configuration:
+
+ * If =HOMEPAGE_AUTO_CONFIG=true=, homepage will create a template
+   automatically that will discover all of your existing services.
+ * If =HOMEPAGE_AUTO_CONFIG=false=, homepage will clone a default
+   template from a git repository, or you may provide your own
+   repository via =HOMEPAGE_TEMPLATE_REPO=.
+
+For now, enable the auto-configuration:
+ 
+#+begin_stdout
+? Do you want to auto-configure Homepage and to discover all of your
+running d.rymcg.tech apps of the current docker context? (Y/n) Yes
+#+end_stdout
+
+*** Install Homepage
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make homepage install wait
+#+end_run
+
+*** Add two new routes on the sentry (droplet)
+
+You need to create two routes: one for homepage, and one for the
+webhooks:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: homepage.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint               Destination_address  Destination_port  Proxy_protocol
+----------               -------------------  ----------------  --------------
+homepage.pi.example.com  10.13.16.2           443               2
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: homepage-webhooks.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                       Destination_address  Destination_port  Proxy_protocol
+----------                       -------------------  ----------------  --------------
+homepage.pi.example.com           10.13.16.2           443               2
+homepage-webhooks.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Open Homepage
+
+Open =https://homepage.pi.example.com= in your web browser.
+
+*** Redeploy Homepage after you have installed new services
+
+The Homepage auto-config only happens at install time. If you install
+or remove services, you should reinstall homepage to update the
+dashboard:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make homepage install
+#+end_run
+
+*** Customize Hompepage template
+To customize your homepage template, you must set
+=HOMEPAGE_AUTO_CONFIG=false= and provide =HOMEPAGE_TEMPLATE_REPO= in
+the =.env_{CONTEXT}_{INSTANCE}= file:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make homepage reconfigure \
+  var=HOMEPAGE_TEMPLATE_REPO=https://github.com/EnigmaCurry/d.rymcg.tech_homepage-template.git
+
+pi make homepage reconfigure \
+  var=HOMEPAGE_AUTO_CONFIG=false
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+You can [[https://github.com/EnigmaCurry/d.rymcg.tech_homepage-template][fork the default template repository]] and provide your own
+=HOMEPAGE_TEMPLATE_REPO= and it will automatically pull the
+template from your URL.
+
+If your template repository is not public, you must create a deploy key:
+
+#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+begin_run
+pi make homepage git-deploy-key
+#+end_run
+
+This will generate and save a new SSH key in the config volume
+(=/app/config/ssh/id_rsa=). It will print out the public key, which
+you need to copy and paste into your Forgejo, Github, or Gitlab
+repository settings (Search for Deploy Key in the settings, and add
+this public key to allow cloning from the private repository.)
+
+[[/img/portable-docker/github-deploy-key.webp]]
+#+end_notice
+
+*** Reloading webhook
+
+An optional feature when using a custom template repository
+(=HOMEPAGE_TEMPLATE_REPO=) is you can send a webhook from your git
+forge to your homepage instance, telling it to restart and pull the
+changes automatically.
+
+First you must enable =HOMEPAGE_TEMPLATE_REPO_SYNC_ON_START=true= in
+the homepage =.env_{CONTEXT}_{INSTANCE}= file. Note that this setting
+will delete your existing config everytime homepage restarts, and it
+will redownload the template repository from scratch:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi make homepage reconfigure \
+  var=HOMEPAGE_TEMPLATE_REPO_SYNC_ON_START=true
+#+end_run
+
+Next you must configure your Forgejo, Github, or Gitlab repository to
+send the webhook on =git push= events:
+
+ * Webhook URL is of the format: https://homepage.example.com/reloader/restart
+ * Choose the data type: =application/json=
+ * Webhook Secret is found in your =.env_{INSTANCE}_{CONTEXT}= as
+   =HOMEPAGE_RELOADER_HMAC_SECRET=. This secret is used to validate that
+   the request is actually coming from your git host.
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi make homepage dotenv_get \
+  var=HOMEPAGE_RELOADER_HMAC_SECRET
+#+end_run
+
+#+begin_stdout
+xXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX
+#+end_stdout
+
+ * No extra authorization header is required.
+
+[[/img/portable-docker/github-webhook.webp]]
+
+Finally, redeploy homepage:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi make homepage install
+#+end_run
+
 ** Yourls
 :PROPERTIES:
 :EXPORT_FILE_NAME: yourls
-:EXPORT_HUGO_WEIGHT: 7300
+:EXPORT_HUGO_WEIGHT: 7400
 :END:
 
 [[https://yourls.org/][Yourls]] is a URL shortener.
@@ -4229,7 +4492,7 @@ authentication.
 YOURLS_TRAEFIK_HOST: Enter the YOURLS domain name (e.g., yourls.example.com)
 : yourls.pi.example.com
 
-? Do you want to enable sentry authentication in front of this app (effectively making the entire site private)?
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
 > No
   Yes, with HTTP Basic Authentication
   Yes, with Oauth2
