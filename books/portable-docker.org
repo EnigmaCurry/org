@@ -4174,8 +4174,6 @@ rclone ls pi:
        23 public_html/index.html
 #+end_stdout
 
-
-
 ***** Syncronize a local directory to the remote public_html folder
 
 Sync the current directory ( . ):
@@ -4668,7 +4666,7 @@ instance:
 pi make nginx install wait
 #+end_run
 
-*** Add two new routes on the sentry (droplet)
+*** Add a new route on the sentry (droplet)
 
 You need to create two routes: one for homepage, and one for the
 webhooks:
@@ -4786,11 +4784,10 @@ Create a new project directory on your personal workstation:
 
 #+begin_run
 mkdir -p ~/php-demo
-cd ~/php-demo
 #+end_run
 
 #+begin_run
-cat &lt;&lt;'EOF' > counter.php
+cat &lt;&lt;'EOF' > ~/php-demo/counter.php
 &lt;?php
 // Load environment variables using the standard PostgreSQL environment variable names
 $host = getenv('PGHOST') ?: 'localhost'; // Default to localhost if PGHOST is not set
@@ -4858,9 +4855,15 @@ EOF
 #+end_run
 
 #+begin_run
-scp counter.php sftp.pi.example.com:nginx/public/
+scp ~/php-demo/counter.php sftp.pi.example.com:nginx/public/
 #+end_run
 
+#+attr_shortcode: :style tip
+#+begin_notice
+Instead of =scp=, you can follow the same instructions as for [[/portable-docker/install-web-services/sftp/#use-rclone-to-synchronize-whole-directories-to-sftp][Thttpd]],
+and setup Rclone with an easy to use =sync-web= alias for
+synchronizing your web files.
+#+end_notice
 
 *** Visit counter page
 
