@@ -74,13 +74,13 @@ clients that expect this server to be online and available. No matter
 what kind of Internet connection it has, it should be quick to get
 this server back online.
 
-#+attr_shortcode: :style tip :title You can use any Linux computer instead.
+#+attr_shortcode: :style tip :title You can use any Linux computer, not just Raspberry Pi.
 #+begin_notice
-To follow this book, you don't specifically require a Raspberry Pi.
-You can replace it with any Linux computer (AMD64 or ARM64). The
-instructions for installing its dependencies assume it to be running
-Debian Linux, but this is not a requirement either if you can read
-between the lines.
+To follow this book, you don't necessarily require a Raspberry Pi. You
+can replace it with any Linux computer (AMD64 or ARM64). The
+instructions for installing its dependencies assume it to be running a
+variant of Debian Linux, but this is not a requirement either, if you
+can read between the lines.
 #+end_notice
 
 ** Sentry Droplet
@@ -113,13 +113,17 @@ both the sentry and Raspberry Pi to create the full public route to
 each of your services. Traefik supports the following types of routes:
 
  * *HTTP Layer 7* Routes an incoming HTTP(s) request, which is a
-   domain name (or TLS SNI), and optional HTTP path, over port 443 to
-   a backend HTTP server based on these criteria.
- * *TCP Layer 4 (no TLS inspection)* Routes a unique TCP ADDRESS:PORT combination
-   to a unique backend ADDRESS:PORT combination.
- * *TCP Layer 4 (TLS-enabled)* - TODO - unimplemented, but routes a
-   TCP layer 4 connection based upon the domain name (by inspecting
-   the unencrypted TLS SNI header.)
+   domain name (or TLS SNI), including optional HTTP path, over TCP
+   port =443= to a backend HTTP server based on these criteria. This
+   is the most common method used for publishing web apps.
+ * *TCP Layer 4 (no TLS inspection)* Routes a unique TCP ADDRESS:PORT
+   combination to a unique backend ADDRESS:PORT combination. This is
+   the second most common method, used for publishing non-HTTP
+   services (e.g., SSH).
+ * *TCP Layer 4/7 (TLS-enabled)* - TODO - unimplemented, but routes a
+   TLS encrypted TCP layer 4 connection based upon the domain name (by
+   inspecting the unencrypted TLS SNI header) to a backend
+   ADDRESS:PORT combination.
  * *UDP Layer 4* - TODO - unimplemented, but similar to non-TLS TCP.
 
 Traefik can create a public route for virtually any service on your
@@ -282,8 +286,8 @@ on) to visit your pages.
 
 *** Domain name registration
 
-The public domain name registration system is controlled as an
-artificially scarce resource that you must pay for the use of.
+The public domain name registration system is controlled as a scarce
+resource that you must pay for the use of.
 
 If domain names were given out for free, all of the good ones would be
 taken by now, but due to the imposed registration costs, there are
@@ -568,9 +572,11 @@ app data will live.
 [[/img/portable-docker/nvme-heatsink.webp]]
 #+end_notice
 
-You should purchase separately an NVME heatsink to go on the top of
-your NVME drive, and there is a little bit of room left in the case to
-fit one.
+You should purchase separately a heatsink to go on the top of your
+NVME drive. There is a little bit of room left in the case to fit a
+slim one (the one I installed is 3mm tall). This is not essential, but
+it is recommended if you make use of heavy I/O, as it will increase
+the life expectancy of the SSD.
 
 *** Putting everything together
 
@@ -578,7 +584,8 @@ fit one.
    this list is just a summary.
  * Install the heatsink to the Pi 5 motherboard.
  * Attach one end of the ribbon cable to the PCI-E port and lock it
-   into place.
+   into place. *The blue side of the ribbon cable should be facing
+   outward.*
  * Attach the other end of the ribbon cable to the NVME shield and
    lock it into place.
  * Install the NVME shield on top of the Pi motherboard, plugging into
@@ -636,7 +643,7 @@ software.
    Imager]] or install =rpi-imager= from your package manager.
  * Run =rpi-imager=.
  * Click on the menu labled =Rasperry Pi Device=.
-   * Choose your model of raspberry pi.
+   * Choose your model of Raspberry Pi.
    
  * Click on the menu labeled =Operating System=
    * Choose =Raspberry PI OS (other)=
@@ -687,23 +694,25 @@ Once the Pi is powered on, and is connected to your LAN, you need to
 figure out what its IP address is. There are a number of ways to do
 that:
 
- * If your network has configured multicast DNS (mDNS), you can find
-   the IP address by the hostname you set in the imager (e.g., =pi=),
-   appended with the domain =.local=:
+ * If your network has configured multicast DNS (mDNS, Avahi,
+   Bonjour), you can find the IP address by the hostname (e.g., =pi=
+   set in rpi-imager), appended with the domain =.local=:
 
 #+begin_run
 ping -c3 pi.local
 #+end_run
 
  * From any Linux computer attached to the same LAN, run =arp -a= to
-   find and list local devices. Try doing this before and after you
-   turn on the Pi, and then spot the difference.
+   find and list local connections. Try doing this before and after
+   you turn on the Pi, and then spot the difference.
 
 #+begin_run
 arp -a
 #+end_run
+
  * If you have a central LAN router + DHCP server, check the console
-   of the router for the newly added device.
+   of the router (or DHCP log) for the newly added device.
+   
  * Plug a monitor into the (micro) HDMI port of the Raspberry Pi, and
    the IP address will be printed to the console when it boots.
    
@@ -3540,6 +3549,15 @@ WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
 > admin
 #+end_stdout
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This will allow only the =admin= authorization group to access this
+instance.
+
+Remember, you can create [[/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization][extra authorization groups]] in the Traefik
+config, that way you can have separate user access per instance.
+#+end_notice
+
 Re-install whoami:
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
@@ -4217,6 +4235,429 @@ sync-web
 #+end_run
 #+end_notice
 
+** MinIO S3 (and Filestash)
+:PROPERTIES:
+:EXPORT_FILE_NAME: minio-s3
+:EXPORT_HUGO_WEIGHT: 7210
+:END:
+
+[[https://en.wikipedia.org/wiki/Amazon_S3][S3]] is a storage API (first implemented at Amazon AWS), but has since
+been copied and re-implemented as open source [[https://github.com/minio/minio][MinIO]]. MinIO is a
+service you can install to centrally store files in your network via
+the S3 API. With a web frontend like [[https://github.com/mickael-kerjean/filestash][Filestash]], you can host a file
+manager webapp for easy file sharing.
+
+[[/img/portable-docker/filestash-window.webp]]
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Running MinIO on a single Raspberry Pi is perfect for personal use.
+However, for heavier production use, you will need to plan to use
+beefier hardware with redundant storage.
+#+end_notice
+
+*** Configure MinIO
+
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make minio config
+#+end_run
+
+#+begin_stdout
+MINIO_TRAEFIK_HOST: Enter the minio domain name (eg. s3.example.com)
+: s3.pi.example.com
+
+MINIO_CONSOLE_TRAEFIK_HOST: Enter the minio console domain name (eg. console.s3.example.com)
+: s3-console.pi.example.com
+
+MINIO_SITE_REGION: Enter the self-described region of the server (eg. default)
+: default
+
+MINIO_ROOT_USER: Enter the minio root username (eg. root)
+: root
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?  
+> No
+  Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+*** Enable admin console (optional)
+
+The admin console is optional and it is blocked by default. If you
+want to access the console, you must unblock it, by providing your
+client IP address:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Unblock the console for your specific IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=X.X.X.X/32
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+To allow any IP address access to the minio console use =0.0.0.0/0=:
+
+#+attr_shortcode: :style other :title Run this on your Raspberry Pi
+#+begin_run
+## To unblock the console for any IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=0.0.0.0/0
+#+end_run
+
+Once installed, the console will be accessible at
+=https://s3-console.pi.example.com=. You will need to enter the
+username (=root=) and the password can be retrieved from the
+=.env_{CONTEXT}_{INSTANCE}= file:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## To retrieve the minio console root password:
+pi make minio dotenv_get var=MINIO_ROOT_PASSWORD
+#+end_run
+
+#+begin_stdout
+XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+#+end_stdout
+#+end_notice
+
+*** Install MinIO
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make minio install wait
+#+end_run
+
+*** Add two new routes on the sentry (droplet)
+
+Create a route for S3 and the console:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: s3.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+s3.pi.example.com  10.13.16.2           443               2
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: s3-console.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                 Destination_address  Destination_port  Proxy_protocol
+----------                 -------------------  ----------------  --------------
+s3.pi.example.com          10.13.16.2           443               2
+s3-console.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Create an S3 bucket and credentials
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make minio bucket
+#+end_run
+
+Create the bucket name: =demo= and then leave the policy, group, and
+username blank to use the same value:
+
+#+begin_stdout
+Enter a new bucket name (test): demo
+Enter a new policy name (demo): 
+Enter a new group name (demo): 
+Enter a new user name (demo): 
+#+end_stdout
+
+This will create the bucket and the output the endpoint and access
+credentials, which is all of the information necessary to provide
+access:
+
+#+begin_stdout
+Bucket: demo
+Endpoint: s3.pi.example.com
+Access Key: demo
+Secret Key: XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+#+end_stdout
+
+*** Configure Filestash instance
+
+It is likely you will want several instances of filestash for
+different buckets, so you you should configure them separately as
+named instances:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Create an instance named test:
+
+pi make filestash config instance=test
+#+end_run
+
+#+begin_stdout
+FILESTASH_TRAEFIK_HOST: Enter the filestash domain name (eg. filestash.example.com)
+: filestash-test.pi.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?  
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Warning
+#+begin_notice
+*sentry authorization is a requirement* as the S3 credentials are
+stored in the filestash client (i.e., web browser), therefore you
+should not allow anyone you do not trust with this information to
+access the page.
+#+end_notice
+
+
+#+begin_stdout
+? Which authorization group do you want to permit access to this app?  
+> admin
+#+end_stdout
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This will allow only the =admin= authorization group to access this
+instance.
+
+Remember, you can create [[/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization][extra authorization groups]] in the Traefik
+config, that way you can have separate user access per instance.
+#+end_notice
+
+*** Install the Filestash instance
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Install the instance named test:
+
+pi make filestash install instance=test
+#+end_run
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+The build process for filestash may take awhile, as it is built from
+source code. This is because the [[https://hub.docker.com/r/machines/filestash/][upstream images]] were out of date for
+ARM64.
+#+end_notice
+
+*** Add a new route on the sentry (droplet)
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: filestash-test.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                     Destination_address  Destination_port  Proxy_protocol
+----------                     -------------------  ----------------  --------------
+filestash-test.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Open Filestash
+
+Open the URL in your browser: =https://filestash-test.pi.example.com=.
+
+ * The initial page will ask you to create an admin password.
+
+*** Administer Filestash
+
+The admin page is only accessible from
+=https://filestash-test.pi.example.com/admin/=, and it is here you
+must configure the storage backend.
+
+ * Click =Backend= in the menu.
+ * Remove every backend except for =S3=.
+ * Do not select any authentication middleware.
+ * Click the icon in the upper left to go to main page, or simply go
+   to =https://filestash-test.pi.example.com/=.
+
+On the main page, enter the credentials for the S3 connection:
+
+ * Click =Advanced=
+ * Enter the Access key ID
+ * Enter the Secret Access Key
+ * Enter the Endpoint
+ * Leave the other options blank.
+
+[[/img/portable-docker/filestash-connect.webp]]
+
+ * Click =Connect=.
+
+Once logged in you should see a single folder with the same name as
+the bucket (=test=):
+
+[[/img/portable-docker/filestash-folder.webp]]
+
+ * Click the Share icon in the top right of the folder container.
+
+[[/img/portable-docker/filestash-share-link.webp]]
+
+ * Choose the appropriate permission for the person you are sharing
+   with:
+
+   * =Editor= has full access, download, upload, view, and delete.
+   * =Viewer= is read only.
+   * =Uploader= is write only (they won't be able to see any files,
+     not even the ones they upload.)
+   
+ * Under =Advanced= settings, you may optionally set an expiration for
+   the link, or customize the link URL.
+ * Do not set a password, as you can rely upon the sentry
+   authorization instead.
+ * Copy the link, and share this link with your friends!
+ * Try the link yourself in an Incognito browser window so that you
+   test it with no existing cookies. It should force you to login
+   through Forgejo first, and then once on the filestash page, test
+   the permissions you set are working.
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Because you enabled sentry authorization for this route, your friends
+will also need to create Forgejo accounts, and you will need to add
+them to the [[/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization][sentry authorization group]] in the Traefik config.
+#+end_notice
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Create an admin link for yourself, so that you don't need to enter the
+S3 credentials again, and you can create new share links too:
+
+ * Create a new share link like before.
+ * Choose =Editor= privilege.
+ * Click =Advanced=.
+ * Click =Can Reshare=.
+
+[[/img/portable-docker/filestash-share-admin.webp]]
+#+end_notice
+
+*** Using filestash
+
+ * You can upload files multiple files at a time by draging and
+   dropping them directly from your computer's file manager into the
+   browser window (FYI the dropzone is only near the top of the page).
+
+ * Many media types are supported with rich viewers, including images,
+   audio, and video.
+
 ** Homepage
 :PROPERTIES:
 :EXPORT_FILE_NAME: homepage
@@ -4266,6 +4707,15 @@ protect homepage, e.g., with OAuth2:
 ? Which authorization group do you want to permit access to this app?  
 > admin
 #+end_stdout
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This will allow only the =admin= authorization group to access this
+instance.
+
+Remember, you can create [[/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization][extra authorization groups]] in the Traefik
+config, that way you can have separate user access per instance.
+#+end_notice
 
 **** HOMEPAGE_AUTO_CONFIG
 
@@ -4663,6 +5113,15 @@ instance:
 > admin
 #+end_stdout
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This will allow only the =admin= authorization group to access this
+instance.
+
+Remember, you can create [[/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization][extra authorization groups]] in the Traefik
+config, that way you can have separate user access per instance.
+#+end_notice
+
 *** Install Nginx
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
@@ -4994,3 +5453,45 @@ xXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX
 
 Open =https://jupyterlab.pi.example.com= in your web browser. Paste
 the login token, and optionally set a new password.
+
+* Maintainence
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: maintainence
+:EXPORT_HUGO_WEIGHT: 9000
+:END:
+** Maintainence
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 9001
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Backup
+:PROPERTIES:
+:EXPORT_FILE_NAME: backup
+:EXPORT_HUGO_WEIGHT: 9002
+:END:
+
+TODO
+
+** Upgrade
+:PROPERTIES:
+:EXPORT_FILE_NAME: upgrade
+:EXPORT_HUGO_WEIGHT: 9003
+:END:
+
+*** Upgrade Raspberry Pi OS
+
+TODO
+
+*** Upgrade container images
+
+TODO
+
+*** Upgrade sentry
+
+TODO
