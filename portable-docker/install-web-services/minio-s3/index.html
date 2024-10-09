@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en-us" dir="ltr" itemscope itemtype="http://schema.org/Article">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="generator" content="Hugo 0.123.7">
+    <meta name="generator" content="Relearn 6.0.0+tip">
+    <meta name="description" content="S3 is a storage API (first implemented at Amazon AWS), but has since been copied and re-implemented as open source MinIO. MinIO is a service you can install to centrally store files in your network via the S3 API. With a web frontend like Filestash, you can host a file manager webapp for easy file sharing.
+Tip Running MinIO on a single Raspberry Pi is perfect for personal use. However, for heavier production use, you will need to plan to use beefier hardware with redundant storage.">
+    <meta name="author" content="">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="MinIO S3 (and Filestash) :: book.rymcg.tech">
+    <meta name="twitter:description" content="S3 is a storage API (first implemented at Amazon AWS), but has since been copied and re-implemented as open source MinIO. MinIO is a service you can install to centrally store files in your network via the S3 API. With a web frontend like Filestash, you can host a file manager webapp for easy file sharing.
+Tip Running MinIO on a single Raspberry Pi is perfect for personal use. However, for heavier production use, you will need to plan to use beefier hardware with redundant storage.">
+    <meta property="og:url" content="https://book.rymcg.tech/portable-docker/install-web-services/minio-s3/index.html">
+    <meta property="og:site_name" content="book.rymcg.tech">
+    <meta property="og:title" content="MinIO S3 (and Filestash) :: book.rymcg.tech">
+    <meta property="og:description" content="S3 is a storage API (first implemented at Amazon AWS), but has since been copied and re-implemented as open source MinIO. MinIO is a service you can install to centrally store files in your network via the S3 API. With a web frontend like Filestash, you can host a file manager webapp for easy file sharing.
+Tip Running MinIO on a single Raspberry Pi is perfect for personal use. However, for heavier production use, you will need to plan to use beefier hardware with redundant storage.">
+    <meta property="og:locale" content="en-us">
+    <meta property="og:type" content="article">
+    <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
+    <meta itemprop="name" content="MinIO S3 (and Filestash) :: book.rymcg.tech">
+    <meta itemprop="description" content="S3 is a storage API (first implemented at Amazon AWS), but has since been copied and re-implemented as open source MinIO. MinIO is a service you can install to centrally store files in your network via the S3 API. With a web frontend like Filestash, you can host a file manager webapp for easy file sharing.
+Tip Running MinIO on a single Raspberry Pi is perfect for personal use. However, for heavier production use, you will need to plan to use beefier hardware with redundant storage.">
+    <meta itemprop="wordCount" content="1532">
+    <title>MinIO S3 (and Filestash) :: book.rymcg.tech</title>
+    <link href="/css/fontawesome-all.min.css?1728517003" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728517003" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1728517003" rel="stylesheet">
+    <link href="/css/auto-complete.css?1728517003" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728517003" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1728517003" rel="stylesheet">
+    <link href="/css/fonts.css?1728517003" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728517003" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1728517003" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1728517003" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1728517003" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1728517003" rel="stylesheet">
+    <link href="/css/print.css?1728517003" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1728517003"></script>
+    <script>
+      window.relearn = window.relearn || {};
+      window.relearn.relBasePath='..\/..\/..';
+      window.relearn.relBaseUri='..\/..\/..';
+      window.relearn.absBaseUri='https:\/\/book.rymcg.tech';
+      window.index_js_url="/index.search.js";
+      // variant stuff
+      window.variants && variants.init( [ 'zen-auto', 'zen-light', 'zen-dark', 'relearn-auto', 'relearn-light', 'relearn-dark', 'relearn-bright', 'neon', 'learn', 'blue', 'green', 'red' ] );
+      // translations
+      window.T_Copy_to_clipboard = `Copy to clipboard`;
+      window.T_Copied_to_clipboard = `Copied to clipboard!`;
+      window.T_Copy_link_to_clipboard = `Copy link to clipboard`;
+      window.T_Link_copied_to_clipboard = `Copied link to clipboard!`;
+      window.T_Reset_view = `Reset view`;
+      window.T_View_reset = `View reset!`;
+      window.T_No_results_found = `No results found for "{0}"`;
+      window.T_N_results_found = `{1} results found for "{0}"`;
+    </script><link href="/css/custom.css" rel="stylesheet">
+
+  </head>
+  <body class="mobile-support html" data-url="/portable-docker/install-web-services/minio-s3/index.html">
+    <div id="R-body" class="default-animation">
+      <div id="R-body-overlay"></div>
+      <nav id="R-topbar">
+        <div class="topbar-wrapper">
+          <div class="topbar-sidebar-divider"></div>
+          <div class="topbar-area topbar-area-start" data-area="start">
+            <div class="topbar-button topbar-button-sidebar" data-content-empty="disable" data-width-s="show" data-width-m="hide" data-width-l="hide"><button class="topbar-control" onclick="toggleNav()" type="button" title="Menu (CTRL&#43;ALT&#43;n)"><i class="fa-fw fas fa-bars"></i></button>
+            </div>
+            <div class="topbar-button topbar-button-toc" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="Table of Contents (CTRL&#43;ALT&#43;t)"><i class="fa-fw fas fa-list-alt"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper"><nav class="TableOfContents">
+  <ul>
+    <li><a href="#configure-minio">Configure MinIO</a></li>
+    <li><a href="#enable-admin-console--optional">Enable admin console (optional)</a></li>
+    <li><a href="#install-minio">Install MinIO</a></li>
+    <li><a href="#add-two-new-routes-on-the-sentry--droplet">Add two new routes on the sentry (droplet)</a></li>
+    <li><a href="#create-an-s3-bucket-and-credentials">Create an S3 bucket and credentials</a></li>
+    <li><a href="#configure-filestash-instance">Configure Filestash instance</a></li>
+    <li><a href="#install-the-filestash-instance">Install the Filestash instance</a></li>
+    <li><a href="#add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</a></li>
+    <li><a href="#open-filestash">Open Filestash</a></li>
+    <li><a href="#administer-filestash">Administer Filestash</a></li>
+    <li><a href="#using-filestash">Using filestash</a></li>
+  </ul>
+</nav>
+                </div>
+              </div>
+            </div>
+          </div>
+          <ol class="topbar-breadcrumbs breadcrumbs highlightable" itemscope itemtype="http://schema.org/BreadcrumbList"><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/index.html"><span itemprop="name">Portable Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/install-web-services/index.html"><span itemprop="name">Install apps</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">MinIO S3 (and Filestash)</span><meta itemprop="position" content="4"></li>
+          </ol>
+          <div class="topbar-area topbar-area-end" data-area="end">
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-web-services/sftp/index.html" title="SFTP (and Thttpd) (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-web-services/homepage/index.html" title="Homepage (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            </div>
+            <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
+              <div class="topbar-content">
+                <div class="topbar-content-wrapper">
+                  <div class="topbar-area topbar-area-more" data-area="more">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div id="R-main-overlay"></div>
+      <main id="R-body-inner" class="highlightable default" tabindex="-1">
+        <div class="flex-block-wrapper">
+          <article class="default">
+            <header class="headline">
+            </header>
+
+<h1 id="minio-s3-and-filestash">MinIO S3 (and Filestash)</h1>
+
+<p><a href="https://en.wikipedia.org/wiki/Amazon_S3" rel="external" target="_blank">S3</a> is a storage API (first implemented at Amazon AWS), but has since
+been copied and re-implemented as open source <a href="https://github.com/minio/minio" rel="external" target="_blank">MinIO</a>. MinIO is a
+service you can install to centrally store files in your network via
+the S3 API. With a web frontend like <a href="https://github.com/mickael-kerjean/filestash" rel="external" target="_blank">Filestash</a>, you can host a file
+manager webapp for easy file sharing.</p>
+<figure><img src="/img/portable-docker/filestash-window.webp"/>
+</figure>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Running MinIO on a single Raspberry Pi is perfect for personal use.
+However, for heavier production use, you will need to plan to use
+beefier hardware with redundant storage.</p>
+</div>
+</div>
+<h2 id="configure-minio">Configure MinIO</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make minio config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+MINIO_TRAEFIK_HOST: Enter the minio domain name (eg. s3.example.com)
+
+: s3.pi.example.com
+
+MINIO_CONSOLE_TRAEFIK_HOST: Enter the minio console domain name (eg. console.s3.example.com)
+
+: s3-console.pi.example.com
+
+MINIO_SITE_REGION: Enter the self-described region of the server (eg. default)
+
+: default
+
+MINIO_ROOT_USER: Enter the minio root username (eg. root)
+
+: root
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+> No
+  Yes, with Mutual TLS (mTLS)
+</pre>
+    </div>
+</div>
+
+<h2 id="enable-admin-console--optional">Enable admin console (optional)</h2>
+<p>The admin console is optional and it is blocked by default. If you
+want to access the console, you must unblock it, by providing your
+client IP address:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Unblock the console for your specific IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=X.X.X.X/32
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>To allow any IP address access to the minio console use <code>0.0.0.0/0</code>:</p>
+<div class="box notices cstyle run">
+    <div class="box-label other">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## To unblock the console for any IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=0.0.0.0/0
+</pre></code>
+    </div>
+</div>
+<p>Once installed, the console will be accessible at
+<code>https://s3-console.pi.example.com</code>. You will need to enter the
+username (<code>root</code>) and the password can be retrieved from the
+<code>.env_{CONTEXT}_{INSTANCE}</code> file:</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## To retrieve the minio console root password:
+pi make minio dotenv_get var=MINIO_ROOT_PASSWORD
+</pre></code>
+    </div>
+</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+</pre>
+    </div>
+</div>
+</div>
+</div>
+<h2 id="install-minio">Install MinIO</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make minio install wait
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="add-two-new-routes-on-the-sentry--droplet">Add two new routes on the sentry (droplet)</h2>
+<p>Create a route for S3 and the console:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+sentry make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+
+: s3.pi.example.com
+
+Enter the destination IP address to forward to:
+
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+s3.pi.example.com  10.13.16.2           443               2
+
+? Layer 7 TLS Proxy:
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+
+: s3-console.pi.example.com
+
+Enter the destination IP address to forward to:
+
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                 Destination_address  Destination_port  Proxy_protocol
+----------                 -------------------  ----------------  --------------
+s3.pi.example.com          10.13.16.2           443               2
+s3-console.pi.example.com  10.13.16.2           443               2
+</pre>
+    </div>
+</div>
+
+<p>Press <code>ESC</code> three times to go back to the main menu, and re-install Traefik:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre>
+    </div>
+</div>
+
+<p>After installation, press <code>ESC</code> to quit the config tool.</p>
+<h2 id="create-an-s3-bucket-and-credentials">Create an S3 bucket and credentials</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make minio bucket
+</pre></code>
+    </div>
+</div>
+
+
+<p>Create the bucket name: <code>demo</code> and then leave the policy, group, and
+username blank to use the same value:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Enter a new bucket name (test): demo
+Enter a new policy name (demo):
+Enter a new group name (demo):
+Enter a new user name (demo):
+</pre>
+    </div>
+</div>
+
+<p>This will create the bucket and the output the endpoint and access
+credentials, which is all of the information necessary to provide
+access:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Bucket: demo
+Endpoint: s3.pi.example.com
+Access Key: demo
+Secret Key: XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+</pre>
+    </div>
+</div>
+
+<h2 id="configure-filestash-instance">Configure Filestash instance</h2>
+<p>It is likely you will want several instances of filestash for
+different buckets, so you you should configure them separately as
+named instances:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Create an instance named test:
+
+pi make filestash config instance=test
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+FILESTASH_TRAEFIK_HOST: Enter the filestash domain name (eg. filestash.example.com)
+
+: filestash-test.pi.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p><strong>sentry authorization is a requirement</strong> as the S3 credentials are
+stored in the filestash client (i.e., web browser), therefore you
+should not allow anyone you do not trust with this information to
+access the page.</p>
+</div>
+</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Which authorization group do you want to permit access to this app?
+> admin
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>This will allow only the <code>admin</code> authorization group to access this
+instance.</p>
+<p>Remember, you can create <a href="/portable-docker/install-core-services/traefik-forward-auth/index.html#add-user-groups-for-sentry-authorization">extra authorization groups</a> in the Traefik
+config, that way you can have separate user access per instance.</p>
+</div>
+</div>
+<h2 id="install-the-filestash-instance">Install the Filestash instance</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Install the instance named test:
+
+pi make filestash install instance=test
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
+  <div class="box-content">
+
+<p>The build process for filestash may take awhile, as it is built from
+source code. This is because the <a href="https://hub.docker.com/r/machines/filestash/" rel="external" target="_blank">upstream images</a> were out of date for
+ARM64.</p>
+</div>
+</div>
+<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+sentry make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+
+: filestash-test.pi.example.com
+
+Enter the destination IP address to forward to:
+
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                     Destination_address  Destination_port  Proxy_protocol
+----------                     -------------------  ----------------  --------------
+filestash-test.pi.example.com  10.13.16.2           443               2
+</pre>
+    </div>
+</div>
+
+<p>Press <code>ESC</code> three times to go back to the main menu, and re-install Traefik:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre>
+    </div>
+</div>
+
+<p>After installation, press <code>ESC</code> to quit the config tool.</p>
+<h2 id="open-filestash">Open Filestash</h2>
+<p>Open the URL in your browser: <code>https://filestash-test.pi.example.com</code>.</p>
+<ul>
+<li>The initial page will ask you to create an admin password.</li>
+</ul>
+<h2 id="administer-filestash">Administer Filestash</h2>
+<p>The admin page is only accessible from
+<code>https://filestash-test.pi.example.com/admin/</code>, and it is here you
+must configure the storage backend.</p>
+<ul>
+<li>Click <code>Backend</code> in the menu.</li>
+<li>Remove every backend except for <code>S3</code>.</li>
+<li>Do not select any authentication middleware.</li>
+<li>Click the icon in the upper left to go to main page, or simply go
+to <code>https://filestash-test.pi.example.com/</code>.</li>
+</ul>
+<p>On the main page, enter the credentials for the S3 connection:</p>
+<ul>
+<li>Click <code>Advanced</code></li>
+<li>Enter the Access key ID</li>
+<li>Enter the Secret Access Key</li>
+<li>Enter the Endpoint</li>
+<li>Leave the other options blank.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-connect.webp"/>
+</figure>
+
+<ul>
+<li>Click <code>Connect</code>.</li>
+</ul>
+<p>Once logged in you should see a single folder with the same name as
+the bucket (<code>test</code>):</p>
+<figure><img src="/img/portable-docker/filestash-folder.webp"/>
+</figure>
+
+<ul>
+<li>Click the Share icon in the top right of the folder container.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-share-link.webp"/>
+</figure>
+
+<ul>
+<li>
+<p>Choose the appropriate permission for the person you are sharing
+with:</p>
+<ul>
+<li><code>Editor</code> has full access, download, upload, view, and delete.</li>
+<li><code>Viewer</code> is read only.</li>
+<li><code>Uploader</code> is write only (they won&rsquo;t be able to see any files,
+not even the ones they upload.)</li>
+</ul>
+</li>
+<li>
+<p>Under <code>Advanced</code> settings, you may optionally set an expiration for
+the link, or customize the link URL.</p>
+</li>
+<li>
+<p>Do not set a password, as you can rely upon the sentry
+authorization instead.</p>
+</li>
+<li>
+<p>Copy the link, and share this link with your friends!</p>
+</li>
+<li>
+<p>Try the link yourself in an Incognito browser window so that you
+test it with no existing cookies. It should force you to login
+through Forgejo first, and then once on the filestash page, test
+the permissions you set are working.</p>
+</li>
+</ul>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Because you enabled sentry authorization for this route, your friends
+will also need to create Forgejo accounts, and you will need to add
+them to the <a href="/portable-docker/install-core-services/traefik-forward-auth/index.html#add-user-groups-for-sentry-authorization">sentry authorization group</a> in the Traefik config.</p>
+</div>
+</div>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Create an admin link for yourself, so that you don&rsquo;t need to enter the
+S3 credentials again, and you can create new share links too:</p>
+<ul>
+<li>Create a new share link like before.</li>
+<li>Choose <code>Editor</code> privilege.</li>
+<li>Click <code>Advanced</code>.</li>
+<li>Click <code>Can Reshare</code>.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-share-admin.webp"/>
+</figure>
+</div>
+</div>
+<h2 id="using-filestash">Using filestash</h2>
+<ul>
+<li>
+<p>You can upload files multiple files at a time by draging and
+dropping them directly from your computer&rsquo;s file manager into the
+browser window (FYI the dropzone is only near the top of the page).</p>
+</li>
+<li>
+<p>Many media types are supported with rich viewers, including images,
+audio, and video.</p>
+</li>
+</ul>
+
+            <footer class="footline">
+            </footer>
+          </article>
+        </div>
+      </main>
+    </div>
+    <aside id="R-sidebar" class="default-animation">
+      <div id="R-header-topbar" class="default-animation"></div>
+      <div id="R-header-wrapper" class="default-animation">
+        <div id="R-header" class="default-animation">
+<img src="/img/logo.jpg" class="logo" />
+
+        </div>
+
+        <search><form action="/search.html" method="get">
+          <div class="searchbox default-animation">
+            <button class="search-detail" type="submit" title="Search (CTRL+ALT+f)"><i class="fas fa-search"></i></button>
+            <label class="a11y-only" for="R-search-by">Search</label>
+            <input data-search-input id="R-search-by" name="search-by" class="search-by" type="search" placeholder="Search...">
+            <button class="search-clear" type="button" data-search-clear="" title="Clear search"><i class="fas fa-times" title="Clear search"></i></button>
+          </div>
+        </form></search>
+        <script>
+          var contentLangs=['en'];
+        </script>
+        <script src="/js/auto-complete.js?1728517003" defer></script>
+        <script src="/js/lunr/lunr.min.js?1728517003" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1728517003" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1728517003" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1728517003" defer></script>
+        <script src="/js/search.js?1728517003" defer></script>
+      </div>
+      <div id="R-homelinks" class="default-animation homelinks">
+        <ul>
+          <li><a class="padding" href="/index.html"><i class="fa-fw fas fa-home"></i> Home</a></li>
+        </ul>
+        <hr class="padding">
+      </div>
+      <div id="R-content-wrapper" class="highlightable">
+        <div id="R-topics">
+          <ul class="enlarge morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/index.html" class=""><a class="padding" href="/linux-workstation/index.html">Linux Workstation</a><ul id="R-subsections-4fabcc8bf6f43bc84cc33c8d9fe1b62b" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/introduction/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/introduction/index.html">Introduction</a><ul id="R-subsections-247caeb1441bcea844a3ccf766ca4471" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/introduction/fedora-sway-atomic/index.html" class=""><a class="padding" href="/linux-workstation/introduction/fedora-sway-atomic/index.html">Fedora Sway Atomic</a></li>
+          <li data-nav-id="/linux-workstation/introduction/requirements/index.html" class=""><a class="padding" href="/linux-workstation/introduction/requirements/index.html">Requirements</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/install/index.html" class=""><a class="padding" href="/linux-workstation/install/index.html">Install Linux (Fedora Atomic)</a></li>
+          <li data-nav-id="/linux-workstation/upgrading/index.html" class=""><a class="padding" href="/linux-workstation/upgrading/index.html">Upgrading</a></li>
+          <li data-nav-id="/linux-workstation/layering-packages/index.html" class=""><a class="padding" href="/linux-workstation/layering-packages/index.html">Layering packages</a></li>
+          <li data-nav-id="/linux-workstation/config/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/config/index.html">Config</a><ul id="R-subsections-51edac90ba33828eb61f7465c11b4244" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/config/sway/index.html" class=""><a class="padding" href="/linux-workstation/config/sway/index.html">Sway</a></li>
+          <li data-nav-id="/linux-workstation/config/firefox/index.html" class=""><a class="padding" href="/linux-workstation/config/firefox/index.html">Firefox</a></li>
+          <li data-nav-id="/linux-workstation/config/toolbox/index.html" class=""><a class="padding" href="/linux-workstation/config/toolbox/index.html">Toolbox</a></li>
+          <li data-nav-id="/linux-workstation/config/emacs-on-fedora/index.html" class=""><a class="padding" href="/linux-workstation/config/emacs-on-fedora/index.html">Emacs</a></li>
+          <li data-nav-id="/linux-workstation/config/ssh/index.html" class=""><a class="padding" href="/linux-workstation/config/ssh/index.html">SSH</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/sudo-2fa/index.html">Solokey authentication</a><ul id="R-subsections-96e2330197c57518ec319a4d358386d1" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/sudo-2fa/get-your-solokey/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/get-your-solokey/index.html">Get your Solokey</a></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/solo-v2/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/solo-v2/index.html">Solokey v2</a></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/solo-v1/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/solo-v1/index.html">Solokey v1</a></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/sudo-2fa/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/sudo-2fa/index.html">Sudo with Solokey</a></li>
+          <li data-nav-id="/linux-workstation/sudo-2fa/ssh-2fa/index.html" class=""><a class="padding" href="/linux-workstation/sudo-2fa/ssh-2fa/index.html">SSH with Solokey</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/app-users/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/app-users/index.html">Application users</a><ul id="R-subsections-f5664fb1bd37f091399ca1d7ccc19fa6" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/app-users/digitalocean/index.html" class=""><a class="padding" href="/linux-workstation/app-users/digitalocean/index.html">DigitalOcean CLI (doctl)</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/index.html">KVM / libvirt</a><ul id="R-subsections-866ef10ce7233c8e220552c62acdd9fb" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/kvm-libvirt/install-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/install-libvirtd/index.html">Install libvirtd</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-libvirtd/index.html">Setup libvirtd</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/dedicated-vm-user/index.html">Create VM admin</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/index.html" class="alwaysopen"><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/index.html">Cloud-Init VMs</a><ul id="R-subsections-85e75632117660d261346e27d0e1596a" class="morespace collapsible-menu">
+          <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/config-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/config-vm/index.html">Configure VM (cloud-init)</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/cloud-init/create-vm/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/cloud-init/create-vm/index.html">Create VM (cloud-init)</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/systemd/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/systemd/index.html">Systemd services to control VMs</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/public-routes/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/public-routes/index.html">Public routes to VMs</a></li>
+          <li data-nav-id="/linux-workstation/kvm-libvirt/setup-workstation/index.html" class=""><a class="padding" href="/linux-workstation/kvm-libvirt/setup-workstation/index.html">Setup workstation SSH config</a></li></ul></li>
+          <li data-nav-id="/linux-workstation/firewall/index.html" class=""><a class="padding" href="/linux-workstation/firewall/index.html">Firewall</a></li></ul></li>
+          <li data-nav-id="/portable-docker/index.html" class="parent "><a class="padding" href="/portable-docker/index.html">Portable Docker</a><ul id="R-subsections-b3086ba332f3435644ca357f0652e978" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/introduction/index.html" class=""><a class="padding" href="/portable-docker/introduction/index.html">Introduction</a></li>
+          <li data-nav-id="/portable-docker/set-up-dns/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/set-up-dns/index.html">Set up DNS</a><ul id="R-subsections-a0c2c97983f01b68076939714fc6a926" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/set-up-dns/register-domain/index.html" class=""><a class="padding" href="/portable-docker/set-up-dns/register-domain/index.html">Register a domain name</a></li>
+          <li data-nav-id="/portable-docker/set-up-dns/create-digitalocean-api-token/index.html" class=""><a class="padding" href="/portable-docker/set-up-dns/create-digitalocean-api-token/index.html">Add the domain to DigitalOcean DNS</a></li>
+          <li data-nav-id="/portable-docker/set-up-dns/create-digitalocean-api-token-for-acme-challenge/index.html" class=""><a class="padding" href="/portable-docker/set-up-dns/create-digitalocean-api-token-for-acme-challenge/index.html">Generate DigitalOcean API token for ACME challenge</a></li></ul></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/set-up-raspberry-pi/index.html">Set up Raspberry Pi</a><ul id="R-subsections-76f5fc887c0761353199079afdcded3c" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/build-your-pi/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/build-your-pi/index.html">Build your Raspberry Pi</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/install-raspbian/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/install-raspbian/index.html">Install Raspberry Pi OS</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/set-up-networking/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/set-up-networking/index.html">Set up networking</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/set-up-ssh/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/set-up-ssh/index.html">Set up SSH</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/install-docker/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/install-docker/index.html">Install Docker</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/install-d-rymcg-tech/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/install-d-rymcg-tech/index.html">Install d.rymcg.tech</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/install-traefik/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/install-traefik/index.html">Install Traefik</a></li>
+          <li data-nav-id="/portable-docker/set-up-raspberry-pi/install-whoami/index.html" class=""><a class="padding" href="/portable-docker/set-up-raspberry-pi/install-whoami/index.html">Install Whoami</a></li></ul></li>
+          <li data-nav-id="/portable-docker/set-up-cloud-sentry/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/set-up-cloud-sentry/index.html">Set up sentry Droplet</a><ul id="R-subsections-d79aafc309d8cfcdaa8648ffd061e5e1" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/index.html" class=""><a class="padding" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/index.html">Launch DigitalOcean droplet</a></li>
+          <li data-nav-id="/portable-docker/set-up-cloud-sentry/set-up-docker-context/index.html" class=""><a class="padding" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/index.html">Configure the droplet on the Pi</a></li>
+          <li data-nav-id="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/index.html" class=""><a class="padding" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/index.html">Configure d.rymcg.tech for the sentry</a></li></ul></li>
+          <li data-nav-id="/portable-docker/configure-wireguard-tunnel/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/configure-wireguard-tunnel/index.html">Configure WireGuard VPN</a><ul id="R-subsections-0f57b4569cb5c84faed570bffcdf4dd0" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/configure-wireguard-tunnel/configure-sentry-wireguard-server/index.html" class=""><a class="padding" href="/portable-docker/configure-wireguard-tunnel/configure-sentry-wireguard-server/index.html">Configure sentry wireguard server</a></li>
+          <li data-nav-id="/portable-docker/configure-wireguard-tunnel/configure-raspberry-pi-wireguard-client/index.html" class=""><a class="padding" href="/portable-docker/configure-wireguard-tunnel/configure-raspberry-pi-wireguard-client/index.html">Configure Raspberry Pi WireGuard client</a></li></ul></li>
+          <li data-nav-id="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html" class=""><a class="padding" href="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html">Set up public SSH</a></li>
+          <li data-nav-id="/portable-docker/install-core-services/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/install-core-services/index.html">Install core services</a><ul id="R-subsections-c9481aa00498efbc9aa9b90ebe7fdb65" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/install-core-services/forgejo/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/forgejo/index.html">Forgejo</a></li>
+          <li data-nav-id="/portable-docker/install-core-services/traefik-forward-auth/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/traefik-forward-auth/index.html">Traefik-Forward-Auth (sentry authorization)</a></li></ul></li>
+          <li data-nav-id="/portable-docker/install-web-services/index.html" class="parent alwaysopen"><a class="padding" href="/portable-docker/install-web-services/index.html">Install apps</a><ul id="R-subsections-4340db93b595b617ec6a0c5b45298ba3" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/install-web-services/immich/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/immich/index.html">Immich</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/sftp/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/sftp/index.html">SFTP (and Thttpd)</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/minio-s3/index.html" class="active"><a class="padding" href="/portable-docker/install-web-services/minio-s3/index.html">MinIO S3 (and Filestash)</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/homepage/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/homepage/index.html">Homepage</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/yourls/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/yourls/index.html">Yourls</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/nginx-and-php/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/nginx-and-php/index.html">Nginx and PHP</a></li>
+          <li data-nav-id="/portable-docker/install-web-services/jupyterlab/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/jupyterlab/index.html">Jupyterlab</a></li></ul></li>
+          <li data-nav-id="/portable-docker/maintainence/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/maintainence/index.html">Maintainence</a><ul id="R-subsections-81d31540667f3eb173271408fccd3717" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/maintainence/backup/index.html" class=""><a class="padding" href="/portable-docker/maintainence/backup/index.html">Backup</a></li>
+          <li data-nav-id="/portable-docker/maintainence/upgrade/index.html" class=""><a class="padding" href="/portable-docker/maintainence/upgrade/index.html">Upgrade</a></li></ul></li></ul></li>
+          <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
+          <li data-nav-id="/publishing-with-org-mode/building-locally/index.html" class=""><a class="padding" href="/publishing-with-org-mode/building-locally/index.html">Building locally</a></li>
+          <li data-nav-id="/publishing-with-org-mode/publish-with-github-pages/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-github-pages/index.html">Publishing with GitHub pages</a></li>
+          <li data-nav-id="/publishing-with-org-mode/publish-with-sftp/index.html" class=""><a class="padding" href="/publishing-with-org-mode/publish-with-sftp/index.html">Publishing with SFTP</a></li>
+          <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/index.html">Using Org-mode and Emacs</a><ul id="R-subsections-f93c6166e26669592c85e9cf02707646" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/index.html">Navigating Org-mode files</a></li>
+          <li data-nav-id="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/index.html">Editing Org-mode files</a></li></ul></li>
+          <li data-nav-id="/publishing-with-org-mode/examples/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/examples/index.html">Example Org / Hugo content</a><ul id="R-subsections-21525f33c1956ce3844918973388ff0a" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/examples/org-blocks/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/org-blocks/index.html">Example Org Blocks</a></li>
+          <li data-nav-id="/publishing-with-org-mode/examples/shortcodes/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/shortcodes/index.html">Example Shortcodes</a></li>
+          <li data-nav-id="/publishing-with-org-mode/examples/deeply/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/examples/deeply/index.html">Example of a deeply …</a><ul id="R-subsections-5c8cebe1226c6de44ad55152efdb64aa" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/examples/deeply/nested/index.html" class="alwaysopen"><a class="padding" href="/publishing-with-org-mode/examples/deeply/nested/index.html">Nested …</a><ul id="R-subsections-b3d8d366e5b04e51fbfcb8de77d01482" class="morespace collapsible-menu">
+          <li data-nav-id="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter1/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter1/index.html">Sub-chapter 1</a></li>
+          <li data-nav-id="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter2/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter2/index.html">Sub-chapter 2</a></li>
+          <li data-nav-id="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter3/index.html" class=""><a class="padding" href="/publishing-with-org-mode/examples/deeply/nested/subchapters/subchapter3/index.html">Sub-chapter 3</a></li></ul></li></ul></li></ul></li></ul></li>
+          <li data-nav-id="/license/index.html" class=""><a class="padding" href="/license/index.html">LICENSE</a></li>
+          </ul>
+        </div>
+        <div class="padding footermargin footerLangSwitch footerVariantSwitch footerVisitedLinks footerFooter showVariantSwitch showFooter"></div>
+        <div id="R-menu-footer">
+          <hr class="padding default-animation footerLangSwitch footerVariantSwitch footerVisitedLinks footerFooter showVariantSwitch showFooter">
+          <div id="R-prefooter" class="footerLangSwitch footerVariantSwitch footerVisitedLinks showVariantSwitch">
+            <ul>
+              <li id="R-select-language-container" class="footerLangSwitch">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-language"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <label class="a11y-only" for="R-select-language">Language</label>
+                    <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/portable-docker/install-web-services/minio-s3/index.html" lang="en-us" selected></option>
+                    </select>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+              </li>
+              <li id="R-select-variant-container" class="footerVariantSwitch showVariantSwitch">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-paint-brush"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <label class="a11y-only" for="R-select-variant">Theme</label>
+                    <select id="R-select-variant" onchange="window.variants && variants.changeVariant( this.value );">
+                      <option id="R-select-variant-zen-auto" value="zen-auto" selected>Zen Light/Dark</option>
+                      <option id="R-select-variant-zen-light" value="zen-light">Zen Light</option>
+                      <option id="R-select-variant-zen-dark" value="zen-dark">Zen Dark</option>
+                      <option id="R-select-variant-relearn-auto" value="relearn-auto">Relearn Light/Dark</option>
+                      <option id="R-select-variant-relearn-light" value="relearn-light">Relearn Light</option>
+                      <option id="R-select-variant-relearn-dark" value="relearn-dark">Relearn Dark</option>
+                      <option id="R-select-variant-relearn-bright" value="relearn-bright">Relearn Bright</option>
+                      <option id="R-select-variant-neon" value="neon">Neon</option>
+                      <option id="R-select-variant-learn" value="learn">Learn</option>
+                      <option id="R-select-variant-blue" value="blue">Blue</option>
+                      <option id="R-select-variant-green" value="green">Green</option>
+                      <option id="R-select-variant-red" value="red">Red</option>
+                    </select>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+                <script>window.variants && variants.markSelectedVariant();</script>
+              </li>
+              <li class="footerVisitedLinks">
+                <div class="padding menu-control">
+                  <i class="fa-fw fas fa-history"></i>
+                  <span>&nbsp;</span>
+                  <div class="control-style">
+                    <button onclick="clearHistory();">Clear History</button>
+                  </div>
+                  <div class="clear"></div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 9, 2024 at 11:36pm (UTC)
+
+          </div>
+        </div>
+      </div>
+    </aside>
+    <script src="/js/clipboard.min.js?1728517003" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1728517003" defer></script>
+    <script src="/js/theme.js?1728517003" defer></script>
+  </body>
+</html>
