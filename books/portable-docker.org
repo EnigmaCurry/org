@@ -1150,6 +1150,7 @@ Configure the =pi= user's =~/.bashrc= file:
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
 cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
+export EDITOR=nano
 
 ## d.rymcg.tech cli tool:
 export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
@@ -4651,9 +4652,9 @@ S3 credentials again, and you can create new share links too:
 
 *** Using filestash
 
- * You can upload files multiple files at a time by draging and
-   dropping them directly from your computer's file manager into the
-   browser window (FYI the dropzone is only near the top of the page).
+ * You can upload multiple files at a time by draging and dropping
+   them directly from your computer's file manager into the browser
+   window (FYI the dropzone is only near the top of the page).
 
  * Many media types are supported with rich viewers, including images,
    audio, and video.
@@ -5486,12 +5487,54 @@ TODO
 
 *** Upgrade Raspberry Pi OS
 
-TODO
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sudo apt update
+sudo apt full-upgrade
+sudo reboot
+#+end_run
 
 *** Upgrade container images
 
-TODO
+Each application is configured via its own =.env_{CONTEXT}_{INSTANCE}=
+file in the project folder of each app.
+
+The version of the app is usually controlled via an environment
+variable named =PROJECT_IMAGE= or =PROJECT_VERSION=. For some apps,
+this will be labeled as =latest= so that it always installs the latest
+version, while others are locked to a specific know working version.
+The =d.rymcg.tech= authors will update the =.env-dist= file
+automatically, but you must still update this in your own
+=.env_{CONTEXT}_{INSTANCE}= config files.
+
+You can edit the .env file for any app instance:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Immich is just an example app:
+pi make immich config-edit instance=default
+#+end_run
+
+This will open the config file in the default editor (=nano=), find
+the appropriate environment variable that affects the version of the
+application (usually there's a comment or URL to go to), edit it so
+that it points to the latest version, and save the file.
+
+You must reinstall the application to install the new version:
+
+#+begin_run
+## Immich is just an example app:
+pi make immich install
+#+end_run
 
 *** Upgrade sentry
 
-TODO
+The sentry should also be upgraded from time to time:
+
+ * Update the Traefik version.
+ * Update the WireGuard version.
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry make traefik config-edit
+#+end_run
