@@ -726,6 +726,11 @@ toolbox create dev
 
 This will create a new toolbox container called =dev=.
 
+By default, the container image that toolbox selects is the same OS
+version as the host. (eg. If the host is running Fedora Atomic Sway
+40, the toolbox will run Fedora Workstation 40.)
+
+
 To enter the toolbox run:
 
 #+begin_run
@@ -735,6 +740,18 @@ toolbox enter dev
 This will enter the toolbox container, and now you can install extra
 software:
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+There is a [[https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/fedora-dev.sh][ready made script]] that sets up the container included with
+[[http://localhost:1313/linux-workstation/config/sway/#sway-config][EnigmaCurry's sway config]]:
+
+#+attr_shortcode: :style secondary :title Run this in the dev toolbox
+#+begin_run
+~/.config/toolbox/fedora-dev.sh
+#+end_run
+
+Or do it manually:
+
 #+attr_shortcode: :title Run this in the dev toolbox :style secondary
 #+begin_run
 sudo dnf install keychain htop gettext libwebp-tools flatpak-xdg-utils
@@ -742,11 +759,7 @@ sudo dnf groupinstall "Development Tools" "Development Libraries"
 # Make xdg-open open the host web browser:
 sudo ln -s /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
 #+end_run
-
-By default, the container image toolbox selects is the image of Fedora
-Workstation, based upon the same version as the host (eg. If the host
-is running Fedora Atomic Sway 40, the toolbox will run Fedora
-Workstation 40.)
+#+end_notice
 
 *** Arch Linux toolbox
 
