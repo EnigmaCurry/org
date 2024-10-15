@@ -69,7 +69,7 @@
 (message "Loading f.el library")
 (use-package f)
 
-(defun build (root-dir)
+(defun build-books (root-dir)
   "Build all org books into hugo markdown"
   (message "Starting build process for %s" root-dir)
   (let ((org-files (append
@@ -78,7 +78,40 @@
     (dolist (e org-files)
       (message "Processing file: %s" e)
       (find-file e)
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((ditaa . t)))
+      (org-babel-execute-buffer)
       (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)))
   (message "Build process complete"))
+
+(defun build (root-dir)
+  
+  (build-books root-dir)
+  )
+
+;; Configure org-babel languages
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((ditaa . t)))
+(defun my/org-babel-execute:ditaa (body params)
+  "Execute BODY of Ditaa code with org-babel according to PARAMS using a custom Java command."
+  (let* ((out-file (or (cdr (assq :file params))
+                       (error "Ditaa code block requires :file header argument")))
+         (cmdline (cdr (assq :cmdline params)))
+         (java (cdr (assq :java params)))
+         (in-file (org-babel-temp-file "ditaa-"))
+         (eps (cdr (assq :eps params)))
+         (eps-file (when eps
+                     (org-babel-process-file-name (concat in-file ".eps"))))
+         (cmd (concat "java -cp /usr/share/java/commons-cli.jar:/usr/share/java/ditaa.jar "
+                      "org.stathissideris.ascii2image.core.CommandLineConverter "
+                      cmdline " "
+                      (org-babel-process-file-name in-file) " "
+                      (org-babel-process-file-name out-file))))
+    (with-temp-file in-file (insert body))
+    (message cmd) (shell-command cmd)
+    nil)) ;; signal that output has already been written to file
+(advice-add 'org-babel-execute:ditaa :override #'my/org-babel-execute:ditaa)
 
 (message "init.el loading complete")
