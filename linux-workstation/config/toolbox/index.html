@@ -19,19 +19,19 @@
     <meta property="article:section" content="Linux Workstation">
     <meta itemprop="name" content="Toolbox :: book.rymcg.tech">
     <meta itemprop="description" content="Toolbox (Toolbx) is an integral part of Fedora Atomic, being one of the main methods of installing software, it lets you run your applications inside of Podman containers. Toolbox can actually be used on any Linux system that is capable of running Podman, but it is especially useful on Atomic hosts. Toolbox is more tightly integrated with your host OS than Docker or Podman containers normally are. Toolbox containers share the same /home directory with the host (bind mounted), and they live in the same network and process namespace as the host (ie.">
-    <meta itemprop="wordCount" content="853">
+    <meta itemprop="wordCount" content="929">
     <title>Toolbox :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1728932071" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728932071" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1728932071" rel="stylesheet">
-    <link href="/css/auto-complete.css?1728932071" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728932071" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1728932071" rel="stylesheet">
-    <link href="/css/fonts.css?1728932071" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728932071" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1728932071" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1728932071" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1728932071" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1728932071" rel="stylesheet">
-    <link href="/css/print.css?1728932071" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1728932071"></script>
+    <link href="/css/fontawesome-all.min.css?1728970576" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1728970576" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1728970576" rel="stylesheet">
+    <link href="/css/auto-complete.css?1728970576" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1728970576" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1728970576" rel="stylesheet">
+    <link href="/css/fonts.css?1728970576" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1728970576" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1728970576" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1728970576" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1728970576" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1728970576" rel="stylesheet">
+    <link href="/css/print.css?1728970576" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1728970576"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -175,36 +175,68 @@ software:</p>
   <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
   <div class="box-content">
 
-<p>There is a <a href="https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/fedora-dev.sh" rel="external" target="_blank">ready made script</a> that sets up the container included with
-<a href="http://localhost:1313/linux-workstation/config/sway/#sway-config" rel="external" target="_blank">EnigmaCurry&rsquo;s sway config</a>:</p>
+<p>In <a href="http://localhost:1313/linux-workstation/config/sway/#sway-config" rel="external" target="_blank">EnigmaCurry&rsquo;s sway config</a> there is a <a href="https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/fedora-dev.sh" rel="external" target="_blank">fedora-dev.sh script</a> that sets
+up the container automatically:</p>
 <div class="box notices cstyle run">
     <div class="box-label secondary">
         <i class="fa-fw fas fa-dollar-sign"></i>Run this in the dev toolbox</div>
     <div class="box-content">
         <code><pre>
+## Automatic install:
+##
 ~/.config/toolbox/fedora-dev.sh
 </pre></code>
     </div>
 </div>
-<p>Or do it manually:</p>
+<p>The rest of the commands in this chapter are for manual installation
+only.</p>
+</div>
+</div>
+
+
 <div class="box notices cstyle run">
     <div class="box-label secondary">
         <i class="fa-fw fas fa-dollar-sign"></i>Run this in the dev toolbox</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 sudo dnf install keychain htop gettext libwebp-tools flatpak-xdg-utils
 sudo dnf groupinstall "Development Tools" "Development Libraries"
-<p>sudo ln -s /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
+
+sudo ln -s /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
 </pre></code>
-</div></p>
+    </div>
 </div>
-</div>
-</div>
+
+
 <h2 id="arch-linux-toolbox">Arch Linux toolbox</h2>
 <p>You are not limited to using the default toolbox image, in fact you
 can run any container image you want, or even build your own from a
 <code>Dockerfile</code>. Here is how to build a custom Arch Linux container
 image:</p>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>In <a href="http://localhost:1313/linux-workstation/config/sway/#sway-config" rel="external" target="_blank">EnigmaCurry&rsquo;s sway config</a> there is a <a href="https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/arch-dev.sh" rel="external" target="_blank">arch-dev.sh script</a> that sets
+up the container automatically:</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this in the dev toolbox</div>
+    <div class="box-content">
+        <code><pre>
+## Automatic install:
+##
+~/.config/toolbox/arch-dev.sh
+</pre></code>
+    </div>
+</div>
+<p>The rest of the commands in this chapter are for manual installation
+only.</p>
+</div>
+</div>
 
 
 <div class="box notices cstyle run">
@@ -212,6 +244,8 @@ image:</p>
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 IMAGE=arch
 (set -e
 mkdir -p ~/toolbox/${IMAGE}
@@ -249,6 +283,8 @@ podman build -t ${IMAGE} ~/toolbox/${IMAGE}
         <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 toolbox create --image arch arch
 </pre></code>
     </div>
@@ -326,6 +362,8 @@ commands on the host.</p>
         <i class="fa-fw fas fa-dollar-sign"></i>Run this in your toolbox container:</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 sudo dnf install host-spawn
 </pre></code>
     </div>
@@ -340,6 +378,8 @@ sudo dnf install host-spawn
         <i class="fa-fw fas fa-dollar-sign"></i>Build and install host-spawn on Arch Linux</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 (set -e
 BUILD_DIR=~/aur/host-spawn
 rm -f ${BUILD_DIR}/*.zst
@@ -403,6 +443,8 @@ host-spawn toolbox list
         <i class="fa-fw fas fa-dollar-sign"></i>Run this in your toolbox container:</div>
     <div class="box-content">
         <code><pre>
+## Manual install:
+##
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/toolbox
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/podman
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
@@ -440,12 +482,12 @@ sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1728932071" defer></script>
-        <script src="/js/lunr/lunr.min.js?1728932071" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1728932071" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1728932071" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1728932071" defer></script>
-        <script src="/js/search.js?1728932071" defer></script>
+        <script src="/js/auto-complete.js?1728970576" defer></script>
+        <script src="/js/lunr/lunr.min.js?1728970576" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1728970576" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1728970576" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1728970576" defer></script>
+        <script src="/js/search.js?1728970576" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -601,14 +643,14 @@ sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 14, 2024 at 6:54pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 15, 2024 at 5:36am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1728932071" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1728932071" defer></script>
-    <script src="/js/theme.js?1728932071" defer></script>
+    <script src="/js/clipboard.min.js?1728970576" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1728970576" defer></script>
+    <script src="/js/theme.js?1728970576" defer></script>
   </body>
 </html>
