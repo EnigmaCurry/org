@@ -5423,53 +5423,83 @@ the login token, and optionally set a new password.
 index
 #+end_index
 
-** Backup
+** Native Backup
 :PROPERTIES:
 :EXPORT_FILE_NAME: backup
 :EXPORT_HUGO_WEIGHT: 9002
 :END:
 
-Native systems are harder to backup than virtual systems, thats just
-the way it goes. With VMs, your hypervisor usually has a builtin
-backup feature which pauses the machine, makes a snapshot, resumes the
-machine, and continues backing up the snapshot in the background. If
-you have the luxury of running your server as a VM (e.g., [[https://www.proxmox.com/en/proxmox-virtual-environment/overview][Proxmox
-PVE]]), it makes backups so much easier.
+Backup of native machines is much harder than for virtual machines,
+that's just the way it goes. With VMs, your hypervisor should have a
+builtin backup feature which can suspend (pause) the entire machine,
+make a snapshot of the disk and the entire RAM contents, resume the
+machine, and continue backing up the snapshot in the background. If
+you have the luxury of running your server as a VM (e.g., [[https://www.proxmox.com/en/proxmox-virtual-environment/overview][Proxmox PVE]],
+or any cloud provider), it makes backups so much easier.
 
-However in this book we are dealing with a physical Raspberry Pi, not
-a virtual machine, so backup must be managed another way.
+When running Docker natively on a Raspberry Pi, you do not have that
+option. This chapter deals with the more intricate procedure of the
+backup of a /non-virtual/ machine.
 
 *** Restic
 
 [[https://restic.net/][Restic]] is a modern open source backup tool, which has many great
 features including incremental backups, encryption, and offsite
-upload. It can maintain backups of huge sizes.
+upload. It can maintain backups of huge sizes, and it only needs to
+upload the changes since the last backup.
 
-You can install restic to backup any directory on a Linux host. One of
-the best ways to do that is with the script found on this blog post:
+One of the best ways to install Restic is with the script found on
+this blog post:
 
 [[https://blog.rymcg.tech/blog/linux/restic_backup/][Daily backups to S3 with Restic and systemd timers]]
 
+#+attr_shortcode: :style warning :title Warning
+#+begin_notice
 The only problem with backing up files this way is that with
 containers that are always running, you need to make sure that the
 files are flushed to disk before the backup starts, otherwise your
-backup could become corrupted. For most media storage that doesn't
-change that often (photos, videos, etc.) this might not be such a big
-deal, but for databases it's a problem.
+backup could become corrupted. For files that are only written to once
+(photos, videos, etc.) this might not be such a big deal, but for
+files that are constantly changing (e.g., databases) this is a
+problem.
+#+end_notice
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Evaluating [[https://blog.rymcg.tech/blog/linux/restic_backup/][this Restic script]]:
+
+Pros:
+
+ * It's a self contained script not dependent on Docker.
+ * It can backup several directories and upload to an offsite S3
+   bucket. Point the script at any directory and it will make a backup
+   of it (e.g., =/home/pi/=, =/var/lib/docker/volumes= [see Cons].)
+ * It supports a space-efficient incremental backup strategy.
+ * It's a good option for backup of home directories and large media
+   folders.
+
+Cons:
+
+ * No integration with Docker; it cannot shutdown containers before
+   backup. Backup of =/var/lib/docker/volumes= is not 100% safe. Files
+   that are modified *during* the backup may become corrupted.
+ * Restoration requires the original script and for you to re-install
+   Restic.
+#+end_notice
 
 *** Backup-Volume
 
 [[https://github.com/EnigmaCurry/backup-volume][Backup-Volume]] is another backup tool that is specifically configured
 to backup Docker volumes and uploading archives to offsite storage
-(S3, SSH, DropBox). This tool is much more simplistic compared to
-Restic, with the most important difference being that *Backup-Volume
-can only handle complete backups (no incremental storage)*. For small
-datasets this is ideal, because each backup gets stored in a separate
-=backup-XXXX.tar.gz=, and its easy to restore with one file. For
-larger datasets, the duplication of backup files would be
-prohibitively expensive/wasteful (although you can tune the retention
-and pruning parameters to save some space, it won't compare to the
-efficiency of restic).
+(S3, SSH, DropBox).
+
+*Backup-Volume can only handle complete backups (no incremental
+storage)*. For small datasets this is ideal, because each backup gets
+stored in a separate =backup-XXXX.tar.gz=, and its easy to restore
+with one file. For larger datasets, the duplication of backup files
+would be prohibitively expensive/wasteful (although you can tune the
+retention and pruning parameters to save some space, it won't compare
+to the efficiency of Restic).
 
 Backup-Volume has a trick it can use in its favor: it can
 automatically stop and start containers before and after the backup
@@ -5477,10 +5507,24 @@ runs. This makes this style of backup much safer for write intensive
 volumes (e.g., databases) and ensures that the data gets flushed
 before the backup starts.
 
-You will have to analyze your own situation and weigh the cost of data
-integrity vs. the cost of data duplication, to help decide which kind
-of backup to deploy. A future version of Backup-Volume may integrate
-Restic to make this choice a non-issue.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Evaluating [[https://github.com/EnigmaCurry/backup-volume][Backup-Volume]]:
+
+Pros:
+ * Specifically designed to backup Docker volumes on a cron-like
+   schedule.
+ * Manages the lifecycle of the containers to shut them down before a
+   backup starts and to restart them afterward.
+ * Each backup is contained in a single file (=backup-XXXX.tar.gz=)
+   which is uploaded to your S3 provider. Restoration is easy, just
+   download the latest tarball and extract it.
+ * Automatic pruning of old archives helps to save some space.
+
+Cons:
+ * No incremental backup support. Each backup duplicates the entire
+   dataset. Ill-suited for large datasets.
+#+end_notice
 
 *** Setup Backup-Volume
 
