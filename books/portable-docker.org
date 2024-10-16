@@ -5464,10 +5464,12 @@ to backup Docker volumes and uploading archives to offsite storage
 (S3, SSH, DropBox). This tool is much more simplistic compared to
 Restic, with the most important difference being that *Backup-Volume
 can only handle complete backups (no incremental storage)*. For small
-datasets, this is ideal, as each backup gets stored in a separate
+datasets this is ideal, because each backup gets stored in a separate
 =backup-XXXX.tar.gz=, and its easy to restore with one file. For
-larger datasets, this duplication would be prohibitively
-expensive/wasteful.
+larger datasets, the duplication of backup files would be
+prohibitively expensive/wasteful (although you can tune the retention
+and pruning parameters to save some space, it won't compare to the
+efficiency of restic).
 
 Backup-Volume has a trick it can use in its favor: it can
 automatically stop and start containers before and after the backup
@@ -5475,9 +5477,10 @@ runs. This makes this style of backup much safer for write intensive
 volumes (e.g., databases) and ensures that the data gets flushed
 before the backup starts.
 
-You will have to analyze your own situation and weigh the cost of
-data integrity vs. the cost of data duplication, to help decide which
-kind of backup to deploy.
+You will have to analyze your own situation and weigh the cost of data
+integrity vs. the cost of data duplication, to help decide which kind
+of backup to deploy. A future version of Backup-Volume may integrate
+Restic to make this choice a non-issue.
 
 *** Setup Backup-Volume
 
