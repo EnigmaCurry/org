@@ -23,19 +23,19 @@ However in this book we are dealing with a physical Raspberry Pi, not a virtual 
     <meta itemprop="name" content="Backup :: book.rymcg.tech">
     <meta itemprop="description" content="Native systems are harder to backup than virtual systems, thats just the way it goes. With VMs, your hypervisor usually has a builtin backup feature which pauses the machine, makes a snapshot, resumes the machine, and continues backing up the snapshot in the background. If you have the luxury of running your server as a VM (e.g., Proxmox PVE), it makes backups so much easier.
 However in this book we are dealing with a physical Raspberry Pi, not a virtual machine, so backup must be managed another way.">
-    <meta itemprop="wordCount" content="881">
+    <meta itemprop="wordCount" content="919">
     <title>Backup :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1729058760" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729058760" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1729058760" rel="stylesheet">
-    <link href="/css/auto-complete.css?1729058760" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729058760" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1729058760" rel="stylesheet">
-    <link href="/css/fonts.css?1729058760" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729058760" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1729058760" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1729058760" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1729058760" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1729058760" rel="stylesheet">
-    <link href="/css/print.css?1729058760" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1729058760"></script>
+    <link href="/css/fontawesome-all.min.css?1729060291" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729060291" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1729060291" rel="stylesheet">
+    <link href="/css/auto-complete.css?1729060291" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729060291" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1729060291" rel="stylesheet">
+    <link href="/css/fonts.css?1729060291" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729060291" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1729060291" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1729060291" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1729060291" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1729060291" rel="stylesheet">
+    <link href="/css/print.css?1729060291" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1729060291"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -146,18 +146,21 @@ to backup Docker volumes and uploading archives to offsite storage
 (S3, SSH, DropBox). This tool is much more simplistic compared to
 Restic, with the most important difference being that <strong>Backup-Volume
 can only handle complete backups (no incremental storage)</strong>. For small
-datasets, this is ideal, as each backup gets stored in a separate
+datasets this is ideal, because each backup gets stored in a separate
 <code>backup-XXXX.tar.gz</code>, and its easy to restore with one file. For
-larger datasets, this duplication would be prohibitively
-expensive/wasteful.</p>
+larger datasets, the duplication of backup files would be
+prohibitively expensive/wasteful (although you can tune the retention
+and pruning parameters to save some space, it won&rsquo;t compare to the
+efficiency of restic).</p>
 <p>Backup-Volume has a trick it can use in its favor: it can
 automatically stop and start containers before and after the backup
 runs. This makes this style of backup much safer for write intensive
 volumes (e.g., databases) and ensures that the data gets flushed
 before the backup starts.</p>
-<p>You will have to analyze your own situation and weigh the cost of
-data integrity vs. the cost of data duplication, to help decide which
-kind of backup to deploy.</p>
+<p>You will have to analyze your own situation and weigh the cost of data
+integrity vs. the cost of data duplication, to help decide which kind
+of backup to deploy. A future version of Backup-Volume may integrate
+Restic to make this choice a non-issue.</p>
 <h2 id="setup-backup-volume">Setup Backup-Volume</h2>
 <h3 id="prepare-an-s3-bucket-offsite">Prepare an S3 bucket offsite</h3>
 <p>You may want to use your own <a href="/portable-docker/install-web-services/minio-s3/index.html">minio</a> S3 service (preferably installed on
@@ -395,12 +398,12 @@ appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1729058760" defer></script>
-        <script src="/js/lunr/lunr.min.js?1729058760" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1729058760" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1729058760" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1729058760" defer></script>
-        <script src="/js/search.js?1729058760" defer></script>
+        <script src="/js/auto-complete.js?1729060291" defer></script>
+        <script src="/js/lunr/lunr.min.js?1729060291" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1729060291" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1729060291" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1729060291" defer></script>
+        <script src="/js/search.js?1729060291" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -556,14 +559,14 @@ appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 16, 2024 at 6:06am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 16, 2024 at 6:31am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1729058760" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1729058760" defer></script>
-    <script src="/js/theme.js?1729058760" defer></script>
+    <script src="/js/clipboard.min.js?1729060291" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1729060291" defer></script>
+    <script src="/js/theme.js?1729060291" defer></script>
   </body>
 </html>
