@@ -49,3 +49,12 @@ publish: build
 	@echo "## Publishing books via rclone ... be patient ..."
 	time rclone sync public ${PUBLISH_RCLONE_REMOTE}:${PUBLISH_RCLONE_DIRECTORY}/public
 	@echo Done
+
+.PHONY: pdf # Build PDF
+pdf: build
+	# Sort Markdown files, concatenate them
+	@./_script/sort_md.sh portable-docker | tr '\0' '\n' | xargs cat > combined.md
+	# Escape backslashes so they are printed literally
+	@sed -i 's/\\/\\\\/g' combined.md
+	# Create the PDF using Pandoc
+	@pandoc combined.md -o portable-docker.pdf --toc --metadata title="Portable Docker" --pdf-engine=xelatex
