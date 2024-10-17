@@ -1,32 +1,46 @@
 {{ partial "header.html" . }} <!-- Use theme's header -->
-
+{{ $isBookLayout := true }}
 <main class="book-content">
-    {{ $section := .Params.section }}
 
-    <!-- Include the _index.md content -->
-    {{ if $section }}
-    {{ $index := .Site.GetPage "section" $section }}
-    {{ if $index }}
-    <div class="introduction">
-        <h1 id="{{ $index.File.BaseFileName }}">{{ $index.Title }}</h1>
-        {{ $index.Content }}
+    <!-- Define Section from Front Matter -->
+    {{ $section := .Params.section }}
+    {{ if not $section }}
+    <p>No section defined in front matter.</p>
+    {{ else }}
+    {{ $indexPagePath := printf "%s/_index.md" $section }}
+    {{ $indexPage := .Site.GetPage $indexPagePath }}
+
+    {{ if $indexPage }}
+    <div class="introduction" style="page-break-after: always;">
+        <h1 id="{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</h1>
+        {{ $indexPage.Content | safeHTML }}
     </div>
-    {{ end }}
     {{ end }}
 
     <!-- Render all the individual chapters -->
-    {{ if $section }}
-    {{ range (where .Site.Pages "Section" $section) }}
-    {{ if ne .File.Path "_index.md" }}
+    {{ range (where .Site.RegularPages "Section" $section) }}
     <div class="chapter" style="page-break-after: always;">
         <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
-        {{ .Content | safeHTML }}
+        <div class="chapter-content">
+            {{ $uniqueId := .File.BaseFileName }}
+            {{ $content := .Content | safeHTML }}
+
+            <!-- Add IDs to headers manually by re-rendering -->
+            {{ $lines := split $content "\n" }}
+            {{ range $lines }}
+            {{ if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
+            {{ $level := index (findRE "^<h([1-6])>" .) 1 }}
+            {{ $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
+            <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</h{{ $level }}>
+            {{ else }}
+            {{ . | safeHTML }}
+            {{ end }}
+            {{ end }}
+        </div>
     </div>
     {{ end }}
     {{ end }}
-    {{ else }}
-    <p>No section defined in front matter.</p>
-    {{ end }}
+
 </main>
 
 {{ partial "footer.html" . }} <!-- Use theme's footer -->
