@@ -3585,6 +3585,115 @@ The request shows the new details:
 
 All other apps may be protected with sentry authorization in the same manner as whoami.
 
+** Postfix-Relay (MTA)
+:PROPERTIES:
+:EXPORT_FILE_NAME: postfix-relay
+:EXPORT_HUGO_WEIGHT: 640
+:END:
+
+Many apps require to send email for various purposes. Rather than
+configure each such container with your secret mail credentials, you
+can configure a single central mail forwarding service with
+[[https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/postfix-relay#readme][postfix-relay]].
+
+#+begin_mermaid
+---
+title: Authorized container networks may bridge with the Postfix-Relay to send outgoing email.
+---
+graph TD;
+subgraph Docker network
+    A[Container A] -->|private mail-only network| D[Postfix-Relay]
+    B[Container B] -->|private mail-only network| D[Postfix-Relay]
+    C[Container C] -.- F[Blocked]
+end
+D -->|Internet| E[Public  SMTP server]
+E --> G[Allowed Email recipient]
+E --> H[Allowed Email recipient]
+E -.- I[Blocked Email recipient]
+#+end_mermaid
+
+*** Register the upstream SMTP service
+
+You will need access to a public email (SMTP) service for outgoing
+mail. Gather the following information from your provider:
+
+ * The SMTP server domain, e.g., =mail.example.com=.
+ * The port, e.g., =465= (TLS) or =587= (STARTTLS).
+ * The username, e.g., =me@example.com=.
+ * The password, e.g., =hunter2=.
+
+*** Configure Postfix-Relay
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make postfix-relay config
+#+end_run
+
+Enter the domain name for this postfix instance:
+
+#+begin_stdout
+POSTFIX_RELAY_TRAEFIK_HOST: Enter the domain name for this instance
+: smtp.d.example.com
+#+end_stdout
+
+Enter the upstream SMTP server connection details:
+
+#+begin_stdout
+POSTFIX_RELAY_RELAYHOST: Enter the outgoing SMTP server domain:port (eg. smtp.example.com:587)
+: mail.example.com:465
+
+POSTFIX_RELAY_RELAYHOST_USERNAME: Enter the outgoing SMTP server username
+: username@example.com
+
+POSTFIX_RELAY_RELAYHOST_PASSWORD: Enter the outgoing SMTP server password
+: xxxxxxxxxxxxxxxxxxxx
+#+end_stdout
+
+Select which network subdomains should be masked at the root domain
+(this is optional, and can be used to hide private subdomains from the
+email headers):
+
+#+begin_stdout
+POSTFIX_RELAY_MASQUERADED_DOMAINS: Enter the root domains (separated by space) that should mask its sub-domains
+: example.com example.org
+#+end_stdout
+
+*** Install
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make postfix-relay install
+#+end_run
+
+*** Test sending mail
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+(
+RECIPIENT="recipient@example.com"
+SENDER="root@localhost"
+SUBJECT="Test Email"
+BODY="This is a test email sent from Docker."
+
+docker run --rm \
+  --network postfix-relay_default \
+  -e RECIPIENT="$RECIPIENT" \
+  -e SENDER="$SENDER" \
+  -e SUBJECT="$SUBJECT" \
+  -e BODY="$BODY" \
+  alpine sh -c 'apk add --no-cache msmtp && \
+  echo -e "Subject: $SUBJECT\n\n$BODY" | \
+  msmtp --from="$SENDER" \
+        --host=postfix-relay-postfix-relay-1 \
+        --port=587 \
+        --tls=off \
+        --tls-starttls=off \
+        "$RECIPIENT" && \
+        echo "Email sent" || \
+        echo "Email failed to send"'
+)
+#+end_run
+
 *** Next steps
 
  * Install apps.
@@ -5621,6 +5730,16 @@ local volume:
 > Do you want to keep a local backup in addition to the remote one? No
 #+end_stdout
 
+You can choose to turn on notifications (see separate instructions
+below.)
+
+#+begin_stdout
+? Do you want to receive notifications for backup failure?  
+> No.
+  Yes, via email.
+  Yes, via webhook.
+#+end_stdout
+
 **** Install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
@@ -5669,7 +5788,85 @@ appropriate directory under =/var/lib/docker/volumes=.
 
 **** Notifications
 
-TODO
+In the event of a failed backup job, a notification can be sent to a
+configurable receiver with [[https://containrrr.dev/shoutrrr/v0.8/services/overview/][Shoutrrr]] (including Email, Matrix, Discord,
+Ntfy, IFTTT etc.)
+
+***** Email notifications
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+To enable email notifications, you must setup postfix-relay separately
+and configure it to allow clients from the the =backup-volume= network
+to send mail.
+#+end_notice
+
+#+begin_stdout
+? Do you want to receive notifications for backup failure?  
+  No.
+> Yes, via email.
+  Yes, via webhook.
+
+Enter the sender email address
+: backup-volume-default@pi5.forwarding.network
+
+Enter the recipient email address
+: test@example.com
+#+end_stdout
+
+
+***** Matrix notifications via webhook
+
+You will need to setup the [[https://matrix-org.github.io/matrix-hookshot/latest/index.html][Matrix Hookshot]] bot in order to receive a
+generic webhook from Backup-Volume that notifies the Matrix room you
+share with the bot.
+
+ * Create a new room and invite the hookshot bot to it.
+ * Message the room: =!hookshot setup-widget=.
+ * Open the room Extensions tab and click on the Hookshot extension.
+ * Create a new =Inbound (Generic) Webhook=.
+ * Name the webhook =backup-volume.example.com= after your
+   backup-volume instance.
+ * Copy the long URL it gives you, e.g.,
+   =https://matrix.example.com/hookshot/webhooks/webhook/xxxxxx=.
+ * Click =Save=.
+
+Reconfigure the =.env_{CONTEXT}_{INSTANCE}= file of the backup-volume
+instance, setting the notification URL as a [[https://containrrr.dev/shoutrrr/v0.8/services/generic/][Generic webhook]]:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make backup-volume reconfigure var=BACKUP_NOTIFICATION_URLS="generic://matrix.example.com/hookshot/webhooks/webhook/xxxxx?template=json"
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Important: the Shoutrrr webhook notification URL should start with
+=generic://= (not =https://=). It should end with =?template=json=.
+#+end_notice
+
+Re-install to load the new config:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make backup-volume install
+#+end_run
+
+To test the notification, you can consider setting
+=BACKUP_CRON_EXPRESSION=@every 1m= and change the S3 credentials so
+that they are incorrect, thus triggering a failure notification to be
+sent.
+
+You should see the JSON notification in the channel, which
+unfortunately is not formatted very nicely :
+
+#+attr_shortcode: :title Example matrix message:
+#+begin_notice
+{
+  "message": "Running backup-volume failed with error: main.(*script).copyArchive: error copying archive: s3.(*s3Storage).Copy: error uploading backup to remote storage: [Message]: 'The specified bucket does not exist.', [Code]: NoSuchBucket, [StatusCode]: 404\n\nLog output of the failed run was:\n\ntime=2024-10-16T19:45:27.092Z level=INFO msg=\"Stopping 1 out of 26 running container(s) as they were labeled backup-volume.stop-during-backup=true.\"\ntime=2024-10-16T19:45:27.713Z level=INFO msg=\"Created backup of `/backup` at `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\"\ntime=2024-10-16T19:45:27.972Z level=INFO msg=\"Restarted 1 container(s).\"\ntime=2024-10-16T19:45:28.259Z level=INFO msg=\"Removed tar file `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\"\n",
+  "title": "Failure running backup-volume at 2024-10-16T19:45:27Z"
+}
+#+end_notice
 
 ** Upgrade
 :PROPERTIES:
@@ -5792,4 +5989,3 @@ sudo reboot
 Check to see if the error goes away, but if not, you probably have a
 hardware issue.
 #+end_notice
-
