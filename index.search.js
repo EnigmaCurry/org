@@ -185,8 +185,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Portable Docker",
-    "content": " Index Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry ",
-    "description": " Index Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry ",
+    "content": " sequenceDiagram participant Browser as Web Browser participant Sentry as Sentry participant RaspberryPi as Raspberry Pi Browser-\u0026gt;\u0026gt;Sentry: HTTP Request Sentry-\u0026gt;\u0026gt;RaspberryPi: Forward Request RaspberryPi--\u0026gt;\u0026gt;Sentry: Response Sentry--\u0026gt;\u0026gt;Browser: Forward Response Index Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry ",
+    "description": " sequenceDiagram participant Browser as Web Browser participant Sentry as Sentry participant RaspberryPi as Raspberry Pi Browser-\u0026gt;\u0026gt;Sentry: HTTP Request Sentry-\u0026gt;\u0026gt;RaspberryPi: Forward Request RaspberryPi--\u0026gt;\u0026gt;Sentry: Response Sentry--\u0026gt;\u0026gt;Browser: Forward Response Index Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry ",
     "tags": [],
     "title": "Set up sentry Droplet",
     "uri": "/portable-docker/set-up-cloud-sentry/index.html"
