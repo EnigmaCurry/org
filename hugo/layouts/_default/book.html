@@ -1,7 +1,11 @@
 {{ partial "header.html" . }} <!-- Use theme's header -->
 {{ $isBookLayout := true }}
 <main class="book-content">
-
+    <script src="/js/mermaid.min.js"></script>
+    <script src="/js/js-yaml.min.js"></script>
+    <script>
+     mermaid.initialize({ startOnLoad: true });
+    </script>
     <!-- Define Section from Front Matter -->
     {{ $section := .Params.section }}
     {{ if not $section }}
@@ -9,38 +13,33 @@
     {{ else }}
     {{ $indexPagePath := printf "%s/_index.md" $section }}
     {{ $indexPage := .Site.GetPage $indexPagePath }}
-
     {{ if $indexPage }}
     <div class="introduction" style="page-break-after: always;">
         <h1 id="{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</h1>
-        {{ $indexPage.Content | safeHTML }}
+{{ $indexPage.Content | safeHTML }}
     </div>
     {{ end }}
-
     <!-- Render all the individual chapters -->
     {{ range (where .Site.RegularPages "Section" $section) }}
     <div class="chapter" style="page-break-after: always;">
         <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
         <div class="chapter-content">
-            {{ $uniqueId := .File.BaseFileName }}
-            {{ $content := .Content | safeHTML }}
-
+            {{- $uniqueId := .File.BaseFileName }}
+            {{- $content := .Content | safeHTML }}
             <!-- Add IDs to headers manually by re-rendering -->
-            {{ $lines := split $content "\n" }}
-            {{ range $lines }}
-            {{ if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
-            {{ $level := index (findRE "^<h([1-6])>" .) 1 }}
-            {{ $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
+            {{- $lines := split $content "\n" }}
+            {{- range $lines }}
+            {{- if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
+            {{- $level := index (findRE "^<h([1-6])>" .) 1 }}
+            {{- $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
             <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</h{{ $level }}>
-            {{ else }}
-            {{ . | safeHTML }}
-            {{ end }}
-            {{ end }}
+            {{- else }}
+{{ . | safeHTML }}
+            {{- end }}
+            {{- end }}
         </div>
     </div>
     {{ end }}
     {{ end }}
-
 </main>
-
 {{ partial "footer.html" . }} <!-- Use theme's footer -->
