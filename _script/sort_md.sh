@@ -65,4 +65,4 @@ if [[ -n "${index_files[hugo/content/portable-docker]}" ]] && [[ ! " ${final_sor
 fi
 
 # Print the final sorted list
-printf "%s\n" "${final_sorted_list[@]}"
+printf "%s\0" "${final_sorted_list[@]}"
