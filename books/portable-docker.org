@@ -2060,7 +2060,14 @@ You now need to be able to control the droplet's =root= user from the
  name):
 
 [[/img/portable-docker/configure.webp]]
- 
+
+#+begin_mermaid
+graph LR;
+    Workstation[Personal Workstation] -->|SSH| RaspberryPi[Raspberry Pi]
+    RaspberryPi -->|SSH| Sentry[Sentry]
+#+end_mermaid
+
+
 *** Append to the SSH config on the Pi
  
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
@@ -2436,6 +2443,26 @@ IP addresses assigned for each peer:
 
 The sentry can support up to 252 additional VPN clients, having
 consecutive IP addresses =10.13.16.3= through =10.13.16.254=.
+
+#+begin_mermaid
+graph LR;
+    Internet[Internet Users] -->|Access| Sentry[Sentry Traefik]
+
+    subgraph Docker1
+        Client1[Traefik 1]
+    end
+    subgraph Docker2
+        Client2[Traefik 2]
+    end
+    subgraph Docker3
+        Client3[Traefik 3]
+    end
+
+    Sentry <-->|VPN Tunnel| Client1
+    Sentry <-->|VPN Tunnel| Client2
+    Sentry <-->|VPN Tunnel| Client3
+#+end_mermaid
+
 
 #+begin_index
 index
@@ -3354,6 +3381,8 @@ title: Traefik Forward Auth
 graph LR;
     Start[Request...] -->|HTTP| Traefik
     Traefik -->|Sends the request to AuthServer| TFA[Traefik-Forward-Auth]
+    TFA -->|OAuth2| Forgejo
+    Forgejo -->|Oauth2 OK / KO| TFA
     TFA -->|Returns OK / KO| Traefik
     Traefik -->|If OK, proceed...| Proceed[...Access Granted]
     Traefik -->|If KO, returns the error| Start
