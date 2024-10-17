@@ -4433,6 +4433,17 @@ manager webapp for easy file sharing.
 
 [[/img/portable-docker/filestash-window.webp]]
 
+#+begin_mermaid
+graph LR;
+    Browser[Web Browser\nFileStash UI] -->|HTTP request for app page| FileStash
+    Browser -->|API request for object data| Minio
+
+    subgraph Docker
+        FileStash[FileStash\nWWW]
+        Minio((Minio S3\nObject store))
+    end
+#+end_mermaid
+
 #+attr_shortcode: :style tip
 #+begin_notice
 Running MinIO on a single Raspberry Pi is perfect for personal use.
