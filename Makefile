@@ -29,6 +29,7 @@ build-md:
 	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"$${PWD}\"'
 
 build-hugo:
+	@_script/printable_books.sh
 	@cd hugo && hugo
 
 .PHONY: serve # Build and serve the site on http://localhost:1313

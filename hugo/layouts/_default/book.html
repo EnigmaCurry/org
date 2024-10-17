@@ -1,0 +1,32 @@
+{{ partial "header.html" . }} <!-- Use theme's header -->
+
+<main class="book-content">
+    {{ $section := .Params.section }}
+
+    <!-- Include the _index.md content -->
+    {{ if $section }}
+    {{ $index := .Site.GetPage "section" $section }}
+    {{ if $index }}
+    <div class="introduction">
+        <h1 id="{{ $index.File.BaseFileName }}">{{ $index.Title }}</h1>
+        {{ $index.Content }}
+    </div>
+    {{ end }}
+    {{ end }}
+
+    <!-- Render all the individual chapters -->
+    {{ if $section }}
+    {{ range (where .Site.Pages "Section" $section) }}
+    {{ if ne .File.Path "_index.md" }}
+    <div class="chapter" style="page-break-after: always;">
+        <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
+        {{ .Content | safeHTML }}
+    </div>
+    {{ end }}
+    {{ end }}
+    {{ else }}
+    <p>No section defined in front matter.</p>
+    {{ end }}
+</main>
+
+{{ partial "footer.html" . }} <!-- Use theme's footer -->
