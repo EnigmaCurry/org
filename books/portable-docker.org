@@ -943,6 +943,18 @@ to access the =root= user's account.
 Although you will not need to interact with the =root= user's shell
 directly, the =pi= user will be granted full access to =root= via SSH.
 
+#+begin_mermaid
+graph LR;
+    subgraph Raspberry Pi
+        pi[User: pi]
+        root[User: root]
+        pi -->|Docker SSH context\nto root@localhost| root
+    end
+
+    RemoteComputer[Personal\nWorkstation] -->|ssh pi@pi| pi
+#+end_mermaid
+
+
 #+attr_shortcode: :style warning :title Docker == root == pi
 #+begin_notice
 SSH is used here almost like =sudo=. The =pi= user should be treated
@@ -1291,6 +1303,17 @@ security for all of your applications. Traefik is configured to
 support several authentication and sentry authorization mechanisms,
 including: HTTP Basic Auth, OAuth2, mutual TLS, and IP address
 filtering.
+
+#+begin_mermaid
+graph RL;
+    Browser[Web Browser] -->|HTTP Request| Traefik[Traefik Proxy]
+    Traefik -->|HTTP Response| Browser
+    Whoami -->|Response| Traefik
+    subgraph Docker
+        Traefik[Traefik Proxy] -->|Forwards Request| Whoami[Container: whoami]
+    end
+#+end_mermaid
+
 
 *** Basic Traefik config
 
