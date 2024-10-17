@@ -114,7 +114,14 @@ proxy (ingress), which forwards incoming connections through a backdoor
 VPN connection to the Raspberry Pi. The Pi automatically initiates
 this connection to the sentry whenever it boots and comes online.
 
-[[/img/portable-docker/vpn-diagram.webp]]
+#+begin_mermaid
+graph TD;
+    Web1[Web browser] -->|Internet| Sentry[Public Sentry]
+    Web2[curl] -->|Internet| Sentry
+    SFTP[SFTP client] -->|Internet| Sentry
+    Sentry <---->|WireGuard VPN| C[Raspberry Pi]
+#+end_mermaid
+
 
 ** WireGuard VPN
 
@@ -2717,6 +2724,20 @@ the Raspberry Pi even during emergency maintenance cycles, including
 restarting Traefik, restarting Docker, or even rebooting the system
 (the persistent tunnels will be restarted on boot).
 
+#+begin_mermaid
+---
+title: SSH and wireguard operate independently
+---
+graph TD;
+S1[SSH client] -->|Public TCP port 2220| SSH
+W1[Wireguard client] -->|Public UDP port 51820| WG
+subgraph Docker server
+    SSH[SSH server]
+    WG[Wireguard server]
+end
+#+end_mermaid
+
+
 *** Ensure the SSH server is secure
 
 During the =rpi-imager= configuration, you should have selected the
@@ -3286,6 +3307,18 @@ git clone ssh://git@git.pi.example.com:2222/username/repository.git
 :EXPORT_FILE_NAME: traefik-forward-auth
 :EXPORT_HUGO_WEIGHT: 630
 :END:
+
+#+begin_mermaid
+---
+title: Traefik Forward Auth
+---
+graph LR;
+    Start[Request...] -->|HTTP| Traefik
+    Traefik -->|Sends the request to AuthServer| TFA[Traefik-Forward-Auth]
+    TFA -->|Returns OK / KO| Traefik
+    Traefik -->|If OK, proceed...| Proceed[...Access Granted]
+    Traefik -->|If KO, returns the error| Start
+#+end_mermaid
 
 *** Sentry authorization
 
