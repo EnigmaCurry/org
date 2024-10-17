@@ -469,6 +469,22 @@ takes effect, you may need to wait for this TTL to reset.
 
 [[/img/portable-docker/api.webp]]
 
+#+begin_mermaid
+---
+title: ACME challenge response for requesting a TLS certificate
+---
+sequenceDiagram
+    participant Traefik as Traefik (Docker)
+    participant LE as Let's Encrypt (ACME)
+    participant DO as DigitalOcean DNS
+
+    Traefik->>LE: Request / Renew TLS Certificate (ACME)
+    LE-->>Traefik: Issue DNS-01 Challenge
+    Traefik->>DO: Update DNS Records using API token (Add TXT Record)
+    DO-->>LE: DNS Challenge Resolved (TXT Record Found)
+    LE-->>Traefik: Issue TLS Certificate
+#+end_mermaid
+
 #+attr_shortcode: :style tip :title Choose any supported DNS provider
 #+begin_notice
 All examples in this book use DigitalOcean as the DNS provider. You
