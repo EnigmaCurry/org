@@ -3,7 +3,7 @@
   <channel>
     <title>Install core services :: book.rymcg.tech</title>
     <link>https://book.rymcg.tech/portable-docker/install-core-services/index.html</link>
-    <description> There are a few services you should consider installing before any others, which we will call core services:&#xA;Index Forgejo Traefik-Forward-Auth (sentry authorization) </description>
+    <description> There are a few services you should consider installing before any others, which we will call core services:&#xA;Index Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) </description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <atom:link href="https://book.rymcg.tech/portable-docker/install-core-services/index.xml" rel="self" type="application/rss+xml" />
@@ -20,6 +20,13 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       <guid>https://book.rymcg.tech/portable-docker/install-core-services/traefik-forward-auth/index.html</guid>
       <description>Sentry authorization Some apps may already have their own authentication mechanisms, while others may not. Sentry authorization creates a common authentication and authorization framework in front of your applications via Traefik middleware. Sentry authorization happens before any existing auth mechanisms in the app itself, and so it acts as a front door gatekeeper for your apps. It can’t control what users are allowed to do once they get in, but it does control who is allowed in through the front door.</description>
+    </item>
+    <item>
+      <title>Postfix-Relay (MTA)</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/postfix-relay/index.html</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/postfix-relay/index.html</guid>
+      <description>Many apps require to send email for various purposes. Rather than configure each such container with your secret mail credentials, you can configure a single central mail forwarding service with postfix-relay.&#xA;--- title: Authorized container networks may bridge with the Postfix-Relay to send outgoing email. --- graph TD; subgraph Docker network A[Container A] --&amp;gt;|private mail-only network| D[Postfix-Relay] B[Container B] --&amp;gt;|private mail-only network| D[Postfix-Relay] C[Container C] -.- F[Blocked] end D --&amp;gt;|Internet| E[Public SMTP server] E --&amp;gt; G[Allowed Email recipient] E --&amp;gt; H[Allowed Email recipient] E -.</description>
     </item>
   </channel>
 </rss>

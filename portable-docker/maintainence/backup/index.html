@@ -19,19 +19,19 @@
     <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
     <meta itemprop="name" content="Native Backup :: book.rymcg.tech">
     <meta itemprop="description" content="Backup of native machines is much harder than for virtual machines, that’s just the way it goes. With VMs, your hypervisor should have a builtin backup feature which can suspend (pause) the entire machine, make a snapshot of the disk and the entire RAM contents, resume the machine, and continue backing up the snapshot in the background. If you have the luxury of running your server as a VM (e.g., Proxmox PVE, or any cloud provider), it makes backups so much easier.">
-    <meta itemprop="wordCount" content="1079">
+    <meta itemprop="wordCount" content="1457">
     <title>Native Backup :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1729098171" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729098171" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1729098171" rel="stylesheet">
-    <link href="/css/auto-complete.css?1729098171" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729098171" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1729098171" rel="stylesheet">
-    <link href="/css/fonts.css?1729098171" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729098171" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1729098171" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1729098171" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1729098171" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1729098171" rel="stylesheet">
-    <link href="/css/print.css?1729098171" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1729098171"></script>
+    <link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1729145969" rel="stylesheet">
+    <link href="/css/auto-complete.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729145969" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1729145969" rel="stylesheet">
+    <link href="/css/fonts.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729145969" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1729145969" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1729145969" rel="stylesheet">
+    <link href="/css/print.css?1729145969" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1729145969"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -350,6 +350,20 @@ local volume:</p>
     </div>
 </div>
 
+<p>You can choose to turn on notifications (see separate instructions
+below.)</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Do you want to receive notifications for backup failure?
+> No.
+  Yes, via email.
+  Yes, via webhook.
+</pre>
+    </div>
+</div>
+
 <h3 id="install">Install</h3>
 
 
@@ -423,7 +437,110 @@ ommitted if you use the <code>@every</code> syntax.</p>
 <p>To restore a volume from a backup, simply untar the archive into the
 appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
 <h3 id="notifications">Notifications</h3>
-<p>TODO</p>
+<p>In the event of a failed backup job, a notification can be sent to a
+configurable receiver with <a href="https://containrrr.dev/shoutrrr/v0.8/services/overview/" rel="external" target="_blank">Shoutrrr</a> (including Email, Matrix, Discord,
+Ntfy, IFTTT etc.)</p>
+<h4 id="email-notifications">Email notifications</h4>
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
+  <div class="box-content">
+
+<p>To enable email notifications, you must setup postfix-relay separately
+and configure it to allow clients from the the <code>backup-volume</code> network
+to send mail.</p>
+</div>
+</div>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Do you want to receive notifications for backup failure?
+  No.
+> Yes, via email.
+  Yes, via webhook.
+
+Enter the sender email address
+
+: backup-volume-default@pi5.forwarding.network
+
+Enter the recipient email address
+
+: test@example.com
+</pre>
+    </div>
+</div>
+
+<h4 id="matrix-notifications-via-webhook">Matrix notifications via webhook</h4>
+<p>You will need to setup the <a href="https://matrix-org.github.io/matrix-hookshot/latest/index.html" rel="external" target="_blank">Matrix Hookshot</a> bot in order to receive a
+generic webhook from Backup-Volume that notifies the Matrix room you
+share with the bot.</p>
+<ul>
+<li>Create a new room and invite the hookshot bot to it.</li>
+<li>Message the room: <code>!hookshot setup-widget</code>.</li>
+<li>Open the room Extensions tab and click on the Hookshot extension.</li>
+<li>Create a new <code>Inbound (Generic) Webhook</code>.</li>
+<li>Name the webhook <code>backup-volume.example.com</code> after your
+backup-volume instance.</li>
+<li>Copy the long URL it gives you, e.g.,
+<code>https://matrix.example.com/hookshot/webhooks/webhook/xxxxxx</code>.</li>
+<li>Click <code>Save</code>.</li>
+</ul>
+<p>Reconfigure the <code>.env_{CONTEXT}_{INSTANCE}</code> file of the backup-volume
+instance, setting the notification URL as a <a href="https://containrrr.dev/shoutrrr/v0.8/services/generic/" rel="external" target="_blank">Generic webhook</a>:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make backup-volume reconfigure var=BACKUP_NOTIFICATION_URLS="generic://matrix.example.com/hookshot/webhooks/webhook/xxxxx?template=json"
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Important: the Shoutrrr webhook notification URL should start with
+<code>generic://</code> (not <code>https://</code>). It should end with <code>?template=json</code>.</p>
+</div>
+</div>
+<p>Re-install to load the new config:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make backup-volume install
+</pre></code>
+    </div>
+</div>
+
+
+<p>To test the notification, you can consider setting
+<code>BACKUP_CRON_EXPRESSION=@every 1m</code> and change the S3 credentials so
+that they are incorrect, thus triggering a failure notification to be
+sent.</p>
+<p>You should see the JSON notification in the channel, which
+unfortunately is not formatted very nicely :</p>
+
+<div class="box notices cstyle default">
+  <div class="box-label">Example matrix message:</div>
+  <div class="box-content">
+
+<p>{
+&ldquo;message&rdquo;: &ldquo;Running backup-volume failed with error: main.(*script).copyArchive: error copying archive: s3.(*s3Storage).Copy: error uploading backup to remote storage: [Message]: &lsquo;The specified bucket does not exist.&rsquo;, [Code]: NoSuchBucket, [StatusCode]: 404\n\nLog output of the failed run was:\n\ntime=2024-10-16T19:45:27.092Z level=INFO msg=\&ldquo;Stopping 1 out of 26 running container(s) as they were labeled backup-volume.stop-during-backup=true.\&quot;\ntime=2024-10-16T19:45:27.713Z level=INFO msg=\&ldquo;Created backup of `/backup` at `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\&quot;\ntime=2024-10-16T19:45:27.972Z level=INFO msg=\&ldquo;Restarted 1 container(s).\&quot;\ntime=2024-10-16T19:45:28.259Z level=INFO msg=\&ldquo;Removed tar file `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\&quot;\n&rdquo;,
+&ldquo;title&rdquo;: &ldquo;Failure running backup-volume at 2024-10-16T19:45:27Z&rdquo;
+}</p>
+</div>
+</div>
 
             <footer class="footline">
             </footer>
@@ -450,12 +567,12 @@ appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1729098171" defer></script>
-        <script src="/js/lunr/lunr.min.js?1729098171" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1729098171" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1729098171" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1729098171" defer></script>
-        <script src="/js/search.js?1729098171" defer></script>
+        <script src="/js/auto-complete.js?1729145969" defer></script>
+        <script src="/js/lunr/lunr.min.js?1729145969" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1729145969" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1729145969" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1729145969" defer></script>
+        <script src="/js/search.js?1729145969" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -524,7 +641,8 @@ appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
           <li data-nav-id="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html" class=""><a class="padding" href="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html">Set up public SSH</a></li>
           <li data-nav-id="/portable-docker/install-core-services/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/install-core-services/index.html">Install core services</a><ul id="R-subsections-c9481aa00498efbc9aa9b90ebe7fdb65" class="morespace collapsible-menu">
           <li data-nav-id="/portable-docker/install-core-services/forgejo/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/forgejo/index.html">Forgejo</a></li>
-          <li data-nav-id="/portable-docker/install-core-services/traefik-forward-auth/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/traefik-forward-auth/index.html">Traefik-Forward-Auth (sentry authorization)</a></li></ul></li>
+          <li data-nav-id="/portable-docker/install-core-services/traefik-forward-auth/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/traefik-forward-auth/index.html">Traefik-Forward-Auth (sentry authorization)</a></li>
+          <li data-nav-id="/portable-docker/install-core-services/postfix-relay/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/postfix-relay/index.html">Postfix-Relay (MTA)</a></li></ul></li>
           <li data-nav-id="/portable-docker/install-web-services/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/install-web-services/index.html">Install apps</a><ul id="R-subsections-4340db93b595b617ec6a0c5b45298ba3" class="morespace collapsible-menu">
           <li data-nav-id="/portable-docker/install-web-services/immich/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/immich/index.html">Immich</a></li>
           <li data-nav-id="/portable-docker/install-web-services/sftp/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/sftp/index.html">SFTP (and Thttpd)</a></li>
@@ -611,14 +729,14 @@ appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 16, 2024 at 5:02pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 17, 2024 at 6:19am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1729098171" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1729098171" defer></script>
-    <script src="/js/theme.js?1729098171" defer></script>
+    <script src="/js/clipboard.min.js?1729145969" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1729145969" defer></script>
+    <script src="/js/theme.js?1729145969" defer></script>
   </body>
 </html>
