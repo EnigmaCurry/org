@@ -3869,6 +3869,20 @@ files directly into its volume, via SFTP. You can substitute this with
 [[/portable-docker/install-web-services/nginx-and-php/][Nginx]] if you prefer. This same approach will work with any Docker
 volume.
 
+#+begin_mermaid
+---
+title: SFTP and Thttpd share the same volume
+---
+graph TD;
+B[Web browser] --|internet|--> C
+D[SFTP client] --|internet|--> A
+subgraph Docker network
+    C[Thttpd container] --|volume link|--> V((volume: \nthttpd_files))
+    A[SFTP container] --|volume link|--> V((volume: \nthttpd_files))
+end
+#+end_mermaid
+
+
 **** Configure thttpd
 
 #+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
