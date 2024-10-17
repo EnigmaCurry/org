@@ -64,7 +64,8 @@
           ("stdout" :raw t)
           ("edit" :raw t)
           ("env" :raw t)
-          ("math" :raw t))))
+          ("math" :raw t)))
+  )
 
 (message "Loading f.el library")
 (use-package f)
