@@ -6,36 +6,36 @@
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
     <meta name="description" content="This chapter will focus on creating an out-of-band backup SSH tunnel (non-WireGuard, non-Traefik based), using a public gateway port on the sentry. This backdoor connection will ensure that you retain access to the Raspberry Pi even during emergency maintenance cycles, including restarting Traefik, restarting Docker, or even rebooting the system (the persistent tunnels will be restarted on boot).
-Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
+--- title: SSH and wireguard operate independently --- graph TD; S1[SSH client] --&amp;gt;|Public TCP port 2220| SSH W1[Wireguard client] --&amp;gt;|Public UDP port 51820| WG subgraph Docker server SSH[SSH server] WG[Wireguard server] end Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="Set up public SSH :: book.rymcg.tech">
     <meta name="twitter:description" content="This chapter will focus on creating an out-of-band backup SSH tunnel (non-WireGuard, non-Traefik based), using a public gateway port on the sentry. This backdoor connection will ensure that you retain access to the Raspberry Pi even during emergency maintenance cycles, including restarting Traefik, restarting Docker, or even rebooting the system (the persistent tunnels will be restarted on boot).
-Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
+--- title: SSH and wireguard operate independently --- graph TD; S1[SSH client] --&amp;gt;|Public TCP port 2220| SSH W1[Wireguard client] --&amp;gt;|Public UDP port 51820| WG subgraph Docker server SSH[SSH server] WG[Wireguard server] end Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
     <meta property="og:url" content="https://book.rymcg.tech/portable-docker/set-up-public-ssh-reverse-tunnel/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
     <meta property="og:title" content="Set up public SSH :: book.rymcg.tech">
     <meta property="og:description" content="This chapter will focus on creating an out-of-band backup SSH tunnel (non-WireGuard, non-Traefik based), using a public gateway port on the sentry. This backdoor connection will ensure that you retain access to the Raspberry Pi even during emergency maintenance cycles, including restarting Traefik, restarting Docker, or even rebooting the system (the persistent tunnels will be restarted on boot).
-Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
+--- title: SSH and wireguard operate independently --- graph TD; S1[SSH client] --&amp;gt;|Public TCP port 2220| SSH W1[Wireguard client] --&amp;gt;|Public UDP port 51820| WG subgraph Docker server SSH[SSH server] WG[Wireguard server] end Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="website">
     <meta itemprop="name" content="Set up public SSH :: book.rymcg.tech">
     <meta itemprop="description" content="This chapter will focus on creating an out-of-band backup SSH tunnel (non-WireGuard, non-Traefik based), using a public gateway port on the sentry. This backdoor connection will ensure that you retain access to the Raspberry Pi even during emergency maintenance cycles, including restarting Traefik, restarting Docker, or even rebooting the system (the persistent tunnels will be restarted on boot).
-Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
-    <meta itemprop="wordCount" content="611">
+--- title: SSH and wireguard operate independently --- graph TD; S1[SSH client] --&amp;gt;|Public TCP port 2220| SSH W1[Wireguard client] --&amp;gt;|Public UDP port 51820| WG subgraph Docker server SSH[SSH server] WG[Wireguard server] end Ensure the SSH server is secure During the rpi-imager configuration, you should have selected the option for SSH to Allow public-key authentication only.">
+    <meta itemprop="wordCount" content="643">
     <title>Set up public SSH :: book.rymcg.tech</title>
     <link href="/portable-docker/set-up-public-ssh-reverse-tunnel/index.xml" rel="alternate" type="application/rss+xml" title="Set up public SSH :: book.rymcg.tech">
-    <link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1729145969" rel="stylesheet">
-    <link href="/css/auto-complete.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1729145969" rel="stylesheet">
-    <link href="/css/fonts.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1729145969" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1729145969" rel="stylesheet">
-    <link href="/css/print.css?1729145969" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1729145969"></script>
+    <link href="/css/fontawesome-all.min.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1729148334" rel="stylesheet">
+    <link href="/css/auto-complete.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1729148334" rel="stylesheet">
+    <link href="/css/fonts.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1729148334" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1729148334" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1729148334" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1729148334" rel="stylesheet">
+    <link href="/css/print.css?1729148334" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1729148334"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..';
@@ -122,6 +122,19 @@ sentry. This backdoor connection will ensure that you retain access to
 the Raspberry Pi even during emergency maintenance cycles, including
 restarting Traefik, restarting Docker, or even rebooting the system
 (the persistent tunnels will be restarted on boot).</p>
+
+<pre class="mermaid align-center ">
+---
+title: SSH and wireguard operate independently
+---
+graph TD;
+S1[SSH client] --&amp;gt;|Public TCP port 2220| SSH
+W1[Wireguard client] --&amp;gt;|Public UDP port 51820| WG
+subgraph Docker server
+    SSH[SSH server]
+    WG[Wireguard server]
+end
+</pre>
 <h2 id="ensure-the-ssh-server-is-secure">Ensure the SSH server is secure</h2>
 <p>During the <code>rpi-imager</code> configuration, you should have selected the
 option for SSH to <code>Allow public-key authentication only</code>. You should
@@ -418,12 +431,12 @@ the connection; it will always show the IP address of the tunnel
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1729145969" defer></script>
-        <script src="/js/search.js?1729145969" defer></script>
+        <script src="/js/auto-complete.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1729148334" defer></script>
+        <script src="/js/search.js?1729148334" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -580,14 +593,28 @@ the connection; it will always show the IP address of the tunnel
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 17, 2024 at 6:19am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 17, 2024 at 6:58am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1729145969" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1729145969" defer></script>
-    <script src="/js/theme.js?1729145969" defer></script>
+    <script src="/js/clipboard.min.js?1729148334" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-color.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-dispatch.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-drag.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-ease.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-interpolate.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-selection.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-timer.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-transition.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-zoom.min.js?1729148334" defer></script>
+    <script src="/js/js-yaml.min.js?1729148334" defer></script>
+    <script src="/js/mermaid.min.js?1729148334" defer></script>
+    <script>
+      window.themeUseMermaid = JSON.parse("{}");
+    </script>
+    <script src="/js/theme.js?1729148334" defer></script>
   </body>
 </html>

@@ -23,19 +23,19 @@ Install a demo web server (thttpd) Thttpd is a tiny static HTTP server for hosti
     <meta itemprop="name" content="SFTP (and Thttpd) :: book.rymcg.tech">
     <meta itemprop="description" content="SFTP (SSH File Transfer Protocol) is a standard and secure method of transferring files. There are clients available for all platforms. You can configure an SFTP server to send and receive files directly with your Docker volumes.
 Install a demo web server (thttpd) Thttpd is a tiny static HTTP server for hosting websites. It will be used for demonstration purposes in showing the effect of transferring files directly into its volume, via SFTP.">
-    <meta itemprop="wordCount" content="1490">
+    <meta itemprop="wordCount" content="1526">
     <title>SFTP (and Thttpd) :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1729145969" rel="stylesheet">
-    <link href="/css/auto-complete.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1729145969" rel="stylesheet">
-    <link href="/css/fonts.css?1729145969" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729145969" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1729145969" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1729145969" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1729145969" rel="stylesheet">
-    <link href="/css/print.css?1729145969" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1729145969"></script>
+    <link href="/css/fontawesome-all.min.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1729148334" rel="stylesheet">
+    <link href="/css/auto-complete.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1729148334" rel="stylesheet">
+    <link href="/css/fonts.css?1729148334" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729148334" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1729148334" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1729148334" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1729148334" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1729148334" rel="stylesheet">
+    <link href="/css/print.css?1729148334" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1729148334"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -143,6 +143,19 @@ used for demonstration purposes in showing the effect of transferring
 files directly into its volume, via SFTP. You can substitute this with
 <a href="/portable-docker/install-web-services/nginx-and-php/index.html">Nginx</a> if you prefer. This same approach will work with any Docker
 volume.</p>
+
+<pre class="mermaid align-center ">
+---
+title: SFTP and Thttpd share the same volume
+---
+graph TD;
+B[Web browser] --|internet|--&amp;gt; C
+D[SFTP client] --|internet|--&amp;gt; A
+subgraph Docker network
+    C[Thttpd container] --|volume link|--&amp;gt; V((volume: \nthttpd_files))
+    A[SFTP container] --|volume link|--&amp;gt; V((volume: \nthttpd_files))
+end
+</pre>
 <h3 id="configure-thttpd">Configure thttpd</h3>
 
 
@@ -792,12 +805,12 @@ sync-web
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1729145969" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1729145969" defer></script>
-        <script src="/js/search.js?1729145969" defer></script>
+        <script src="/js/auto-complete.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1729148334" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1729148334" defer></script>
+        <script src="/js/search.js?1729148334" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -954,14 +967,28 @@ sync-web
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 17, 2024 at 6:19am (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 17, 2024 at 6:58am (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1729145969" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1729145969" defer></script>
-    <script src="/js/theme.js?1729145969" defer></script>
+    <script src="/js/clipboard.min.js?1729148334" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-color.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-dispatch.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-drag.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-ease.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-interpolate.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-selection.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-timer.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-transition.min.js?1729148334" defer></script>
+    <script src="/js/d3/d3-zoom.min.js?1729148334" defer></script>
+    <script src="/js/js-yaml.min.js?1729148334" defer></script>
+    <script src="/js/mermaid.min.js?1729148334" defer></script>
+    <script>
+      window.themeUseMermaid = JSON.parse("{}");
+    </script>
+    <script src="/js/theme.js?1729148334" defer></script>
   </body>
 </html>
