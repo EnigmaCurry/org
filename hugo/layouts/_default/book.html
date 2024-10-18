@@ -1,45 +1,88 @@
-{{ partial "header.html" . }} <!-- Use theme's header -->
+<!DOCTYPE html>
 {{ $isBookLayout := true }}
-<main class="book-content">
-    <script src="/js/mermaid.min.js"></script>
-    <script src="/js/js-yaml.min.js"></script>
-    <script>
-     mermaid.initialize({ startOnLoad: true });
-    </script>
-    <!-- Define Section from Front Matter -->
-    {{ $section := .Params.section }}
-    {{ if not $section }}
-    <p>No section defined in front matter.</p>
-    {{ else }}
-    {{ $indexPagePath := printf "%s/_index.md" $section }}
-    {{ $indexPage := .Site.GetPage $indexPagePath }}
-    {{ if $indexPage }}
-    <div class="introduction" style="page-break-after: always;">
-        <h1 id="{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</h1>
+<html>
+    <head>
+        <link href="/css/custom.css" rel="stylesheet">
+        <script>
+         function forcePrintStyles() {
+             // Get all stylesheets on the page
+             const stylesheets = document.styleSheets;
+
+             for (let i = 0; i < stylesheets.length; i++) {
+                 try {
+                     const rules = stylesheets[i].cssRules || stylesheets[i].rules;
+
+                     // Loop through all the CSS rules
+                     for (let j = 0; j < rules.length; j++) {
+                         if (rules[j].media && rules[j].media.mediaText === "print") {
+                             // Change mediaText to "all" to apply print styles on screen
+                             rules[j].media.mediaText = "all";
+                         }
+                     }
+                 } catch (e) {
+                     // Handling security exceptions if accessing rules is blocked
+                     console.warn('Could not access stylesheet rules: ', e);
+                 }
+             }
+         }
+         document.addEventListener("DOMContentLoaded", function() {
+             forcePrintStyles();
+         });
+        </script>
+        <script src="/js/mermaid.min.js"></script>
+        <script src="/js/js-yaml.min.js"></script>
+        <script src="/js/dom-to-image.min.js"></script>
+        <script>
+         mermaid.initialize({
+             startOnLoad: true,
+         });
+         window.addEventListener("beforeprint", function() {
+             if (typeof mermaid !== 'undefined') {
+                 mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+             }
+         });
+        </script>
+
+    </head>
+    <body>
+        <div class="default_animation">
+            <main class="book-content">
+                <!-- Define Section from Front Matter -->
+                {{ $section := .Params.section }}
+                {{ if not $section }}
+                <p>No section defined in front matter.</p>
+                {{ else }}
+                {{ $indexPagePath := printf "%s/_index.md" $section }}
+                {{ $indexPage := .Site.GetPage $indexPagePath }}
+                {{ if $indexPage }}
+                <div class="introduction" style="page-break-after: always;">
+                    <h1 id="{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</h1>
 {{ $indexPage.Content | safeHTML }}
-    </div>
-    {{ end }}
-    <!-- Render all the individual chapters -->
-    {{ range (where .Site.RegularPages "Section" $section) }}
-    <div class="chapter" style="page-break-after: always;">
-        <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
-        <div class="chapter-content">
-            {{- $uniqueId := .File.BaseFileName }}
-            {{- $content := .Content | safeHTML }}
-            <!-- Add IDs to headers manually by re-rendering -->
-            {{- $lines := split $content "\n" }}
-            {{- range $lines }}
-            {{- if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
-            {{- $level := index (findRE "^<h([1-6])>" .) 1 }}
-            {{- $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
-            <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</h{{ $level }}>
-            {{- else }}
+                </div>
+                {{ end }}
+                <!-- Render all the individual chapters -->
+                {{ range (where .Site.RegularPages "Section" $section) }}
+                <div class="chapter" style="page-break-after: always;">
+                    <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
+                    <div class="chapter-content">
+                        {{- $uniqueId := .File.BaseFileName }}
+                        {{- $content := .Content | safeHTML }}
+                        <!-- Add IDs to headers manually by re-rendering -->
+                        {{- $lines := split $content "\n" }}
+                        {{- range $lines }}
+                        {{- if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
+                        {{- $level := index (findRE "^<h([1-6])>" .) 1 }}
+                        {{- $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
+                        <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</h{{ $level }}>
+                        {{- else }}
 {{ . | safeHTML }}
-            {{- end }}
-            {{- end }}
-        </div>
-    </div>
-    {{ end }}
-    {{ end }}
-</main>
-{{ partial "footer.html" . }} <!-- Use theme's footer -->
+                        {{- end }}
+                        {{- end }}
+                    </div>
+                </div>
+                {{ end }}
+                {{ end }}
+            </main>
+        </div>    
+    </body>
+</html>

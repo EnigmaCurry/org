@@ -62,6 +62,7 @@
           ("video" :raw t)
           ("run" :raw t)
           ("stdout" :raw t)
+          ("mermaid" :raw t)
           ("edit" :raw t)
           ("env" :raw t)
           ("math" :raw t)))
