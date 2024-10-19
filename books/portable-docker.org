@@ -3934,10 +3934,10 @@ title: Mutual TLS with two separate Certificate Authorities
 graph TD
     StepCA[Step CA]
     LetsEncrypt[Let's Encrypt CA]
-    Client -->|Client sends cert signed by Step-CA, which the Server trusts| Server
-    Server -->|Server sends cert signed by Let's Encrypt, which the Client trusts| Client
-    Client <-->|Step-CA issues cert upon client's request| StepCA
-    Server <-->|Let's Encrypt issues cert upon server's request| LetsEncrypt    
+    Client -->|Client sends Step-CA signed cert| Server
+    Server -->|Server sends Let's Encrypt signed cert| Client
+    Client <-->|Issues cert| StepCA
+    Server <-->|Issues cert| LetsEncrypt
 #+end_mermaid
  
 Theoretically you could just use Step-CA for both sides, but this
