@@ -4287,7 +4287,8 @@ WHOAMI_MTLS_AUTHORIZED_CERTS: Enter comma separated list of allowed client certi
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
 Make sure to enter the same authorized cert wildcard that matches your
-client certificate.
+client certificate, otherwise you will encounter the error =No
+matching DNS names.=
 #+end_notice
 
 Re-install whoami:
@@ -4304,22 +4305,26 @@ Test the service without specifying a certificate:
 curl https://whoami.pi.example.com
 #+end_run
 
-You should now receive this error, indicating that a client
-certificate is required:
+You should now receive one of the following errors, both indicating
+that a client certificate is required:
 
 #+begin_stdout
 curl: (56) OpenSSL SSL_read: OpenSSL/3.0.14: error:0A00045C:SSL routines::tlsv13 alert certificate required, errno 0
+curl: (55) getpeername() failed with errno 107: Transport endpoint is not connected
 #+end_stdout
 
 Now test it with your client certificate:
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
+(
+NAME=foo.clients.pi.example.com
 CERTS=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs
 
 curl https://whoami.pi.example.com \
---cert $CERTS/foo.clients.pi.example.com.crt \
---key $CERTS/foo.clients.pi.example.com.key 
+--cert ${CERTS}/${NAME}.crt \
+--key ${CERTS}/${NAME}.key
+)
 #+end_run
 
 With the correctly supplied certificate and key, the server now
