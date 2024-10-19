@@ -19,19 +19,19 @@
     <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
     <meta itemprop="name" content="Step-CA (mutual TLS) :: book.rymcg.tech">
     <meta itemprop="description" content="Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let’s Encrypt), where only the server’s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.">
-    <meta itemprop="wordCount" content="1802">
+    <meta itemprop="wordCount" content="1863">
     <title>Step-CA (mutual TLS) :: book.rymcg.tech</title>
-    <link href="/css/fontawesome-all.min.css?1729366337" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729366337" rel="stylesheet"></noscript>
-    <link href="/css/nucleus.css?1729366337" rel="stylesheet">
-    <link href="/css/auto-complete.css?1729366337" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729366337" rel="stylesheet"></noscript>
-    <link href="/css/perfect-scrollbar.min.css?1729366337" rel="stylesheet">
-    <link href="/css/fonts.css?1729366337" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729366337" rel="stylesheet"></noscript>
-    <link href="/css/theme.css?1729366337" rel="stylesheet">
-    <link href="/css/theme-zen-auto.css?1729366337" rel="stylesheet" id="R-variant-style">
-    <link href="/css/chroma-zen-auto.css?1729366337" rel="stylesheet" id="R-variant-chroma-style">
-    <link href="/css/variant.css?1729366337" rel="stylesheet">
-    <link href="/css/print.css?1729366337" rel="stylesheet" media="print">
-    <script src="/js/variant.js?1729366337"></script>
+    <link href="/css/fontawesome-all.min.css?1729368742" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729368742" rel="stylesheet"></noscript>
+    <link href="/css/nucleus.css?1729368742" rel="stylesheet">
+    <link href="/css/auto-complete.css?1729368742" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729368742" rel="stylesheet"></noscript>
+    <link href="/css/perfect-scrollbar.min.css?1729368742" rel="stylesheet">
+    <link href="/css/fonts.css?1729368742" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fonts.css?1729368742" rel="stylesheet"></noscript>
+    <link href="/css/theme.css?1729368742" rel="stylesheet">
+    <link href="/css/theme-zen-auto.css?1729368742" rel="stylesheet" id="R-variant-style">
+    <link href="/css/chroma-zen-auto.css?1729368742" rel="stylesheet" id="R-variant-chroma-style">
+    <link href="/css/variant.css?1729368742" rel="stylesheet">
+    <link href="/css/print.css?1729368742" rel="stylesheet" media="print">
+    <script src="/js/variant.js?1729368742"></script>
     <script>
       window.relearn = window.relearn || {};
       window.relearn.relBasePath='..\/..\/..';
@@ -130,6 +130,9 @@ interconnected environments like microservices and zero-trust
 architectures. By using certificates issued by trusted Certificate
 Authorities (CA), mTLS prevents unauthorized access and guarantees
 that both parties using a communication channel are legitimate.</p>
+<figure><img src="/img/portable-docker/treasure-map.webp"/>
+</figure>
+
 <p><a href="https://smallstep.com/docs/step-ca/" rel="external" target="_blank">Step-CA</a> is an open source Certificate Authority (CA) and an Automated
 Certificate Management Enviornment (ACME). You can self-host Step-CA
 and use it to add secure mTLS authentication in all of your
@@ -139,6 +142,11 @@ applications and infrastructure.</p>
   <div class="box-label">Info</div>
   <div class="box-content">
 
+<p>This chapter is focused soley on enhancing client authentication with
+mTLS, but it still uses the Let&rsquo;s Encrypt CA for the server
+certificates. If you don&rsquo;t want to rely upon Let&rsquo;s Encrypt, and you
+want to run a fully self-hosted Public Key Infrastructure (PKI) for
+all of your services, please see the appendix chapter <a href="/portable-docker/appendix/private-acme/">Private ACME</a>.</p>
 <p>Although primarily used for machine-to-machine communication, mTLS can
 also be used in the web browser to provide strong end-user client
 authentication, enhancing security for sensitive web applications.
@@ -192,7 +200,7 @@ STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS: Enter the list of allowed domain wildca
 <p>In an earlier chapter Traefik was setup with <a href="/portable-docker/set-up-raspberry-pi/install-traefik/#configure-acme">ACME</a>. All of the
 server-side applications on your Raspberry Pi already have automatic
 TLS certificates issued via <a href="https://letsencrypt.org/getting-started/" rel="external" target="_blank">Let&rsquo;s Encrypt</a>, which is a free and public
-CA, therfore, in this example Step-CA will not need to be used for any
+CA, therfore, in this example Step-CA will not be required for any
 server-side certificates. Lets Encrypt does not support requesting
 client certificates, so Step-CA will be required only to create and
 verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
@@ -202,8 +210,8 @@ verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
 authority, whose root certificate must be added to the server&rsquo;s
 trust store during install.</li>
 <li>The client will verify the server&rsquo;s certificate using the Let&rsquo;s
-Encrypt authority, whose root certificate is widely trusted in most
-operating systems and devices from factory default settings, which
+Encrypt authority, whose root certificate is already widely trusted
+in most operating systems factory default settings, which
 simplifies installation.</li>
 </ul>
 <pre class="mermaid align-center ">
@@ -219,8 +227,8 @@ graph TD
     Server &lt;--&gt;|Issues cert| LetsEncrypt
 </pre>
 <p>Theoretically you could just use Step-CA for both sides, but this
-would require changing the root certificate store on every client,
-which is a risky and complex procedure, ultimately unnecessary because
+would require modifying the root certificate store on every client,
+which is a risky and complex procedure, and ultimately unnecessary because
 Let&rsquo;s Encrypt is already commonly trusted by all operating systems and
 browsers.</p>
 </div>
@@ -235,9 +243,10 @@ name format (e.g., <code>foo.clients.pi.example.com</code>), but this does not
 need to resolve to any IP address. Each certificate can have an
 arbitrary name as long as it matches the Step-CA policy
 (<code>STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS</code>). The certificate name is
-used as the transport authentication id (essentially like a
-&ldquo;username&rdquo;), and it is forwarded to your backend HTTP services through
-a trusted header <code>X-Client-CN</code> for secondary authorization purposes.</p>
+used as the transport authentication id (essentially used as a
+username), and it is forwarded to your backend HTTP services through a
+trusted header <code>X-Client-CN</code> for the purpose of secondary
+authorization by the app itself.</p>
 </div>
 </div>
 <h3 id="define-default-tls-certificate-expiration">Define default TLS certificate expiration</h3>
@@ -263,7 +272,7 @@ does not specify one, 7 days by default.</li>
 ## Increase the minimum duration to 1 day:
 pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=24h
 
-## Increase the maximum to 1 year:
+## Increase the maximum duration to 1 year:
 pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=8760h
 
 ## Increase the default duration to 90 days:
@@ -810,12 +819,12 @@ secondary authorization in your app.</p>
         <script>
           var contentLangs=['en'];
         </script>
-        <script src="/js/auto-complete.js?1729366337" defer></script>
-        <script src="/js/lunr/lunr.min.js?1729366337" defer></script>
-        <script src="/js/lunr/lunr.stemmer.support.min.js?1729366337" defer></script>
-        <script src="/js/lunr/lunr.multi.min.js?1729366337" defer></script>
-        <script src="/js/lunr/lunr.en.min.js?1729366337" defer></script>
-        <script src="/js/search.js?1729366337" defer></script>
+        <script src="/js/auto-complete.js?1729368742" defer></script>
+        <script src="/js/lunr/lunr.min.js?1729368742" defer></script>
+        <script src="/js/lunr/lunr.stemmer.support.min.js?1729368742" defer></script>
+        <script src="/js/lunr/lunr.multi.min.js?1729368742" defer></script>
+        <script src="/js/lunr/lunr.en.min.js?1729368742" defer></script>
+        <script src="/js/search.js?1729368742" defer></script>
       </div>
       <div id="R-homelinks" class="default-animation homelinks">
         <ul>
@@ -900,6 +909,7 @@ secondary authorization in your app.</p>
           <li data-nav-id="/portable-docker/maintainence/upgrade/index.html" class=""><a class="padding" href="/portable-docker/maintainence/upgrade/index.html">Upgrade</a></li>
           <li data-nav-id="/portable-docker/maintainence/troubleshooting/index.html" class=""><a class="padding" href="/portable-docker/maintainence/troubleshooting/index.html">Troubleshooting</a></li></ul></li>
           <li data-nav-id="/portable-docker/appendix/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/appendix/index.html">Appendix</a><ul id="R-subsections-be574699630779575805aef573eb3b88" class="morespace collapsible-menu">
+          <li data-nav-id="/portable-docker/appendix/private-acme/index.html" class=""><a class="padding" href="/portable-docker/appendix/private-acme/index.html">Private ACME</a></li>
           <li data-nav-id="/portable-docker/appendix/mutual-tls-for-web-and-mobile/index.html" class=""><a class="padding" href="/portable-docker/appendix/mutual-tls-for-web-and-mobile/index.html">Mutual TLS for Web and Mobile</a></li></ul></li></ul></li>
           <li data-nav-id="/publishing-with-org-mode/index.html" class=""><a class="padding" href="/publishing-with-org-mode/index.html">Publishing with org-mode</a><ul id="R-subsections-415a59a995a98556d7692b05dd8d304c" class="morespace collapsible-menu">
           <li data-nav-id="/publishing-with-org-mode/dependencies/index.html" class=""><a class="padding" href="/publishing-with-org-mode/dependencies/index.html">Dependencies</a></li>
@@ -975,28 +985,28 @@ secondary authorization in your app.</p>
               </li>
             </ul>
           </div>
-          <div id="R-footer" class="footerFooter showFooter">Build: Oct 19, 2024 at 7:32pm (UTC)
+          <div id="R-footer" class="footerFooter showFooter">Build: Oct 19, 2024 at 8:12pm (UTC)
 
           </div>
         </div>
       </div>
     </aside>
-    <script src="/js/clipboard.min.js?1729366337" defer></script>
-    <script src="/js/perfect-scrollbar.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-color.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-dispatch.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-drag.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-ease.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-interpolate.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-selection.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-timer.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-transition.min.js?1729366337" defer></script>
-    <script src="/js/d3/d3-zoom.min.js?1729366337" defer></script>
-    <script src="/js/js-yaml.min.js?1729366337" defer></script>
-    <script src="/js/mermaid.min.js?1729366337" defer></script>
+    <script src="/js/clipboard.min.js?1729368742" defer></script>
+    <script src="/js/perfect-scrollbar.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-color.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-dispatch.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-drag.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-ease.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-interpolate.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-selection.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-timer.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-transition.min.js?1729368742" defer></script>
+    <script src="/js/d3/d3-zoom.min.js?1729368742" defer></script>
+    <script src="/js/js-yaml.min.js?1729368742" defer></script>
+    <script src="/js/mermaid.min.js?1729368742" defer></script>
     <script>
       window.themeUseMermaid = JSON.parse("{}");
     </script>
-    <script src="/js/theme.js?1729366337" defer></script>
+    <script src="/js/theme.js?1729368742" defer></script>
   </body>
 </html>

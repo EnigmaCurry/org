@@ -154,6 +154,8 @@ Chat with us on Matrix
 <li><a href="/portable-docker/maintainence/troubleshooting/index.html">Troubleshooting</a><ul>
 	</ul></li></ul></li>
 <li><a href="/portable-docker/appendix/index.html">Appendix</a><ul>
+<li><a href="/portable-docker/appendix/private-acme/index.html">Private ACME</a><ul>
+	</ul></li>
 <li><a href="/portable-docker/appendix/mutual-tls-for-web-and-mobile/index.html">Mutual TLS for Web and Mobile</a><ul>
 	</ul></li></ul></li>
 </ul>
@@ -4744,6 +4746,9 @@ interconnected environments like microservices and zero-trust
 architectures. By using certificates issued by trusted Certificate
 Authorities (CA), mTLS prevents unauthorized access and guarantees
 that both parties using a communication channel are legitimate.</p>
+<figure><img src="/img/portable-docker/treasure-map.webp"/>
+</figure>
+
 <p><a href="https://smallstep.com/docs/step-ca/" rel="external" target="_blank">Step-CA</a> is an open source Certificate Authority (CA) and an Automated
 Certificate Management Enviornment (ACME). You can self-host Step-CA
 and use it to add secure mTLS authentication in all of your
@@ -4753,6 +4758,11 @@ applications and infrastructure.</p>
   <div class="box-label">Info</div>
   <div class="box-content">
 
+<p>This chapter is focused soley on enhancing client authentication with
+mTLS, but it still uses the Let&rsquo;s Encrypt CA for the server
+certificates. If you don&rsquo;t want to rely upon Let&rsquo;s Encrypt, and you
+want to run a fully self-hosted Public Key Infrastructure (PKI) for
+all of your services, please see the appendix chapter <a href="/portable-docker/appendix/private-acme/">Private ACME</a>.</p>
 <p>Although primarily used for machine-to-machine communication, mTLS can
 also be used in the web browser to provide strong end-user client
 authentication, enhancing security for sensitive web applications.
@@ -4806,7 +4816,7 @@ STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS: Enter the list of allowed domain wildca
 <p>In an earlier chapter Traefik was setup with <a href="/portable-docker/set-up-raspberry-pi/install-traefik/#configure-acme">ACME</a>. All of the
 server-side applications on your Raspberry Pi already have automatic
 TLS certificates issued via <a href="https://letsencrypt.org/getting-started/" rel="external" target="_blank">Let&rsquo;s Encrypt</a>, which is a free and public
-CA, therfore, in this example Step-CA will not need to be used for any
+CA, therfore, in this example Step-CA will not be required for any
 server-side certificates. Lets Encrypt does not support requesting
 client certificates, so Step-CA will be required only to create and
 verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
@@ -4816,8 +4826,8 @@ verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
 authority, whose root certificate must be added to the server&rsquo;s
 trust store during install.</li>
 <li>The client will verify the server&rsquo;s certificate using the Let&rsquo;s
-Encrypt authority, whose root certificate is widely trusted in most
-operating systems and devices from factory default settings, which
+Encrypt authority, whose root certificate is already widely trusted
+in most operating systems factory default settings, which
 simplifies installation.</li>
 </ul>
 <pre class="mermaid align-center ">
@@ -4833,8 +4843,8 @@ graph TD
     Server &lt;--&gt;|Issues cert| LetsEncrypt
 </pre>
 <p>Theoretically you could just use Step-CA for both sides, but this
-would require changing the root certificate store on every client,
-which is a risky and complex procedure, ultimately unnecessary because
+would require modifying the root certificate store on every client,
+which is a risky and complex procedure, and ultimately unnecessary because
 Let&rsquo;s Encrypt is already commonly trusted by all operating systems and
 browsers.</p>
 </div>
@@ -4849,9 +4859,10 @@ name format (e.g., <code>foo.clients.pi.example.com</code>), but this does not
 need to resolve to any IP address. Each certificate can have an
 arbitrary name as long as it matches the Step-CA policy
 (<code>STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS</code>). The certificate name is
-used as the transport authentication id (essentially like a
-&ldquo;username&rdquo;), and it is forwarded to your backend HTTP services through
-a trusted header <code>X-Client-CN</code> for secondary authorization purposes.</p>
+used as the transport authentication id (essentially used as a
+username), and it is forwarded to your backend HTTP services through a
+trusted header <code>X-Client-CN</code> for the purpose of secondary
+authorization by the app itself.</p>
 </div>
 </div>
 <h3 id="define-default-tls-certificate-expiration">Define default TLS certificate expiration</h3>
@@ -4877,7 +4888,7 @@ does not specify one, 7 days by default.</li>
 ## Increase the minimum duration to 1 day:
 pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=24h
 
-## Increase the maximum to 1 year:
+## Increase the maximum duration to 1 year:
 pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=8760h
 
 ## Increase the default duration to 90 days:
@@ -8490,7 +8501,16 @@ hardware issue.</p>
                 </div>
                 
                 <div class="chapter" style="page-break-after: always;">
-                    <h1 id="010001-Mutual TLS for Web and Mobile">Mutual TLS for Web and Mobile</h1>
+                    <h1 id="010001-Private ACME">Private ACME</h1>
+                    <div class="chapter-content">
+                        
+<p>TODO</p>
+
+                    </div>
+                </div>
+                
+                <div class="chapter" style="page-break-after: always;">
+                    <h1 id="010010-Mutual TLS for Web and Mobile">Mutual TLS for Web and Mobile</h1>
                     <div class="chapter-content">
                         
 <p>TODO</p>
