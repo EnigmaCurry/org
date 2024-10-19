@@ -177,7 +177,7 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech",
-    "content": " This book serves as your guide to installing Docker on a small portable Linux device (e.g., Raspberry Pi) and deploying some web service containers on it.\nYou’ll also create and configure a public cloud server (e.g., a DigitalOcean droplet) whose sole purpose is to host a VPN (WireGuard) and public gateway (Traefik), enabling the Raspberry Pi to securely connect from any location.\nThrough the encrypted tunnel established by this connection, the Pi can publish services to the Internet even when operating behind a restrictive firewall, such as public Wi-Fi, mobile hotspots, or carrier-grade NAT. As long as you can get unblocked outgoing Internet access, you can self-host a roaming public server from anywhere!\nd.rymcg.tech Chat with us on Matrix Index Acknowledgements Introduction Set up DNS Register a domain name Add the domain to DigitalOcean DNS Generate DigitalOcean API token for ACME challenge Set up Raspberry Pi Build your Raspberry Pi Install Raspberry Pi OS Set up networking Set up SSH Install Docker Install d.rymcg.tech Install Traefik Install Whoami Set up sentry Droplet Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry Configure WireGuard VPN Configure sentry wireguard server Configure Raspberry Pi WireGuard client Set up public SSH Install core services Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) Install apps Immich SFTP (and Thttpd) MinIO S3 (and Filestash) Homepage Yourls Nginx and PHP Jupyterlab Maintainence Native Backup Upgrade Troubleshooting Appendix Private ACME Mutual TLS for Web and Mobile ",
+    "content": " This book serves as your guide to installing Docker on a small portable Linux device (e.g., Raspberry Pi) and deploying some web service containers on it.\nYou’ll also create and configure a public cloud server (e.g., a DigitalOcean droplet) whose sole purpose is to host a VPN (WireGuard) and public gateway (Traefik), enabling the Raspberry Pi to securely connect from any location.\nThrough the encrypted tunnel established by this connection, the Pi can publish services to the Internet even when operating behind a restrictive firewall, such as public Wi-Fi, mobile hotspots, or carrier-grade NAT. As long as you can get unblocked outgoing Internet access, you can self-host a roaming public server from anywhere!\nd.rymcg.tech Chat with us on Matrix Index Acknowledgements Introduction Set up DNS Register a domain name Add the domain to DigitalOcean DNS Generate DigitalOcean API token for ACME challenge Set up Raspberry Pi Build your Raspberry Pi Install Raspberry Pi OS Set up networking Set up SSH Install Docker Install d.rymcg.tech Install Traefik Install Whoami Set up sentry Droplet Launch DigitalOcean droplet Configure the sentry context on the Pi Configure d.rymcg.tech for the sentry Configure WireGuard VPN Configure sentry wireguard server Configure Raspberry Pi WireGuard client Set up public SSH Install core services Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) Docker Registry Install apps Immich SFTP (and Thttpd) MinIO S3 (and Filestash) Homepage Yourls Nginx and PHP Jupyterlab Maintainence Native Backup Upgrade Troubleshooting Appendix Private ACME Mutual TLS for Web and Mobile ",
     "description": "This book serves as your guide to installing Docker on a small portable Linux device (e.g., Raspberry Pi) and deploying some web service containers on it.\nYou’ll also create and configure a public cloud server (e.g., a DigitalOcean droplet) whose sole purpose is to host a VPN (WireGuard) and public gateway (Traefik), enabling the Raspberry Pi to securely connect from any location.\nThrough the encrypted tunnel established by this connection, the Pi can publish services to the Internet even when operating behind a restrictive firewall, such as public Wi-Fi, mobile hotspots, or carrier-grade NAT.",
     "tags": [],
     "title": "Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling",
@@ -249,8 +249,8 @@ var relearn_search_index = [
   },
   {
     "breadcrumb": "book.rymcg.tech \u003e Portable Docker",
-    "content": " There are a few applications which we will call “core” services: you should consider installing these before any others (although not required.)\nIndex Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) ",
-    "description": " There are a few applications which we will call “core” services: you should consider installing these before any others (although not required.)\nIndex Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) ",
+    "content": " There are a few applications which we will call “core” services: you should consider installing these before any others (although not required.)\nIndex Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) Docker Registry ",
+    "description": " There are a few applications which we will call “core” services: you should consider installing these before any others (although not required.)\nIndex Forgejo Traefik-Forward-Auth (sentry authorization) Postfix-Relay (MTA) Step-CA (mutual TLS) Docker Registry ",
     "tags": [],
     "title": "Install core services",
     "uri": "/portable-docker/install-core-services/index.html"
@@ -286,6 +286,14 @@ var relearn_search_index = [
     "tags": [],
     "title": "Step-CA (mutual TLS)",
     "uri": "/portable-docker/install-core-services/step-ca/index.html"
+  },
+  {
+    "breadcrumb": "book.rymcg.tech \u003e Portable Docker \u003e Install core services",
+    "content": " A Docker registry is a service for storing and distributing Docker images (OCI images). Public registries like Docker Hub are common, but private registries offer more control and security. By using a registry, you can version images, enforce access policies, and simplify deployment, making it a key part of your infrastructure.",
+    "description": "A Docker registry is a service for storing and distributing Docker images (OCI images). Public registries like Docker Hub are common, but private registries offer more control and security. By using a registry, you can version images, enforce access policies, and simplify deployment, making it a key part of your infrastructure.",
+    "tags": [],
+    "title": "Docker Registry",
+    "uri": "/portable-docker/install-core-services/docker-registry/index.html"
   },
   {
     "breadcrumb": "book.rymcg.tech",
