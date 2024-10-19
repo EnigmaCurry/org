@@ -1077,7 +1077,6 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 If it worked, you should see the output of =whoami= which should print
 the username =root= (which is the user configured by SSH).
 
-
 ** Install Docker
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000240-install-docker
@@ -1154,7 +1153,10 @@ If it worked, the =pi= user is now fully equipped to run any docker comamnd as =
 sudo apt-get update && \
 sudo apt-get install -y bash build-essential gettext \
      git openssl apache2-utils xdg-utils jq sshfs \
-     wireguard curl inotify-tools w3m
+     wireguard curl inotify-tools w3m && \
+( cd $(mktemp -d) && wget -O step-cli.deb \
+  https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_$(dpkg --print-architecture).deb && \
+  sudo dpkg -i step-cli.deb && rm -f step-cli.deb )
 #+end_run
 
 *** Clone the git repository
@@ -3038,8 +3040,9 @@ the connection; it will always show the IP address of the tunnel
 
 [[/img/portable-docker/core-services.webp]]
 
-There are a few services you should consider installing before any
-others, which we will call core services:
+There are a few applications which we will call "core" services: you
+should consider installing these before any others (although not
+required.)
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -3105,7 +3108,7 @@ APP_NAME: Enter the service description (eg. "git thing")
 pi make forgejo install
 #+end_run
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -3523,7 +3526,7 @@ TRAEFIK_FORWARD_AUTH_LOGOUT_REDIRECT: Enter the logout redirect URL
 pi make traefik-forward-auth install
 #+end_run
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -3852,6 +3855,500 @@ docker run --rm \
 )
 #+end_run
 
+** Step-CA (mutual TLS)
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000650-step-ca
+:EXPORT_HUGO_WEIGHT: 650
+:EXPORT_HUGO_SLUG: step-ca
+:END:
+
+Mutual TLS (mTLS) is a form of transport security where both the
+client and server authenticate each other using digital certificates.
+Unlike traditional TLS (e.g., Let's Encrypt), where only the server's
+identity is verified, mTLS provides mutual verification of the server
+and client, making it ideal for protecting data exchanges in
+interconnected environments like microservices and zero-trust
+architectures. By using certificates issued by trusted Certificate
+Authorities (CA), mTLS prevents unauthorized access and guarantees
+that both parties using a communication channel are legitimate.
+
+[[https://smallstep.com/docs/step-ca/][Step-CA]] is an open source Certificate Authority (CA) and an Automated
+Certificate Management Enviornment (ACME). You can self-host Step-CA
+and use it to add secure mTLS authentication in all of your
+applications and infrastructure.
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+Although primarily used for machine-to-machine communication, mTLS can
+also be used in the web browser to provide strong end-user client
+authentication, enhancing security for sensitive web applications.
+This is an advanced topic, and will be discussed in the appendix
+chapter [[/portable-docker/appendix/mutual-tls-for-web-and-mobile/][Mutual TLS for Web and Mobile]].
+#+end_notice
+
+*** Configure Step-CA
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca config
+#+end_run
+
+Set the hostname for Step-CA itself:
+
+#+begin_stdout
+STEP_CA_TRAEFIK_HOST: Enter the step-ca domain name (eg. ca.example.com)
+: ca.pi.example.com
+#+end_stdout
+
+Set the allowed list of domains to create certificates for:
+
+#+begin_stdout
+STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS: Enter the list of allowed domain wildcards (comma separated) (eg. *.example.com,*.example.org)
+: *.clients.pi.example.com
+#+end_stdout
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+In an earlier chapter Traefik was setup with [[/portable-docker/set-up-raspberry-pi/install-traefik/#configure-acme][ACME]]. All of the
+server-side applications on your Raspberry Pi already have automatic
+TLS certificates issued via [[https://letsencrypt.org/getting-started/][Let's Encrypt]], which is a free and public
+CA, therfore, in this example Step-CA will not need to be used for any
+server-side certificates. Lets Encrypt does not support requesting
+client certificates, so Step-CA will be required only to create and
+verify the client-side certificates (=*.clients.pi.example.com=).
+
+In this mode, mTLS authentication works like this:
+
+ * The server will verify the client's certificate using the Step-CA
+   authority, whose root certificate must be added to the server's
+   trust store during install.
+ * The client will verify the server's certificate using the Let's
+   Encrypt authority, whose root certificate is widely trusted in most
+   operating systems and devices from factory default settings, which
+   simplifies installation.
+
+#+begin_mermaid
+-----
+title: Mutual TLS with two separate Certificate Authorities
+-----
+graph TD
+    StepCA[Step CA]
+    LetsEncrypt[Let's Encrypt CA]
+    Client -->|Client sends cert signed by Step-CA, which the Server trusts| Server
+    Server -->|Server sends cert signed by Let's Encrypt, which the Client trusts| Client
+    Client <-->|Step-CA issues cert upon client's request| StepCA
+    Server <-->|Let's Encrypt issues cert upon server's request| LetsEncrypt    
+#+end_mermaid
+
+
+ 
+Theoretically you could just use Step-CA for both sides, but this
+would require changing the root certificate store on every client,
+which is a risky and complex procedure, ultimately unnecessary because
+Let's Encrypt is already commonly trusted by all operating systems and
+browsers.
+#+end_notice
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Each client certificate must have a unique name (CN) written in domain
+name format (e.g., =foo.clients.pi.example.com=), but this does not
+need to resolve to any IP address. Each certificate can have an
+arbitrary name as long as it matches the Step-CA policy
+(=STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS=). The certificate name is
+used as the transport authentication id (essentially like a
+"username"), and it is forwarded to your backend HTTP services through
+a trusted header =X-Client-CN= for secondary authorization purposes.
+#+end_notice
+
+**** Define default TLS certificate expiration
+
+By default, TLS certificates are valid for 7 days, and then must be
+re-issued. You can customize the certificate durations in the config.
+There are three limits defined:
+
+ * =STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=5m= the minimum
+   duration a certificate may be requested for, 5 minutes by default.
+ * =STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=2160h= the maximum
+   duration a certificate may be requested for, 90 days be default.
+ * =STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=168h= the
+   default duration a certificate will be issued for if the client
+   does not specify one, 7 days by default.
+
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Increase the minimum duration to 1 day:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=24h
+
+## Increase the maximum to 1 year:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=8760h
+
+## Increase the default duration to 90 days:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=2160h
+#+end_run
+
+
+*** Install Step-CA
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca install wait
+#+end_run
+
+*** Retrieve the admin password
+
+The admin password is printed in the container logs only the first
+time it starts. Retrieve it by running:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca logs-out | grep password
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Save this password to a safe place, you will need it everytime you
+sign a new (non-ACME) certificate.
+#+end_notice
+
+
+*** Finish Step-CA configuration by restarting the service
+
+#+attr_shortcode: :style primary :title Important
+#+begin_notice
+After installation, you must restart Step-CA one more time to finish
+the setup procedure. This will finalize the configuration in
+=/home/step/config/ca.json=.
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+## Re-install forces the service to restart:
+pi make step-ca reinstall
+#+end_run
+
+This also has a side effect of clearing the admin password from the
+logs, hope you saved it!
+#+end_notice
+
+*** Retrieve the server CA cert fingerprint:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca inspect-fingerprint
+#+end_run
+
+The fingerprint is the public identifier of the Step-CA root
+certificate. Copy it into your clipboard for use in the next section.
+
+*** Reconfigure Traefik
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make traefik config
+#+end_run
+
+**** Configure Traefik for mTLS
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik TLS config:  
+> Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+
+? How do you want to configure the list of trusted Certificate Authorities (CA)?  
+  Use the stock list, (alpine: ca-certificates ca-certificates-bundle).
+> Use the stock list, plus add my own root Step-CA certificate.
+  Delete the entire list, and add my own root Step-CA certificate.
+  Delete the entire list.
+  Cancel / Go back.
+#+end_stdout
+
+Enter the Step-CA endpoint URL:
+
+#+begin_stdout
+TRAEFIK_STEP_CA_ENDPOINT: Enter your Step-CA endpoint URL (eg. https://ca.example.com)
+: https://ca.pi.example.com
+#+end_stdout
+
+You will need to paste the fingerprint you copied from the last
+section into the answer for the next question:
+
+#+begin_stdout
+TRAEFIK_STEP_CA_FINGERPRINT: Enter your Step-CA root CA certificate
+fingerprint (eg. xxxxxxxxxxxxxxxxxxxx)
+: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+#+end_stdout
+
+Press =ESC= two times to go back to the main menu, then re-install
+Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Add a new route on the sentry
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: ca.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+ca.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
+*** Log in with the step-cli client
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca client-bootstrap 
+#+end_run
+
+#+begin_stdout
+# CA Host: https://ca.pi.example.com:443
+# CA Fingerprint: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+The root certificate has been saved in /home/pi/.step/certs/root_ca.crt.
+The authority configuration has been saved in /home/pi/.step/config/defaults.json.
+#+end_stdout
+
+*** Create certificates
+
+Do this anytime you wish to create a new client certificate:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make step-ca cert
+#+end_run
+
+Enter the client certificate name (CN):
+
+#+begin_stdout
+Enter the subject (CN) to be certified, a domain name, or a client name
+: foo.clients.pi.example.com
+#+end_stdout
+
+When signing certificates, you need to enter the step-ca root admin
+passphrase, and then the certificates will be signed:
+
+#+begin_stdout
+Please enter the password to decrypt the provisioner key: xxxxx
+
+✔ Provisioner: admin (JWK)
+✔ Certificate: certs/foo.clients.pi.example.com.crt
+✔ Private Key: certs/foo.clients.pi.example.com.key
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Warning
+#+begin_notice
+The next question asks you to set a temporary passphrase to encrypt
+the =.p12= formatted client key.
+
+#+begin_stdout
+Please enter a password to encrypt the .p12 file: 
+#+end_stdout
+
+*The =p12= password should NOT be the same as the root CA password! It
+should be a separate password that you will share with the end user,
+so that they can unlock the certificate you are giving them.*
+#+end_notice
+
+Finally you will see some details printed about the issued
+certificate.
+
+#+begin_stdout
+Certificate:
+    Data:
+       .....
+        Validity
+            Not Before: Oct 19 17:51:27 2024 UTC
+            Not After : Oct 26 17:52:27 2024 UTC
+        Subject: CN=foo.clients.pi.example.com        
+#+end_stdout
+
+The client certificate =foo= has been written to the =step-ca/certs=
+directory (.e.g.,
+=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs=.)
+
+ * =foo.clients.pi.example.com.crt= This is the public
+   certificate for the =foo= client.
+ * =foo.clients.pi.example.com.key= This is the private key
+   for the =foo= certificate. *This file is unencrypted*.
+ * =foo.clients.pi.example.com.p12= This is also the private
+   key for the =foo= certificate written in a different format that is
+   used on some devices, this file is encrypted with the temporary
+   passphrase you chose and needs to be provided to the client when
+   installing the certificate.
+
+*** Configure apps for mTLS
+
+For demo purposes, enable mTLS for the =whoami= service:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make whoami config
+#+end_run
+
+#+begin_stdout
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+: whoami.pi.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?  
+  No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+> Yes, with Mutual TLS (mTLS)
+
+WHOAMI_MTLS_AUTHORIZED_CERTS: Enter comma separated list of allowed client certificate names (or blank to allow all) (eg. *.clients.whoami.example.com)
+: *.clients.pi.example.com
+#+end_stdout
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Make sure to enter the same authorized cert wildcard that matches your
+client certificate.
+#+end_notice
+
+Re-install whoami:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+pi make whoami install
+#+end_run
+
+Test the service without specifying a certificate:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+curl https://whoami.pi.example.com
+#+end_run
+
+You should now receive this error, indicating that a client
+certificate is required:
+
+#+begin_stdout
+curl: (56) OpenSSL SSL_read: OpenSSL/3.0.14: error:0A00045C:SSL routines::tlsv13 alert certificate required, errno 0
+#+end_stdout
+
+Now test it with your client certificate:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+CERTS=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs
+
+curl https://whoami.pi.example.com \
+--cert $CERTS/foo.clients.pi.example.com.crt \
+--key $CERTS/foo.clients.pi.example.com.key 
+#+end_run
+
+With the correctly supplied certificate and key, the server now
+resolves to the whoami response:
+
+#+begin_stdout
+Name: default
+Hostname: 427db0a29c30
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:45068
+GET / HTTP/1.1
+Host: whoami.pi5.forwarding.network
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Client-Cn: CN=foo.clients.pi5.forwarding.network
+X-Forwarded-For: 127.0.0.1
+X-Forwarded-Host: whoami.pi5.forwarding.network
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: pi5
+X-Forwarded-User: CN=foo.clients.pi5.forwarding.network
+X-Real-Ip: 127.0.0.1
+#+end_stdout
+
+Notice that there are two headers sent to the whoami backend:
+
+ * =X-Client-Cn=
+ * =X-Forwarded-User=
+
+These two headers contain the same information, identifying the client
+cert id to the backend server. Either of these may be used for
+secondary authorization in your app.
+
 *** Next steps
 
  * Install apps.
@@ -3933,7 +4430,7 @@ Waiting until all services are started and become healthy ...
 All services healthy.
 #+end_stdout
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -4583,7 +5080,7 @@ XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
 pi make minio install wait
 #+end_run
 
-*** Add two new routes on the sentry (droplet)
+*** Add two new routes on the sentry
 
 Create a route for S3 and the console:
 
@@ -4764,7 +5261,7 @@ source code. This is because the [[https://hub.docker.com/r/machines/filestash/]
 ARM64.
 #+end_notice
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -4991,7 +5488,7 @@ running d.rymcg.tech apps of the current docker context? (Y/n) Yes
 pi make homepage install wait
 #+end_run
 
-*** Add two new routes on the sentry (droplet)
+*** Add two new routes on the sentry
 
 You need to create two routes: one for homepage, and one for the
 webhooks:
@@ -5230,7 +5727,7 @@ Waiting until all services are started and become healthy ...
 All services healthy.
 #+end_stdout
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -5381,7 +5878,7 @@ config, that way you can have separate user access per instance.
 pi make nginx install wait
 #+end_run
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 You need to create two routes: one for homepage, and one for the
 webhooks:
@@ -5625,7 +6122,7 @@ pi make jupyterlab config
 pi make jupyterlab install wait
 #+end_run
 
-*** Add a new route on the sentry (droplet)
+*** Add a new route on the sentry
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -6001,7 +6498,7 @@ to send mail.
   Yes, via webhook.
 
 Enter the sender email address
-: backup-volume-default@pi5.forwarding.network
+: backup-volume-default@pi.example.com
 
 Enter the recipient email address
 : test@example.com
@@ -6184,3 +6681,28 @@ sudo reboot
 Check to see if the error goes away, but if not, you probably have a
 hardware issue.
 #+end_notice
+* Appendix
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: appendix
+:EXPORT_HUGO_WEIGHT: 10000
+:END:
+** Appendix
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 10001
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Mutual TLS for Web and Mobile
+:PROPERTIES:
+:EXPORT_FILE_NAME: 010001-Mutual TLS for Web and Mobile
+:EXPORT_HUGO_WEIGHT: 10001
+:EXPORT_HUGO_SLUG: Mutual TLS for Web and Mobile
+:END:
+
+TODO
