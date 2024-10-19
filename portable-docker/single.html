@@ -128,6 +128,8 @@ Chat with us on Matrix
 <li><a href="/portable-docker/install-core-services/traefik-forward-auth/index.html">Traefik-Forward-Auth (sentry authorization)</a><ul>
 	</ul></li>
 <li><a href="/portable-docker/install-core-services/postfix-relay/index.html">Postfix-Relay (MTA)</a><ul>
+	</ul></li>
+<li><a href="/portable-docker/install-core-services/step-ca/index.html">Step-CA (mutual TLS)</a><ul>
 	</ul></li></ul></li>
 <li><a href="/portable-docker/install-web-services/index.html">Install apps</a><ul>
 <li><a href="/portable-docker/install-web-services/immich/index.html">Immich</a><ul>
@@ -150,6 +152,9 @@ Chat with us on Matrix
 <li><a href="/portable-docker/maintainence/upgrade/index.html">Upgrade</a><ul>
 	</ul></li>
 <li><a href="/portable-docker/maintainence/troubleshooting/index.html">Troubleshooting</a><ul>
+	</ul></li></ul></li>
+<li><a href="/portable-docker/appendix/index.html">Appendix</a><ul>
+<li><a href="/portable-docker/appendix/mutual-tls-for-web-and-mobile/index.html">Mutual TLS for Web and Mobile</a><ul>
 	</ul></li></ul></li>
 </ul>
 </div>
@@ -1418,7 +1423,10 @@ docker info | grep -iE "(Name|Context)"
 sudo apt-get update && \
 sudo apt-get install -y bash build-essential gettext \
      git openssl apache2-utils xdg-utils jq sshfs \
-     wireguard curl inotify-tools w3m
+     wireguard curl inotify-tools w3m && \
+( cd $(mktemp -d) && wget -O step-cli.deb \
+  https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_$(dpkg --print-architecture).deb && \
+  sudo dpkg -i step-cli.deb && rm -f step-cli.deb )
 </pre></code>
     </div>
 </div>
@@ -3775,7 +3783,7 @@ pi make forgejo install
 </div>
 
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -4302,7 +4310,7 @@ pi make traefik-forward-auth install
 </div>
 
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -4719,6 +4727,676 @@ docker run --rm \
 </div>
 
 
+
+                    </div>
+                </div>
+                
+                <div class="chapter" style="page-break-after: always;">
+                    <h1 id="000650-step-ca">Step-CA (mutual TLS)</h1>
+                    <div class="chapter-content">
+                        
+<p>Mutual TLS (mTLS) is a form of transport security where both the
+client and server authenticate each other using digital certificates.
+Unlike traditional TLS (e.g., Let&rsquo;s Encrypt), where only the server&rsquo;s
+identity is verified, mTLS provides mutual verification of the server
+and client, making it ideal for protecting data exchanges in
+interconnected environments like microservices and zero-trust
+architectures. By using certificates issued by trusted Certificate
+Authorities (CA), mTLS prevents unauthorized access and guarantees
+that both parties using a communication channel are legitimate.</p>
+<p><a href="https://smallstep.com/docs/step-ca/" rel="external" target="_blank">Step-CA</a> is an open source Certificate Authority (CA) and an Automated
+Certificate Management Enviornment (ACME). You can self-host Step-CA
+and use it to add secure mTLS authentication in all of your
+applications and infrastructure.</p>
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
+  <div class="box-content">
+
+<p>Although primarily used for machine-to-machine communication, mTLS can
+also be used in the web browser to provide strong end-user client
+authentication, enhancing security for sensitive web applications.
+This is an advanced topic, and will be discussed in the appendix
+chapter <a href="/portable-docker/appendix/mutual-tls-for-web-and-mobile/">Mutual TLS for Web and Mobile</a>.</p>
+</div>
+</div>
+<h2 id="configure-step-ca">Configure Step-CA</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca config
+</pre></code>
+    </div>
+</div>
+
+
+<p>Set the hostname for Step-CA itself:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+STEP_CA_TRAEFIK_HOST: Enter the step-ca domain name (eg. ca.example.com)
+
+: ca.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>Set the allowed list of domains to create certificates for:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS: Enter the list of allowed domain wildcards (comma separated) (eg. *.example.com,*.example.org)
+
+: *.clients.pi.example.com
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
+  <div class="box-content">
+
+<p>In an earlier chapter Traefik was setup with <a href="/portable-docker/set-up-raspberry-pi/install-traefik/#configure-acme">ACME</a>. All of the
+server-side applications on your Raspberry Pi already have automatic
+TLS certificates issued via <a href="https://letsencrypt.org/getting-started/" rel="external" target="_blank">Let&rsquo;s Encrypt</a>, which is a free and public
+CA, therfore, in this example Step-CA will not need to be used for any
+server-side certificates. Lets Encrypt does not support requesting
+client certificates, so Step-CA will be required only to create and
+verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
+<p>In this mode, mTLS authentication works like this:</p>
+<ul>
+<li>The server will verify the client&rsquo;s certificate using the Step-CA
+authority, whose root certificate must be added to the server&rsquo;s
+trust store during install.</li>
+<li>The client will verify the server&rsquo;s certificate using the Let&rsquo;s
+Encrypt authority, whose root certificate is widely trusted in most
+operating systems and devices from factory default settings, which
+simplifies installation.</li>
+</ul>
+<pre class="mermaid align-center ">
+-----
+
+title: Mutual TLS with two separate Certificate Authorities
+
+-----
+
+graph TD
+    StepCA[Step CA]
+    LetsEncrypt[Let&#39;s Encrypt CA]
+    Client --&gt;|Client sends cert signed by Step-CA, which the Server trusts| Server
+    Server --&gt;|Server sends cert signed by Let&#39;s Encrypt, which the Client trusts| Client
+    Client &lt;--&gt;|Step-CA issues cert upon client&#39;s request| StepCA
+    Server &lt;--&gt;|Let&#39;s Encrypt issues cert upon server&#39;s request| LetsEncrypt
+</pre>
+<p>Theoretically you could just use Step-CA for both sides, but this
+would require changing the root certificate store on every client,
+which is a risky and complex procedure, ultimately unnecessary because
+Let&rsquo;s Encrypt is already commonly trusted by all operating systems and
+browsers.</p>
+</div>
+</div>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Each client certificate must have a unique name (CN) written in domain
+name format (e.g., <code>foo.clients.pi.example.com</code>), but this does not
+need to resolve to any IP address. Each certificate can have an
+arbitrary name as long as it matches the Step-CA policy
+(<code>STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS</code>). The certificate name is
+used as the transport authentication id (essentially like a
+&ldquo;username&rdquo;), and it is forwarded to your backend HTTP services through
+a trusted header <code>X-Client-CN</code> for secondary authorization purposes.</p>
+</div>
+</div>
+<h3 id="define-default-tls-certificate-expiration">Define default TLS certificate expiration</h3>
+<p>By default, TLS certificates are valid for 7 days, and then must be
+re-issued. You can customize the certificate durations in the config.
+There are three limits defined:</p>
+<ul>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=5m</code> the minimum
+duration a certificate may be requested for, 5 minutes by default.</li>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=2160h</code> the maximum
+duration a certificate may be requested for, 90 days be default.</li>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=168h</code> the
+default duration a certificate will be issued for if the client
+does not specify one, 7 days by default.</li>
+</ul>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Increase the minimum duration to 1 day:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=24h
+
+## Increase the maximum to 1 year:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=8760h
+
+## Increase the default duration to 90 days:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=2160h
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="install-step-ca">Install Step-CA</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca install wait
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="retrieve-the-admin-password">Retrieve the admin password</h2>
+<p>The admin password is printed in the container logs only the first
+time it starts. Retrieve it by running:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca logs-out | grep password
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Save this password to a safe place, you will need it everytime you
+sign a new (non-ACME) certificate.</p>
+</div>
+</div>
+<h2 id="finish-step-ca-configuration-by-restarting-the-service">Finish Step-CA configuration by restarting the service</h2>
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Important</div>
+  <div class="box-content">
+
+<p>After installation, you must restart Step-CA one more time to finish
+the setup procedure. This will finalize the configuration in
+<code>/home/step/config/ca.json</code>.</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Re-install forces the service to restart:
+pi make step-ca reinstall
+</pre></code>
+    </div>
+</div>
+<p>This also has a side effect of clearing the admin password from the
+logs, hope you saved it!</p>
+</div>
+</div>
+<h2 id="retrieve-the-server-ca-cert-fingerprint">Retrieve the server CA cert fingerprint:</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca inspect-fingerprint
+</pre></code>
+    </div>
+</div>
+
+
+<p>The fingerprint is the public identifier of the Step-CA root
+certificate. Copy it into your clipboard for use in the next section.</p>
+<h2 id="reconfigure-traefik">Reconfigure Traefik</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="configure-traefik-for-mtls">Configure Traefik for mTLS</h3>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik TLS config:
+> Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+
+? How do you want to configure the list of trusted Certificate Authorities (CA)?
+  Use the stock list, (alpine: ca-certificates ca-certificates-bundle).
+> Use the stock list, plus add my own root Step-CA certificate.
+  Delete the entire list, and add my own root Step-CA certificate.
+  Delete the entire list.
+  Cancel / Go back.
+</pre>
+    </div>
+</div>
+
+<p>Enter the Step-CA endpoint URL:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+TRAEFIK_STEP_CA_ENDPOINT: Enter your Step-CA endpoint URL (eg. https://ca.example.com)
+
+: https://ca.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>You will need to paste the fingerprint you copied from the last
+section into the answer for the next question:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+TRAEFIK_STEP_CA_FINGERPRINT: Enter your Step-CA root CA certificate
+fingerprint (eg. xxxxxxxxxxxxxxxxxxxx)
+
+: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre>
+    </div>
+</div>
+
+<p>Press <code>ESC</code> two times to go back to the main menu, then re-install
+Traefik:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre>
+    </div>
+</div>
+
+<p>After installation, press <code>ESC</code> to quit the config tool.</p>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+sentry make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+
+: ca.pi.example.com
+
+Enter the destination IP address to forward to:
+
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+ca.pi.example.com  10.13.16.2           443               2
+</pre>
+    </div>
+</div>
+
+<p>Press <code>ESC</code> three times to go back to the main menu, and re-install Traefik:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre>
+    </div>
+</div>
+
+<p>After installation, press <code>ESC</code> to quit the config tool.</p>
+<h2 id="log-in-with-the-step-cli-client">Log in with the step-cli client</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca client-bootstrap
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+The root certificate has been saved in /home/pi/.step/certs/root_ca.crt.
+The authority configuration has been saved in /home/pi/.step/config/defaults.json.
+</pre>
+    </div>
+</div>
+
+<h2 id="create-certificates">Create certificates</h2>
+<p>Do this anytime you wish to create a new client certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca cert
+</pre></code>
+    </div>
+</div>
+
+
+<p>Enter the client certificate name (CN):</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Enter the subject (CN) to be certified, a domain name, or a client name
+
+: foo.clients.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>When signing certificates, you need to enter the step-ca root admin
+passphrase, and then the certificates will be signed:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Please enter the password to decrypt the provisioner key: xxxxx
+
+✔ Provisioner: admin (JWK)
+✔ Certificate: certs/foo.clients.pi.example.com.crt
+✔ Private Key: certs/foo.clients.pi.example.com.key
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle warning">
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
+  <div class="box-content">
+
+<p>The next question asks you to set a temporary passphrase to encrypt
+the <code>.p12</code> formatted client key.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Please enter a password to encrypt the .p12 file:
+</pre>
+    </div>
+</div>
+<p><strong>The <code>p12</code> password should NOT be the same as the root CA password! It
+should be a separate password that you will share with the end user,
+so that they can unlock the certificate you are giving them.</strong></p>
+</div>
+</div>
+<p>Finally you will see some details printed about the issued
+certificate.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Certificate:
+    Data:
+       .....
+        Validity
+            Not Before: Oct 19 17:51:27 2024 UTC
+            Not After : Oct 26 17:52:27 2024 UTC
+        Subject: CN=foo.clients.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>The client certificate <code>foo</code> has been written to the <code>step-ca/certs</code>
+directory (.e.g.,
+<code>~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs</code>.)</p>
+<ul>
+<li><code>foo.clients.pi.example.com.crt</code> This is the public
+certificate for the <code>foo</code> client.</li>
+<li><code>foo.clients.pi.example.com.key</code> This is the private key
+for the <code>foo</code> certificate. <strong>This file is unencrypted</strong>.</li>
+<li><code>foo.clients.pi.example.com.p12</code> This is also the private
+key for the <code>foo</code> certificate written in a different format that is
+used on some devices, this file is encrypted with the temporary
+passphrase you chose and needs to be provided to the client when
+installing the certificate.</li>
+</ul>
+<h2 id="configure-apps-for-mtls">Configure apps for mTLS</h2>
+<p>For demo purposes, enable mTLS for the <code>whoami</code> service:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make whoami config
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
+
+: whoami.pi.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+> Yes, with Mutual TLS (mTLS)
+
+WHOAMI_MTLS_AUTHORIZED_CERTS: Enter comma separated list of allowed client certificate names (or blank to allow all) (eg. *.clients.whoami.example.com)
+
+: *.clients.pi.example.com
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Make sure to enter the same authorized cert wildcard that matches your
+client certificate.</p>
+</div>
+</div>
+<p>Re-install whoami:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make whoami install
+</pre></code>
+    </div>
+</div>
+
+
+<p>Test the service without specifying a certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+curl https://whoami.pi.example.com
+</pre></code>
+    </div>
+</div>
+
+
+<p>You should now receive this error, indicating that a client
+certificate is required:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+curl: (56) OpenSSL SSL_read: OpenSSL/3.0.14: error:0A00045C:SSL routines::tlsv13 alert certificate required, errno 0
+</pre>
+    </div>
+</div>
+
+<p>Now test it with your client certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+CERTS=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs
+
+curl https://whoami.pi.example.com \
+--cert $CERTS/foo.clients.pi.example.com.crt \
+--key $CERTS/foo.clients.pi.example.com.key
+</pre></code>
+    </div>
+</div>
+
+
+<p>With the correctly supplied certificate and key, the server now
+resolves to the whoami response:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Name: default
+Hostname: 427db0a29c30
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:45068
+GET / HTTP/1.1
+Host: whoami.pi5.forwarding.network
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Client-Cn: CN=foo.clients.pi5.forwarding.network
+X-Forwarded-For: 127.0.0.1
+X-Forwarded-Host: whoami.pi5.forwarding.network
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: pi5
+X-Forwarded-User: CN=foo.clients.pi5.forwarding.network
+X-Real-Ip: 127.0.0.1
+</pre>
+    </div>
+</div>
+
+<p>Notice that there are two headers sent to the whoami backend:</p>
+<ul>
+<li><code>X-Client-Cn</code></li>
+<li><code>X-Forwarded-User</code></li>
+</ul>
+<p>These two headers contain the same information, identifying the client
+cert id to the backend server. Either of these may be used for
+secondary authorization in your app.</p>
 <h2 id="next-steps">Next steps</h2>
 <ul>
 <li>Install apps.</li>
@@ -4803,7 +5481,7 @@ All services healthy.
     </div>
 </div>
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -5702,7 +6380,7 @@ pi make minio install wait
 </div>
 
 
-<h2 id="add-two-new-routes-on-the-sentry--droplet">Add two new routes on the sentry (droplet)</h2>
+<h2 id="add-two-new-routes-on-the-sentry">Add two new routes on the sentry</h2>
 <p>Create a route for S3 and the console:</p>
 
 
@@ -5949,7 +6627,7 @@ source code. This is because the <a href="https://hub.docker.com/r/machines/file
 ARM64.</p>
 </div>
 </div>
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -6247,7 +6925,7 @@ pi make homepage install wait
 </div>
 
 
-<h2 id="add-two-new-routes-on-the-sentry--droplet">Add two new routes on the sentry (droplet)</h2>
+<h2 id="add-two-new-routes-on-the-sentry">Add two new routes on the sentry</h2>
 <p>You need to create two routes: one for homepage, and one for the
 webhooks:</p>
 
@@ -6575,7 +7253,7 @@ All services healthy.
     </div>
 </div>
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -6779,7 +7457,7 @@ pi make nginx install wait
 </div>
 
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 <p>You need to create two routes: one for homepage, and one for the
 webhooks:</p>
 
@@ -7103,7 +7781,7 @@ pi make jupyterlab install wait
 </div>
 
 
-<h2 id="add-a-new-route-on-the-sentry--droplet">Add a new route on the sentry (droplet)</h2>
+<h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
 <div class="box notices cstyle run">
@@ -7567,7 +8245,7 @@ to send mail.</p>
 
 Enter the sender email address
 
-: backup-volume-default@pi5.forwarding.network
+: backup-volume-default@pi.example.com
 
 Enter the recipient email address
 
@@ -7810,6 +8488,15 @@ sudo reboot
 hardware issue.</p>
 </div>
 </div>
+
+                    </div>
+                </div>
+                
+                <div class="chapter" style="page-break-after: always;">
+                    <h1 id="010001-Mutual TLS for Web and Mobile">Mutual TLS for Web and Mobile</h1>
+                    <div class="chapter-content">
+                        
+<p>TODO</p>
 
                     </div>
                 </div>

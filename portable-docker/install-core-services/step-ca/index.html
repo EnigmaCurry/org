@@ -5,30 +5,22 @@
     <meta name="viewport" content="height=device-height, width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="generator" content="Hugo 0.123.7">
     <meta name="generator" content="Relearn 6.0.0+tip">
-    <meta name="description" content="Forgejo is a self-hosted git forge similar to GitHub. Forgejo is a fork of Gitea, which is a fork of Gogs.
-Installing Forgejo is useful for two unrelated purposes:
-Self-hosting your own git repositories. Providing an OAuth2 identity service for your organization, facilitating single-sign on to all of your apps via Traefik’s forward-auth middleware. Forgejo is fundamental infrastructure You don’t need to install Forgejo on every server you make, but having at least one instance in your domain is recommended.">
+    <meta name="description" content="Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let’s Encrypt), where only the server’s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.">
     <meta name="author" content="">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Forgejo :: book.rymcg.tech">
-    <meta name="twitter:description" content="Forgejo is a self-hosted git forge similar to GitHub. Forgejo is a fork of Gitea, which is a fork of Gogs.
-Installing Forgejo is useful for two unrelated purposes:
-Self-hosting your own git repositories. Providing an OAuth2 identity service for your organization, facilitating single-sign on to all of your apps via Traefik’s forward-auth middleware. Forgejo is fundamental infrastructure You don’t need to install Forgejo on every server you make, but having at least one instance in your domain is recommended.">
-    <meta property="og:url" content="https://book.rymcg.tech/portable-docker/install-core-services/forgejo/index.html">
+    <meta name="twitter:title" content="Step-CA (mutual TLS) :: book.rymcg.tech">
+    <meta name="twitter:description" content="Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let’s Encrypt), where only the server’s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.">
+    <meta property="og:url" content="https://book.rymcg.tech/portable-docker/install-core-services/step-ca/index.html">
     <meta property="og:site_name" content="book.rymcg.tech">
-    <meta property="og:title" content="Forgejo :: book.rymcg.tech">
-    <meta property="og:description" content="Forgejo is a self-hosted git forge similar to GitHub. Forgejo is a fork of Gitea, which is a fork of Gogs.
-Installing Forgejo is useful for two unrelated purposes:
-Self-hosting your own git repositories. Providing an OAuth2 identity service for your organization, facilitating single-sign on to all of your apps via Traefik’s forward-auth middleware. Forgejo is fundamental infrastructure You don’t need to install Forgejo on every server you make, but having at least one instance in your domain is recommended.">
+    <meta property="og:title" content="Step-CA (mutual TLS) :: book.rymcg.tech">
+    <meta property="og:description" content="Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let’s Encrypt), where only the server’s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.">
     <meta property="og:locale" content="en-us">
     <meta property="og:type" content="article">
     <meta property="article:section" content="Portable Docker: Build and Deploy Anywhere with WireGuard Tunneling">
-    <meta itemprop="name" content="Forgejo :: book.rymcg.tech">
-    <meta itemprop="description" content="Forgejo is a self-hosted git forge similar to GitHub. Forgejo is a fork of Gitea, which is a fork of Gogs.
-Installing Forgejo is useful for two unrelated purposes:
-Self-hosting your own git repositories. Providing an OAuth2 identity service for your organization, facilitating single-sign on to all of your apps via Traefik’s forward-auth middleware. Forgejo is fundamental infrastructure You don’t need to install Forgejo on every server you make, but having at least one instance in your domain is recommended.">
-    <meta itemprop="wordCount" content="1365">
-    <title>Forgejo :: book.rymcg.tech</title>
+    <meta itemprop="name" content="Step-CA (mutual TLS) :: book.rymcg.tech">
+    <meta itemprop="description" content="Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let’s Encrypt), where only the server’s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.">
+    <meta itemprop="wordCount" content="1821">
+    <title>Step-CA (mutual TLS) :: book.rymcg.tech</title>
     <link href="/css/fontawesome-all.min.css?1729363844" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/fontawesome-all.min.css?1729363844" rel="stylesheet"></noscript>
     <link href="/css/nucleus.css?1729363844" rel="stylesheet">
     <link href="/css/auto-complete.css?1729363844" rel="stylesheet" media="print" onload="this.media='all';this.onload=null;"><noscript><link href="/css/auto-complete.css?1729363844" rel="stylesheet"></noscript>
@@ -60,7 +52,7 @@ Self-hosting your own git repositories. Providing an OAuth2 identity service for
     </script><link href="/css/custom.css" rel="stylesheet">
 
   </head>
-  <body class="mobile-support html" data-url="/portable-docker/install-core-services/forgejo/index.html">
+  <body class="mobile-support html" data-url="/portable-docker/install-core-services/step-ca/index.html">
     <div id="R-body" class="default-animation">
       <div id="R-body-overlay"></div>
       <nav id="R-topbar">
@@ -73,19 +65,25 @@ Self-hosting your own git repositories. Providing an OAuth2 identity service for
               <div class="topbar-content">
                 <div class="topbar-content-wrapper"><nav class="TableOfContents">
   <ul>
-    <li><a href="#configure-forgejo">Configure Forgejo</a></li>
-    <li><a href="#install-forgejo">Install Forgejo</a></li>
-    <li><a href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></li>
-    <li><a href="#finish-forgejo-installation">Finish Forgejo installation</a></li>
-    <li><a href="#which-account-to-use">Which account to use?</a></li>
-    <li><a href="#enable-access-to-repositories-by-ssh">Enable access to repositories by SSH</a>
+    <li><a href="#configure-step-ca">Configure Step-CA</a>
       <ul>
-        <li><a href="#enable-the-traefik-ssh-entrypoint">Enable the Traefik SSH entrypoint</a></li>
-        <li><a href="#create-an-entrypoint-on-the-sentry">Create an entrypoint on the sentry</a></li>
-        <li><a href="#create-a-route-from-the-sentry-to-the-pi">Create a route from the sentry to the Pi</a></li>
-        <li><a href="#test-cloning-a-repository-via-ssh">Test cloning a repository via SSH</a></li>
+        <li><a href="#define-default-tls-certificate-expiration">Define default TLS certificate expiration</a></li>
       </ul>
     </li>
+    <li><a href="#install-step-ca">Install Step-CA</a></li>
+    <li><a href="#retrieve-the-admin-password">Retrieve the admin password</a></li>
+    <li><a href="#finish-step-ca-configuration-by-restarting-the-service">Finish Step-CA configuration by restarting the service</a></li>
+    <li><a href="#retrieve-the-server-ca-cert-fingerprint">Retrieve the server CA cert fingerprint:</a></li>
+    <li><a href="#reconfigure-traefik">Reconfigure Traefik</a>
+      <ul>
+        <li><a href="#configure-traefik-for-mtls">Configure Traefik for mTLS</a></li>
+      </ul>
+    </li>
+    <li><a href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></li>
+    <li><a href="#log-in-with-the-step-cli-client">Log in with the step-cli client</a></li>
+    <li><a href="#create-certificates">Create certificates</a></li>
+    <li><a href="#configure-apps-for-mtls">Configure apps for mTLS</a></li>
+    <li><a href="#next-steps">Next steps</a></li>
   </ul>
 </nav>
                 </div>
@@ -96,12 +94,12 @@ Self-hosting your own git repositories. Providing an OAuth2 identity service for
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/index.html"><span itemprop="name">book.rymcg.tech</span></a><meta itemprop="position" content="1">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/index.html"><span itemprop="name">Portable Docker</span></a><meta itemprop="position" content="2">&nbsp;>&nbsp;</li><li
             itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><a itemprop="item" href="/portable-docker/install-core-services/index.html"><span itemprop="name">Install core services</span></a><meta itemprop="position" content="3">&nbsp;>&nbsp;</li><li
-            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Forgejo</span><meta itemprop="position" content="4"></li>
+            itemscope itemtype="https://schema.org/ListItem" itemprop="itemListElement"><span itemprop="name">Step-CA (mutual TLS)</span><meta itemprop="position" content="4"></li>
           </ol>
           <div class="topbar-area topbar-area-end" data-area="end">
-            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-core-services/index.html" title="Install core services (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
+            <div class="topbar-button topbar-button-prev" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-core-services/postfix-relay/index.html" title="Postfix-Relay (MTA) (🡐)"><i class="fa-fw fas fa-chevron-left"></i></a>
             </div>
-            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-core-services/traefik-forward-auth/index.html" title="Traefik-Forward-Auth (sentry authorization) (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
+            <div class="topbar-button topbar-button-next" data-content-empty="disable" data-width-s="show" data-width-m="show" data-width-l="show"><a class="topbar-control" href="/portable-docker/install-web-services/index.html" title="Install apps (🡒)"><i class="fa-fw fas fa-chevron-right"></i></a>
             </div>
             <div class="topbar-button topbar-button-more" data-content-empty="hide" data-width-s="show" data-width-m="show" data-width-l="show"><button class="topbar-control" onclick="toggleTopbarFlyout(this)" type="button" title="More"><i class="fa-fw fas fa-ellipsis-v"></i></button>
               <div class="topbar-content">
@@ -121,82 +119,332 @@ Self-hosting your own git repositories. Providing an OAuth2 identity service for
             <header class="headline">
             </header>
 
-<h1 id="forgejo">Forgejo</h1>
+<h1 id="step-ca-mutual-tls">Step-CA (mutual TLS)</h1>
 
-<p><a href="https://forgejo.org/" rel="external" target="_blank">Forgejo</a> is a self-hosted git forge similar to <a href="https://docs.github.com/en/get-started/start-your-journey/about-github-and-git" rel="external" target="_blank">GitHub</a>. Forgejo is a
-fork of <a href="https://github.com/go-gitea/gitea?tab=readme-ov-file#gitea" rel="external" target="_blank">Gitea</a>, which is a fork of <a href="https://github.com/gogs/gogs" rel="external" target="_blank">Gogs</a>.</p>
-<figure><img src="/img/portable-docker/forgejo-home.webp"/>
-</figure>
+<p>Mutual TLS (mTLS) is a form of transport security where both the
+client and server authenticate each other using digital certificates.
+Unlike traditional TLS (e.g., Let&rsquo;s Encrypt), where only the server&rsquo;s
+identity is verified, mTLS provides mutual verification of the server
+and client, making it ideal for protecting data exchanges in
+interconnected environments like microservices and zero-trust
+architectures. By using certificates issued by trusted Certificate
+Authorities (CA), mTLS prevents unauthorized access and guarantees
+that both parties using a communication channel are legitimate.</p>
+<p><a href="https://smallstep.com/docs/step-ca/" rel="external" target="_blank">Step-CA</a> is an open source Certificate Authority (CA) and an Automated
+Certificate Management Enviornment (ACME). You can self-host Step-CA
+and use it to add secure mTLS authentication in all of your
+applications and infrastructure.</p>
 
-<p>Installing Forgejo is useful for two unrelated purposes:</p>
-<ul>
-<li>Self-hosting your own git repositories.</li>
-<li>Providing an OAuth2 identity service for your organization,
-facilitating single-sign on to all of your apps via Traefik&rsquo;s
-<a href="https://doc.traefik.io/traefik/middlewares/http/forwardauth/" rel="external" target="_blank">forward-auth middleware</a>.</li>
-</ul>
-
-<div class="box notices cstyle info">
-  <div class="box-label"><i class="fa-fw fas fa-info-circle"></i> Forgejo is fundamental infrastructure</div>
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
   <div class="box-content">
 
-<p>You don&rsquo;t need to install Forgejo on every server you make, but having
-at least one instance in your domain is recommended.</p>
-<p>Even if you (or your users) have no need for storing git repositories,
-Forgejo is part of the fundamental infrastructure of securing other
-d.rymcg.tech apps via OAuth2. You can authenticate and authorize your
-users to access your apps via their Forgejo account (sentry
-authorization), see the next chapter: <a href="/portable-docker/install-core-services/traefik-forward-auth">Traefik Forward Auth</a>.</p>
+<p>Although primarily used for machine-to-machine communication, mTLS can
+also be used in the web browser to provide strong end-user client
+authentication, enhancing security for sensitive web applications.
+This is an advanced topic, and will be discussed in the appendix
+chapter <a href="/portable-docker/appendix/mutual-tls-for-web-and-mobile/">Mutual TLS for Web and Mobile</a>.</p>
 </div>
 </div>
-<h2 id="configure-forgejo">Configure Forgejo</h2>
+<h2 id="configure-step-ca">Configure Step-CA</h2>
 
 
 <div class="box notices cstyle run">
     <div class="box-label secondary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
     <div class="box-content">
         <code><pre>
-pi make forgejo config
+pi make step-ca config
 </pre></code>
     </div>
 </div>
 
 
-<p>Configure the domain name and service description:</p>
+<p>Set the hostname for Step-CA itself:</p>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-FORGEJO_TRAEFIK_HOST: Enter your forgejo domain name (eg. git.example.com)
+STEP_CA_TRAEFIK_HOST: Enter the step-ca domain name (eg. ca.example.com)
 
-: git.pi.example.com
-
-APP_NAME: Enter the service description (eg. "git thing")
-
-: pi5 git hosting
-
-? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
-> No
-  Yes, with Mutual TLS (mTLS)
+: ca.pi.example.com
 </pre>
     </div>
 </div>
 
-<h2 id="install-forgejo">Install Forgejo</h2>
+<p>Set the allowed list of domains to create certificates for:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS: Enter the list of allowed domain wildcards (comma separated) (eg. *.example.com,*.example.org)
+
+: *.clients.pi.example.com
+</pre>
+    </div>
+</div>
+
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Info</div>
+  <div class="box-content">
+
+<p>In an earlier chapter Traefik was setup with <a href="/portable-docker/set-up-raspberry-pi/install-traefik/#configure-acme">ACME</a>. All of the
+server-side applications on your Raspberry Pi already have automatic
+TLS certificates issued via <a href="https://letsencrypt.org/getting-started/" rel="external" target="_blank">Let&rsquo;s Encrypt</a>, which is a free and public
+CA, therfore, in this example Step-CA will not need to be used for any
+server-side certificates. Lets Encrypt does not support requesting
+client certificates, so Step-CA will be required only to create and
+verify the client-side certificates (<code>*.clients.pi.example.com</code>).</p>
+<p>In this mode, mTLS authentication works like this:</p>
+<ul>
+<li>The server will verify the client&rsquo;s certificate using the Step-CA
+authority, whose root certificate must be added to the server&rsquo;s
+trust store during install.</li>
+<li>The client will verify the server&rsquo;s certificate using the Let&rsquo;s
+Encrypt authority, whose root certificate is widely trusted in most
+operating systems and devices from factory default settings, which
+simplifies installation.</li>
+</ul>
+<pre class="mermaid align-center ">
+-----
+
+title: Mutual TLS with two separate Certificate Authorities
+
+-----
+
+graph TD
+    StepCA[Step CA]
+    LetsEncrypt[Let&#39;s Encrypt CA]
+    Client --&gt;|Client sends cert signed by Step-CA, which the Server trusts| Server
+    Server --&gt;|Server sends cert signed by Let&#39;s Encrypt, which the Client trusts| Client
+    Client &lt;--&gt;|Step-CA issues cert upon client&#39;s request| StepCA
+    Server &lt;--&gt;|Let&#39;s Encrypt issues cert upon server&#39;s request| LetsEncrypt
+</pre>
+<p>Theoretically you could just use Step-CA for both sides, but this
+would require changing the root certificate store on every client,
+which is a risky and complex procedure, ultimately unnecessary because
+Let&rsquo;s Encrypt is already commonly trusted by all operating systems and
+browsers.</p>
+</div>
+</div>
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Each client certificate must have a unique name (CN) written in domain
+name format (e.g., <code>foo.clients.pi.example.com</code>), but this does not
+need to resolve to any IP address. Each certificate can have an
+arbitrary name as long as it matches the Step-CA policy
+(<code>STEP_CA_AUTHORITY_POLICY_X509_ALLOW_DNS</code>). The certificate name is
+used as the transport authentication id (essentially like a
+&ldquo;username&rdquo;), and it is forwarded to your backend HTTP services through
+a trusted header <code>X-Client-CN</code> for secondary authorization purposes.</p>
+</div>
+</div>
+<h3 id="define-default-tls-certificate-expiration">Define default TLS certificate expiration</h3>
+<p>By default, TLS certificates are valid for 7 days, and then must be
+re-issued. You can customize the certificate durations in the config.
+There are three limits defined:</p>
+<ul>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=5m</code> the minimum
+duration a certificate may be requested for, 5 minutes by default.</li>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=2160h</code> the maximum
+duration a certificate may be requested for, 90 days be default.</li>
+<li><code>STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=168h</code> the
+default duration a certificate will be issued for if the client
+does not specify one, 7 days by default.</li>
+</ul>
 
 
 <div class="box notices cstyle run">
     <div class="box-label secondary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
     <div class="box-content">
         <code><pre>
-pi make forgejo install
+## Increase the minimum duration to 1 day:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MIN_TLS_CERT_DURATION=24h
+
+## Increase the maximum to 1 year:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_MAX_TLS_CERT_DURATION=8760h
+
+## Increase the default duration to 90 days:
+pi make step-ca reconfigure var=STEP_CA_AUTHORITY_CLAIMS_DEFAULT_TLS_CERT_DURATION=2160h
 </pre></code>
     </div>
 </div>
 
 
+<h2 id="install-step-ca">Install Step-CA</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca install wait
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="retrieve-the-admin-password">Retrieve the admin password</h2>
+<p>The admin password is printed in the container logs only the first
+time it starts. Retrieve it by running:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca logs-out | grep password
+</pre></code>
+    </div>
+</div>
+
+
+
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
+  <div class="box-content">
+
+<p>Save this password to a safe place, you will need it everytime you
+sign a new (non-ACME) certificate.</p>
+</div>
+</div>
+<h2 id="finish-step-ca-configuration-by-restarting-the-service">Finish Step-CA configuration by restarting the service</h2>
+
+<div class="box notices cstyle primary">
+  <div class="box-label">Important</div>
+  <div class="box-content">
+
+<p>After installation, you must restart Step-CA one more time to finish
+the setup procedure. This will finalize the configuration in
+<code>/home/step/config/ca.json</code>.</p>
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+## Re-install forces the service to restart:
+pi make step-ca reinstall
+</pre></code>
+    </div>
+</div>
+<p>This also has a side effect of clearing the admin password from the
+logs, hope you saved it!</p>
+</div>
+</div>
+<h2 id="retrieve-the-server-ca-cert-fingerprint">Retrieve the server CA cert fingerprint:</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca inspect-fingerprint
+</pre></code>
+    </div>
+</div>
+
+
+<p>The fingerprint is the public identifier of the Step-CA root
+certificate. Copy it into your clipboard for use in the next section.</p>
+<h2 id="reconfigure-traefik">Reconfigure Traefik</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make traefik config
+</pre></code>
+    </div>
+</div>
+
+
+<h3 id="configure-traefik-for-mtls">Configure Traefik for mTLS</h3>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik TLS config:
+> Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+
+? How do you want to configure the list of trusted Certificate Authorities (CA)?
+  Use the stock list, (alpine: ca-certificates ca-certificates-bundle).
+> Use the stock list, plus add my own root Step-CA certificate.
+  Delete the entire list, and add my own root Step-CA certificate.
+  Delete the entire list.
+  Cancel / Go back.
+</pre>
+    </div>
+</div>
+
+<p>Enter the Step-CA endpoint URL:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+TRAEFIK_STEP_CA_ENDPOINT: Enter your Step-CA endpoint URL (eg. https://ca.example.com)
+
+: https://ca.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>You will need to paste the fingerprint you copied from the last
+section into the answer for the next question:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+TRAEFIK_STEP_CA_FINGERPRINT: Enter your Step-CA root CA certificate
+fingerprint (eg. xxxxxxxxxxxxxxxxxxxx)
+
+: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre>
+    </div>
+</div>
+
+<p>Press <code>ESC</code> two times to go back to the main menu, then re-install
+Traefik:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre>
+    </div>
+</div>
+
+<p>After installation, press <code>ESC</code> to quit the config tool.</p>
 <h2 id="add-a-new-route-on-the-sentry">Add a new route on the sentry</h2>
 
 
@@ -243,7 +491,7 @@ sentry make traefik config
 
 Enter the public domain (SNI) for the route:
 
-: git.pi.example.com
+: ca.pi.example.com
 
 Enter the destination IP address to forward to:
 
@@ -257,9 +505,9 @@ Enter the destination TCP port to forward to:
 
 ## Layer 7 TLS Proxy is ENABLED.
 ## Configured Layer 7 Routes:
-Entrypoint           Destination_address  Destination_port  Proxy_protocol
-----------           -------------------  ----------------  --------------
-git.pi.example.com  10.13.16.2           443               2
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+ca.pi.example.com  10.13.16.2           443               2
 </pre>
     </div>
 </div>
@@ -279,63 +527,15 @@ git.pi.example.com  10.13.16.2           443               2
 </div>
 
 <p>After installation, press <code>ESC</code> to quit the config tool.</p>
-<h2 id="finish-forgejo-installation">Finish Forgejo installation</h2>
-<p>Immediately open the Foregjo application to finish the installation.
-Open your web browser to <code>https://git.pi.example.com</code>.</p>
-<p>This should show a page with the title <code>Initial configuration</code> at the
-top. The <strong>only</strong> thing you need to change on this page is the admin
-credentials found at the bottom (all of other settings are instead
-derived from the environment variables found in the Forgejo
-<code>.env_{CONTEXT}_{INSTANCE}</code> file created by d.rymcg.tech):</p>
-<figure><img src="/img/portable-docker/forgejo-admin-account-settings.webp"/>
-</figure>
-
-<ul>
-<li>You should create a dedicated admin account, separate from your
-personal account.</li>
-<li>Click <code>Administrator account settings</code> to expand the section.</li>
-<li>Enter the <code>Adminstrator username</code>: <code>root</code></li>
-<li>Enter the admin email address.</li>
-<li>Enter a secure passphrase and confirmation.</li>
-<li>Click the <code>Install Forgejo</code> button at the very bottom.</li>
-</ul>
-<p>Once logged in as <code>root</code>, you can create additional user accounts from
-the account icon in the top right, which expands a menu.</p>
-<figure><img src="/img/portable-docker/forgejo-admin-site-settings.webp"/>
-</figure>
-
-<ul>
-<li>Click <code>Site adminstration</code>.</li>
-<li>Click <code>Identity &amp; access</code>.</li>
-<li>Click <code>User accounts</code>.</li>
-</ul>
-<figure><img src="/img/portable-docker/forgejo-admin-user-accounts.webp"/>
-</figure>
-
-<ul>
-<li>Click <code>Create User Account</code> and create your own personal account.</li>
-<li>Log out of the root account and test logging into the new account.</li>
-</ul>
-<h2 id="which-account-to-use">Which account to use?</h2>
-<ul>
-<li>You should use the <code>root</code> account for creating new OAuth2 apps and
-for creating new users.</li>
-<li>You should use your personal account for storing your git
-repositories and for your identity when logging into other apps.</li>
-</ul>
-<h2 id="enable-access-to-repositories-by-ssh">Enable access to repositories by SSH</h2>
-<p>By default, Forgejo only supports cloning its hosted git repositories
-via HTTPS. To allow cloning by SSH, you must enable the Traefik SSH
-entrypoint:</p>
-<h3 id="enable-the-traefik-ssh-entrypoint">Enable the Traefik SSH entrypoint</h3>
+<h2 id="log-in-with-the-step-cli-client">Log in with the step-cli client</h2>
 
 
 <div class="box notices cstyle run">
     <div class="box-label secondary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
     <div class="box-content">
         <code><pre>
-pi make traefik config
+pi make step-ca client-bootstrap
 </pre></code>
     </div>
 </div>
@@ -345,84 +545,115 @@ pi make traefik config
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-? Traefik:
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
+The root certificate has been saved in /home/pi/.step/certs/root_ca.crt.
+The authority configuration has been saved in /home/pi/.step/config/defaults.json.
+</pre>
+    </div>
+</div>
 
-? Traefik Configuration:
-  Traefik user
-> Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-v Logging level
+<h2 id="create-certificates">Create certificates</h2>
+<p>Do this anytime you wish to create a new client certificate:</p>
 
-? Traefik entrypoint config
-  Show enabled entrypoints
-> Configure stock entrypoints
-  Configure custom entrypoints
 
-? Select entrypoint to configure:
-^ websecure : HTTPS (TLS encrypted HTTP)
-  web_plain : HTTP (unencrypted; specifically NOT redirected to websecure; must use different port than web)
-  mqtt : MQTT (mosquitto) pub-sub service
-> ssh : SSH (forgejo) git (ssh) entrypoint
-  xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
-  xmpp_s2s : XMPP (ejabberd) server-to-server entrypoint
-v mpd : Music Player Daemon (mopidy) control entrypoint
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make step-ca cert
+</pre></code>
+    </div>
+</div>
 
-> Do you want to enable the ssh entrypoint? Yes
 
-TRAEFIK_SSH_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (eg. 0.0.0.0)
+<p>Enter the client certificate name (CN):</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Enter the subject (CN) to be certified, a domain name, or a client name
 
-: 0.0.0.0
+: foo.clients.pi.example.com
+</pre>
+    </div>
+</div>
 
-TRAEFIK_SSH_ENTRYPOINT_PORT: Enter the host port to listen on (eg. 2222)
+<p>When signing certificates, you need to enter the step-ca root admin
+passphrase, and then the certificates will be signed:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Please enter the password to decrypt the provisioner key: xxxxx
 
-: 2222
-
-? Is this entrypoint downstream from another trusted proxy?
-> No, clients dial directly to this server. (Turn off Proxy Protocol)
-  Yes, clients are proxied through a trusted server. (Turn on Proxy Protocol)
+✔ Provisioner: admin (JWK)
+✔ Certificate: certs/foo.clients.pi.example.com.crt
+✔ Private Key: certs/foo.clients.pi.example.com.key
 </pre>
     </div>
 </div>
 
 
 <div class="box notices cstyle warning">
-  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Do not enable Proxy Protocol</div>
+  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Warning</div>
   <div class="box-content">
 
-<p>Do not enable Proxy Protocol, because it is not supported by SSH.</p>
-</div>
-</div>
-<p>Press <code>ESC</code> three times to go back to the main menu, then re-install Traefik:</p>
+<p>The next question asks you to set a temporary passphrase to encrypt
+the <code>.p12</code> formatted client key.</p>
 <div class="box notices cstyle stdout">
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-? Traefik:
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
+Please enter a password to encrypt the .p12 file:
+</pre>
+    </div>
+</div>
+<p><strong>The <code>p12</code> password should NOT be the same as the root CA password! It
+should be a separate password that you will share with the end user,
+so that they can unlock the certificate you are giving them.</strong></p>
+</div>
+</div>
+<p>Finally you will see some details printed about the issued
+certificate.</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Certificate:
+    Data:
+       .....
+        Validity
+            Not Before: Oct 19 17:51:27 2024 UTC
+            Not After : Oct 26 17:52:27 2024 UTC
+        Subject: CN=foo.clients.pi.example.com
 </pre>
     </div>
 </div>
 
-<p>Once reinstalled, press <code>ESC</code> to exit the config tool.</p>
-<h3 id="create-an-entrypoint-on-the-sentry">Create an entrypoint on the sentry</h3>
+<p>The client certificate <code>foo</code> has been written to the <code>step-ca/certs</code>
+directory (.e.g.,
+<code>~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs</code>.)</p>
+<ul>
+<li><code>foo.clients.pi.example.com.crt</code> This is the public
+certificate for the <code>foo</code> client.</li>
+<li><code>foo.clients.pi.example.com.key</code> This is the private key
+for the <code>foo</code> certificate. <strong>This file is unencrypted</strong>.</li>
+<li><code>foo.clients.pi.example.com.p12</code> This is also the private
+key for the <code>foo</code> certificate written in a different format that is
+used on some devices, this file is encrypted with the temporary
+passphrase you chose and needs to be provided to the client when
+installing the certificate.</li>
+</ul>
+<h2 id="configure-apps-for-mtls">Configure apps for mTLS</h2>
+<p>For demo purposes, enable mTLS for the <code>whoami</code> service:</p>
 
 
 <div class="box notices cstyle run">
     <div class="box-label secondary">
-        <i class="fa-fw fas fa-dollar-sign"></i>Run this on the Raspberry Pi</div>
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
     <div class="box-content">
         <code><pre>
-sentry make traefik config
+pi make whoami config
 </pre></code>
     </div>
 </div>
@@ -432,163 +663,130 @@ sentry make traefik config
     <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
     <div class="box-content">
         <pre>
-? Traefik:
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (eg. whoami.example.com)
 
-? Traefik Configuration:
-  Traefik user
-> Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-v Logging level
+: whoami.pi.example.com
 
-? Custom Entrypoints: <canceled>
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+> Yes, with Mutual TLS (mTLS)
 
-? Traefik entrypoint config
-  Show enabled entrypoints
-  Configure stock entrypoints
-> Configure custom entrypoints
+WHOAMI_MTLS_AUTHORIZED_CERTS: Enter comma separated list of allowed client certificate names (or blank to allow all) (eg. *.clients.whoami.example.com)
 
-? Custom Entrypoints:
-  List custom entrypoints
-> Add new custom entrypoint
-  Remove custom entrypoints
-
-Adding a custom TCP/UDP entrypoint -
-
-- Make sure to enable the port in all upstream firewalls.
-- Make sure each entrypoint has a unique lower-case one-word name.
-
-Enter the new entrypoint name:
-
-: forgejo
-
-Enter the entrypoint listen address:
-
-: 0.0.0.0
-
-Enter the entrypoint port:
-
-: 2222
-
-Enter the protocol (tcp or udp):
-
-: tcp
-
-? Is this entrypoint downstream from another trusted proxy?
-> No, clients dial directly to this server. (Turn off Proxy Protocol)
-  Yes, clients are proxied through another trusted proxy. (Turn on Proxoy Protocol)
+: *.clients.pi.example.com
 </pre>
     </div>
 </div>
 
 
-<div class="box notices cstyle warning">
-  <div class="box-label"><i class="fa-fw fas fa-exclamation-triangle"></i> Do not enable Proxy Protocol</div>
+<div class="box notices cstyle tip">
+  <div class="box-label"><i class="fa-fw fas fa-lightbulb"></i> Tip</div>
   <div class="box-content">
 
-<p>SSH does not support <a href="https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt" rel="external" target="_blank">Proxy Protocol</a>, so be sure to disable it.</p>
+<p>Make sure to enter the same authorized cert wildcard that matches your
+client certificate.</p>
 </div>
 </div>
-<p>Press <code>ESC</code> three times to go back to the main menu.</p>
-<h3 id="create-a-route-from-the-sentry-to-the-pi">Create a route from the sentry to the Pi</h3>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-? Traefik:
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes
-  Configure layer 7 TLS proxy
-> Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-## Layer 4 TCP/UDP Proxy is DISABLED.
-? Do you want to enable the layer 4 TCP/UDP proxy? (y/N) Yes
-
-? Layer 4 TCP/UDP Proxy:
-  List layer 4 ingress routes
-> Add new layer 4 ingress route
-  Remove layer 4 ingress routes
-  Disable layer 4 TCP/UDP Proxy
-
-? Entrypoint
-> forgejo
-
-Enter the destination IP address to forward to:
-
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-
-: 2222
-
-##
-## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
-
-> Do you want to enable Proxy Protocol for this route? No
-Set TRAEFIK_LAYER_4_TCP_UDP_PROXY_ROUTES=ssh_pi:10.13.16.2:22:0,forgejo:10.13.16.2:2222:0
-## Configured Layer 4 Routes:
-Entrypoint  Destination_address  Destination_port  Proxy_protocol
-----------  -------------------  ----------------  --------------
-forgejo     10.13.16.2           2222              0
-</pre>
-    </div>
-</div>
-
-<p>Press <code>ESC</code> three times to go back to main menu, then re-install
-Traefik:</p>
-<div class="box notices cstyle stdout">
-    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
-    <div class="box-content">
-        <pre>
-? Traefik:
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-</pre>
-    </div>
-</div>
-
-<p>Once reinstalled, press <code>ESC</code> to exit the config tool.</p>
-<h3 id="test-cloning-a-repository-via-ssh">Test cloning a repository via SSH</h3>
-<ul>
-<li>Login to your Forgejo instance</li>
-<li>Create a new repository</li>
-<li>On the repository page, click on SSH and copy the SSH URL.</li>
-</ul>
+<p>Re-install whoami:</p>
 
 
 <div class="box notices cstyle run">
-    <div class="box-label primary">
-        <i class="fa-fw fas fa-dollar-sign"></i>[bash]: Run this on your workstation:</div>
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
     <div class="box-content">
         <code><pre>
-git clone ssh://git@git.pi.example.com:2222/username/repository.git
+pi make whoami install
 </pre></code>
     </div>
 </div>
 
 
+<p>Test the service without specifying a certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+curl https://whoami.pi.example.com
+</pre></code>
+    </div>
+</div>
+
+
+<p>You should now receive this error, indicating that a client
+certificate is required:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+curl: (56) OpenSSL SSL_read: OpenSSL/3.0.14: error:0A00045C:SSL routines::tlsv13 alert certificate required, errno 0
+</pre>
+    </div>
+</div>
+
+<p>Now test it with your client certificate:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+CERTS=~/git/vendor/enigmacurry/d.rymcg.tech/step-ca/certs
+
+curl https://whoami.pi.example.com \
+--cert $CERTS/foo.clients.pi.example.com.crt \
+--key $CERTS/foo.clients.pi.example.com.key
+</pre></code>
+    </div>
+</div>
+
+
+<p>With the correctly supplied certificate and key, the server now
+resolves to the whoami response:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Name: default
+Hostname: 427db0a29c30
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:45068
+GET / HTTP/1.1
+Host: whoami.pi5.forwarding.network
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Client-Cn: CN=foo.clients.pi5.forwarding.network
+X-Forwarded-For: 127.0.0.1
+X-Forwarded-Host: whoami.pi5.forwarding.network
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: pi5
+X-Forwarded-User: CN=foo.clients.pi5.forwarding.network
+X-Real-Ip: 127.0.0.1
+</pre>
+    </div>
+</div>
+
+<p>Notice that there are two headers sent to the whoami backend:</p>
+<ul>
+<li><code>X-Client-Cn</code></li>
+<li><code>X-Forwarded-User</code></li>
+</ul>
+<p>These two headers contain the same information, identifying the client
+cert id to the backend server. Either of these may be used for
+secondary authorization in your app.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li>Install apps.</li>
+</ul>
 
             <footer class="footline">
             </footer>
@@ -688,10 +886,10 @@ git clone ssh://git@git.pi.example.com:2222/username/repository.git
           <li data-nav-id="/portable-docker/configure-wireguard-tunnel/configure-raspberry-pi-wireguard-client/index.html" class=""><a class="padding" href="/portable-docker/configure-wireguard-tunnel/configure-raspberry-pi-wireguard-client/index.html">Configure Raspberry Pi WireGuard client</a></li></ul></li>
           <li data-nav-id="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html" class=""><a class="padding" href="/portable-docker/set-up-public-ssh-reverse-tunnel/index.html">Set up public SSH</a></li>
           <li data-nav-id="/portable-docker/install-core-services/index.html" class="parent alwaysopen"><a class="padding" href="/portable-docker/install-core-services/index.html">Install core services</a><ul id="R-subsections-c9481aa00498efbc9aa9b90ebe7fdb65" class="morespace collapsible-menu">
-          <li data-nav-id="/portable-docker/install-core-services/forgejo/index.html" class="active"><a class="padding" href="/portable-docker/install-core-services/forgejo/index.html">Forgejo</a></li>
+          <li data-nav-id="/portable-docker/install-core-services/forgejo/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/forgejo/index.html">Forgejo</a></li>
           <li data-nav-id="/portable-docker/install-core-services/traefik-forward-auth/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/traefik-forward-auth/index.html">Traefik-Forward-Auth (sentry authorization)</a></li>
           <li data-nav-id="/portable-docker/install-core-services/postfix-relay/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/postfix-relay/index.html">Postfix-Relay (MTA)</a></li>
-          <li data-nav-id="/portable-docker/install-core-services/step-ca/index.html" class=""><a class="padding" href="/portable-docker/install-core-services/step-ca/index.html">Step-CA (mutual TLS)</a></li></ul></li>
+          <li data-nav-id="/portable-docker/install-core-services/step-ca/index.html" class="active"><a class="padding" href="/portable-docker/install-core-services/step-ca/index.html">Step-CA (mutual TLS)</a></li></ul></li>
           <li data-nav-id="/portable-docker/install-web-services/index.html" class="alwaysopen"><a class="padding" href="/portable-docker/install-web-services/index.html">Install apps</a><ul id="R-subsections-4340db93b595b617ec6a0c5b45298ba3" class="morespace collapsible-menu">
           <li data-nav-id="/portable-docker/install-web-services/immich/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/immich/index.html">Immich</a></li>
           <li data-nav-id="/portable-docker/install-web-services/sftp/index.html" class=""><a class="padding" href="/portable-docker/install-web-services/sftp/index.html">SFTP (and Thttpd)</a></li>
@@ -737,7 +935,7 @@ git clone ssh://git@git.pi.example.com:2222/username/repository.git
                   <div class="control-style">
                     <label class="a11y-only" for="R-select-language">Language</label>
                     <select id="R-select-language" onchange="location = this.querySelector( this.value ).dataset.url;">
-                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/portable-docker/install-core-services/forgejo/index.html" lang="en-us" selected></option>
+                      <option id="R-select-language-en" value="#R-select-language-en" data-url="/portable-docker/install-core-services/step-ca/index.html" lang="en-us" selected></option>
                     </select>
                   </div>
                   <div class="clear"></div>
@@ -788,6 +986,20 @@ git clone ssh://git@git.pi.example.com:2222/username/repository.git
     </aside>
     <script src="/js/clipboard.min.js?1729363844" defer></script>
     <script src="/js/perfect-scrollbar.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-color.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-dispatch.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-drag.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-ease.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-interpolate.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-selection.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-timer.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-transition.min.js?1729363844" defer></script>
+    <script src="/js/d3/d3-zoom.min.js?1729363844" defer></script>
+    <script src="/js/js-yaml.min.js?1729363844" defer></script>
+    <script src="/js/mermaid.min.js?1729363844" defer></script>
+    <script>
+      window.themeUseMermaid = JSON.parse("{}");
+    </script>
     <script src="/js/theme.js?1729363844" defer></script>
   </body>
 </html>
