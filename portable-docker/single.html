@@ -4827,10 +4827,10 @@ title: Mutual TLS with two separate Certificate Authorities
 graph TD
     StepCA[Step CA]
     LetsEncrypt[Let&#39;s Encrypt CA]
-    Client --&gt;|Client sends cert signed by Step-CA, which the Server trusts| Server
-    Server --&gt;|Server sends cert signed by Let&#39;s Encrypt, which the Client trusts| Client
-    Client &lt;--&gt;|Step-CA issues cert upon client&#39;s request| StepCA
-    Server &lt;--&gt;|Let&#39;s Encrypt issues cert upon server&#39;s request| LetsEncrypt
+    Client --&gt;|Client sends Step-CA signed cert| Server
+    Server --&gt;|Server sends Let&#39;s Encrypt signed cert| Client
+    Client &lt;--&gt;|Issues cert| StepCA
+    Server &lt;--&gt;|Issues cert| LetsEncrypt
 </pre>
 <p>Theoretically you could just use Step-CA for both sides, but this
 would require changing the root certificate store on every client,
