@@ -5411,10 +5411,6 @@ X-Real-Ip: 127.0.0.1
 <p>These two headers contain the same information, identifying the client
 cert id to the backend server. Either of these may be used for
 secondary authorization in your app.</p>
-<h2 id="next-steps">Next steps</h2>
-<ul>
-<li>Install apps.</li>
-</ul>
 
                     </div>
                 </div>
@@ -5432,6 +5428,218 @@ Hub</a> are common, but private registries offer
 more control and security. By using a registry, you can version
 images, enforce access policies, and simplify deployment, making it a
 key part of your infrastructure.</p>
+<p>If you only have one Docker server, running a registry might be kind
+of pointless. But you may want to run it for any of these reasons:</p>
+<ul>
+<li>You have multiple Docker servers and you want an image cache that they can all share.</li>
+<li>You have built your own custom images that you want to distribute.</li>
+<li>You want to run faasd and need a place to store your function container images.</li>
+<li>You want to store images for any reason.</li>
+</ul>
+<h2 id="configure-registry">Configure registry</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make registry config
+</pre></code>
+    </div>
+</div>
+
+
+<p>Configure the registry hostname:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+REGISTRY_TRAEFIK_HOST: Enter the registry domain name (eg. registry.example.com)
+
+: registry.pi.example.com
+</pre>
+    </div>
+</div>
+
+<p>It is <strong>highly</strong> recommended to turn on HTTP Basic Authentication or
+Mutual TLS, in order to protect the registry from unauthorized use:</p>
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+  No
+> Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+
+Enter the username for HTTP Basic Authentication
+
+: ryan
+
+Enter the passphrase for ryan (leave blank to generate a random passphrase)
+
+: hunter2
+
+Hashed password: ryan:$apr1$Rav9J1xZ$oKMnqMzcEequ6H2VBha6N0
+Url encoded: https://ryan:hunter2@example.com/...
+
+> Would you like to create additional usernames (for the same access privilege)? No
+
+> Would you like to export the usernames and cleartext passwords to the file passwords.js
+n? No
+</pre>
+    </div>
+</div>
+
+<h2 id="install-registry">Install registry</h2>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make registry install
+</pre></code>
+    </div>
+</div>
+
+
+<h2 id="configure-docker-client">Configure Docker client</h2>
+<p>To use the registry, configure the docker client on the pi:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+docker login registry.pi.example.com
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+Username: ryan
+Password:
+WARNING! Your password will be stored unencrypted in /home/ryan/.docker/config.json.
+Configure a credential helper to remove this warning. See
+https://docs.docker.com/engine/reference/commandline/login/#credential-stores
+
+Login Succeeded
+</pre>
+    </div>
+</div>
+
+<h2 id="test-pushing-an-image">Test pushing an image:</h2>
+<p>Pull an image from the normal Docker registry for testing purposes:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+docker pull docker.io/traefik/whoami:latest
+</pre></code>
+    </div>
+</div>
+
+
+<p>Retag the image so that it belongs to your registry now:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+docker tag docker.io/traefik/whoami:latest registry.pi.example.com/traefik/whoami:latest
+</pre></code>
+    </div>
+</div>
+
+
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+docker push registry.example.com/traefik/whoami:latest
+</pre></code>
+    </div>
+</div>
+
+
+<div class="box notices cstyle stdout">
+    <div class="box-label"><i class="fa-fw fas fa-angle-right"></i>(stdout)</div>
+    <div class="box-content">
+        <pre>
+The push refers to repository [registry.example.com/traefik/whoami]
+298b6a4a6489: Pushed
+a1b937ed548c: Pushed
+01d1702a867e: Pushed
+latest: digest: sha256:c899811bc4a1f63a1273c612e15f1bea6514a19c7b08143dbbdef3e8f882c38d size: 948
+</pre>
+    </div>
+</div>
+
+<h2 id="configure-docker-client-for-mutual-tls">Configure Docker client for Mutual TLS</h2>
+<p>If you choose the mTLS sentry authorization with step-ca, you can
+configure your docker client to use your client certificate and key:</p>
+<p>On the client computer:</p>
+<ul>
+<li>
+<p>Create a directory under <code>/etc/docker/certs.d</code> matching the registry
+hostname (e.g., <code>/etc/docker/certs.d/registry.pi.example.com/</code>).</p>
+</li>
+<li>
+<p>Copy three files into the new directory:</p>
+<p><code>ca.crt</code> - the Step-CA public CA cert.
+<code>client.cert</code> - the client&rsquo;s public cert.
+<code>client.key</code> - the client&rsquo;s private key.</p>
+</li>
+</ul>
+<h2 id="restrict-access-by-ip-address">Restrict access by IP address</h2>
+<p>In addition to (or in lieu of) sentry authorization, you can restrict
+access by source IP address. By default the access is allowed to
+0.0.0.0/0 which allows all traffic. For example, you may restrict
+access to only a specific list of subnets:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make registry reconfigure var=REGISTRY_IP_SOURCERANGE=192.168.1.10/24,10.13.13.10/32
+</pre></code>
+    </div>
+</div>
+
+
+<p>Make to re-install after all config changes:</p>
+
+
+<div class="box notices cstyle run">
+    <div class="box-label secondary">
+        <i class="fa-fw fas fa-dollar-sign"></i>Run this on your Raspberry Pi</div>
+    <div class="box-content">
+        <code><pre>
+pi make registry install
+</pre></code>
+    </div>
+</div>
+
+
 
                     </div>
                 </div>
