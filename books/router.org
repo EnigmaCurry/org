@@ -346,36 +346,57 @@ Although you will be able to receive community updates, this does not
 disable the nag screen, which will persist.
 #+end_notice
 
-** Setup firewall
+** Setup Proxmox firewall
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000204-setup-firewall
 :EXPORT_HUGO_WEIGHT: 204
 :EXPORT_HUGO_SLUG: setup-firewall
 :END:
 
-By default, the Proxmox firewall is disabled. Add some basic rules and
-enable the firewall now:
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The Proxmox firewall is only used to protect the PVE node and its VMs
+on the management interface =vmbr0=. It has nothing to do with the
+virtual router firewall that will be created later.
+#+end_notice
+
+Proxmox has a multi-layer firewall, which can be enabled at the
+Datacenter, PVE node, and VM levels. The Datacenter firewall sets the
+default policy. The Node firewall will be used to protect the PVE node
+itself, while the VM firewalls protects individual VMs.
+
+*** Enable the Datacenter and Node firewalls
+ 
+By default, the firewalls are disabled. Add some basic rules and
+enable the Datacenter and Node firewalls now:
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
-pvesh create /cluster/firewall/rules \
+ALLOWED_SUBNET=0.0.0.0/0
+PUBLIC_IP_ADDRESS=$(ip -4 addr show vmbr0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+MGMT_INTERFACE=vmbr0
+
+pvesh create /nodes/${HOSTNAME}/firewall/rules \
   --action ACCEPT --type in --macro ssh \
-  --iface vmbr0 --enable 1 \
-  --comment "Allow SSH from management interface on vmbr0"
+  --iface ${MGMT_INTERFACE} --source ${ALLOWED_SUBNET} --dest ${PUBLIC_IP_ADDRESS} --enable 1 \
+  --comment "Allow SSH from any source on ${MGMT_INTERFACE} for ${PUBLIC_IP_ADDRESS}"
 
-pvesh create /cluster/firewall/rules \
+pvesh create /nodes/${HOSTNAME}/firewall/rules \
   --action ACCEPT --type in --dport 8006 --proto tcp \
-  --iface vmbr0 --enable 1 \
-  --comment "Allow Proxmox Web Console from management interface on vmbr0"
+  --iface ${MGMT_INTERFACE} --source ${ALLOWED_SUBNET} --dest ${PUBLIC_IP_ADDRESS} --enable 1 \
+  --comment "Allow Proxmox Web Console from any source on ${MGMT_INTERFACE} for ${PUBLIC_IP_ADDRESS}"
 
+pvesh set /nodes/${HOSTNAME}/firewall/options --enable 1
+pvesh set /cluster/firewall/options --policy_in DROP --policy_out ACCEPT
 pvesh set /cluster/firewall/options --enable 1
 #+end_run
 
 #+attr_shortcode: :style primary :title Info
 #+begin_notice
-The rules above open up port 22 and 8006 for all networks connected to
-the management interface. Proxmox has additional anti-lockout rules
-for port 22 and 8006, but these are for the same local subnet only.
+The rules above will open up TCP ports 22 and 8006 from all source
+addresses =0.0.0.0/0= that are connected to the management
+interface =vmbr0=. You may modify the =ALLOWED_SUBNET= to further restrict
+this.
 #+end_notice
 
 ** Setup VM network (NAT)
@@ -435,8 +456,8 @@ default) and the menu of options.
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
 The =vmbr0= interface is for direct bridge networking to the LAN, and
-it is created by default when Proxmox is installed. You will have to
-create a separate =vmbr1= interface for NAT.
+it is created by default when Proxmox is installed. You now have to
+create a separate interface for NAT: =vmbr1=.
 #+end_notice
 
 *** Create the NAT interface
@@ -539,15 +560,16 @@ wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/pr
 chmod +x proxmox_kvm.sh
 #+end_run
 
-*** Create the Debian VM template
+*** Create the Fedora VM template
 
 Create the template:
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
 STORAGE=local-lvm \
-DISTRO=debian \
-TEMPLATE_ID=9001 \
+DISTRO=fedora \
+TEMPLATE_ID=9003 \
+PUBLIC_PORTS_TCP=22,80,443 \
 ./proxmox_kvm.sh template
 #+end_run
 
@@ -580,13 +602,13 @@ export VM_ID=102 \
        VM_NET=10.10.1.2/24 \
        VM_GATEWAY=10.10.1.1 \
        VM_HOSTNAME=router \
-       TEMPLATE_ID=9001 && \
+       TEMPLATE_ID=9003 && \
     ./proxmox_kvm.sh clone && \
     qm set "${VM_ID}" \
+       --machine q35 \
        --net0 "virtio,bridge=vmbr1" \
        --ipconfig0 "ip=${VM_NET},gw=${VM_GATEWAY}"
 #+end_run
-
 *** Configure PCI passthrough of the Ethernet device
 
 You need to find the device ID of the Ethernet controller that you are
@@ -636,16 +658,16 @@ PCI_DEVICE=01:00; \
   -hostpci0 ${PCI_DEVICE},pcie=on
 #+end_run
 
-*** Set a root password for the VM (optional)
-Normally you should not set a password for the VM, but for debugging
-purposes in may be useful:
+*** Create the initial snapshot
+
+Before starting the VM for the first time, take an initial snapshot:
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
-VM_ID=102; \
-PASSWORD="foo"; \
-qm set ${VM_ID} --ciuser root --cipassword "${PASSWORD}"
+VM_ID=102 && \
+qm snapshot ${VM_ID} init --description "Initial"
 #+end_run
+
 
 *** Start the Router VM
 
@@ -657,6 +679,7 @@ qm start ${VM_ID}
 
 *** Find the IP address of the VM
 
+Wait a minute for the VM to boot, then find the IP address: 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
 VM_ID=102 \
@@ -688,7 +711,7 @@ EOF
 ssh router
 #+end_run
 
-The first time you connect, you will need to accept the SSH
+The st time you connect, you will need to accept the SSH
 fingerprint the first time, type =yes= and press Enter.
 
 ** Bootstrap Docker
