@@ -1,0 +1,727 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /router
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi toc env
+#+STARTUP: align
+
+* Linux Router
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :linkTitle Linux Router
+:EXPORT_HUGO_WEIGHT: 400
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+This book is about creating a virtualized Linux router on Docker on
+Proxmox.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+* Hardware
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000150-hardware
+:EXPORT_HUGO_WEIGHT: 150
+:EXPORT_HUGO_SLUG: hardware
+:END:
+
+ * [[https://www8.hp.com/h20195/v2/GetPDF.aspx/c06393061.pdf][HP t740]]
+   * Quad core CPU
+     * [[https://www.techpowerup.com/cpu-specs/ryzen-embedded-v1756b.c2065][AMD Ryzen Embedded V1756B]]
+   * 32GB of RAM
+   * 1TB NVME
+   * Dual 10Gb NIC installed in PCIE slot.
+     * [[https://www.intel.com/content/www/us/en/products/sku/60020/intel-ethernet-controller-x540at2/specifications.html][Intel X540-AT2]]
+
+* Setup Proxmox
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: install-proxmox
+:EXPORT_HUGO_WEIGHT: 200 
+:END:
+
+** Setup Proxmox
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 201
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Install Proxmox
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000202-install-proxmox
+:EXPORT_HUGO_WEIGHT: 202
+:EXPORT_HUGO_SLUG: install-proxmox
+:END:
+
+*** Download the installer .iso
+
+[[https://proxmox.com/en/downloads/proxmox-virtual-environment][Download the latest Proxmox VE release here.]]
+
+Write the .iso image file to a suitable USB drive with =dd= or
+[[https://unetbootin.github.io/][UNetbootin]].
+
+*** Boot the USB drive
+
+During installation, you will need to plug in a monitor, keyboard,
+mouse, and the USB device into the host system. Boot the router host
+from the USB drive.
+
+[[/img/proxmox/boot-screen.webp]]
+
+Select =Install Proxmox VE (Graphical)= and press Enter.
+
+*** Accept the license agreement
+
+Click =I agree=.
+
+*** Select the root storage device
+
+The device you select will be automatically partitioned for
+LVM storage:
+
+[[/img/proxmox/select-storage.webp]]
+
+#+attr_shortcode: :style warning :title Warning
+#+begin_notice
+Proxmox will use the entire storage device. This will destroy any
+existing partitions/data on the selected device.
+#+end_notice
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This book assumes you using only a single storage device with the
+default filesystem type =ext4=.
+
+You may click =Options= to configure the partition scheme and
+filesystem, but the defaults settings are already setup for efficient
+use of the available storage. If you have multiple identical storage
+devices you may configure ZFS for redundancy. For configuration help,
+see [[https://wintelguy.com/zfs-calc.pl][ZFS / RAIDZ Capacity Calculator]].
+#+end_notice
+
+Click =Next=.
+
+*** Configure locale
+
+[[/img/proxmox/configure-locale.webp]]
+
+Click =Next=.
+
+*** Set password and email address
+
+[[/img/proxmox/set-password.webp]]
+
+Click =Next=.
+
+*** Setup management networking
+
+Configure a static IP address and hostname for the management
+network interface:
+
+[[/img/proxmox/management-interface.webp]]
+
+The management interface is used to administer the Proxmox host from
+your existing network, and also used for the default =vmbr0= bridge
+network and provides Internet access to the proxmox host.
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+The Proxmox management interface is only used for adminstrative tasks, it
+plays no part in the new router, since the router will use a separate
+physical network interface.
+#+end_notice
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The Proxmox management interface does not use DHCP. You must choose a
+static IP address in your existing (home/lab) LAN subnet range. You
+should also reserve this IP address with your upstream router by
+associating the MAC address shown (e.g., =bc:24:11:22:da:99=) so that
+the IP address does not conflict with any other devices on the
+upstream LAN.
+
+The Hostname you choose (e.g., =pve-router.example.com=) is an
+administrative identifier for the Proxmox host only, it serves no
+purpose in relation to the new router.
+#+end_notice
+
+*** Start Install
+
+On the Summary page, confirm the settings you chose, then click
+=Install=.
+
+*** Reboot
+
+When the installer finishes, it will automatically reboot the host.
+Once fully rebooted, you should see the text console message
+indicating the URL to log into the management interface:
+
+#+begin_example
+Welcome to the Proxmox Virtual Environment. Please use your web browser to configure this server - connect to
+
+  https://192.168.1.2:8006
+#+end_example
+
+At this point you may remove the keyboard, monitor, mouse, and USB
+device. You will only need to connect by SSH or by the management web
+interface.
+
+** Setup SSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000203-setup-ssh
+:EXPORT_HUGO_WEIGHT: 203
+:EXPORT_HUGO_SLUG: setup-ssh
+:END:
+
+The Proxmox host has SSH enabled by default and so you can access it
+via the IP address and password you chose during install.
+
+The next step will be to improve security by setting up your
+workstation SSH key and to disable authentication via password.
+
+*** Create SSH key on your workstation
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+If you do not yet have an SSH key on your workstation, make one:
+
+#+begin_run
+ssh-keygen
+#+end_run
+
+For more information see the chapter on SSH in the [[/linux-workstation/config/ssh/index.html][Linux Workstation]]
+book.
+#+end_notice
+
+*** Create SSH config on your workstation
+
+#+begin_run
+PROXMOX_IP_ADDRESS=192.168.1.2 \
+PROXMOX_HOST=pve-router \
+cat &lt;&lt; EOF &gt;&gt; ~/.ssh/config
+
+Host ${PROXMOX_HOST}
+     Hostname ${PROXMOX_IP_ADDRESS}
+     User root
+
+EOF
+#+end_run
+
+*** Install SSH key
+
+Copy your public SSH to the Proxmox host:
+
+#+begin_run
+PROXMOX_HOST=pve-router \
+ssh-copy-id ${PROXMOX_HOST}
+#+end_run
+
+#+attr_shortcode: :style info :title Info
+#+begin_notice
+
+The first time you connect you will be asked to trust the host ssh
+key, just type =yes= and press Enter:
+
+#+begin_stdout
+The authenticity of host '192.168.1.2 (192.168.1.2)' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+#+end_stdout
+
+When prompted, you must enter the password you chose during install:
+
+#+begin_stdout
+root@192.168.1.2's password: 
+#+end_stdout
+
+If successful, it will indicate how many keys it copied:
+
+#+begin_stdout
+Number of key(s) added: 1
+#+end_stdout
+#+end_notice
+
+*** Test connection via key
+
+#+begin_run
+ssh pve-router
+#+end_run
+
+#+begin_notice
+The connection should no longer require your password. Depending on
+your local SSH agent, you may need to authenticate to unlock your key,
+but no password should be required to login to the host.
+#+end_notice
+
+*** Disable password authentication
+
+Now that you have tested that you can Login to the Proxmox host using
+your key, you should reconfigure SSH to disable password
+authentication:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+sed -i '/^PasswordAuthentication /d' /etc/ssh/sshd_config
+echo -e "\nPasswordAuthentication no" | tee -a /etc/ssh/sshd_config
+systemctl restart sshd
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+To test that the change has taken effect, you can attempt to login
+again with an invalid user:
+
+#+begin_run
+ssh foo@pve-router
+#+end_run
+
+#+begin_stdout
+foo@192.168.1.2: Permission denied (publickey).
+#+end_stdout
+
+If you see =Permission denied (publickey)=, and it does not prompt you
+for a password for =foo=, you have successfully disabled password
+authentication.
+#+end_notice
+
+** Choose update repository
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000204-enable-community-repository
+:EXPORT_HUGO_WEIGHT: 204
+:EXPORT_HUGO_SLUG: enable-community-repository
+:END:
+
+Proxmox is open-source and is completely free to download and use.
+However, there may be some confusion at first, when you see the
+following message in the web console stating =No valid subscription=:
+
+[[/img/proxmox/no-valid-subscription.webp]]
+
+The default installation is configured to use the Enterprise
+repository, which requires a paid Enterprise license, and this also
+grants you professional support. For now, you may simply click =OK= to
+bypass the nag screen.
+
+[[https://proxmox.com/en/services/support][To get an enterprise license visit Proxmox Support]].
+
+*** Community repository
+
+If you don't want to pay for an enterprise license, you may enable the
+free community repository which allows you to access Proxmox’s
+=no-subscription= version, which is ideal for individual users,
+small-scale setups, or open-source enthusiasts who want the full
+Proxmox experience but without professional updates and support.
+
+Run this command to enable the community repository:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+## Backup existing sources list for Proxmox
+cp /etc/apt/sources.list.d/pve-enterprise.list /etc/apt/sources.list.d/pve-enterprise.list.bak
+
+## Disable enterprise repository by commenting it out
+sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/pve-enterprise.list
+sed -i 's/^deb/#deb/' /etc/apt/sources.list.d/ceph.list
+
+## Add the no-subscription community repository
+echo "deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
+
+## Update the package lists
+apt update
+
+## Clear the cache to make the changes effective immediately
+systemctl restart pveproxy.service
+#+end_run
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+Although you will be able to receive community updates, this does not
+disable the nag screen, which will persist.
+#+end_notice
+
+** Setup firewall
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000204-setup-firewall
+:EXPORT_HUGO_WEIGHT: 204
+:EXPORT_HUGO_SLUG: setup-firewall
+:END:
+
+By default, the Proxmox firewall is disabled. Add some basic rules and
+enable the firewall now:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+pvesh create /cluster/firewall/rules \
+  --action ACCEPT --type in --macro ssh \
+  --iface vmbr0 --enable 1 \
+  --comment "Allow SSH from management interface on vmbr0"
+
+pvesh create /cluster/firewall/rules \
+  --action ACCEPT --type in --dport 8006 --proto tcp \
+  --iface vmbr0 --enable 1 \
+  --comment "Allow Proxmox Web Console from management interface on vmbr0"
+
+pvesh set /cluster/firewall/options --enable 1
+#+end_run
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+The rules above open up port 22 and 8006 for all networks connected to
+the management interface. Proxmox has additional anti-lockout rules
+for port 22 and 8006, but these are for the same local subnet only.
+#+end_notice
+
+** Setup VM network (NAT)
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000210-setup-nat
+:EXPORT_HUGO_WEIGHT: 210
+:EXPORT_HUGO_SLUG: setup-nat
+:END:
+
+Proxmox VMs are configured by default to use bridge networking with
+your LAN. While great for application servers, this is undesirable
+when creating a router.
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Bridging connects VMs directly to the host’s network, giving each one
+a separate IP address on the same network as the host. VMs behave just
+like any other device on the local network, allowing full, direct
+communication with other devices on the LAN.
+
+NAT (Network Address Translation) is an alternative that creates a
+private network for the VMs, routing their traffic through the host’s
+IP as a gateway. The VMs shares the host’s IP externally, and so
+outgoing traffic appears to come from the host.
+#+end_notice
+
+Download and run the
+[proxmox_nat.sh](https://blog.rymcg.tech/blog/proxmox/02-networking/)
+script:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_nat.sh
+
+chmod +x proxmox_nat.sh
+./proxmox_nat.sh
+#+end_run
+
+#+begin_stdout
+BRIDGE  NETWORK          COMMENT
+vmbr0   192.168.1.10/24  LAN bridge
+
+NAT bridge tool:
+ * Type `i` or `interfaces` to list the bridge interfaces.
+ * Type `c` or `create` to create a new NAT bridge.
+ * Type `l` or `list` to list the NAT rules.
+ * Type `n` or `new` to create some new NAT rules.
+ * Type `d` or `delete` to delete some existing NAT rules.
+ * Type `e` or `enable` to enable or disable adding the rules on boot.
+ * Type `?` or `help` to see this help message again.
+ * Type `q` or `quit` to quit.
+#+end_stdout
+
+The script outputs the current list of bridges (just =vmbr0= by
+default) and the menu of options.
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The =vmbr0= interface is for direct bridge networking to the LAN, and
+it is created by default when Proxmox is installed. You will have to
+create a separate =vmbr1= interface for NAT.
+#+end_notice
+
+*** Create the NAT interface
+Enter the =c= command to create a new bridge interface:
+
+#+begin_stdout
+Enter command (for help, enter `?`)
+: c
+#+end_stdout
+
+Enter the existing upstream bridge interface (=vmbr0=):
+
+#+begin_stdout
+Enter the existing bridge to NAT from
+: vmbr0
+#+end_stdout
+
+Enter the number =1= to create the new NAT interface (=vmbr1=):
+
+#+begin_stdout
+Enter a unique number for the new bridge (don't write the vmbr prefix)
+: 1
+#+end_stdout
+
+Configure the PVE host IP address for the new interface:
+
+#+begin_stdout
+Configuring new interface: vmbr1
+Enter the static IP address and network prefix in CIDR notation for vmbr1:
+: 10.10.1.1/24
+
+Enter the description/comment for this interface
+: NAT 10.10.1.1/24 bridged to vmbr0
+#+end_stdout
+
+*** Create NAT rules
+
+#+begin_stdout
+Enter command (for help, enter `?`)
+: n
+
+Defining new port forward rule:
+Enter the inbound interface
+: vmbr0
+Enter the protocol (tcp, udp)
+: tcp
+Enter the inbound Port number
+: 2222
+Enter the destination IP address
+: 10.10.1.2
+Enter the destination Port number
+: 22
+INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+vmbr0      tcp       2222     10.10.1.2  22
+? Is this rule correct? (Y/n): y
+
+? Would you like to define more port forwarding rules now? (y/N): N
+
+? Would you like to enable the systemd unit on boot? (Y/n): Y
+
+## Existing inbound port forwarding (DNAT) rules:
+INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+vmbr0      tcp       2222     10.10.1.2  22
+#+end_stdout
+
+*** Enable the NAT script to run on boot
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+Enter command (for help, enter `?`)
+: e
+
+The systemd unit is named: my-iptables-rules
+The systemd unit is currently: enabled
+? Would you like to enable the systemd unit on boot? (Y/n): y
+Systemd unit enabled: my-iptables-rules
+NAT rules applied: /etc/network/my-iptables-rules.sh
+#+end_run
+
+Now quit the script by entering =q=.
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+Enter command (for help, enter `?`)
+: q
+#+end_run
+
+** Setup KVM template
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000220-setup-kvm-template
+:EXPORT_HUGO_WEIGHT: 220
+:EXPORT_HUGO_SLUG: setup-kvm-template
+:END:
+
+*** Download the KVM template script
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_kvm.sh
+chmod +x proxmox_kvm.sh
+#+end_run
+
+*** Create the Debian VM template
+
+Create the template:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+STORAGE=local-lvm \
+DISTRO=debian \
+TEMPLATE_ID=9001 \
+./proxmox_kvm.sh template
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+=STORAGE= needs to match your Proxmox storage type. If using LVM
+storage, use =STORAGE=local-lvm=. If you are using ZFS storage,
+replace it with =STORAGE=local-zfs=.
+#+end_notice
+
+* Create Router VM
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: create-router-vm
+:EXPORT_HUGO_WEIGHT: 205 
+:END:
+
+** Create the Router VM
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000230-create-router-vm
+:EXPORT_HUGO_WEIGHT: 230
+:EXPORT_HUGO_SLUG: create-router-vm
+:END:
+
+Create the router VM with the IP address =10.10.1.2= and the mnemonic
+ID =102=:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+export VM_ID=102 \
+       VM_NET=10.10.1.2/24 \
+       VM_GATEWAY=10.10.1.1 \
+       VM_HOSTNAME=router \
+       TEMPLATE_ID=9001 && \
+    ./proxmox_kvm.sh clone && \
+    qm set "${VM_ID}" \
+       --net0 "virtio,bridge=vmbr1" \
+       --ipconfig0 "ip=${VM_NET},gw=${VM_GATEWAY}"
+#+end_run
+
+*** Configure PCI passthrough of the Ethernet device
+
+You need to find the device ID of the Ethernet controller that you are
+going to passthrough to the router VM:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+lspci | grep Ethernet
+#+end_run
+
+#+begin_stdout
+01:00.0 Ethernet controller: Intel Corporation Ethernet Controller 10-Gigabit X540-AT2 (rev 01)
+01:00.1 Ethernet controller: Intel Corporation Ethernet Controller 10-Gigabit X540-AT2 (rev 01)
+...
+#+end_stdout
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+In the example above, =lspci= identifies the device model (X540-AT2).
+The fully qualified PCI bus and device ID is listed at the very
+beginning of each line =Bus:Device:Function=. Because the device has
+two Ethernet ports (functions), it is listed twice with the same bus
+and device id, but with a unique function suffix appended to it:
+
+#+begin_src text
+  Bus   Device  Function
+   |       |       |
+  01     :00      .0
+  01     :00      .1         
+#+end_src
+
+To pass the device to the VM, you only need to pass the Bus and Device
+ID: =01:00=. The function suffixes =.0= and =.1= can be ignored,
+because the entire device will be passed through to the VM, including
+all of these PCI functions.
+#+end_notice
+
+
+Once you found the device ID (e.g., =01:00=), passthrough the device
+to the router VM:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+VM_ID=102 \
+PCI_DEVICE=01:00; \
+  qm set ${VM_ID} \
+  -hostpci0 ${PCI_DEVICE},pcie=on
+#+end_run
+
+*** Set a root password for the VM (optional)
+Normally you should not set a password for the VM, but for debugging
+purposes in may be useful:
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+VM_ID=102; \
+PASSWORD="foo"; \
+qm set ${VM_ID} --ciuser root --cipassword "${PASSWORD}"
+#+end_run
+
+*** Start the Router VM
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+VM_ID=102 \
+qm start ${VM_ID}
+#+end_run
+
+*** Find the IP address of the VM
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+VM_ID=102 \
+./proxmox_kvm.sh get_ip
+#+end_run
+
+*** Create SSH config to access the router VM
+
+Append the following config to your workstation's =~/.ssh/config=
+file, replacing =X.X.X.X= with the IP address found on the VM summary page.
+
+#+begin_run
+VM_IP=X.X.X.X
+cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
+
+Host router
+     Hostname ${VM_IP}
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+
+EOF
+#+end_run
+
+*** Connect to the VM
+
+#+begin_run
+ssh router
+#+end_run
+
+The first time you connect, you will need to accept the SSH
+fingerprint the first time, type =yes= and press Enter.
+
+** Bootstrap Docker
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000240-bootstrap-docker
+:EXPORT_HUGO_WEIGHT: 240
+:EXPORT_HUGO_SLUG: bootstrap-docker
+:END:
+
+You should now be logged into the router VM via SSH. Set the following
+temporary environment variables in the shell of the router VM:
+
+ * =ALIAS= (e.g., "router") is the short contextual alias used to
+   interact with your Docker server.
+ * =ROOT_DOMAIN= (e.g., "lan.example.com") is the chosen sub-domain
+   for the new router's LAN .
+ * =SYSBOX=true= (true/false) enables [[https://github.com/nestybox/sysbox][Sysbox]] to allow the router
+   containers to run privileged tasks (e.g., systemd).
+
+#+begin_env
+## These temporary variables configure bootstrap_sworkstation.sh
+export ALIAS=router
+export ROOT_DOMAIN=lan.example.com
+export SYSBOX=true
+#+end_env
+
+After setting the environment variables, run the boostrap script:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+bash <(curl -L https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true)
+#+end_run
+
+Once the script is finished, close the SSH session (=Ctrl-D=) and log
+back in.
+

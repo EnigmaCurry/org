@@ -958,6 +958,7 @@ This will invoke =toolbox= */on the host/*.
 ## Manual install:
 ##
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/toolbox
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/distrobox
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/podman
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
 #+end_run
@@ -1008,7 +1009,7 @@ this on the host (not in the toolbox), to create it as the root user:
 cat << EOF | sudo tee /usr/local/bin/emacs
 #!/bin/bash
 ## Run Emacs in the dev toolbox and pass it any args:
-toolbox run -c dev emacs $@
+distrobox enter --name dev -- bash -l -c emacs
 EOF
 sudo chmod a+x /usr/local/bin/emacs
 #+end_run
