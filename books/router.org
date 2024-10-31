@@ -15,6 +15,11 @@
 This book is about creating a virtualized Linux router on Docker on
 Proxmox.
 
+#+attr_shortcode: :style warning :title Warning
+#+begin_notice
+This book is still being written.
+#+end_notice
+
 #+attr_shortcode: :depth 999
 #+begin_index
 index
@@ -367,37 +372,40 @@ itself, while the VM firewalls protects individual VMs.
 
 *** Enable the Datacenter and Node firewalls
  
-By default, the firewalls are disabled. Add some basic rules and
-enable the Datacenter and Node firewalls now:
+By default, the firewalls are disabled. Reset the firewall, add some
+basic rules, and enable the firewalls now:
+
+Download and run the
+[proxmox_firewall.sh](https://blog.rymcg.tech/blog/proxmox/01-install/#the-script)
+script:
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
-ALLOWED_SUBNET=0.0.0.0/0
-PUBLIC_IP_ADDRESS=$(ip -4 addr show vmbr0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
-MGMT_INTERFACE=vmbr0
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_firewall.sh
 
-pvesh create /nodes/${HOSTNAME}/firewall/rules \
-  --action ACCEPT --type in --macro ssh \
-  --iface ${MGMT_INTERFACE} --source ${ALLOWED_SUBNET} --dest ${PUBLIC_IP_ADDRESS} --enable 1 \
-  --comment "Allow SSH from any source on ${MGMT_INTERFACE} for ${PUBLIC_IP_ADDRESS}"
-
-pvesh create /nodes/${HOSTNAME}/firewall/rules \
-  --action ACCEPT --type in --dport 8006 --proto tcp \
-  --iface ${MGMT_INTERFACE} --source ${ALLOWED_SUBNET} --dest ${PUBLIC_IP_ADDRESS} --enable 1 \
-  --comment "Allow Proxmox Web Console from any source on ${MGMT_INTERFACE} for ${PUBLIC_IP_ADDRESS}"
-
-pvesh set /nodes/${HOSTNAME}/firewall/options --enable 1
-pvesh set /cluster/firewall/options --policy_in DROP --policy_out ACCEPT
-pvesh set /cluster/firewall/options --enable 1
+chmod +x proxmox_firewall.sh
 #+end_run
 
-#+attr_shortcode: :style primary :title Info
-#+begin_notice
-The rules above will open up TCP ports 22 and 8006 from all source
-addresses =0.0.0.0/0= that are connected to the management
-interface =vmbr0=. You may modify the =ALLOWED_SUBNET= to further restrict
-this.
-#+end_notice
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
+./proxmox_firewall.sh
+#+end_run
+
+#+begin_stdout
+? This will reset the Node and Datacenter firewalls and delete all existing rules.. Proceed? (y/N): y
+
+Enter the management interface (e.g., vmbr0)
+: vmbr0
+Which subnet is allowed to access the management interface?
+: 0.0.0.0/0
+
+Allowing ICMP ping response from the management interface.
+Allowing access to SSH (22) for the management interface.
+Allowing access to Proxmox console (8006) for the management interface.
+Enabling Node firewall.
+Enabling Datacenter firewall.
+#+end_stdout
+
 
 ** Setup VM network (NAT)
 :PROPERTIES:
@@ -424,7 +432,7 @@ outgoing traffic appears to come from the host.
 #+end_notice
 
 Download and run the
-[proxmox_nat.sh](https://blog.rymcg.tech/blog/proxmox/02-networking/)
+[proxmox_nat.sh](https://blog.rymcg.tech/blog/proxmox/02-networking/#the-script)
 script:
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
@@ -432,8 +440,13 @@ script:
 wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_nat.sh
 
 chmod +x proxmox_nat.sh
+#+end_run
+
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
+#+begin_run
 ./proxmox_nat.sh
 #+end_run
+
 
 #+begin_stdout
 BRIDGE  NETWORK          COMMENT
@@ -554,6 +567,10 @@ Enter command (for help, enter `?`)
 
 *** Download the KVM template script
 
+Download and run the
+[proxmox_kvm.sh](https://blog.rymcg.tech/blog/proxmox/05-kvm-templates/#the-script)
+script:
+
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
 wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_kvm.sh
@@ -567,17 +584,16 @@ Create the template:
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
 STORAGE=local-lvm \
-DISTRO=fedora \
+DISTRO=fedora-41 \
 TEMPLATE_ID=9003 \
 PUBLIC_PORTS_TCP=22,80,443 \
+FILESYSTEM_SIZE=20 \
 ./proxmox_kvm.sh template
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
-=STORAGE= needs to match your Proxmox storage type. If using LVM
-storage, use =STORAGE=local-lvm=. If you are using ZFS storage,
-replace it with =STORAGE=local-zfs=.
+If you installed Proxmox with ZFS storage, set =STORAGE=local-zfs=.
 #+end_notice
 
 * Create Router VM
@@ -602,13 +618,29 @@ export VM_ID=102 \
        VM_NET=10.10.1.2/24 \
        VM_GATEWAY=10.10.1.1 \
        VM_HOSTNAME=router \
-       TEMPLATE_ID=9003 && \
+       TEMPLATE_ID=9003 \
+       CPU=2 \
+       RAM_MB=2048 \
+       EXTRA_DISK_SPACE_GB=30 && \
     ./proxmox_kvm.sh clone && \
     qm set "${VM_ID}" \
        --machine q35 \
        --net0 "virtio,bridge=vmbr1" \
-       --ipconfig0 "ip=${VM_NET},gw=${VM_GATEWAY}"
+       --ipconfig0 "ip=${VM_NET},gw=${VM_GATEWAY}" \
+       --cores ${CPU} \
+       --memory ${RAM_MB} && \
+    test -n "${EXTRA_DISK_SPACE_GB}" && \
+    test "${EXTRA_DISK_SPACE_GB}" != 0 && \
+    qm resize "${VM_ID}" scsi0 +${EXTRA_DISK_SPACE_GB}G
 #+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The base fedora image is about 5GB, and the base template reserved
+20GB of free space. This VM reserves an extra 30GB, for a total of
+55GB storage space reserved.
+#+end_notice
+
 *** Configure PCI passthrough of the Ethernet device
 
 You need to find the device ID of the Ethernet controller that you are
@@ -677,26 +709,19 @@ VM_ID=102 \
 qm start ${VM_ID}
 #+end_run
 
-*** Find the IP address of the VM
-
-Wait a minute for the VM to boot, then find the IP address: 
-#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
-#+begin_run
-VM_ID=102 \
-./proxmox_kvm.sh get_ip
-#+end_run
 
 *** Create SSH config to access the router VM
 
-Append the following config to your workstation's =~/.ssh/config=
-file, replacing =X.X.X.X= with the IP address found on the VM summary page.
+Create a new entry in your to your workstation's =~/.ssh/config= file
+for the router VM.
 
 #+begin_run
-VM_IP=X.X.X.X
+PROXMOX_IP_ADDRESS=X.X.X.X
 cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
 
 Host router
-     Hostname ${VM_IP}
+     Hostname ${PROXMOX_IP_ADDRESS}
+     Port 2222
      User root
      ControlMaster auto
      ControlPersist yes
@@ -705,14 +730,27 @@ Host router
 EOF
 #+end_run
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Replace =X.X.X.X= with the management IP address of your proxmox host.
+#+end_notice
+
+
 *** Connect to the VM
 
 #+begin_run
 ssh router
 #+end_run
 
-The st time you connect, you will need to accept the SSH
-fingerprint the first time, type =yes= and press Enter.
+#+begin_stdout
+The authenticity of host '[192.168.1.2]:2222 ([192.168.1.2]:2222)' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxx.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+#+end_stdout
+
+The first time you connect, you will need to accept the SSH fingerprint
+the first time, type =yes= and press Enter.
 
 ** Bootstrap Docker
 :PROPERTIES:
@@ -742,9 +780,163 @@ After setting the environment variables, run the boostrap script:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-bash <(curl -L https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true)
+bash <(curl -L https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh?raw=true)
 #+end_run
 
 Once the script is finished, close the SSH session (=Ctrl-D=) and log
 back in.
 
+
+** Setup Router Network
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000250-setup-router-network
+:EXPORT_HUGO_WEIGHT: 250
+:EXPORT_HUGO_SLUG: setup-router-network
+:END:
+
+*** Install network utilities
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+dnf install -y \
+    dnsutils nmap netcat iperf mtr tcpdump \
+    iftop bmon nload speedtest-cli whois arp-scan
+#+end_run
+
+
+*** Rename interfaces
+
+List the detected network interfaces on the router VM:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip link
+#+end_run
+
+=eth0= is the virtual NIC attached to the =vmbr1= bridge, which is
+acessible through the Proxmox management interface only.
+
+#+begin_stdout
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether bc:24:11:94:02:05 brd ff:ff:ff:ff:ff:ff
+#+end_stdout
+
+The physical dual 10G Ethernet passed into the VM is recognized as two
+interfaces, =enp1s0f0= and =enp1s0f1=, and will become the new
+router's LAN and WAN ports respectively:
+
+#+begin_stdout
+3: enp1s0f0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether CA:FE:BA:BE:12:34 brd ff:ff:ff:ff:ff:ff
+4: enp1s0f1: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether DE:AD:BE:EF:42:42 brd ff:ff:ff:ff:ff:ff
+#+end_stdout
+
+Let's rename all of the interfaces so they are easier to identify:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+## Define your interface mappings: existing_name=new_name,...
+INTERFACES="eth0=mgmt,enp1s0f0=lan,enp1s0f1=wan"
+
+mkdir -p /etc/systemd/network
+
+IFS=',' # Split INTERFACES by commas
+for iface_map in $INTERFACES; do
+    IFS='=' read -r interface name &lt;&lt;&lt; "$iface_map"
+    mac_address=$(ip link show "$interface" | awk '/ether/ {print $2}')
+    if [[ -z "$mac_address" ]]; then
+        echo "Error: Could not find MAC address for $interface"
+        continue
+    fi
+    link_file="/etc/systemd/network/10-${name}.link"
+    cat &lt;&lt;EOF | sudo tee "$link_file" > /dev/null
+[Match]
+MACAddress=${mac_address}
+
+[Link]
+Name=${name}
+EOF
+    echo "Created link file $link_file for interface $interface with MAC $mac_address"
+done
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Double check the =INTERFACES= mapping matches your existing network
+interface names.
+#+end_notice
+
+*** Set static LAN address
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+LAN_NETWORK=192.168.10.1/24
+GATEWAY=10.10.1.1   ## Temporary management gateway
+DNS="1.1.1.1;1.0.0.1;"
+cat &lt;&lt;EOF > /etc/NetworkManager/system-connections/lan.nmconnection
+[connection]
+id=lan
+type=ethernet
+interface-name=lan
+
+[ipv4]
+method=manual
+address1=${LAN_NETWORK},${GATEWAY}
+dns=${DNS}
+EOF
+chmod 600 /etc/NetworkManager/system-connections/lan.nmconnection
+#+end_run
+
+*** Set WAN for DHCP
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+cat &lt;&lt;EOF > /etc/NetworkManager/system-connections/wan.nmconnection
+[connection]
+id=wan
+type=ethernet
+interface-name=wan
+
+[ipv4]
+method=auto
+EOF
+chmod 600 /etc/NetworkManager/system-connections/wan.nmconnection
+#+end_run
+
+
+*** Reboot the Router VM
+
+To see the changes, you will have to reboot the VM.
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+reboot
+#+end_run
+
+Once rebooted, log back in and check the interface names again:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip link
+#+end_run
+
+#+begin_stdout
+3: lan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether CA:FE:BA:BE:12:34 brd ff:ff:ff:ff:ff:ff
+4: wan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/ether DE:AD:BE:EF:42:42 brd ff:ff:ff:ff:ff:ff
+#+end_stdout
+
+Show the IP address of the LAN interface:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip add show dev lan
+#+end_run
+
+#+begin_stdout
+...
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global 
+...
+#+end_stdout
