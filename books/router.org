@@ -803,6 +803,80 @@ dnf install -y \
     iftop bmon nload speedtest-cli whois arp-scan
 #+end_run
 
+*** Setup systemd-networkd
+
+The Fedora cloud image the VM is booted from is automatically setup
+for NetworkManager. For a router, this just gets in the way of things,
+so you should disable NetworkManager and setup static IP addresses via
+systemd-networkd.
+
+First, create a static network config for the management interface
+(name =eth0= by default, but it will be renamed to =mgmt=):
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+mac_address=$(ip link show "eth0" | awk '/ether/ {print $2}')
+network=/etc/systemd/network/01-mgmt.network
+link=/etc/systemd/network/01-mgmt.link
+
+cat &lt;&lt;EOF > /etc/systemd/network/01-mgmt.network
+[Match]
+Name=mgmt
+
+[Network]
+Address=10.10.1.2/24
+Gateway=10.10.1.1
+DNS=1.1.1.1
+DNS=1.0.0.1
+EOF
+
+cat &lt;&lt;EOF > /etc/systemd/network/01-mgmt.link
+[Match]
+MACAddress=${mac_address}
+
+[Link]
+Name=mgmt
+EOF
+
+echo -e "\n\n## Network: ${network}"
+cat ${network}
+echo -e "\n## Link: ${link}"
+cat ${link}
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Make sure to use the same =Address= as you assigned in the cloud-init
+settings for th VM (e.g., =10.10.1.2=). Although this configuration is
+now divorced from cloud-init, using the same address will prevent
+conflict.
+#+end_notice
+
+Enable systemd-networkd:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+sudo systemctl enable systemd-networkd
+#+end_run
+
+Disable NetworkManager:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+sudo systemctl stop NetworkManager
+sudo systemctl mask NetworkManager
+#+end_run
+
+Disable cloud-init:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+touch /etc/cloud/cloud-init.disabled
+systemctl mask cloud-init
+#+end_run
+
+cloud-init was useful for first boot configuration, but now that its
+done its job, it needs to get out of the way.
 
 *** Rename interfaces
 
@@ -812,14 +886,6 @@ List the detected network interfaces on the router VM:
 #+begin_run
 ip link
 #+end_run
-
-=eth0= is the virtual NIC attached to the =vmbr1= bridge, which is
-acessible through the Proxmox management interface only.
-
-#+begin_stdout
-2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
-    link/ether bc:24:11:94:02:05 brd ff:ff:ff:ff:ff:ff
-#+end_stdout
 
 The physical dual 10G Ethernet passed into the VM is recognized as two
 interfaces, =enp1s0f0= and =enp1s0f1=, and will become the new
@@ -832,12 +898,12 @@ router's LAN and WAN ports respectively:
     link/ether DE:AD:BE:EF:42:42 brd ff:ff:ff:ff:ff:ff
 #+end_stdout
 
-Let's rename all of the interfaces so they are easier to identify:
+Let's rename these interfaces so they are easier to identify:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
 ## Define your interface mappings: existing_name=new_name,...
-INTERFACES="eth0=mgmt,enp1s0f0=lan,enp1s0f1=wan"
+INTERFACES="enp1s0f0=lan,enp1s0f1=wan"
 
 mkdir -p /etc/systemd/network
 
