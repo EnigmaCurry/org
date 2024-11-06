@@ -956,369 +956,129 @@ sudo chattr +i /etc/resolv.conf
    when you can't find an ethernet LAN with DHCP.
  * [[https://www.raspberrypi.com/documentation/computers/configuration.html#wireless-networking-command-line][Official Raspberry Pi Networking guide]]
 
-** Set up SSH
-:PROPERTIES:
-:EXPORT_FILE_NAME: 000231-set-up-ssh
-:EXPORT_HUGO_WEIGHT: 231
-:EXPORT_HUGO_SLUG: set-up-ssh
-:END:
-
-The Docker context is controlled exclusively through SSH, as the
-=root= user. This requires setting up some keys to allow the =pi= user
-to access the =root= user's account.
-
-Although you will not need to interact with the =root= user's shell
-directly, the =pi= user will be granted full access to =root= via SSH.
-
-#+begin_mermaid
-graph LR;
-    subgraph Raspberry Pi
-        pi[User: pi]
-        root[User: root]
-        pi -->|Docker SSH context\nto root@localhost| root
-    end
-
-    RemoteComputer[Personal\nWorkstation] -->|ssh pi@pi| pi
-#+end_mermaid
-
-
-#+attr_shortcode: :style warning :title Docker == root == pi
-#+begin_notice
-SSH is used here almost like =sudo=. The =pi= user should be treated
-with the same respect as the =root= user, as it will be granted full
-=root= access through SSH (to localhost).
-#+end_notice
-
-*** Create a new SSH key
-
-You need to create a new SSH key for the =pi= user.
-
-#+attr_shortcode: :style warning :title Unencrypted SSH keys are used for convenience
-#+begin_notice
-To connect to the Docker context requires that your SSH key be already
-/decrypted/.
-
-There's only two ways to do that:
-
- * Create an /unencrypted/ SSH key, so that no passphrase is ever
-    required.
- -or-
- * Set up an ssh-agent to decrypt and load the unencrypted key into
-    resident memory, so that your key can be used without requiring a
-    passphrase.
-
-For the sake of convenience, this guide will use the first method, and
-create a new /unencrypted/ SSH key, living in the pi user's home
-directory: =/home/pi/.ssh/id_ed25519=. The security of this key
-depends upon the physical and network security of the device
-(including SD card). Any user gaining entry to the =pi= user's account
-will have access to the key, and no passphrase is required to use the
-key.
-
-If you wish to enhance the security of your SSH key, please read the
-[[https://wiki.archlinux.org/title/SSH_keys][Arch Wiki article on SSH keys]], which covers generating secure SSH
-keys, setting a passphrase, and setting up an ssh-agent with [[https://wiki.archlinux.org/title/SSH_keys#Keychain][Keychain]].
-
-You may also protect the integrity of the SD card (at rest) with [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][full
-disk encryption and remote unlock via SSH]].
-#+end_notice
-
-Create a new SSH key (without a passphrase):
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
-#+end_run
-
-*** Authorize the key of the pi user to connect as root
-
-All interaction with Docker is done over SSH as the =root= user, so
-for the =pi= user to control Docker, they need to be able to SSH to
-=localhost= as the =root= user.
-
-Add the =pi= user's key to the root user's
-=/root/.ssh/authorized_keys= file:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-cat ~/.ssh/id_ed25519.pub | sudo tee -a /root/.ssh/authorized_keys
-#+end_run
-
-Create a config named =pi= in your =~/.ssh/config=:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-cat &lt;&lt;EOF &gt&gt ~/.ssh/config
-Host pi
-    User root
-    Hostname localhost
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath /tmp/ssh-%u-%r@%h:%p
-EOF
-#+end_run
-
-Test the connection is working:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-ssh pi whoami
-#+end_run
-
-Accept the key fingerprint it offers:
-
-#+begin_stdout
-The authenticity of host 'localhost (::1)' can't be established.
-ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-#+end_stdout
-
-If it worked, you should see the output of =whoami= which should print
-the username =root= (which is the user configured by SSH).
-
-** Install Docker
-:PROPERTIES:
-:EXPORT_FILE_NAME: 000240-install-docker
-:EXPORT_HUGO_WEIGHT: 240
-:EXPORT_HUGO_SLUG: install-docker
-:END:
-
-*** Install Docker
-
- * On the pi, install docker:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run   
-curl -sSL https://get.docker.com | sh
-#+end_run
-
- * Test docker is working: 
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-sudo docker run hello-world
-#+end_run
-
-  * If working, you should see a =Hello from Docker!= message and some other help info.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-Normally, you shouldn't use =sudo docker=. In the next section you
-will create a Docker context for the =pi= user to use directly.
-#+end_notice
-  
-*** Set up Docker context (SSH)
-
-[[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of a [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]] via SSH, rather than
-the default socket context.
-
-Create a new docker context, named =pi=, using the SSH config you had
-just created (also called =pi=):
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-docker context create pi --docker "host=ssh://pi"
-#+end_run
-
-Switch to use the new SSH context as the default:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-docker context use pi
-#+end_run
-
-Now, when you run any docker command, it will use the SSH context:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-docker info | grep -iE "(Name|Context)"
-#+end_run
-
-This should print the proper context: =pi=.
-
-If it worked, the =pi= user is now fully equipped to run any docker comamnd as =root=.
-
 ** Install d.rymcg.tech
 :PROPERTIES:
-:EXPORT_FILE_NAME: 000250-install-d-rymcg-tech
+:EXPORT_FILE_NAME: 000250-install-docker-and-d.rymcg.tech
 :EXPORT_HUGO_WEIGHT: 250
-:EXPORT_HUGO_SLUG: install-d-rymcg-tech
+:EXPORT_HUGO_SLUG: install-docker-and-d.rymcg.tech
 :END:
 
-*** Install dependencies
+The installation process for Docker and d.rymcg.tech is fully
+automated via bash environment variable and a downloaded script.
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style info :title Info
+#+begin_notice
+Before running the command below, you should edit it to set a custom
+=ROOT_DOMAIN=, which is to be a dedicated sub-domain assigned to the
+Pi. The =ALIASES= variable is already preset with the aliases you'll
+be needing for this book: =pi= and =sentry=.
+#+end_notice
+
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sudo apt-get update && \
-sudo apt-get install -y bash build-essential gettext \
-     git openssl apache2-utils xdg-utils jq sshfs \
-     wireguard curl inotify-tools w3m && \
-( cd $(mktemp -d) && wget -O step-cli.deb \
-  https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_$(dpkg --print-architecture).deb && \
-  sudo dpkg -i step-cli.deb && rm -f step-cli.deb )
+ROOT_DOMAIN=pi.example.com \
+ALIASES=pi,sentry \
+bash <(curl -L
+https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true)
 #+end_run
 
-*** Clone the git repository
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
-    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
-
-cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
-#+end_run
-
-*** Configure Bash shell integration
-
-Configure the =pi= user's =~/.bashrc= file:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
-export EDITOR=nano
-
-## d.rymcg.tech cli tool:
-export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
-eval "$(d.rymcg.tech completion bash)"
-__d.rymcg.tech_cli_alias d
-
-## Add d.rymcg.tech alias for each Docker context:
-__d.rymcg.tech_context_alias pi
-__d.rymcg.tech_context_alias sentry
-
-EOF
-#+end_run
+Once the script has finished, log out from the Pi and log back in. You
+are done, and you may proceed to the next section ([[/portable-docker/set-up-raspberry-pi/install-traefik/index.html][Install Traefik]]).
 
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
-Set =EDITOR= to your preferred console text editor.
+If you don't like running automatic scripts, you can follow the [[/portable-docker/appendix/manual-installation/index.html][manual
+installation steps]] listed in the appendix.
+
+This script is designed only to be run on a freshly installed
+*Debian*-derived system (including Raspberry Pi OS).
+
+If you are wary of running curlbombs (you should be) you may want to
+download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and then
+run it manually:
+
+#+begin_example
+## Download and set executable:
+curl -LO https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true
+chmod a+x ./bootstrap_sworkstation.sh
+
+## Set the config variables as exported:
+export ROOT_DOMAIN=pi.example.com
+export ALIASES=pi,sentry
+
+## Examine the script before running it.
+## Run it: ./bootstrap_sworkstation.sh
+#+end_example
 #+end_notice
 
-Once finished, logout of the Pi and log back in.
+*** Script configuration
 
-Now you should have a new alias named =d= that controls the
-=d.rymcg.tech= toolset. Check out the main help screen:
+Here are the environment variables that the bootstrap script supports:
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-d
-#+end_run
+**** ALIASES
 
-#+begin_stdout
-## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
-cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory (or given subdirectory)
-make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
-context                       View or set the current Docker context
-new-context                   Create a new Docker context
-tmp-context                   Use a temporary Docker context in a sub-shell
-config                        Configure the current Docker context
-ssh [COMMAND ...]             Run command or shell on active docker context SSH host
-completion                    Setup TAB completion in your shell
-install                       Install an app interactively
-install-docker                Install Docker Engine on the host
-status                        Show status of all installed services
-audit                         Print security audit of running containers
+Throughout this book, a short command alias is used to control the
+d.rymcg.tech Docker context of the local host (named =pi=) and another
+alias for the remote sentry (named =sentry=), but you can rename these
+aliases to any names you like. =ALIASES= is a comma separated list of
+alias names to create: =pi,sentry=.
 
-## Documentation sub-commands:
-help                          Show this help screen
-list                          List available d.rymcg.tech projects
-                              (not including external projects, unless you symlink them into ROOT_DIR)
-readme                        Open the main d.rymcg.tech README.md in your browser
-readme [PROJECT]              Open the README.md for the given project name
-readme digitalocean           Open root documentation file: DIGITALOCEAN.md
-readme security               Open root documentation file: SECURITY.md
-readme aws                    Open root documentation file: AWS.md
-readme license                Open root documentation file: LICENSE.txt
-readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
-readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
-#+end_stdout
+**** ROOT_DOMAIN
 
-There are two additional aliases created for each of the Docker contexts:
+=ROOT_DOMAIN= should be a unique dedicated sub-domain assigned to your
+Docker server (e.g., =pi.example.com=). This becomes the default root
+domain for every app you install (e.g., =whoami.pi.example.com=.) The
+default name is only a suggestion and each app can set whatever domain
+name they want.
 
- * =pi=
- * =sentry=
+#+attr_shortcode: :style info :title ROOT_DOMAIN
+#+begin_notice
+Having a default domain name for each app, one that is unique,
+determinstic, and identifiable, will greatly simplify the creation of
+DNS records and TLS certificates. With the use of wildcard domain
+records, e.g., =*.pi.example.com=, you only have to setup DNS records
+once per Docker host, even if you install more apps later. In this
+book, =pi= is just a short identifier to make these URLs unique to a
+particular Docker host. The actual interstitial name can be whatever
+you like.
+#+end_notice
 
-These aliases can be used to directly interact with that particular
-context without requiring the use of setting the context first (e.g.,
-=d context use= is unnecessary). These aliases will be used throughout
-this book.
+**** SSH_HOST (optional)
 
-You can see how they each of the aliases are constructed:
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+A "sworkstation" is defined as a hybrid workstation and server, so by
+definition, the sworkstation should be controlling itself. Therfore,
+the default =SSH_HOST= is =localhost=. You don't need to change this
+unless you are making a pure workstation that would be remote
+controlling another pure server.
+#+end_notice
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-alias d
-alias pi
-alias sentry
-#+end_run
+**** CONTEXT (optional)
 
-#+begin_stdout
-alias d='D_RYMCG_TECH_CLI_ALIAS=d d.rymcg.tech '
-alias pi='D_RYMCG_TECH_CONTEXT_ALIAS=pi d.rymcg.tech tmp-context pi d.rymcg.tech'
-alias sentry='D_RYMCG_TECH_CONTEXT_ALIAS=sentry d.rymcg.tech tmp-context sentry d.rymcg.tech'
-#+end_stdout
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The default Docker context will be created with the same name as
+=SSH_HOST= (=localhost=). You don't need to set this unless you need
+to rename the Docker context for some reason.
+#+end_notice
 
-Full tab completion is supported for all of the aliases.
 
-*** Run the main config
+**** SYSBOX (optional)
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_run
-pi config
-#+end_run
+If you need to grant special privileges to your containers, you may do
+so with [[https://github.com/nestybox/sysbox#readme][Sysbox]]:
 
-*** Follow the interactive prompts to finish configuration
-**** Install script-wizard
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
-#+begin_stdout
-This utility can automatically install a required helper tool called script-wizard.
-See https://github.com/enigmacurry/script-wizard
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+This is only required for some special cases, e.g., rootless
+[[https://hub.docker.com/_/docker/][Docker-in-Docker]], [[https://github.com/openfaas/faasd/][Faasd]], or any image that runs systemd. Set
+=SYSBOX=true= to enable it.
 
-Do you wish to automatically install script-wizard into `_scripts/script-wizard`? (Y/n): y
-#+end_stdout
-
-[[https://github.com/EnigmaCurry/script-wizard][script-wizard]] is required dependency that can be downloaded and
-installed automatically. =script-wizard= makes interactive input and
-selection wizards in Bash a lot nicer.
-
-**** Acknowledge the detected Docker context
-#+begin_stdout
-? This will make a configuration for the current docker context (pi). Proceed? (Y/n)  y
-#+end_stdout
-**** Choose the root domain name for this server
-
-#+begin_stdout
-ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
-: pi.example.com
-#+end_stdout
-
-Instead of =pi.example.com= you should type the actual domain name (or
-subdomain name) that you want to use as the root domain for all of
-your services on this server.
-
-For example, if you entered =example.com=, you will later install apps
-(e.g., =whoami=) with subdomains like =whoami.example.com=. Choosing a
-deeper subdomain has the benefit of being able to share a single root
-domain name amongst several Docker instances, therefore with the
-example of =pi.example.com= the service would be deployed like
-=whoami.pi.example.com=, and a second Docker instance could use
-=pi2.example.com=, with services like =whoami.pi2.example.com=.
-
-**** Choose to save generated passwords.json files by default
-#+begin_stdout
-Every time you configure HTTP Basic Authentication, you are asked if you wish to save the cleartext passwords
-into passwords.json (in each project directory). If you were to press Enter without answering the question,
-the default answer is No (displayed as y/N). You may change the default response to Yes (displayed as Y/n).
-? Do you want to save cleartext passwords in passwords.json by default? (y/N)  y
-#+end_stdout
-
-This question is in regards to the integrated HTTP Basic Auth setting,
-which allows you to store the plain text credentials in the file named
-=passwords.json= in the various project directories. This is a
-convenience feature, but you may not want it. It's not really a
-security concern, because the same password is also availalbe in the
-.env file for the project anyway, so go ahead and enable it.
+You may also export =SYSBOX_URL= to point to a particular [[https://github.com/nestybox/sysbox/releases][release
+package URL]] to install.
+#+end_notice
 
 ** Install Traefik
 :PROPERTIES:
@@ -1996,7 +1756,7 @@ index
      * Port Range: =2223=
      * Sources: All IPv4, All IPv6, or a specific set of static IP
        addresses if you want to be more secure.
-     * Description: /Optional/ - this is so you can use [[http://localhost:1313/portable-docker/install-web-services/sftp/][SFTP]].
+     * Description: /Optional/ - this is so you can use [[/portable-docker/install-web-services/sftp/][SFTP]].
   * Click =Create Firewall=.
 #+end_notice
 
@@ -6880,10 +6640,395 @@ hardware issue.
 index
 #+end_index
 
+** Manual installation
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: manual-installation
+:EXPORT_HUGO_WEIGHT: 10000
+:END:
+
+*** Manual installation
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 10100
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+These are the manual steps you can take if you do not wish to run [[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/][the
+automated script]].
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+*** Set up SSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: 010110-set-up-ssh
+:EXPORT_HUGO_WEIGHT: 10110
+:EXPORT_HUGO_SLUG: set-up-ssh
+:END:
+
+The Docker context is controlled exclusively through SSH, as the
+=root= user. This requires setting up some keys to allow the =pi= user
+to access the =root= user's account.
+
+Although you will not need to interact with the =root= user's shell
+directly, the =pi= user will be granted full access to =root= via SSH.
+
+#+begin_mermaid
+graph LR;
+    subgraph Raspberry Pi
+        pi[User: pi]
+        root[User: root]
+        pi -->|Docker SSH context\nto root@localhost| root
+    end
+
+    RemoteComputer[Personal\nWorkstation] -->|ssh pi@pi| pi
+#+end_mermaid
+
+
+#+attr_shortcode: :style warning :title Docker == root == pi
+#+begin_notice
+SSH is used here almost like =sudo=. The =pi= user should be treated
+with the same respect as the =root= user, as it will be granted full
+=root= access through SSH (to localhost).
+#+end_notice
+
+***** Create a new SSH key
+
+You need to create a new SSH key for the =pi= user.
+
+#+attr_shortcode: :style warning :title Unencrypted SSH keys are used for convenience
+#+begin_notice
+To connect to the Docker context requires that your SSH key be already
+/decrypted/.
+
+There's only two ways to do that:
+
+ * Create an /unencrypted/ SSH key, so that no passphrase is ever
+    required.
+ -or-
+ * Set up an ssh-agent to decrypt and load the unencrypted key into
+    resident memory, so that your key can be used without requiring a
+    passphrase.
+
+For the sake of convenience, this guide will use the first method, and
+create a new /unencrypted/ SSH key, living in the pi user's home
+directory: =/home/pi/.ssh/id_ed25519=. The security of this key
+depends upon the physical and network security of the device
+(including SD card). Any user gaining entry to the =pi= user's account
+will have access to the key, and no passphrase is required to use the
+key.
+
+If you wish to enhance the security of your SSH key, please read the
+[[https://wiki.archlinux.org/title/SSH_keys][Arch Wiki article on SSH keys]], which covers generating secure SSH
+keys, setting a passphrase, and setting up an ssh-agent with [[https://wiki.archlinux.org/title/SSH_keys#Keychain][Keychain]].
+
+You may also protect the integrity of the SD card (at rest) with [[https://gist.github.com/EnigmaCurry/2f9bed46073da8e38057fe78a61e7994][full
+disk encryption and remote unlock via SSH]].
+#+end_notice
+
+Create a new SSH key (without a passphrase):
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+#+end_run
+
+***** Authorize the key of the pi user to connect as root
+
+All interaction with Docker is done over SSH as the =root= user, so
+for the =pi= user to control Docker, they need to be able to SSH to
+=localhost= as the =root= user.
+
+Add the =pi= user's key to the root user's
+=/root/.ssh/authorized_keys= file:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+cat ~/.ssh/id_ed25519.pub | sudo tee -a /root/.ssh/authorized_keys
+#+end_run
+
+Create a config named =pi= in your =~/.ssh/config=:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+cat &lt;&lt;EOF &gt&gt ~/.ssh/config
+Host pi
+    User root
+    Hostname localhost
+    ControlMaster auto
+    ControlPersist yes
+    ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+Test the connection is working:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+ssh pi whoami
+#+end_run
+
+Accept the key fingerprint it offers:
+
+#+begin_stdout
+The authenticity of host 'localhost (::1)' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+#+end_stdout
+
+If it worked, you should see the output of =whoami= which should print
+the username =root= (which is the user configured by SSH).
+
+*** Install Docker
+:PROPERTIES:
+:EXPORT_FILE_NAME: 010200-install-docker
+:EXPORT_HUGO_WEIGHT: 10200
+:EXPORT_HUGO_SLUG: install-docker
+:END:
+
+**** Install Docker
+
+ * On the pi, install docker:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run   
+curl -sSL https://get.docker.com | sh
+#+end_run
+
+ * Test docker is working: 
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo docker run hello-world
+#+end_run
+
+  * If working, you should see a =Hello from Docker!= message and some other help info.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Normally, you shouldn't use =sudo docker=. In the next section you
+will create a Docker context for the =pi= user to use directly.
+#+end_notice
+  
+**** Set up Docker context (SSH)
+
+[[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] requires the use of a [[https://docs.docker.com/engine/manage-resources/contexts/][Docker context]] via SSH, rather than
+the default socket context.
+
+Create a new docker context, named =pi=, using the SSH config you had
+just created (also called =pi=):
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+docker context create pi --docker "host=ssh://pi"
+#+end_run
+
+Switch to use the new SSH context as the default:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+docker context use pi
+#+end_run
+
+Now, when you run any docker command, it will use the SSH context:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+docker info | grep -iE "(Name|Context)"
+#+end_run
+
+This should print the proper context: =pi=.
+
+If it worked, the =pi= user is now fully equipped to run any docker comamnd as =root=.
+
+*** Install d.rymcg.tech
+:PROPERTIES:
+:EXPORT_FILE_NAME: 010300-install-d-rymcg-tech
+:EXPORT_HUGO_WEIGHT: 10300
+:EXPORT_HUGO_SLUG: install-d-rymcg-tech
+:END:
+
+**** Install dependencies
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sudo apt-get update && \
+sudo apt-get install -y bash build-essential gettext \
+     git openssl apache2-utils xdg-utils jq sshfs \
+     wireguard curl inotify-tools w3m && \
+( cd $(mktemp -d) && wget -O step-cli.deb \
+  https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_$(dpkg --print-architecture).deb && \
+  sudo dpkg -i step-cli.deb && rm -f step-cli.deb )
+#+end_run
+
+**** Clone the git repository
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+git clone https://github.com/EnigmaCurry/d.rymcg.tech.git \
+    ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+
+cd ${HOME}/git/vendor/enigmacurry/d.rymcg.tech
+#+end_run
+
+**** Configure Bash shell integration
+
+Configure the =pi= user's =~/.bashrc= file:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+cat &lt;&lt;'EOF' &gt&gt ~/.bashrc
+export EDITOR=nano
+
+## d.rymcg.tech cli tool:
+export PATH=${PATH}:${HOME}/git/vendor/enigmacurry/d.rymcg.tech/_scripts/user
+eval "$(d.rymcg.tech completion bash)"
+__d.rymcg.tech_cli_alias d
+
+## Add d.rymcg.tech alias for each Docker context:
+__d.rymcg.tech_context_alias pi
+__d.rymcg.tech_context_alias sentry
+
+EOF
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Set =EDITOR= to your preferred console text editor.
+#+end_notice
+
+Once finished, logout of the Pi and log back in.
+
+Now you should have a new alias named =d= that controls the
+=d.rymcg.tech= toolset. Check out the main help screen:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+d
+#+end_run
+
+#+begin_stdout
+## Main d.rymcg.tech sub-commands - Optional arguments are printed in brackets [OPTIONAL_ARG]
+cd [SUBDIR]                   Enter a sub-shell and go to the ROOT_DIR directory (or given subdirectory)
+make [PROJECT] [ARGS ...]     Run a `make` command for the given d.rymcg.tech project name
+context                       View or set the current Docker context
+new-context                   Create a new Docker context
+tmp-context                   Use a temporary Docker context in a sub-shell
+config                        Configure the current Docker context
+ssh [COMMAND ...]             Run command or shell on active docker context SSH host
+completion                    Setup TAB completion in your shell
+install                       Install an app interactively
+install-docker                Install Docker Engine on the host
+status                        Show status of all installed services
+audit                         Print security audit of running containers
+
+## Documentation sub-commands:
+help                          Show this help screen
+list                          List available d.rymcg.tech projects
+                              (not including external projects, unless you symlink them into ROOT_DIR)
+readme                        Open the main d.rymcg.tech README.md in your browser
+readme [PROJECT]              Open the README.md for the given project name
+readme digitalocean           Open root documentation file: DIGITALOCEAN.md
+readme security               Open root documentation file: SECURITY.md
+readme aws                    Open root documentation file: AWS.md
+readme license                Open root documentation file: LICENSE.txt
+readme raspberry_pi           Open root documentation file: RASPBERRY_PI.md
+readme makefile_ops           Open root documentation file: MAKEFILE_OPS.md
+#+end_stdout
+
+There are two additional aliases created for each of the Docker contexts:
+
+ * =pi=
+ * =sentry=
+
+These aliases can be used to directly interact with that particular
+context without requiring the use of setting the context first (e.g.,
+=d context use= is unnecessary). These aliases will be used throughout
+this book.
+
+You can see how they each of the aliases are constructed:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+alias d
+alias pi
+alias sentry
+#+end_run
+
+#+begin_stdout
+alias d='D_RYMCG_TECH_CLI_ALIAS=d d.rymcg.tech '
+alias pi='D_RYMCG_TECH_CONTEXT_ALIAS=pi d.rymcg.tech tmp-context pi d.rymcg.tech'
+alias sentry='D_RYMCG_TECH_CONTEXT_ALIAS=sentry d.rymcg.tech tmp-context sentry d.rymcg.tech'
+#+end_stdout
+
+Full tab completion is supported for all of the aliases.
+
+**** Run the main config
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+pi config
+#+end_run
+
+**** Follow the interactive prompts to finish configuration
+**** Install script-wizard
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_stdout
+This utility can automatically install a required helper tool called script-wizard.
+See https://github.com/enigmacurry/script-wizard
+
+Do you wish to automatically install script-wizard into `_scripts/script-wizard`? (Y/n): y
+#+end_stdout
+
+[[https://github.com/EnigmaCurry/script-wizard][script-wizard]] is required dependency that can be downloaded and
+installed automatically. =script-wizard= makes interactive input and
+selection wizards in Bash a lot nicer.
+
+**** Acknowledge the detected Docker context
+#+begin_stdout
+? This will make a configuration for the current docker context (pi). Proceed? (Y/n)  y
+#+end_stdout
+**** Choose the root domain name for this server
+
+#+begin_stdout
+ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
+: pi.example.com
+#+end_stdout
+
+Instead of =pi.example.com= you should type the actual domain name (or
+subdomain name) that you want to use as the root domain for all of
+your services on this server.
+
+For example, if you entered =example.com=, you will later install apps
+(e.g., =whoami=) with subdomains like =whoami.example.com=. Choosing a
+deeper subdomain has the benefit of being able to share a single root
+domain name amongst several Docker instances, therefore with the
+example of =pi.example.com= the service would be deployed like
+=whoami.pi.example.com=, and a second Docker instance could use
+=pi2.example.com=, with services like =whoami.pi2.example.com=.
+
+**** Choose to save generated passwords.json files by default
+#+begin_stdout
+Every time you configure HTTP Basic Authentication, you are asked if you wish to save the cleartext passwords
+into passwords.json (in each project directory). If you were to press Enter without answering the question,
+the default answer is No (displayed as y/N). You may change the default response to Yes (displayed as Y/n).
+? Do you want to save cleartext passwords in passwords.json by default? (y/N)  y
+#+end_stdout
+
+This question is in regards to the integrated HTTP Basic Auth setting,
+which allows you to store the plain text credentials in the file named
+=passwords.json= in the various project directories. This is a
+convenience feature, but you may not want it. It's not really a
+security concern, because the same password is also availalbe in the
+.env file for the project anyway, so go ahead and enable it.
+
 ** Private ACME
 :PROPERTIES:
-:EXPORT_FILE_NAME: 010001-Private ACME
-:EXPORT_HUGO_WEIGHT: 10001
+:EXPORT_FILE_NAME: 010100-Private ACME
+:EXPORT_HUGO_WEIGHT: 10100
 :EXPORT_HUGO_SLUG: Private ACME
 :END:
 
@@ -6891,8 +7036,8 @@ TODO
 
 ** Mutual TLS for Web and Mobile
 :PROPERTIES:
-:EXPORT_FILE_NAME: 010010-Mutual TLS for Web and Mobile
-:EXPORT_HUGO_WEIGHT: 10010
+:EXPORT_FILE_NAME: 010200-Mutual TLS for Web and Mobile
+:EXPORT_HUGO_WEIGHT: 10200
 :EXPORT_HUGO_SLUG: Mutual TLS for Web and Mobile
 :END:
 
