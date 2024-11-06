@@ -964,7 +964,16 @@ sudo chattr +i /etc/resolv.conf
 :END:
 
 The installation process for Docker and d.rymcg.tech is fully
-automated via bash script:
+automated via bash environment variable and a downloaded script.
+
+#+attr_shortcode: :style info :title Info
+#+begin_notice
+Before running the command below, you should edit it to set a custom
+=ROOT_DOMAIN=, which is to be a dedicated sub-domain assigned to the
+Pi. The =ALIASES= variable is already preset with the aliases you'll
+be needing for this book: =pi= and =sentry=.
+#+end_notice
+
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
@@ -974,25 +983,33 @@ bash <(curl -L
 https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true)
 #+end_run
 
-#+attr_shortcode: :style info :title Info
-#+begin_notice
-You should edit the command above and set a custom =ROOT_DOMAIN=
-before running it, which is to be a dedicated sub-domain assigned to
-the Pi. The =ALIASES= variable is already preset with the aliases you'll
-be needing for this book: =pi= and =sentry=.
-#+end_notice
+Once the script has finished, log out from the Pi and log back in. You
+are done, and you may proceed to the next section ([[/portable-docker/set-up-raspberry-pi/install-traefik/index.html][Install Traefik]]).
 
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
-The script is designed only to be run on a freshly installed
-Debian-based system (including Raspberry Pi OS).
+If you don't like running automatic scripts, you can follow the [[/portable-docker/appendix/manual-installation/index.html][manual
+installation steps]] listed in the appendix.
 
-If you are wary of running curlbombs (you should be) you may review
-the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh)]] and then copy and paste the
-entire contents into the shell.
+This script is designed only to be run on a freshly installed
+*Debian*-derived system (including Raspberry Pi OS).
 
-If you would rather set things up manually, you may skip this section
-and follow the step by step instructions [[/portable-docker/appendix/manual-installation/][in the appendix]].
+If you are wary of running curlbombs (you should be) you may want to
+download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and then
+run it manually:
+
+#+begin_example
+## Download and set executable:
+curl -LO https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true
+chmod a+x ./bootstrap_sworkstation.sh
+
+## Set the config variables as exported:
+export ROOT_DOMAIN=pi.example.com
+export ALIASES=pi,sentry
+
+## Examine the script before running it.
+## Run it: ./bootstrap_sworkstation.sh
+#+end_example
 #+end_notice
 
 *** Script configuration
@@ -1002,23 +1019,18 @@ Here are the environment variables that the bootstrap script supports:
 **** ALIASES
 
 Throughout this book, a short command alias is used to control the
-d.rymcg.tech Docker context of the local host, named =pi=, but you can
-set this to any name you like.
-
-**** CONTEXT
-
-#+attr_shortcode: :style tip :title Tip
-#+begin_notice
-You only need to set =CONTEXT= if you want to name the Docker context
-something other than =${ALIASES}=
+d.rymcg.tech Docker context of the local host (named =pi=) and another
+alias for the remote sentry (named =sentry=), but you can rename these
+aliases to any names you like. =ALIASES= is a comma separated list of
+alias names to create: =pi,sentry=.
 
 **** ROOT_DOMAIN
 
 =ROOT_DOMAIN= should be a unique dedicated sub-domain assigned to your
 Docker server (e.g., =pi.example.com=). This becomes the default root
 domain for every app you install (e.g., =whoami.pi.example.com=.) The
-default name is only a suggestion, and each app can set whatever
-domain name they want.
+default name is only a suggestion and each app can set whatever domain
+name they want.
 
 #+attr_shortcode: :style info :title ROOT_DOMAIN
 #+begin_notice
@@ -1032,7 +1044,28 @@ particular Docker host. The actual interstitial name can be whatever
 you like.
 #+end_notice
 
-**** SYSBOX
+**** SSH_HOST (optional)
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+A "sworkstation" is defined as a hybrid workstation and server, so by
+definition, the sworkstation should be controlling itself. Therfore,
+the default =SSH_HOST= is =localhost=. You don't need to change this
+unless you are making a pure workstation that would be remote
+controlling another pure server.
+#+end_notice
+
+**** CONTEXT (optional)
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The default Docker context will be created with the same name as
+=SSH_HOST= (=localhost=). You don't need to set this unless you need
+to rename the Docker context for some reason.
+#+end_notice
+
+
+**** SYSBOX (optional)
 
 If you need to grant special privileges to your containers, you may do
 so with [[https://github.com/nestybox/sysbox#readme][Sysbox]]:
@@ -1040,13 +1073,8 @@ so with [[https://github.com/nestybox/sysbox#readme][Sysbox]]:
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
 This is only required for some special cases, e.g., rootless
-[[https://hub.docker.com/_/docker/][Docker-in-Docker]], [[https://github.com/openfaas/faasd/][Faasd]], or any image that runs systemd:
-
-#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
-#+begin_run
-## Enable sysbox only if required:
-export SYSBOX=true
-#+end_run
+[[https://hub.docker.com/_/docker/][Docker-in-Docker]], [[https://github.com/openfaas/faasd/][Faasd]], or any image that runs systemd. Set
+=SYSBOX=true= to enable it.
 
 You may also export =SYSBOX_URL= to point to a particular [[https://github.com/nestybox/sysbox/releases][release
 package URL]] to install.
@@ -1728,7 +1756,7 @@ index
      * Port Range: =2223=
      * Sources: All IPv4, All IPv6, or a specific set of static IP
        addresses if you want to be more secure.
-     * Description: /Optional/ - this is so you can use [[http://localhost:1313/portable-docker/install-web-services/sftp/][SFTP]].
+     * Description: /Optional/ - this is so you can use [[/portable-docker/install-web-services/sftp/][SFTP]].
   * Click =Create Firewall=.
 #+end_notice
 
