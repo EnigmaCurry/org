@@ -560,6 +560,14 @@ to create a unique token for each host.
 :EXPORT_HUGO_SLUG: _index
 :END:
 [[/img/portable-docker/rpi-handover.webp]]
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+If you are not using a Raspberry Pi, you can skip to the [[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/index.html][Install
+d.rymcg.tech]] section
+#+end_notice
+
+
 #+attr_shortcode: :depth 999
 #+begin_index
 index
@@ -985,7 +993,7 @@ variables defined at the top:
 #+begin_run
 ROOT_DOMAIN=pi.example.com \
 ALIASES=pi,sentry \
-bash <(curl -L
+bash <(curl -L \
 https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh?raw=true)
 #+end_run
 
@@ -1879,11 +1887,27 @@ You now need to be able to control the droplet's =root= user from the
 [[/img/portable-docker/configure.webp]]
 
 #+begin_mermaid
-graph LR;
-    Workstation[Personal Workstation] -->|SSH| RaspberryPi[Raspberry Pi]
+---
+title: Docker admin over SSH
+---
+
+graph TD;
+    classDef dottedBox stroke-dasharray: 5 5;
+    Workstation[Personal Workstation] -->|SSH| RaspberryPi[Raspberry Pi - Docker admin]
     RaspberryPi -->|SSH| Sentry[Sentry]
+    RaspberryPi .->|SSH| Docker2[Docker 2, 3, etc.]
+    class Docker2 dottedBox;
 #+end_mermaid
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may want to share a single sentry among several Docker servers at
+various locations, and this is supported, but you should designate
+only *one machine* as the main configuration point (Docker admin) for
+all other contexts. In this example, the Raspberry Pi is the Docker
+admin who controls all other Docker servers, but your Personal
+Workstation or even the sentry could fulfill this role instead.
+#+end_notice
 
 *** Append to the SSH config on the Pi
  
@@ -2483,7 +2507,7 @@ network of the Pi to be setup:
    always have internet access and you still want to access these
    services? If so, choose =No=.
  * The more secure option is to choose =Yes= and always go through the
-   sentry. This will block access between the Pi and your LAN.
+   sentry. This will block access between the Pi and your LAN. You should 
 
 Regardless of this choice, the SSH service will be provided to the
 LAN, so you can change this setting at any time.
