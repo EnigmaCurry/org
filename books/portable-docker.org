@@ -98,10 +98,12 @@ this server back online.
 #+attr_shortcode: :style tip :title You can use any Linux computer, not just Raspberry Pi.
 #+begin_notice
 To follow this book, you don't necessarily require a Raspberry Pi. You
-can replace it with any Linux computer (AMD64 or ARM64). The
-instructions for installing its dependencies assume it to be running a
-variant of Debian Linux, but this is not a requirement either, if you
-can read between the lines.
+can replace it with any Linux computer or virtual machine (AMD64 or
+ARM64). The instructions provided for installing the required packages
+assumes your machine to be running a variant of *Debian Linux* (such
+as Debian, Raspberry Pi OS, Ubuntu, etc.), but this is not a
+requirement either, as long as your platform supports Docker, and you
+can follow the [[/portable-docker/appendix/manual-installation/][manual installation steps]].
 #+end_notice
 
 ** Sentry Droplet
@@ -874,7 +876,7 @@ sudo parted /dev/nvme0n1 --script mklabel gpt
 sudo parted /dev/nvme0n1 --script mkpart primary ext4 0% 100%
 #+end_run
 
-**** Create filesystem
+**** Create the filesystem
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -963,17 +965,21 @@ sudo chattr +i /etc/resolv.conf
 :EXPORT_HUGO_SLUG: install-docker-and-d.rymcg.tech
 :END:
 
-The installation process for Docker and d.rymcg.tech is fully
-automated via bash environment variable and a downloaded script.
+The installation process for [[https://docs.docker.com/engine/install/][Docker]] and [[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] can be automated
+by the following Bash script.
 
-#+attr_shortcode: :style info :title Info
+#+attr_shortcode: :style info :title Info 
 #+begin_notice
-Before running the command below, you should edit it to set a custom
-=ROOT_DOMAIN=, which is to be a dedicated sub-domain assigned to the
-Pi. The =ALIASES= variable is already preset with the aliases you'll
-be needing for this book: =pi= and =sentry=.
-#+end_notice
+Before running the command below, you should edit the environment
+variables defined at the top:
 
+ * =ROOT_DOMAIN= needs to be a dedicated sub-domain name assigned to
+   the Pi (e.g., =pi.example.com=).
+
+ * =ALIASES= is already preset with the aliases you'll be needing for
+   this book: =pi= and =sentry=. You may customize the names here if
+   you wish.
+#+end_notice
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
@@ -991,12 +997,9 @@ are done, and you may proceed to the next section ([[/portable-docker/set-up-ras
 If you don't like running automatic scripts, you can follow the [[/portable-docker/appendix/manual-installation/index.html][manual
 installation steps]] listed in the appendix.
 
-This script is designed only to be run on a freshly installed
-*Debian*-derived system (including Raspberry Pi OS).
-
 If you are wary of running curlbombs (you should be) you may want to
-download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and then
-run it manually:
+download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and run it
+manually:
 
 #+begin_example
 ## Download and set executable:
@@ -1010,6 +1013,10 @@ export ALIASES=pi,sentry
 ## Examine the script before running it.
 ## Run it: ./bootstrap_sworkstation.sh
 #+end_example
+
+This script is designed only to be run on a freshly installed
+*Debian*-derived system (including Raspberry Pi OS). [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh][There is another
+script for machines running Fedora]].
 #+end_notice
 
 *** Script configuration
@@ -6653,8 +6660,21 @@ index
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-These are the manual steps you can take if you do not wish to run [[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/][the
+These are the manual steps you can take if you do not wish to run
+[[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/][the
 automated script]].
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+There are actually two automated scripts:
+
+ 1) The [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][Debian version]], which is described earlier in this book.
+ 2) The [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh][Fedora version]], which is not covered in this book but is very
+    similar to the Debian version.
+
+This section won't use either of them, but I thought you might want to
+know.
+#+end_notice
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -6791,6 +6811,10 @@ the username =root= (which is the user configured by SSH).
 
 **** Install Docker
 
+[[https://docs.docker.com/engine/install/][Follow the official guide to installing Docker Engine]].
+
+There is also an official installer script you may run:
+
  * On the pi, install docker:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
@@ -6798,14 +6822,15 @@ the username =root= (which is the user configured by SSH).
 curl -sSL https://get.docker.com | sh
 #+end_run
 
- * Test docker is working: 
+ * Test that docker is working:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
 sudo docker run hello-world
 #+end_run
 
-  * If working, you should see a =Hello from Docker!= message and some other help info.
+  * If it's working, you should see a =Hello from Docker!= message and
+    some other help info.
 
 #+attr_shortcode: :style tip
 #+begin_notice
