@@ -98,10 +98,12 @@ this server back online.
 #+attr_shortcode: :style tip :title You can use any Linux computer, not just Raspberry Pi.
 #+begin_notice
 To follow this book, you don't necessarily require a Raspberry Pi. You
-can replace it with any Linux computer (AMD64 or ARM64). The
-instructions for installing its dependencies assume it to be running a
-variant of Debian Linux, but this is not a requirement either, if you
-can read between the lines.
+can replace it with any Linux computer or virtual machine (AMD64 or
+ARM64). The instructions provided for installing the required packages
+assumes your machine to be running a variant of *Debian Linux* (such
+as Debian, Raspberry Pi OS, Ubuntu, etc.), but this is not a
+requirement either, as long as your platform supports Docker, and you
+can follow the [[/portable-docker/appendix/manual-installation/][manual installation steps]].
 #+end_notice
 
 ** Sentry Droplet
@@ -874,7 +876,7 @@ sudo parted /dev/nvme0n1 --script mklabel gpt
 sudo parted /dev/nvme0n1 --script mkpart primary ext4 0% 100%
 #+end_run
 
-**** Create filesystem
+**** Create the filesystem
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -963,17 +965,21 @@ sudo chattr +i /etc/resolv.conf
 :EXPORT_HUGO_SLUG: install-docker-and-d.rymcg.tech
 :END:
 
-The installation process for Docker and d.rymcg.tech is fully
-automated via bash environment variable and a downloaded script.
+The installation process for [[https://docs.docker.com/engine/install/][Docker]] and [[https://github.com/enigmacurry/d.rymcg.tech][d.rymcg.tech]] can be automated
+by the following Bash script.
 
-#+attr_shortcode: :style info :title Info
+#+attr_shortcode: :style info :title Info 
 #+begin_notice
-Before running the command below, you should edit it to set a custom
-=ROOT_DOMAIN=, which is to be a dedicated sub-domain assigned to the
-Pi. The =ALIASES= variable is already preset with the aliases you'll
-be needing for this book: =pi= and =sentry=.
-#+end_notice
+Before running the command below, you should edit the environment
+variables defined at the top:
 
+ * =ROOT_DOMAIN= needs to be a dedicated sub-domain name assigned to
+   the Pi (e.g., =pi.example.com=).
+
+ * =ALIASES= is already preset with the aliases you'll be needing for
+   this book: =pi= and =sentry=. You may customize the names here if
+   you wish.
+#+end_notice
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
@@ -991,12 +997,9 @@ are done, and you may proceed to the next section ([[/portable-docker/set-up-ras
 If you don't like running automatic scripts, you can follow the [[/portable-docker/appendix/manual-installation/index.html][manual
 installation steps]] listed in the appendix.
 
-This script is designed only to be run on a freshly installed
-*Debian*-derived system (including Raspberry Pi OS).
-
 If you are wary of running curlbombs (you should be) you may want to
-download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and then
-run it manually:
+download and review the script ([[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][bootstrap_sworkstation.sh]]) and run it
+manually:
 
 #+begin_example
 ## Download and set executable:
@@ -1010,6 +1013,10 @@ export ALIASES=pi,sentry
 ## Examine the script before running it.
 ## Run it: ./bootstrap_sworkstation.sh
 #+end_example
+
+This script is designed only to be run on a freshly installed
+*Debian*-derived system (including Raspberry Pi OS). [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh][There is another
+script for machines running Fedora]].
 #+end_notice
 
 *** Script configuration
@@ -2379,67 +2386,16 @@ sentry make traefik install
 
 *** Reconfigure Traefik to add a Layer 7 route to the Raspberry Pi
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi whoami.pi.example.com
+#+end_run
 
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-> Do you want to enable the layer 7 TLS proxy? Yes
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: whoami.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-##
-## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint              Destination_address  Destination_port  Proxy_protocol
-----------              -------------------  ----------------  --------------
-whoami.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= multiple times to back out to the main menu. On the main
-menu, select =Install=, to re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-Once re-installed, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Find the wireguard peer config
 
@@ -2889,68 +2845,16 @@ pi make forgejo install
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi git.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: git.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint           Destination_address  Destination_port  Proxy_protocol
-----------           -------------------  ----------------  --------------
-git.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
-
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Finish Forgejo installation
 
@@ -3128,73 +3032,22 @@ Enter the protocol (tcp or udp):
 SSH does not support [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], so be sure to disable it.
 #+end_notice
 
-Press =ESC= three times to go back to the main menu.
+Press =ESC= four times to quit the config tool.
 
-**** Create a route from the sentry to the Pi
+**** Create a route from the forgejo entrytpoint to the Pi
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-  
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-  Logging level
-  Access logs
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi forgejo \
+  --layer4 --proxy-protocol false
+#+end_run
 
-? Traefik routes  
-  Configure layer 7 TLS proxy
-> Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-## Layer 4 TCP/UDP Proxy is DISABLED.
-? Do you want to enable the layer 4 TCP/UDP proxy? (y/N) Yes
-  
-? Layer 4 TCP/UDP Proxy:  
-  List layer 4 ingress routes
-> Add new layer 4 ingress route
-  Remove layer 4 ingress routes
-  Disable layer 4 TCP/UDP Proxy
-
-? Entrypoint  
-> forgejo
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 2222
-
-##
-## See https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt
-
-> Do you want to enable Proxy Protocol for this route? No
-Set TRAEFIK_LAYER_4_TCP_UDP_PROXY_ROUTES=ssh_pi:10.13.16.2:22:0,forgejo:10.13.16.2:2222:0
-## Configured Layer 4 Routes:
-Entrypoint  Destination_address  Destination_port  Proxy_protocol
-----------  -------------------  ----------------  --------------
-forgejo     10.13.16.2           2222              0
-#+end_stdout
-
-Press =ESC= three times to go back to main menu, then re-install
-Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-Once reinstalled, press =ESC= to exit the config tool.
-
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
+ 
 **** Test cloning a repository via SSH
 
  * Login to your Forgejo instance
@@ -3307,67 +3160,16 @@ pi make traefik-forward-auth install
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi auth.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: auth.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint           Destination_address  Destination_port  Proxy_protocol
-----------           -------------------  ----------------  --------------
-auth.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Add user groups for sentry authorization
 
@@ -3896,73 +3698,22 @@ After installation, press =ESC= to quit the config tool.
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi ca.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: ca.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint         Destination_address  Destination_port  Proxy_protocol
-----------         -------------------  ----------------  --------------
-ca.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Log in with the step-cli client
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-pi make step-ca client-bootstrap 
+pi make step-ca client-bootstrap
 #+end_run
 
 #+begin_stdout
@@ -4211,6 +3962,19 @@ n? No
 pi make registry install
 #+end_run
 
+*** Add a new route on the sentry
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi registry.pi.example.com
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
+
 *** Configure Docker client
 
 To use the registry, configure the docker client on the pi:
@@ -4374,69 +4138,16 @@ All services healthy.
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi immich.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: immich.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint              Destination_address  Destination_port  Proxy_protocol
-----------              -------------------  ----------------  --------------
-immich.pi.example.com  10.13.16.2           443               2
-whoami.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
-
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Finish
 
@@ -4510,63 +4221,18 @@ Install thttpd:
 pi make thttpd install
 #+end_run
 
-**** Configure the thttpd route on the sentry
+**** Add a new route on the sentry
 
-#+attr_shortcode: :style secondary :title Run this on the Raspberry Pi
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi www.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: www.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, then re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-Once re-installed, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 **** Open the website in your browser
 
@@ -4695,62 +4361,17 @@ Press =ESC= three times to go back to the main menu.
 
 **** Create the SFTP route on the sentry
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi sftp \
+  --layer4 --proxy-protocol false
+#+end_run
 
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / Wireguard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-  Configure layer 7 TLS proxy
-> Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 4 TCP/UDP Proxy:  
-  List layer 4 ingress routes
-> Add new layer 4 ingress route
-  Remove layer 4 ingress routes
-  Disable layer 4 TCP/UDP Proxy
-
-? Entrypoint  
-> sftp
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 2223
-
-> Do you want to enable Proxy Protocol for this route? No
-#+end_stdout
-
-#+attr_shortcode: :style warning :title Do not enable Proxy Protocol
+#+attr_shortcode: :style tip :title Tip
 #+begin_notice
-SSH does not support [[https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt][Proxy Protocol]], so be sure to disable it.
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
 #+end_notice
-
-
-Press =ESC= three times to go back to the main menu, then re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-Once re-installed, press =ESC= to exit the config tool.
 
 *** Authorize your client's SSH public key
 
@@ -5026,91 +4647,19 @@ pi make minio install wait
 
 Create a route for S3 and the console:
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi s3.pi.example.com \
+  --restart false
+sentry route set pi s3-console.pi.example.com \
+  --restart true
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: s3.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint         Destination_address  Destination_port  Proxy_protocol
-----------         -------------------  ----------------  --------------
-s3.pi.example.com  10.13.16.2           443               2
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: s3-console.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint                 Destination_address  Destination_port  Proxy_protocol
-----------                 -------------------  ----------------  --------------
-s3.pi.example.com          10.13.16.2           443               2
-s3-console.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Create an S3 bucket and credentials
 
@@ -5205,67 +4754,16 @@ ARM64.
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi filestash-test.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: filestash-test.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint                     Destination_address  Destination_port  Proxy_protocol
-----------                     -------------------  ----------------  --------------
-filestash-test.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Open Filestash
 
@@ -5435,91 +4933,22 @@ pi make homepage install wait
 You need to create two routes: one for homepage, and one for the
 webhooks:
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi \
+  homepage.pi.example.com \
+  --restart false
+
+sentry route set pi \
+  homepage-webhooks.pi.example.com \
+  --restart true
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: homepage.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint               Destination_address  Destination_port  Proxy_protocol
-----------               -------------------  ----------------  --------------
-homepage.pi.example.com  10.13.16.2           443               2
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: homepage-webhooks.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint                       Destination_address  Destination_port  Proxy_protocol
-----------                       -------------------  ----------------  --------------
-homepage.pi.example.com           10.13.16.2           443               2
-homepage-webhooks.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Open Homepage
 
@@ -5671,67 +5100,16 @@ All services healthy.
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi yourls.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: yourls.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint              Destination_address  Destination_port  Proxy_protocol
-----------              -------------------  ----------------  --------------
-yourls.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Finish
 
@@ -5822,70 +5200,16 @@ pi make nginx install wait
 
 *** Add a new route on the sentry
 
-You need to create two routes: one for homepage, and one for the
-webhooks:
-
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi nginx.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: nginx.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint            Destination_address  Destination_port  Proxy_protocol
-----------            -------------------  ----------------  --------------
-nginx.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Open Nginx webpage
 
@@ -6066,67 +5390,16 @@ pi make jupyterlab install wait
 
 *** Add a new route on the sentry
 
-#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry make traefik config
+sentry route set pi jupyterlab.pi.example.com
 #+end_run
 
-#+begin_stdout
-? Traefik:  
-> Config
-  Install (make install)
-  Admin
-  Exit (ESC)
-
-? Traefik Configuration:  
-^ Entrypoints (including dashboard)
-  TLS certificates and authorities
-  Middleware (including sentry auth)
-> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
-  Error page template
-  Logging level
-  Access logs
-
-? Traefik routes  
-> Configure layer 7 TLS proxy
-  Configure layer 4 TCP/UDP proxy
-  Configure wireguard VPN
-
-? Layer 7 TLS Proxy:  
-  List layer 7 ingress routes
-> Add new layer 7 ingress route
-  Remove layer 7 ingress routes
-  Disable layer 7 TLS Proxy
-
-Enter the public domain (SNI) for the route:
-: jupyterlab.pi.example.com
-
-Enter the destination IP address to forward to:
-: 10.13.16.2
-
-Enter the destination TCP port to forward to:
-: 443
-
-> Do you want to enable Proxy Protocol for this route? Yes
-
-## Layer 7 TLS Proxy is ENABLED.
-## Configured Layer 7 Routes:
-Entrypoint                 Destination_address  Destination_port  Proxy_protocol
-----------                 -------------------  ----------------  --------------
-jupyterlab.pi.example.com  10.13.16.2           443               2
-#+end_stdout
-
-Press =ESC= three times to go back to the main menu, and re-install Traefik:
-
-#+begin_stdout
-? Traefik:  
-  Config
-> Install (make install)
-  Admin
-  Exit (ESC)
-#+end_stdout
-
-After installation, press =ESC= to quit the config tool.
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+You may also create the route interactively through the [[/portable-docker/appendix/traefik-config-menu/#create-custom-routes][Traefik config
+menu]].
+#+end_notice
 
 *** Retrieve the login token
 
@@ -6649,12 +5922,25 @@ index
 *** Manual installation
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_WEIGHT: 10100
+:EXPORT_HUGO_WEIGHT: 10000
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-These are the manual steps you can take if you do not wish to run [[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/][the
+These are the manual steps you can take if you do not wish to run
+[[/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/][the
 automated script]].
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+There are actually two automated scripts:
+
+ 1) The [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation.sh][Debian version]], which is described earlier in this book.
+ 2) The [[https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh][Fedora version]], which is not covered in this book but is very
+    similar to the Debian version.
+
+This section won't use either of them, but I thought you might want to
+know.
+#+end_notice
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -6791,6 +6077,10 @@ the username =root= (which is the user configured by SSH).
 
 **** Install Docker
 
+[[https://docs.docker.com/engine/install/][Follow the official guide to installing Docker Engine]].
+
+There is also an official installer script you may run:
+
  * On the pi, install docker:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
@@ -6798,14 +6088,15 @@ the username =root= (which is the user configured by SSH).
 curl -sSL https://get.docker.com | sh
 #+end_run
 
- * Test docker is working: 
+ * Test that docker is working:
 
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
 sudo docker run hello-world
 #+end_run
 
-  * If working, you should see a =Hello from Docker!= message and some other help info.
+  * If it's working, you should see a =Hello from Docker!= message and
+    some other help info.
 
 #+attr_shortcode: :style tip
 #+begin_notice
@@ -7024,6 +6315,138 @@ which allows you to store the plain text credentials in the file named
 convenience feature, but you may not want it. It's not really a
 security concern, because the same password is also availalbe in the
 .env file for the project anyway, so go ahead and enable it.
+
+** Traefik config menu
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: traefik-config-menu
+:EXPORT_HUGO_WEIGHT: 10050
+:END:
+
+*** Traefik config menu
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 10050
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+Here are some extra things you can do in the Traefik config menu
+system that were skipped in the main text of the book.
+
+**** Create custom routes
+
+The main way to create custom routes is with the contextual =route=
+CLI command:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi whoami.example.com
+#+end_run
+
+Or with all of the explicit options set:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route set pi \
+  whoami.example.com 10.13.16.2 443 \
+  --proxy-protocol true --restart true
+#+end_run
+
+And you can list all of your routes:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry route list
+#+end_run
+
+Another way you can create routes is through the interactive Traefik
+config menu:
+
+#+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
+#+begin_run
+sentry make traefik config
+#+end_run
+
+#+begin_stdout
+? Traefik:  
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:  
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+> Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+  Logging level
+  Access logs
+
+? Traefik routes  
+> Configure layer 7 TLS proxy
+  Configure layer 4 TCP/UDP proxy
+  Configure wireguard VPN
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: s3.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint         Destination_address  Destination_port  Proxy_protocol
+----------         -------------------  ----------------  --------------
+s3.pi.example.com  10.13.16.2           443               2
+
+? Layer 7 TLS Proxy:  
+  List layer 7 ingress routes
+> Add new layer 7 ingress route
+  Remove layer 7 ingress routes
+  Disable layer 7 TLS Proxy
+
+Enter the public domain (SNI) for the route:
+: s3-console.pi.example.com
+
+Enter the destination IP address to forward to:
+: 10.13.16.2
+
+Enter the destination TCP port to forward to:
+: 443
+
+> Do you want to enable Proxy Protocol for this route? Yes
+
+## Layer 7 TLS Proxy is ENABLED.
+## Configured Layer 7 Routes:
+Entrypoint                 Destination_address  Destination_port  Proxy_protocol
+----------                 -------------------  ----------------  --------------
+s3.pi.example.com          10.13.16.2           443               2
+s3-console.pi.example.com  10.13.16.2           443               2
+#+end_stdout
+
+Press =ESC= three times to go back to the main menu, and re-install Traefik:
+
+#+begin_stdout
+? Traefik:  
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+#+end_stdout
+
+After installation, press =ESC= to quit the config tool.
+
 
 ** Private ACME
 :PROPERTIES:
