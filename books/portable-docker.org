@@ -2465,11 +2465,34 @@ pi make traefik config
   No, Traefik should use the host network directly.
   Yes, and this Traefik instance should start the wireguard server.
 > Yes, but this Traefik instance needs credentials to connect to an outside VPN.
+#+end_stdout
 
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+There is an important choice to make regarding how you want the
+network of the Pi to be setup:
+
+#+begin_stdout
 ? Should Traefik bind itself exclusively to the VPN interface?  
-> No, Traefik should work on all host interfaces (including the VPN).
-  Yes, Traefik should only listen on the VPN interface.
+  No, Traefik should work on all host interfaces (including the VPN).
+> Yes, Traefik should only listen on the VPN interface.
+#+end_stdout
 
+ * Do you still want to be able to access the Pi directly from your
+   LAN, without needing to go through the sentry? Perhaps you won't
+   always have internet access and you still want to access these
+   services? If so, choose =No=.
+ * The more secure option is to choose =Yes= and always go through the
+   sentry. This will block access between the Pi and your LAN.
+
+Regardless of this choice, the SSH service will be provided to the
+LAN, so you can change this setting at any time.
+#+end_notice
+
+Finish entering your wireguard client settings by copying them from
+the temporary buffer you saved them in:
+
+#+begin_stdout
 TRAEFIK_VPN_CLIENT_INTERFACE_ADDRESS: Enter the wireguard client Interface Address (e.g., 10.13.16.2)
 : 10.13.16.2
 TRAEFIK_VPN_CLIENT_INTERFACE_PRIVATE_KEY: Enter the wireguard PrivateKey (ends with =)
