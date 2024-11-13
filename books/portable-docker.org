@@ -2076,27 +2076,52 @@ being operated on.
 [[https://github.com/fail2ban/fail2ban?tab=readme-ov-file#readme][Fail2Ban]] scans log files and temporarily bans IP addresses that have
 too many authentication attempts. Fail2Ban can be configured to
 monitor the host SSH server and the Traefik access log, each with
-configurable rules:
+configurable rules.
+
+Configure Fail2Ban via the root context env file:
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
+## Save config in $HOME/git/vendor/enigmacurry/d.rymcg.tech/.env_$CONTEXT
 sentry reconfigure var=FAIL2BAN_ENABLED=true
+sentry reconfigure var=FAIL2BAN_IGNORE_IP=
 sentry reconfigure var=FAIL2BAN_SSHD_ENABLED=true
 sentry reconfigure var=FAIL2BAN_SSHD_MAX_RETRY=2
 sentry reconfigure var=FAIL2BAN_SSHD_BAN_TIME=10m
 sentry reconfigure var=FAIL2BAN_SSHD_FIND_TIME=10m
 sentry reconfigure var=FAIL2BAN_SSHD_ALLOW_IPV6=true
 sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ENABLED=true
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ERROR_LIST=400,403,405,407,429,431
 sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_MAX_RETRY=5
 sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_BAN_TIME=10m
 sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_FIND_TIME=10m
 sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ALLOW_IPV6=true
+#+end_run
 
+If you want to make sure your personal IP address does not get banned,
+add it to the default ignore list:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+sentry reconfigure var=FAIL2BAN_IGNORE_IP=$(curl ifconfig.me)/32
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The IP ranges for localhost (=127.0.0.1/8=) and the Traefik wireguard
+VPN (by default =10.13.16.0/24=) are added to this ignore list
+automatically. You don't need to add these ones yourself.
+#+end_notice
+
+Re-install Fail2Ban:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
 sentry fail2ban
 #+end_run
 
 #+begin_stdout
-? This will reset and reconfigure fail2ban using the pi context. Proceed? (Y/n)  y
+? This will ENABLE and reset Fail2Ban using your config for context sentry. Proceed? (Y/n)  y
 
 ? The Traefik access log must be enabled.. Proceed? (Y/n) y
 #+end_stdout
