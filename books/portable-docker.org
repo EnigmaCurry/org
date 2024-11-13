@@ -1879,24 +1879,25 @@ dig @ns1.digitalocean.com laksdflkweieri.sentry.example.com
 :EXPORT_HUGO_SLUG: set-up-docker-context
 :END:
 
-You now need to be able to control the droplet's =root= user from the
- Raspberry Pi's =pi= user. Create a new SSH config entry for the
- sentry (replace =sentry.example.com= with your own droplet's DNS
- name):
+You now need to be able to control the sentry's =root= user from the
+ Raspberry Pi's =pi= user over SSH. 
 
 [[/img/portable-docker/configure.webp]]
 
 #+begin_mermaid
 ---
-title: Docker admin over SSH
+title: The Docker admin controls all Docker servers over SSH including itself
 ---
 
 graph TD;
     classDef dottedBox stroke-dasharray: 5 5;
-    Workstation[Personal Workstation] -->|SSH| RaspberryPi[Raspberry Pi - Docker admin]
-    RaspberryPi -->|SSH| Sentry[Sentry]
-    RaspberryPi .->|SSH| Docker2[Docker 2, 3, etc.]
+    Workstation[Personal Workstation] -->|admin via SSH| RaspberryPi[Raspberry Pi - Docker admin]
+    RaspberryPi -->|admin self via SSH localhost| RaspberryPi
+    RaspberryPi -->|admin via SSH| Sentry[Sentry]
+    RaspberryPi .->|admin via SSH| Docker2[Docker 2]
+    RaspberryPi .->|admin via SSH| Docker3[Docker 3, etc.]
     class Docker2 dottedBox;
+    class Docker3 dottedBox;
 #+end_mermaid
 
 #+attr_shortcode: :style tip :title Designate a single Docker admin machine
@@ -1905,8 +1906,28 @@ You may want to share a single sentry among several Docker servers at
 various locations, and this is supported, but you should designate
 only *one machine* as the main configuration point (Docker admin) for
 all other contexts. In this example, the Raspberry Pi is the Docker
-admin who controls all of your Docker servers, including the sentry.
+admin who controls all of your Docker servers, including the sentry
+and itself.
 #+end_notice
+
+#+begin_mermaid
+---
+title: A single sentry can proxy for several private Docker servers connected to the same VPN
+---
+
+graph TD;
+
+WebBrowser["Web Browser client 1"] -->|TLS/TCP/UDP from the Internet| Sentry
+TCPClient["TCP client 1"] -->|TLS/TCP/UDP from the Internet| Sentry["Sentry - Public VPS"]
+
+Sentry .->|Layer 4/7 proxy protocol over Wireguard| Docker2["Docker2"]
+Sentry -->|Layer 4/7 proxy protocol over Wireguard| RaspberryPi["Raspberry Pi - Docker admin"]
+Sentry .->|Layer 4/7 proxy protocol over Wireguard| Docker3["Docker3"]
+
+style Docker2 stroke-dasharray: 5, 5
+style Docker3 stroke-dasharray: 5, 5
+#+end_mermaid
+
 
 *** Add the sentry context on the Pi
  
