@@ -1113,13 +1113,15 @@ including: HTTP Basic Auth, OAuth2, mutual TLS, and IP address
 filtering.
 
 #+begin_mermaid
-graph RL;
-    Browser[Web Browser] -->|HTTP Request| Traefik[Traefik Proxy]
-    Traefik -->|HTTP Response| Browser
-    Whoami -->|Response| Traefik
-    subgraph Docker
-        Traefik[Traefik Proxy] -->|Forwards Request| Whoami[Container: whoami]
-    end
+sequenceDiagram
+    participant Browser as Web Browser
+    participant Traefik as Traefik Proxy
+    participant Whoami as Container: whoami
+
+    Browser->>Traefik: HTTP Request
+    Traefik->>Whoami: Forward Request
+    Whoami->>Traefik: Response
+    Traefik->>Browser: HTTP Response
 #+end_mermaid
 
 
