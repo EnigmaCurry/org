@@ -3207,16 +3207,36 @@ git clone ssh://git@git.pi.example.com:2222/username/repository.git
 
 #+begin_mermaid
 ---
-title: Traefik Forward Auth
+title: Traefik Forward Auth middleware handles authentication
 ---
-graph LR;
-    Start[Request...] -->|HTTP| Traefik
-    Traefik -->|Sends the request to AuthServer| TFA[Traefik-Forward-Auth]
-    TFA -->|OAuth2| Forgejo
-    Forgejo -->|Oauth2 OK / KO| TFA
-    TFA -->|Returns OK / KO| Traefik
-    Traefik -->|If OK, proceed...| Proceed[...Access Granted]
-    Traefik -->|If KO, returns the error| Start
+sequenceDiagram
+participant User
+participant Traefik
+participant TFA as TFA middleware
+participant Forgejo as Oauth2 provider - Forgejo
+participant HeaderAuth as Sentry authorization middleware
+participant App
+
+    User -> Traefik: HTTP request
+    Traefik -> TFA: Sends the request to TFA middleware
+    TFA -> Forgejo: OAuth2 authentication
+    Forgejo --> TFA: OAuth2 response (returns OK / KO)
+    TFA --> Traefik: Returns OK / KO
+    alt KO
+        Traefik -> User: KO, access denied
+    else OK
+        Traefik --> User: OK, logged in
+        User --> Traefik: Send new requests with auth cookie.
+    end
+    Traefik -> HeaderAuth: Send cookie token in trusted header for verification
+    HeaderAuth -> Traefik: Returns OK / KO
+    alt KO
+        Traefik -> User: KO, Returns error
+    else OK
+        Traefik --> App: OK, Forwards trusted connection to backend app container
+        App --> Traefik: OK, App returns response
+        Traefik --> User: OK, app returns response
+    end
 #+end_mermaid
 
 *** Sentry authorization
