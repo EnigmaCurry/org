@@ -4359,8 +4359,8 @@ graph TD;
 B[Web browser] --|internet|--> C
 D[SFTP client] --|internet|--> A
 subgraph Docker network
-    C[Thttpd container] --|volume link|--> V((volume: \nthttpd_files))
-    A[SFTP container] --|volume link|--> V((volume: \nthttpd_files))
+    C[Thttpd container] --|volume link|--> V((volume: thttpd_files))
+    A[SFTP container] --|volume link|--> V((volume: thttpd_files))
 end
 #+end_mermaid
 
@@ -4726,14 +4726,15 @@ manager webapp for easy file sharing.
 [[/img/portable-docker/filestash-window.webp]]
 
 #+begin_mermaid
-graph LR;
-    Browser[Web Browser\nFileStash UI] -->|HTTP request for app page| FileStash
-    Browser -->|API request for object data| Minio
+sequenceDiagram
+    participant Browser as FileStash UI - Web Browser
+    participant FileStash as FileStash static server
+    participant Minio as Minio S3 - Object store
 
-    subgraph Docker
-        FileStash[FileStash\nWWW]
-        Minio((Minio S3\nObject store))
-    end
+    Browser->>FileStash: HTTP request for static app page
+    FileStash->>Browser: Response with static app page
+    Browser->>Minio: Direct API request for object data
+    Minio->>Browser: Direct response with object data
 #+end_mermaid
 
 #+attr_shortcode: :style tip
@@ -6137,12 +6138,11 @@ graph LR;
     subgraph Raspberry Pi
         pi[User: pi]
         root[User: root]
-        pi -->|Docker SSH context\nto root@localhost| root
+        pi -->|Docker SSH context to root@localhost| root
     end
 
-    RemoteComputer[Personal\nWorkstation] -->|ssh pi@pi| pi
+    RemoteComputer[Personal Workstation] -->|ssh pi@pi| pi
 #+end_mermaid
-
 
 #+attr_shortcode: :style warning :title Docker == root == pi
 #+begin_notice
