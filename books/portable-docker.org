@@ -3685,13 +3685,20 @@ In this mode, mTLS authentication works like this:
 ---
 title: Mutual TLS with two separate Certificate Authorities
 ---
-graph TD
-    StepCA[Step CA]
-    LetsEncrypt[Let's Encrypt CA]
-    Client -->|Client sends Step-CA signed cert| Server
-    Server -->|Server sends Let's Encrypt signed cert| Client
-    Client <-->|Issues cert| StepCA
-    Server <-->|Issues cert| LetsEncrypt
+sequenceDiagram
+    title Mutual TLS with two separate Certificate Authorities
+
+    participant Client
+    participant StepCA as Step CA
+    participant Server
+    participant LetsEncrypt as Let's Encrypt CA
+
+    Client->>StepCA: Requests new client certificate
+    StepCA->>Client: Receives new client certificate
+    Server->>LetsEncrypt: Requests new server certificate
+    LetsEncrypt->>Server: Receives new server certificate
+    Client->>Server: Sends Step-CA signed request
+    Server->>Client: Receives Let's Encrypt signed response
 #+end_mermaid
  
 Theoretically you could just use Step-CA for both sides, but this
