@@ -3217,25 +3217,25 @@ participant Forgejo as Oauth2 provider - Forgejo
 participant HeaderAuth as Sentry authorization middleware
 participant App
 
-    User -> Traefik: HTTP request
-    Traefik -> TFA: Sends the request to TFA middleware
-    TFA -> Forgejo: OAuth2 authentication
-    Forgejo --> TFA: OAuth2 response (returns OK / KO)
-    TFA --> Traefik: Returns OK / KO
+    User ->> Traefik: HTTP request
+    Traefik ->> TFA: Sends the request to TFA middleware
+    TFA ->> Forgejo: OAuth2 authentication
+    Forgejo -->> TFA: OAuth2 response (returns OK / KO)
+    TFA -->> Traefik: Returns OK / KO
     alt KO
-        Traefik -> User: KO, access denied
+        Traefik ->> User: KO, access denied
     else OK
-        Traefik --> User: OK, logged in
-        User --> Traefik: Send new requests with auth cookie.
+        Traefik -->> User: OK, logged in
+        User -->> Traefik: Send new requests with auth cookie.
     end
-    Traefik -> HeaderAuth: Send cookie token in trusted header for verification
-    HeaderAuth -> Traefik: Returns OK / KO
+    Traefik ->> HeaderAuth: Send cookie token in trusted header for verification
+    HeaderAuth ->> Traefik: Returns OK / KO
     alt KO
-        Traefik -> User: KO, Returns error
+        Traefik ->> User: KO, Returns error
     else OK
-        Traefik --> App: OK, Forwards trusted connection to backend app container
-        App --> Traefik: OK, App returns response
-        Traefik --> User: OK, app returns response
+        Traefik -->> App: OK, Forwards trusted connection to backend app container
+        App -->> Traefik: OK, App returns response
+        Traefik -->> User: OK, app returns response
     end
 #+end_mermaid
 
