@@ -1908,26 +1908,69 @@ all other contexts. In this example, the Raspberry Pi is the Docker
 admin who controls all of your Docker servers, including the sentry.
 #+end_notice
 
-*** Append to the SSH config on the Pi
+*** Add the sentry context on the Pi
  
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
-cat &lt;&lt;EOF &gt&gt ~/.ssh/config
-Host sentry
-    User root
-    Hostname sentry.example.com
-    ControlMaster auto
-    ControlPersist yes
-    ControlPath /tmp/ssh-%u-%r@%h:%p
-EOF
+d.rymcg.tech context new
 #+end_run
 
-#+attr_shortcode: :style tip
+#+begin_stdout
+? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y
+
+? You must specify the SSH config entry to use  
+  I already have an SSH host entry in ~/.ssh/config that I want to use
+> I want to make a new SSH host entry in ~/.ssh/config
+
+? Enter the new SSH context name (short host name) : sentry
+
+? Enter the fully qualified SSH Host DNS name : sentry.example.com
+
+## Here is the new SSH config entry:
+Host sentry
+     Hostname sentry.example.com
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+
+? Do you want to append this config to ~/.ssh/config? (y/N)  y
+
+? Do you want to switch to the new sentry context now? (y/N) n
+#+end_stdout
+
+You can examine the list of your contexts, which you should have
+three by now:
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+d.rymcg.tech context list
+#+end_run
+
+#+begin_stdout
+NAME        DESCRIPTION                               DOCKER ENDPOINT               ERROR
+default *   Current DOCKER_HOST based configuration   unix:///var/run/docker.sock   
+localhost                                             ssh://localhost               
+sentry      Created by 'd.rymcg.tech context new'     ssh://sentry                  
+#+end_stdout
+
+ * =default= is the default context created by Docker itself when it
+   is installed. This context is *not used* by this configuration.
+ * =localhost= is the SSH context of the sworkstation over localhost.
+   This is the main context this configuration uses to configure your
+   applications.
+ * =sentry= is the SSH context of the sentry server, entirely remote
+   controlled from the Pi.
+
+#+attr_shortcode: :style tip :title Tip
 #+begin_notice
-The Hostname value should point to the same name you created the DNS
-entry for the sentry.
+The =*= next to the default context indicates the current context of
+the =docker= command. But since you will be using the context aliases
+=pi= and =sentry=, you won't be using the =docker= command directly,
+so the =*= can be ignored.
 #+end_notice
 
+ 
 *** Test the connection from the Pi to the sentry
 #+attr_shortcode: :title Run this on the Raspberry Pi :style secondary
 #+begin_run
@@ -2002,6 +2045,33 @@ You can switch between these two contexts using =d context=. The
 currently selected context specifies which Docker server is currently
 being operated on.
 #+end_notice
+
+*** Configure Fail2Ban
+
+[[https://github.com/fail2ban/fail2ban?tab=readme-ov-file#readme][Fail2Ban]] scans log files and bans IP addresses that have too many
+authentication attempts. Fail2Ban can be configured to monitor the
+host SSH server and the Traefik access log.
+
+#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
+#+begin_run
+SSHD_ENABLED=true \
+SSHD_MAX_RETRY=2 \
+SSHD_BAN_TIME=10m \
+SSHD_FIND_TIME=10m \
+SSHD_ALLOW_IPV6=true \
+TRAEFIK_ACCESS_ENABLED=true \
+TRAEFIK_ACCESS_MAX_RETRY=5 \
+TRAEFIK_ACCESS_BAN_TIME=10m \
+TRAEFIK_ACCESS_FIND_TIME=10m \
+TRAEFIK_ACCESS_ALLOW_IPV6=true \
+sentry fail2ban
+#+end_run
+
+#+begin_stdout
+? This will reset and reconfigure fail2ban using the pi context. Proceed? (Y/n)  y
+
+? The Traefik access log must be enabled.. Proceed? (Y/n) y
+#+end_stdout
 
 ** Configure d.rymcg.tech for the sentry
 :PROPERTIES:
