@@ -152,9 +152,11 @@ associating the MAC address shown (e.g., =bc:24:11:22:da:99=) so that
 the IP address does not conflict with any other devices on the
 upstream LAN.
 
-The Hostname you choose (e.g., =pve-router.example.com=) is an
-administrative identifier for the Proxmox host only, it serves no
-purpose in relation to the new router.
+The Hostname you choose (e.g., =pve-router.example.com=) is a
+permanaent administrative identifier for the Proxmox host itself. This
+name serves no purpose in relation to the new router. *Do not* use the
+name =router= for the PVE host. The name =router= will be reserved for
+the router VM.
 #+end_notice
 
 *** Start Install
@@ -207,8 +209,8 @@ book.
 *** Create SSH config on your workstation
 
 #+begin_run
-PROXMOX_IP_ADDRESS=192.168.1.2 \
-PROXMOX_HOST=pve-router \
+export PROXMOX_IP_ADDRESS=192.168.1.2 \
+       PROXMOX_HOST=pve-router && \
 cat &lt;&lt; EOF &gt;&gt; ~/.ssh/config
 
 Host ${PROXMOX_HOST}
@@ -295,13 +297,28 @@ If you see =Permission denied (publickey)=, and it does not prompt you
 for a password for =foo=, you have successfully disabled password
 authentication.
 #+end_notice
-
+ 
 ** Choose update repository
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000204-enable-community-repository
 :EXPORT_HUGO_WEIGHT: 204
 :EXPORT_HUGO_SLUG: enable-community-repository
 :END:
+
+*** Open web console
+
+Open the web console at https://X.X.X.X:8006 (replace X.X.X.X with the
+proxmox IP address.)
+
+You will see a security warning in your browser because of the
+self-signed certificate. Your browser should have an option to proceed
+anyway.
+
+At the =Proxmox VE Login= prompt, enter your credentials:
+
+ * username: =root=
+ * password: (the password you set during install)
+ * Realm: Linux PAM standard authentication (Default)
 
 Proxmox is open-source and is completely free to download and use.
 However, there may be some confusion at first, when you see the
@@ -384,6 +401,9 @@ script:
 wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_firewall.sh
 
 chmod +x proxmox_firewall.sh
+
+apt update
+apt install -y jq
 #+end_run
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
@@ -709,35 +729,52 @@ VM_ID=102 \
 qm start ${VM_ID}
 #+end_run
 
-
 *** Create SSH config to access the router VM
 
-Create a new entry in your to your workstation's =~/.ssh/config= file
-for the router VM.
+Create a new entry for the router VM in  =~/.ssh/config= :
 
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
-PROXMOX_IP_ADDRESS=X.X.X.X
 cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
 
 Host router
-     Hostname ${PROXMOX_IP_ADDRESS}
+     Hostname 10.10.1.2
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+EOF
+#+end_run
+
+#+attr_shortcode: :style primary :title Info :title Optional config for your workstation
+#+begin_notice
+If you want to access the router VM directly from your workstation as
+well, do the following:
+
+#+begin_run
+ssh -A pve-router ssh-copy-id router
+#+end_run
+
+#+begin_run
+PVE_HOST_ADDRESS=X.X.X.X
+cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
+
+Host router
+     Hostname ${PVE_HOST_ADDRESS}
      Port 2222
      User root
      ControlMaster auto
      ControlPersist yes
      ControlPath /tmp/ssh-%u-%r@%h:%p
-
 EOF
 #+end_run
 
-#+attr_shortcode: :style tip :title Tip
-#+begin_notice
 Replace =X.X.X.X= with the management IP address of your proxmox host.
 #+end_notice
 
-
 *** Connect to the VM
 
+#+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
 ssh router
 #+end_run
@@ -762,18 +799,15 @@ the first time, type =yes= and press Enter.
 You should now be logged into the router VM via SSH. Set the following
 temporary environment variables in the shell of the router VM:
 
- * =ALIAS= (e.g., "router") is the short contextual alias used to
-   interact with your Docker server.
+ * =ALIASES= (e.g., "router") is the list of aliases to setup for your
+   Docker contexts.
  * =ROOT_DOMAIN= (e.g., "lan.example.com") is the chosen sub-domain
    for the new router's LAN .
- * =SYSBOX=true= (true/false) enables [[https://github.com/nestybox/sysbox][Sysbox]] to allow the router
-   containers to run privileged tasks (e.g., systemd).
 
 #+begin_env
 ## These temporary variables configure bootstrap_sworkstation.sh
-export ALIAS=router
+export ALIASES=router
 export ROOT_DOMAIN=lan.example.com
-export SYSBOX=true
 #+end_env
 
 After setting the environment variables, run the boostrap script:
@@ -940,34 +974,29 @@ interface names.
 LAN_NETWORK=192.168.10.1/24
 GATEWAY=10.10.1.1   ## Temporary management gateway
 DNS="1.1.1.1;1.0.0.1;"
-cat &lt;&lt;EOF > /etc/NetworkManager/system-connections/lan.nmconnection
-[connection]
-id=lan
-type=ethernet
-interface-name=lan
+cat &lt;&lt;EOF > /etc/systemd/network/10-lan.network
+[Match]
+Name=lan
 
-[ipv4]
-method=manual
-address1=${LAN_NETWORK},${GATEWAY}
-dns=${DNS}
+[Network]
+Address=${LAN_NETWORK}
+Gateway=${GATEWAY}
+DNS=${DNS}
 EOF
-chmod 600 /etc/NetworkManager/system-connections/lan.nmconnection
 #+end_run
 
 *** Set WAN for DHCP
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-cat &lt;&lt;EOF > /etc/NetworkManager/system-connections/wan.nmconnection
-[connection]
-id=wan
-type=ethernet
-interface-name=wan
+DNS="1.1.1.1;1.0.0.1;"
+cat &lt;&lt;EOF > /etc/systemd/network/10-wan.network
+[Match]
+Name=wan
 
-[ipv4]
-method=auto
+[Network]
+DHCP=yes
 EOF
-chmod 600 /etc/NetworkManager/system-connections/wan.nmconnection
 #+end_run
 
 
@@ -988,7 +1017,9 @@ ip link
 #+end_run
 
 #+begin_stdout
-3: lan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+2: mgmt: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether BA:D0:DA:D0:FA:CE brd ff:ff:ff:ff:ff:ff
+3: lan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
     link/ether CA:FE:BA:BE:12:34 brd ff:ff:ff:ff:ff:ff
 4: wan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
     link/ether DE:AD:BE:EF:42:42 brd ff:ff:ff:ff:ff:ff
