@@ -746,36 +746,36 @@ Host router
 EOF
 #+end_run
 
-#+attr_shortcode: :style primary :title Info :title Optional config for your workstation
-#+begin_notice
-If you want to access the router VM directly from your workstation as
-well, do the following:
+You can access the VM directly from your workstation by setting a
+proxy jump in your ssh config:
+
+#+begin_run
+cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
+
+Host router
+     Hostname 10.10.1.2
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+     ProxyJump pve-router
+EOF
+#+end_run
+
+Replace =X.X.X.X= with the management IP address of your proxmox host.
+
+Copy your workstation key to the router VM:
 
 #+begin_run
 ssh -A pve-router ssh-copy-id router
 #+end_run
 
-#+begin_run
-PVE_HOST_ADDRESS=X.X.X.X
-cat &lt;&lt;EOF &gt;&gt; ~/.ssh/config
-
-Host router
-     Hostname ${PVE_HOST_ADDRESS}
-     Port 2222
-     User root
-     ControlMaster auto
-     ControlPersist yes
-     ControlPath /tmp/ssh-%u-%r@%h:%p
-EOF
-#+end_run
-
-Replace =X.X.X.X= with the management IP address of your proxmox host.
-#+end_notice
 
 *** Connect to the VM
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
+## You can run this from the PVE host or your workstation:
 ssh router
 #+end_run
 
@@ -989,7 +989,6 @@ EOF
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-DNS="1.1.1.1;1.0.0.1;"
 cat &lt;&lt;EOF > /etc/systemd/network/10-wan.network
 [Match]
 Name=wan
@@ -1021,7 +1020,7 @@ ip link
     link/ether BA:D0:DA:D0:FA:CE brd ff:ff:ff:ff:ff:ff
 3: lan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
     link/ether CA:FE:BA:BE:12:34 brd ff:ff:ff:ff:ff:ff
-4: wan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+4: wan: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc mq state UP mode DEFAULT group default qlen 1000
     link/ether DE:AD:BE:EF:42:42 brd ff:ff:ff:ff:ff:ff
 #+end_stdout
 
@@ -1037,3 +1036,92 @@ ip add show dev lan
     inet 192.168.10.1/24 brd 192.168.10.255 scope global 
 ...
 #+end_stdout
+
+** Configure Routes
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000260-configure-routes
+:EXPORT_HUGO_WEIGHT: 260
+:EXPORT_HUGO_SLUG: configure-routes
+:END:
+
+nftables (netfilter) is used to configure the firewall and routes.
+
+*** Install Nifty-Filter
+
+[nifty-filter](https://github.com/EnigmaCurry/nifty-filter) is used as
+a convenient method of configuring nftables.
+
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+dnf install -y rustup
+rustup-init -y
+. ~/.cargo/env
+
+## TODO: use stable version here
+cargo install --git https://github.com/EnigmaCurry/nifty-filter
+#+end_run
+
+*** Customize your router script
+
+nifty-filter lets you configure your whole router in one shell script,
+which is written to =router.sh=:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+cat &lt;&lt;'EOF' > ~/router.sh
+#!/bin/bash
+set -e
+
+export INTERFACE_MGMT=mgmt
+export INTERFACE_LAN=lan
+export INTERFACE_WAN=wan
+export SUBNET_LAN=192.168.10.1/24
+
+## Allow ping etc. from LAN side only:
+export ICMP_ACCEPT_LAN=echo-request,echo-reply,destination-unreachable,time-exceeded
+export ICMP_ACCEPT_WAN=
+
+## Allow LAN clients to access SSH, DNS, HTTP on the router:
+export TCP_ACCEPT_LAN=22,53,80,443
+export TCP_ACCEPT_WAN=
+
+## Allow LAN clients to access UDP DNS, DHCP on the router:
+export UDP_ACCEPT_LAN=53,67,68
+export UDP_ACCEPT_WAN=
+
+## Forward connections from LAN:
+export TCP_FORWARD_LAN=8000:93.184.215.14:80,2222:192.168.1.1:22
+export UDP_FORWARD_LAN=53:1.1.1.1:53,5353:1.0.0.1:53
+
+## Forward connections from WAN:
+export TCP_FORWARD_WAN=
+export UDP_FORWARD_WAN=
+
+echo "## Applying router config:"
+nifty-filter nftables --validate | \
+    tee >/dev/stderr | \
+    nft -f - && \
+    echo "## Applied!"
+EOF
+chmod +x ~/router.sh
+#+end_run
+
+This script includes the following config expressed as environment variables:
+
+| Name            | Description                                                               |
+|-----------------+---------------------------------------------------------------------------|
+| INTERFACE_MGMT  | The name of the management network (MGMT) interface.                      |
+| INTERFACE_LAN   | The name of the local area network (LAN) interface.                       |
+| INTERFACE_WAN   | The name of the wide area network (WAN) interface.                        |
+| SUBNET_LAN      | The CIDR notation subnet mask for the LAN clients.                        |
+| ICMP_ACCEPT_LAN | The list of allowed ICMP request types to accept from the LAN.            |
+| ICMP_ACCEPT_WAN | The list of allowed ICMP request types to accept from the WAN.            |
+| TCP_ACCEPT_LAN  | The list of TCP ports on the router to allow access from the LAN clients. |
+| TCP_ACCEPT_WAN  | The list of TCP ports on the router to allow access from the WAN clients. |
+| UDP_ACCEPT_LAN  | The list of UDP ports on the router to allow access from the LAN clients. |
+| UDP_ACCEPT_WAN  | The list of UDP ports on the router to allow access from the WAN clients. |
+| TCP_FORWARD_LAN | The list of TCP forwarding routes to allow from the LAN.                  |
+| TCP_FORWARD_WAN | The list of TCP forwarding routes to allow from the WAN.                  |
+| UDP_FORWARD_LAN | The list of UDP forwarding routes to allow from the LAN.                  |
+| UDP_FORWARD_WAN | The list of UDP forwarding routes to allow from the WAN.                  |
