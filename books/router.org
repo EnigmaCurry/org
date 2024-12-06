@@ -789,38 +789,6 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 The first time you connect, you will need to accept the SSH fingerprint
 the first time, type =yes= and press Enter.
 
-** Bootstrap Docker
-:PROPERTIES:
-:EXPORT_FILE_NAME: 000240-bootstrap-docker
-:EXPORT_HUGO_WEIGHT: 240
-:EXPORT_HUGO_SLUG: bootstrap-docker
-:END:
-
-You should now be logged into the router VM via SSH. Set the following
-temporary environment variables in the shell of the router VM:
-
- * =ALIASES= (e.g., "router") is the list of aliases to setup for your
-   Docker contexts.
- * =ROOT_DOMAIN= (e.g., "lan.example.com") is the chosen sub-domain
-   for the new router's LAN .
-
-#+begin_env
-## These temporary variables configure bootstrap_sworkstation.sh
-export ALIASES=router
-export ROOT_DOMAIN=lan.example.com
-#+end_env
-
-After setting the environment variables, run the boostrap script:
-
-#+attr_shortcode: :style secondary :title Run this on the Router VM
-#+begin_run
-bash <(curl -L https://github.com/EnigmaCurry/d.rymcg.tech/blob/master/_scripts/bootstrap_sworkstation_fedora.sh?raw=true)
-#+end_run
-
-Once the script is finished, close the SSH session (=Ctrl-D=) and log
-back in.
-
-
 ** Setup Router Network
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000250-setup-router-network
@@ -859,9 +827,6 @@ Name=mgmt
 
 [Network]
 Address=10.10.1.2/24
-Gateway=10.10.1.1
-DNS=1.1.1.1
-DNS=1.0.0.1
 EOF
 
 cat &lt;&lt;EOF > /etc/systemd/network/01-mgmt.link
@@ -1054,12 +1019,13 @@ a convenient method of configuring nftables.
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-dnf install -y rustup
+## TODO: use stable version here
+
+dnf install -y rustup @development-tools @development-libs
 rustup-init -y
 . ~/.cargo/env
 
-## TODO: use stable version here
-cargo install --git https://github.com/EnigmaCurry/nifty-filter
+cargo install --git https://github.com/EnigmaCurry/nifty-filter --branch tui
 #+end_run
 
 *** Customize your router script
@@ -1098,11 +1064,13 @@ export UDP_FORWARD_LAN=53:1.1.1.1:53,5353:1.0.0.1:53
 export TCP_FORWARD_WAN=
 export UDP_FORWARD_WAN=
 
+## Enable IP forwarding
+sysctl -w net.ipv4.ip_forward=1
+
 echo "## Applying router config:"
-nifty-filter nftables --validate | \
-    tee >/dev/stderr | \
-    nft -f - && \
-    echo "## Applied!"
+nifty-filter nftables --validate | nft -f -
+nft list ruleset
+echo "## Applied!"
 EOF
 chmod +x ~/router.sh
 #+end_run
