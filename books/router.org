@@ -1127,46 +1127,132 @@ If it doesn't work, test that you can at least ping the router (=ping
 your script.
 #+end_notice
 
-** Configure dnsmasq (DNS and DHCP)
+** Configure DNS
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000265-configure-dns
+:EXPORT_HUGO_WEIGHT: 265
+:EXPORT_HUGO_SLUG: configure-dns
+:END:
+
+[[https://www.dnscrypt.org#dnscrypt-proxy][dnscrypt-proxy]] is a local caching DNS proxy which can be configured to
+use [[https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/dns-over-https-client/#dnscrypt-proxy][Cloudflare DNS over HTTP (DoH)]] as the upstream resolver, or any
+other provider you choose.
+
+*** Install dnscrypt-proxy
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+sudo dnf install -y dnscrypt-proxy
+#+end_run
+
+*** Configure dnscrypt-proxy
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+sed -i \
+  -e "s/^listen_addresses =.*/listen_addresses = ['127.0.0.1:53','[::1]:53']/" \
+  -e "s/^# server_names =.*/server_names = ['cloudflare']/" \
+  /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+
+systemctl enable dnscrypt-proxy
+systemctl restart dnscrypt-proxy
+
+chattr -i /etc/resolv.conf || true
+rm -f /etc/resolv.conf
+cat &lt;&lt;EOF > /etc/resolv.conf
+nameserver ::1
+nameserver 127.0.0.1
+options edns0
+EOF
+
+chattr +i /etc/resolv.conf
+#+end_run
+
+dnscrypt-proxy will only listen on localhost. In the next chapter,
+dnsmasq will be setup to forward LAN client requests to the local
+dnscrypt resolver.
+
+** Configure DHCP
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000270-configure-dhcp
 :EXPORT_HUGO_WEIGHT: 270
 :EXPORT_HUGO_SLUG: configure-dhcp
 :END:
 
-**** Install dnsmasq
+[[https://thekelleys.org.uk/dnsmasq/doc.html][dnsmasq]] is a DHCP and DNS forwarder service.
+
+*** Install dnsmasq
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
 sudo dnf install -y dnsmasq
 #+end_run
 
-**** Configure dnsmasq
+*** Create service definition
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+
+cat <<'EOF' > /etc/systemd/system/dnsmasq@.service
+[Unit]
+Description=dnsmasq for %i
+Documentation=man:dnsmasq(8)
+After=network.target
+Before=network-online.target nss-lookup.target
+Wants=nss-lookup.target
+
+[Service]
+ExecStartPre=/usr/sbin/dnsmasq -C /etc/dnsmasq-%i.conf --test
+ExecStart=/usr/sbin/dnsmasq -C /etc/dnsmasq-%i.conf -d --user=dnsmasq --pid-file
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+PrivateDevices=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+#+end_run
+
+*** Configure dnsmasq
 
 nifty-filter can also configure dnsmasq. Specify your entire config in
 a shell script =dnsmasq.sh=:
 
-
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-cat &lt;&lt;'EOF' > ~/router.sh
+cat &lt;&lt;'EOF' > ~/dnsmasq.sh
 #!/bin/bash
 set -e
 
-## Set network interface names:
-export INTERFACE_MGMT=mgmt
-export INTERFACE_LAN=lan
-export INTERFACE_WAN=wan
+## Bind to the lan interface:
+export INTERFACE=lan
+export LISTEN_ADDRESS=192.168.10.1
 
-## Configure LAN subnet:
-export SUBNET_LAN=192.168.10.1/24
+## DHCP config:
+export DOMAIN_LAN=lan.example.com
+export GATEWAY_LAN=192.168.10.1
+export DHCP_LAN_RANGE_START=192.168.10.50
+export DHCP_LAN_RANGE_END=192.168.10.250
+export DHCP_LAN_LEASE=12h
 
-#### TODO TODO TODO
+## DNS config - Forward DNS to dnscrypt on localhost
+export DNS_LAN=192.168.10.1
+export DNS_UPSTREAM_1=::1
+export DNS_UPSTREAM_2=127.0.0.1
+
+nifty-filter dnsmasq | dnsmasq -C - --test
 
 echo "## Applying dnsmasq config:"
-nifty-filter dnsmasq | tee > /etc/dnsmasq-lan.conf
+nifty-filter dnsmasq | tee > /etc/dnsmasq-${INTERFACE}.conf
+systemctl enable dnsmasq@${INTERFACE}.service
+systemctl restart dnsmasq@${INTERFACE}.service
+systemctl status dnsmasq@${INTERFACE}.service --no-pager
 
-echo "## Applied!"
 EOF
 chmod +x ~/dnsmasq.sh
 #+end_run
+
