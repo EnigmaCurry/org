@@ -12,8 +12,7 @@
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-This book is about creating a virtualized Linux router on Docker on
-Proxmox.
+This book is about creating a virtualized Linux router on Proxmox.
 
 #+attr_shortcode: :style warning :title Warning
 #+begin_notice
@@ -1039,9 +1038,12 @@ cat &lt;&lt;'EOF' > ~/router.sh
 #!/bin/bash
 set -e
 
+## Set network interface names:
 export INTERFACE_MGMT=mgmt
 export INTERFACE_LAN=lan
 export INTERFACE_WAN=wan
+
+## Configure LAN subnet:
 export SUBNET_LAN=192.168.10.1/24
 
 ## Allow ping etc. from LAN side only:
@@ -1075,7 +1077,8 @@ EOF
 chmod +x ~/router.sh
 #+end_run
 
-This script includes the following config expressed as environment variables:
+nifty-filter expects the configuration to be passed via environment
+variables, which this script sets up:
 
 | Name            | Description                                                               |
 |-----------------+---------------------------------------------------------------------------|
@@ -1093,3 +1096,77 @@ This script includes the following config expressed as environment variables:
 | TCP_FORWARD_WAN | The list of TCP forwarding routes to allow from the WAN.                  |
 | UDP_FORWARD_LAN | The list of UDP forwarding routes to allow from the LAN.                  |
 | UDP_FORWARD_WAN | The list of UDP forwarding routes to allow from the WAN.                  |
+
+
+*** Run the router script
+
+You may temporarily start the router by running the script manually:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+./router.sh
+#+end_run
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+The router settings will only persist until you next reboot the
+machine.
+#+end_notice
+
+
+#+attr_shortcode: :style tip :title Test IP Masquerade
+#+begin_notice
+To test that IP masquerade is working, set up another machine
+connected to the physical LAN interface of the VM. Configure the new
+machine with a static IP address of =192.168.10.2= and gateway of
+=192.168.10.1=. You should now be able to ping any IP address on the
+internet (e.g. =ping 1.1.1.1=) through the gateway router.
+
+If it doesn't work, test that you can at least ping the router (=ping
+192.168.10.1=) otherwise the problem must be in nifty-filter or in
+your script.
+#+end_notice
+
+** Configure dnsmasq (DNS and DHCP)
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000270-configure-dhcp
+:EXPORT_HUGO_WEIGHT: 270
+:EXPORT_HUGO_SLUG: configure-dhcp
+:END:
+
+**** Install dnsmasq
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+sudo dnf install -y dnsmasq
+#+end_run
+
+**** Configure dnsmasq
+
+nifty-filter can also configure dnsmasq. Specify your entire config in
+a shell script =dnsmasq.sh=:
+
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+cat &lt;&lt;'EOF' > ~/router.sh
+#!/bin/bash
+set -e
+
+## Set network interface names:
+export INTERFACE_MGMT=mgmt
+export INTERFACE_LAN=lan
+export INTERFACE_WAN=wan
+
+## Configure LAN subnet:
+export SUBNET_LAN=192.168.10.1/24
+
+#### TODO TODO TODO
+
+echo "## Applying dnsmasq config:"
+nifty-filter dnsmasq | tee > /etc/dnsmasq-lan.conf
+
+echo "## Applied!"
+EOF
+chmod +x ~/dnsmasq.sh
+#+end_run
