@@ -1024,17 +1024,45 @@ dnf install -y rustup @development-tools @development-libs
 rustup-init -y
 . ~/.cargo/env
 
-cargo install --git https://github.com/EnigmaCurry/nifty-filter --branch tui
+CARGO_INSTALL_ROOT=/usr/local \
+cargo install \
+      --git https://github.com/EnigmaCurry/nifty-filter \
+      --branch tui
+#+end_run
+
+*** Create service definition
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+cat <<'EOF' > /etc/systemd/system/nifty-router.service
+[Unit]
+Description=Custom router script
+After=network.target
+Before=network-online.target nss-lookup.target
+Wants=nss-lookup.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/router.sh
+RemainAfterExit=yes
+PrivateDevices=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
 #+end_run
 
 *** Customize your router script
 
 nifty-filter lets you configure your whole router in one shell script,
-which is written to =router.sh=:
+which is written to =/usr/local/sbin/router.sh=:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-cat &lt;&lt;'EOF' > ~/router.sh
+cat &lt;&lt;'EOF' > /usr/local/sbin/router.sh
 #!/bin/bash
 set -e
 
@@ -1072,9 +1100,10 @@ sysctl -w net.ipv4.ip_forward=1
 echo "## Applying router config:"
 nifty-filter nftables --validate | nft -f -
 nft list ruleset
-echo "## Applied!"
+echo "## Applied router configuration successfully!"
 EOF
-chmod +x ~/router.sh
+chmod +x /usr/local/sbin/router.sh
+ln -sf /usr/local/sbin/router.sh ~/router.sh
 #+end_run
 
 nifty-filter expects the configuration to be passed via environment
@@ -1098,23 +1127,17 @@ variables, which this script sets up:
 | UDP_FORWARD_WAN | The list of UDP forwarding routes to allow from the WAN.                  |
 
 
-*** Run the router script
-
-You may temporarily start the router by running the script manually:
+*** Enable the router service
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-./router.sh
+systemctl enable --now nifty-router
 #+end_run
 
-#+attr_shortcode: :style primary :title Info
-#+begin_notice
-The router settings will only persist until you next reboot the
-machine.
-#+end_notice
 
+*** Test LAN clients with static IP address
 
-#+attr_shortcode: :style tip :title Test IP Masquerade
+#+attr_shortcode: :style tip :title Test IP Masquerade (optional)
 #+begin_notice
 To test that IP masquerade is working, set up another machine
 connected to the physical LAN interface of the VM. Configure the new
@@ -1154,9 +1177,6 @@ sed -i \
   -e "s/^# server_names =.*/server_names = ['cloudflare']/" \
   /etc/dnscrypt-proxy/dnscrypt-proxy.toml
 
-systemctl enable dnscrypt-proxy
-systemctl restart dnscrypt-proxy
-
 chattr -i /etc/resolv.conf || true
 rm -f /etc/resolv.conf
 cat &lt;&lt;EOF > /etc/resolv.conf
@@ -1166,6 +1186,9 @@ options edns0
 EOF
 
 chattr +i /etc/resolv.conf
+
+systemctl enable dnscrypt-proxy
+systemctl restart dnscrypt-proxy
 #+end_run
 
 dnscrypt-proxy will only listen on localhost. In the next chapter,
@@ -1181,6 +1204,14 @@ dnscrypt resolver.
 
 [[https://thekelleys.org.uk/dnsmasq/doc.html][dnsmasq]] is a DHCP and DNS forwarder service.
 
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+Despite the name, dnsmasq's main job is to provide DHCP service to the
+LAN. It will also forward DNS queries to your local dnscrypt-proxy. In
+addition, dnsmasq will resolve any host name found in the router VM's
+=/etc/hosts= file.
+#+end_notice
+
 *** Install dnsmasq
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
@@ -1192,7 +1223,6 @@ sudo dnf install -y dnsmasq
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-
 cat <<'EOF' > /etc/systemd/system/dnsmasq@.service
 [Unit]
 Description=dnsmasq for %i
@@ -1202,8 +1232,7 @@ Before=network-online.target nss-lookup.target
 Wants=nss-lookup.target
 
 [Service]
-ExecStartPre=/usr/sbin/dnsmasq -C /etc/dnsmasq-%i.conf --test
-ExecStart=/usr/sbin/dnsmasq -C /etc/dnsmasq-%i.conf -d --user=dnsmasq --pid-file
+ExecStart=/usr/local/sbin/dnsmasq-%i.sh
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=5
@@ -1220,11 +1249,11 @@ systemctl daemon-reload
 *** Configure dnsmasq
 
 nifty-filter can also configure dnsmasq. Specify your entire config in
-a shell script =dnsmasq.sh=:
+a shell script =/usr/local/sbin/dnsmasq-lan.sh=:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-cat &lt;&lt;'EOF' > ~/dnsmasq.sh
+cat &lt;&lt;'EOF' > /usr/local/sbin/dnsmasq-lan.sh
 #!/bin/bash
 set -e
 
@@ -1239,6 +1268,15 @@ export DHCP_LAN_RANGE_START=192.168.10.50
 export DHCP_LAN_RANGE_END=192.168.10.250
 export DHCP_LAN_LEASE=12h
 
+## Static DHCP Leases:
+## bash array of "MAC_ADDRESS,IP_ADDRESS,HOST_NAME,LEASE_TIME"
+STATIC_LEASES=(
+  ## "9c:69:b4:65:7d:f8,192.168.10.2,arch-client1,12h"
+  "9c:69:b4:65:7d:f8,192.168.10.2,arch-client1,12h"
+)
+## convert array to string:
+export DHCP_LAN_STATIC_LEASES="${STATIC_LEASES[@]}"
+
 ## DNS config - Forward DNS to dnscrypt on localhost
 export DNS_LAN=192.168.10.1
 export DNS_UPSTREAM_1=::1
@@ -1247,12 +1285,20 @@ export DNS_UPSTREAM_2=127.0.0.1
 nifty-filter dnsmasq | dnsmasq -C - --test
 
 echo "## Applying dnsmasq config:"
-nifty-filter dnsmasq | tee > /etc/dnsmasq-${INTERFACE}.conf
-systemctl enable dnsmasq@${INTERFACE}.service
-systemctl restart dnsmasq@${INTERFACE}.service
-systemctl status dnsmasq@${INTERFACE}.service --no-pager
-
+(echo "## This file is generated by nifty-filter. DO NOT EDIT."; \
+ nifty-filter dnsmasq) > /tmp/dnsmasq-${INTERFACE}.conf
+dnsmasq -C /tmp/dnsmasq-${INTERFACE}.conf -d --user=dnsmasq --pid-file
 EOF
-chmod +x ~/dnsmasq.sh
+
+chmod +x /usr/local/sbin/dnsmasq-lan.sh
+ln -sf /usr/local/sbin/dnsmasq-lan.sh ~/dnsmasq-lan.sh
 #+end_run
 
+*** Enable the dnsmasq server
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+systemctl enable dnsmasq@lan.service
+systemctl restart dnsmasq@lan.service
+systemctl status dnsmasq@lan.service --no-pager
+#+end_run
