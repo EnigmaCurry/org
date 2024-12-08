@@ -12,7 +12,8 @@
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-This book is about creating a virtualized Linux router on Proxmox.
+This book is about creating a router for a home / office network using
+a Linux VM on Proxmox.
 
 #+attr_shortcode: :style warning :title Warning
 #+begin_notice
@@ -1097,10 +1098,12 @@ export UDP_ACCEPT_LAN=53,67,68
 export UDP_ACCEPT_WAN=
 
 ## Forward connections from LAN:
-#export TCP_FORWARD_LAN=8000:93.184.215.14:80,2222:192.168.1.1:22
-#texport UDP_FORWARD_LAN=53:1.1.1.1:53,5353:1.0.0.1:53
+## IN_PORT:FORWARD_ADDRESS:FORWARD_PORT,...
+export TCP_FORWARD_LAN=
+export UDP_FORWARD_LAN=
 
 ## Forward connections from WAN:
+## IN_PORT:FORWARD_ADDRESS:FORWARD_PORT,...
 export TCP_FORWARD_WAN=
 export UDP_FORWARD_WAN=
 
@@ -1150,15 +1153,15 @@ systemctl restart nifty-router
 
 #+attr_shortcode: :style tip :title Test IP Masquerade (optional)
 #+begin_notice
-To test that IP masquerade is working, set up another machine
-connected to the physical LAN interface of the VM. Configure the new
-machine with a static IP address of =192.168.10.2= and gateway of
-=192.168.10.1=. You should now be able to ping any IP address on the
-internet (e.g. =ping 1.1.1.1=) through the gateway router.
-
-If it doesn't work, test that you can at least ping the router (=ping
-192.168.10.1=) otherwise the problem must be in nifty-filter or in
-your script.
+At this early stage without even DHCP or DNS setup yet, you still may
+want to verify that IP masquerade is already working. You can set up
+another machine connected to the physical LAN interface of the VM and
+configure that machine with a static IP address of =192.168.10.2= and
+gateway of =192.168.10.1=. You should now be able to ping any IP
+address on the internet (e.g. =ping 1.1.1.1=) through the gateway
+router. These steps will be covered in more detail later in the
+chapter named [[/router/configure-clients/index.html][Configure LAN clients]] after having finished the router
+config.
 #+end_notice
 
 ** Configure DNS and DHCP
@@ -1409,7 +1412,7 @@ Name=${INTERFACE}
 DHCP=yes
 EOF
 
-## Restart systend-network:
+## Restart network:
 systemctl restart systemd-network
 #+end_run
 
