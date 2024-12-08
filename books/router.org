@@ -615,17 +615,29 @@ FILESYSTEM_SIZE=20 \
 If you installed Proxmox with ZFS storage, set =STORAGE=local-zfs=.
 #+end_notice
 
-* Create Router VM
+* Create the router
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: create-router-vm
 :EXPORT_HUGO_WEIGHT: 205 
 :END:
 
-** Create the Router VM
+** Create the router
 :PROPERTIES:
-:EXPORT_FILE_NAME: 000230-create-router-vm
+:EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_WEIGHT: 230
-:EXPORT_HUGO_SLUG: create-router-vm
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Create the VM
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000240-create-the-router-vm
+:EXPORT_HUGO_WEIGHT: 240
+:EXPORT_HUGO_SLUG: create-the-router-vm
 :END:
 
 Create the router VM with the IP address =10.10.1.2= and the mnemonic
@@ -719,8 +731,7 @@ VM_ID=102 && \
 qm snapshot ${VM_ID} init --description "Initial"
 #+end_run
 
-
-*** Start the Router VM
+*** Start the router VM
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
 #+begin_run
@@ -769,7 +780,6 @@ Copy your workstation key to the router VM:
 ssh -A pve-router ssh-copy-id router
 #+end_run
 
-
 *** Connect to the VM
 
 #+attr_shortcode: :style other :title Run this on the Proxmox PVE host
@@ -788,7 +798,7 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 The first time you connect, you will need to accept the SSH fingerprint
 the first time, type =yes= and press Enter.
 
-** Setup Router Network
+** Setup router network
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000250-setup-router-network
 :EXPORT_HUGO_WEIGHT: 250
@@ -800,7 +810,7 @@ the first time, type =yes= and press Enter.
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
 dnf install -y \
-    dnsutils nmap netcat iperf mtr tcpdump \
+    dnsutils dnsmasq dnscrypt-proxy nmap netcat iperf mtr tcpdump \
     iftop bmon nload speedtest-cli whois arp-scan
 #+end_run
 
@@ -1001,7 +1011,7 @@ ip add show dev lan
 ...
 #+end_stdout
 
-** Configure Routes
+** Configure routes
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000260-configure-routes
 :EXPORT_HUGO_WEIGHT: 260
@@ -1087,8 +1097,8 @@ export UDP_ACCEPT_LAN=53,67,68
 export UDP_ACCEPT_WAN=
 
 ## Forward connections from LAN:
-export TCP_FORWARD_LAN=8000:93.184.215.14:80,2222:192.168.1.1:22
-export UDP_FORWARD_LAN=53:1.1.1.1:53,5353:1.0.0.1:53
+#export TCP_FORWARD_LAN=8000:93.184.215.14:80,2222:192.168.1.1:22
+#texport UDP_FORWARD_LAN=53:1.1.1.1:53,5353:1.0.0.1:53
 
 ## Forward connections from WAN:
 export TCP_FORWARD_WAN=
@@ -1131,7 +1141,8 @@ variables, which this script sets up:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-systemctl enable --now nifty-router
+systemctl enable nifty-router
+systemctl restart nifty-router
 #+end_run
 
 
@@ -1150,33 +1161,51 @@ If it doesn't work, test that you can at least ping the router (=ping
 your script.
 #+end_notice
 
-** Configure DNS
+** Configure DNS and DHCP
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000265-configure-dns
 :EXPORT_HUGO_WEIGHT: 265
 :EXPORT_HUGO_SLUG: configure-dns
 :END:
 
-[[https://www.dnscrypt.org#dnscrypt-proxy][dnscrypt-proxy]] is a local caching DNS proxy which can be configured to
-use [[https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/dns-over-https-client/#dnscrypt-proxy][Cloudflare DNS over HTTP (DoH)]] as the upstream resolver, or any
-other provider you choose.
+DHCP is the process your LAN clients perform when they are first
+connected to the network: the client asks the router to configure an
+IP address for them, they recieve the address, and can now get online.
+DNS is how your LAN clients can ask the router what the IP address is
+for any domain name, allowing you to easily navigate the Internet by
+entering names like =example.com=.
 
-*** Install dnscrypt-proxy
+To configure DHCP and DNS for your LAN will require two interrelated
+services to run on the router:
 
-#+attr_shortcode: :style secondary :title Run this on the Router VM
-#+begin_run
-sudo dnf install -y dnscrypt-proxy
-#+end_run
+ * [[https://www.dnscrypt.org#dnscrypt-proxy][dnscrypt-proxy]] is a local caching DNS proxy which can be configured
+   to use [[https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/dns-over-https-client/#dnscrypt-proxy][Cloudflare DNS over HTTP (DoH)]] as the upstream resolver, or
+   any other provider you choose.
+
+ * [[https://thekelleys.org.uk/dnsmasq/doc.html][dnsmasq]] is a DHCP server and DNS forwarder for small networks.
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+dnscrypt-proxy will be set to only listen on localhost port 53,
+therfore the LAN client cannot directly communicate with it. Dnsmasq
+is what the LAN client will interact with. In addition to being the
+DHCP server for the LAN, dnsmasq has the job of forwarding any DNS
+queries to the dnscrypt resolver on localhost.
+#+end_notice
 
 *** Configure dnscrypt-proxy
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
+## Configure the listen address for localhost only:
+## Set the upstream cloudflare DNS resolver:
 sed -i \
   -e "s/^listen_addresses =.*/listen_addresses = ['127.0.0.1:53','[::1]:53']/" \
   -e "s/^# server_names =.*/server_names = ['cloudflare']/" \
   /etc/dnscrypt-proxy/dnscrypt-proxy.toml
 
+## Hard code the dnscrypt resolver as the default:
+## Lock the resolv config so it cannot be modified again:
 chattr -i /etc/resolv.conf || true
 rm -f /etc/resolv.conf
 cat &lt;&lt;EOF > /etc/resolv.conf
@@ -1184,45 +1213,18 @@ nameserver ::1
 nameserver 127.0.0.1
 options edns0
 EOF
-
 chattr +i /etc/resolv.conf
 
+## Enable the dnscrypt service:
 systemctl enable dnscrypt-proxy
 systemctl restart dnscrypt-proxy
 #+end_run
 
-dnscrypt-proxy will only listen on localhost. In the next chapter,
-dnsmasq will be setup to forward LAN client requests to the local
-dnscrypt resolver.
-
-** Configure DHCP
-:PROPERTIES:
-:EXPORT_FILE_NAME: 000270-configure-dhcp
-:EXPORT_HUGO_WEIGHT: 270
-:EXPORT_HUGO_SLUG: configure-dhcp
-:END:
-
-[[https://thekelleys.org.uk/dnsmasq/doc.html][dnsmasq]] is a DHCP and DNS forwarder service.
-
-#+attr_shortcode: :style primary :title Info
-#+begin_notice
-Despite the name, dnsmasq's main job is to provide DHCP service to the
-LAN. It will also forward DNS queries to your local dnscrypt-proxy. In
-addition, dnsmasq will resolve any host name found in the router VM's
-=/etc/hosts= file.
-#+end_notice
-
-*** Install dnsmasq
+*** Create dnsmasq service definition
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-sudo dnf install -y dnsmasq
-#+end_run
-
-*** Create service definition
-
-#+attr_shortcode: :style secondary :title Run this on the Router VM
-#+begin_run
+## Create instantiable dnsmasq service file:
 cat <<'EOF' > /etc/systemd/system/dnsmasq@.service
 [Unit]
 Description=dnsmasq for %i
@@ -1243,6 +1245,7 @@ ProtectSystem=full
 WantedBy=multi-user.target
 EOF
 
+## Reload systemd service files:
 systemctl daemon-reload
 #+end_run
 
@@ -1272,7 +1275,7 @@ export DHCP_LAN_LEASE=12h
 ## bash array of "MAC_ADDRESS,IP_ADDRESS,HOST_NAME,LEASE_TIME"
 STATIC_LEASES=(
   ## "9c:69:b4:65:7d:f8,192.168.10.2,arch-client1,12h"
-  "9c:69:b4:65:7d:f8,192.168.10.2,arch-client1,12h"
+  ## "9c:69:b4:65:7d:f9,192.168.10.3,arch-client2,12h"
 )
 ## convert array to string:
 export DHCP_LAN_STATIC_LEASES="${STATIC_LEASES[@]}"
@@ -1294,7 +1297,18 @@ chmod +x /usr/local/sbin/dnsmasq-lan.sh
 ln -sf /usr/local/sbin/dnsmasq-lan.sh ~/dnsmasq-lan.sh
 #+end_run
 
-*** Enable the dnsmasq server
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Make sure to edit the following config variables:
+
+ * =DOMAIN_LAN= customize your own LAN domain name.
+ * =DHCP_LAN_STATIC_LEASES= customize your own list of hosts that
+   should have static DHCP leases
+   * =STATIC_LEASES= is an intermediate array to help build
+     =DHCP_LAN_STATIC_LEASES=, with a set of examples commented out.
+#+end_notice
+
+*** Enable the dnsmasq service
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
@@ -1302,3 +1316,174 @@ systemctl enable dnsmasq@lan.service
 systemctl restart dnsmasq@lan.service
 systemctl status dnsmasq@lan.service --no-pager
 #+end_run
+
+*** Custom host names
+
+dnsmasq is setup to prioritize any host names defined in =/etc/hosts=
+and to resolve these by itself (without forwarding the query to
+dnscrypt). You can put any names you want in this file, whether they
+are masking real domains, or even if they are completely made up.
+
+#+begin_example
+# Example /etc/hosts file
+192.168.10.2 foo foo.lan.example.com
+192.168.10.3 bar boatymcboatface bar.lan.example.com
+#+end_example
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+Dnscrypt will only read the hosts file on startup, so you must restart
+the dnsmasq service each time you edit =/etc/hosts=:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+systemctl restart dnsmasq@lan
+#+end_run
+#+end_notice
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+## All names from /etc/hosts are resolved.
+## Short, long, made up, doesn't matter:
+
+$ dig foo
+...
+;; ANSWER SECTION:
+foo.                    0       IN      A       192.168.10.2
+
+$ dig foo.lan.example.com
+...
+;; ANSWER SECTION:
+foo.lan.example.com.    0       IN      A       192.168.10.2
+
+$ dig boatymcboatface
+...
+;; ANSWER SECTION:
+boatymcboatface.    0       IN      A       192.168.10.3
+#+end_run
+
+* Configure LAN clients
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: configure-clients
+:EXPORT_HUGO_WEIGHT: 300 
+:END:
+
+** Configure LAN clients
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 301
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+Connect your LAN clients to the physical lan interface of the VM.
+
+*** Setup DHCP client
+
+Most clients you simply need to plug the cable in and they will
+automatically configure themselves by DHCP.
+
+To make this explicit in systemd-networkd:
+
+#+attr_shortcode: :style other :title Run this on the LAN client machine
+#+begin_run
+## Retrieve the MAC address of your interface:
+mac=$(ip link show lan | awk '/ether/ {print $2}')
+
+## Create the systemd-network link config:
+cat &lt;&lt;EOF > /etc/systemd/network/01-lan.link
+[Match]
+MACAddress=${mac}
+
+[Link]
+Name=lan
+EOF
+
+## Create the systemd-network DHCP config:
+cat &lt;&lt;EOF > /etc/systemd/network/20-lan.network
+[Match]
+Name=lan
+
+[Network]
+DHCP=yes
+EOF
+
+## Restart systend-network:
+systemctl restart systemd-network
+#+end_run
+
+*** Test networking
+
+Test that the client can ping the router IP address:
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ ping -c3 192.168.10.1
+PING 192.168.10.1 (192.168.10.1) 56(84) bytes of data.
+64 bytes from 192.168.10.1: icmp_seq=1 ttl=64 time=0.726 ms
+64 bytes from 192.168.10.1: icmp_seq=2 ttl=64 time=0.371 ms
+64 bytes from 192.168.10.1: icmp_seq=3 ttl=64 time=0.847 ms
+#+end_run
+
+Test that the client can ping an Ineternet IP address:
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ ping -c3 1.1.1.1
+PING 1.1.1.1 (1.1.1.1) 56(84) bytes of data.
+64 bytes from 1.1.1.1: icmp_seq=1 ttl=55 time=13.6 ms
+64 bytes from 1.1.1.1: icmp_seq=2 ttl=55 time=11.2 ms
+64 bytes from 1.1.1.1: icmp_seq=3 ttl=55 time=10.7 ms
+#+end_run
+
+Verify that the client DNS resolver is the router IP address and LAN
+domain name:
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ cat /etc/resolv.conf
+domain lan.example.com
+search lan.example.com
+nameserver 192.168.10.1
+#+end_run
+
+Test that the client can query DNS names on the Internet (this query
+goes through dnscrypt):
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ dig time.xmission.com
+...
+;; ANSWER SECTION:
+time.xmission.com.      151     IN      CNAME   clock.xmission.com.
+clock.xmission.com.     151     IN      A       198.60.22.240
+#+end_run
+
+Test that the client can query DNS names from the router =/etc/hosts=
+file (this query is handled by dnsmasq directly):
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ dig foo.lan.example.com
+...
+;; ANSWER SECTION:
+foo.lan.example.com.    0       IN      A       192.168.10.2
+#+end_run
+
+Test that you can ping an Internet server by name:
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ ping -c3 time.xmission.com 
+PING clock.xmission.com (198.60.22.240) 56(84) bytes of data.
+64 bytes from clock.xmission.com (198.60.22.240): icmp_seq=1 ttl=51 time=15.4 ms
+64 bytes from clock.xmission.com (198.60.22.240): icmp_seq=2 ttl=51 time=11.5 ms
+64 bytes from clock.xmission.com (198.60.22.240): icmp_seq=3 ttl=51 time=10.5 ms
+#+end_run
+
+Find your public gateway IP address:
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+$ curl https://ifconfig.me && echo
+#+end_run
+
