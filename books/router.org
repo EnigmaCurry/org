@@ -799,11 +799,11 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 The first time you connect, you will need to accept the SSH fingerprint
 the first time, type =yes= and press Enter.
 
-** Setup router network
+** Install router dependencies
 :PROPERTIES:
-:EXPORT_FILE_NAME: 000250-setup-router-network
-:EXPORT_HUGO_WEIGHT: 250
-:EXPORT_HUGO_SLUG: setup-router-network
+:EXPORT_FILE_NAME: 000249-install-router-dependencies
+:EXPORT_HUGO_WEIGHT: 249
+:EXPORT_HUGO_SLUG: install-router-dependencies
 :END:
 
 *** Install network utilities
@@ -814,6 +814,35 @@ dnf install -y \
     dnsutils dnsmasq dnscrypt-proxy nmap netcat iperf mtr tcpdump \
     iftop bmon nload speedtest-cli whois arp-scan
 #+end_run
+
+*** Install Nifty-Filter
+
+[nifty-filter](https://github.com/EnigmaCurry/nifty-filter) is used as
+a convenient method of configuring nftables.
+
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+## TODO: use stable version here
+
+dnf install -y rustup @development-tools @development-libs
+rustup-init -y
+. ~/.cargo/env
+
+CARGO_INSTALL_ROOT=/usr/local \
+cargo install \
+      --git https://github.com/EnigmaCurry/nifty-filter \
+      --branch tui
+#+end_run
+
+
+
+** Setup router network
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000250-setup-router-network
+:EXPORT_HUGO_WEIGHT: 250
+:EXPORT_HUGO_SLUG: setup-router-network
+:END:
 
 *** Setup systemd-networkd
 
@@ -1020,26 +1049,6 @@ ip add show dev lan
 :END:
 
 nftables (netfilter) is used to configure the firewall and routes.
-
-*** Install Nifty-Filter
-
-[nifty-filter](https://github.com/EnigmaCurry/nifty-filter) is used as
-a convenient method of configuring nftables.
-
-
-#+attr_shortcode: :style secondary :title Run this on the Router VM
-#+begin_run
-## TODO: use stable version here
-
-dnf install -y rustup @development-tools @development-libs
-rustup-init -y
-. ~/.cargo/env
-
-CARGO_INSTALL_ROOT=/usr/local \
-cargo install \
-      --git https://github.com/EnigmaCurry/nifty-filter \
-      --branch tui
-#+end_run
 
 *** Create service definition
 
@@ -1554,7 +1563,7 @@ $ curl https://ifconfig.me && echo
 index
 #+end_index
 
-** Native LAN recap
+** To VLAN or not to VLAN?
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000402-a-recap
 :EXPORT_HUGO_WEIGHT: 402
@@ -1695,3 +1704,196 @@ graph LR
     D --> E
 #+end_mermaid
 #+end_notice
+
+** Configure VLANs
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000404-configure-vlans
+:EXPORT_HUGO_WEIGHT: 404
+:EXPORT_HUGO_SLUG: configure-vlans
+:END:
+
+To retrofit the native LAN config into a VLAN config you need to do
+the following:
+
+ * Rename the =lan= interface to =trunk= which now will carry all of
+   our VLAN traffic.
+ * Create new virtual interfaces for each desired VLAN: =lan@trunk=,
+   =work@trunk=, =apps@trunk=, =iot@trunk=.
+ * Configure one or more ports on the managed switch to use specific
+   VLANs.
+
+ #+attr_shortcode: :style primary :title Info
+ #+begin_notice
+There are 4095 usable VLAN numeric IDs in the range 1 -> 4095.
+
+The number you choose is arbitrary, but by convention you can use the
+first 255 to represent specific subnets, for example VLAN =10=
+represents the subnet =192.168.10.0/24=, which is provisioned for the
+=lan@trunk= VLAN, =11= for =192.168.11.0/24= provisioned for the
+=work@trunk= VLAN, etc.
+#+end_notice
+
+*** Remove the lan interface config
+
+The existing =lan= config needs to be removed:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+rm -f /etc/systemd/network/10-lan.{link,network}
+rm -f /usr/local/sbin/dnsmasq-lan.sh
+systemctl disable --now dnsmasq@lan
+#+end_run
+
+*** Create the trunk interface config 
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+## Get the mac address for the exsting lan interface:
+mac_address=$(ip link show "lan" | awk '/ether/ {print $2}')
+
+## Rename it to trunk:
+link=/etc/systemd/network/10-trunk.link
+cat <<EOF > ${link}
+[Match]
+MACAddress=${mac_address}
+
+[Link]
+Name=trunk
+MACVLAN=on
+EOF
+
+echo -e "\n## Link: ${link}"
+cat ${link}
+#+end_run
+
+Reboot the router for the interface name change to take effect:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+reboot
+#+end_run
+
+Wait for it to reboot, log back in, and verify the name change for
+=trunk=:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip link
+#+end_run
+
+#+begin_stdout
+...
+3: trunk: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 1c:fd:08:ca:fe:bb brd ff:ff:ff:ff:ff:ff
+#+end_stdout
+
+*** Create the trunk network
+
+List all of the VLAN names you need in the trunk interface config:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+network=/etc/systemd/network/20-trunk.network
+cat &lt;&lt;EOF > ${network}
+[Match]
+Name=trunk
+Type=ether
+
+[Network]
+Description=trunk for all VLAN traffic
+VLAN=lan
+VLAN=work
+VLAN=apps
+VLAN=iot
+EOF
+#+end_run
+
+*** Create VLAN networks
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+declare -A vlan_names
+vlan_names=(
+  [10]="lan"
+  [11]="work"
+  [12]="apps"
+  [13]="iot"
+)
+
+for vlan in "${!vlan_names[@]}"; do
+  netdev="/etc/systemd/network/20-${vlan_names[$vlan]}.netdev"
+  network="/etc/systemd/network/20-${vlan_names[$vlan]}.network"
+  cat &lt;&lt;EOF > ${netdev}
+[NetDev]
+Name=${vlan_names[$vlan]}
+Kind=vlan
+
+[VLAN]
+Id=${vlan}
+EOF
+  cat &lt;&lt;EOF > ${network}
+[Match]
+Name=${vlan_names[$vlan]}
+Type=vlan
+
+[Network]
+Description=The interface for ${vlan_names[$vlan]}
+
+[Address]
+Address=192.168.${vlan}.1/24
+EOF
+  echo -e "\n## VLAN ${vlan} netdev: ${netdev}"
+  cat ${netdev}
+  echo -e "\n## VLAN ${vlan} network: ${network}"
+  cat ${network}
+done
+#+end_run
+
+
+
+*** Restart network
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+systemctl restart systemd-networkd
+#+end_run
+
+
+*** Show interfaces
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip addr
+#+end_run
+
+#+begin_stdout
+[root@router network]# ip addr
+...
+3: trunk: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 1c:fd:08:7c:74:b6 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::1efd:8ff:fe7c:74b6/64 scope link proto kernel_ll 
+       valid_lft forever preferred_lft forever
+5: lan@trunk: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global lan
+6: work@trunk: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    inet 192.168.11.1/24 brd 192.168.11.255 scope global work
+7: iot@trunk: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    inet 192.168.13.1/24 brd 192.168.13.255 scope global iot
+8: apps@trunk: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    inet 192.168.12.1/24 brd 192.168.12.255 scope global apps
+#+end_stdout
+
+** Configure Switch
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000405-configure-switch
+:EXPORT_HUGO_WEIGHT: 405
+:EXPORT_HUGO_SLUG: configure-switch
+:END:
+
+Having just configured the physical network interface on the VM as a
+trunk port, it is important that you protect it. You should not let
+any client connect directly to the trunk interface -- You must use a
+managed switch as an intermediary. The switches job is to enforce VLAN
+tagging on specific switch ports. Rather than configure your clients
+for specific VLANs, you configure the switch to do it all by itself,
+by assigning dedicated ports to specific clients.
