@@ -1386,22 +1386,24 @@ To make this explicit in systemd-networkd:
 
 #+attr_shortcode: :style other :title Run this on the LAN client machine
 #+begin_run
+INTERFACE=lan
+
 ## Retrieve the MAC address of your interface:
-mac=$(ip link show lan | awk '/ether/ {print $2}')
+MAC=$(ip link show ${INTERFACE} | awk '/ether/ {print $2}')
 
 ## Create the systemd-network link config:
-cat &lt;&lt;EOF > /etc/systemd/network/01-lan.link
+cat &lt;&lt;EOF > /etc/systemd/network/01-${INTERFACE}.link
 [Match]
-MACAddress=${mac}
+MACAddress=${MAC}
 
 [Link]
-Name=lan
+Name=${INTERFACE}
 EOF
 
 ## Create the systemd-network DHCP config:
-cat &lt;&lt;EOF > /etc/systemd/network/20-lan.network
+cat &lt;&lt;EOF > /etc/systemd/network/20-${INTERFACE}.network
 [Match]
-Name=lan
+Name=${INTERFACE}
 
 [Network]
 DHCP=yes
@@ -1412,6 +1414,32 @@ systemctl restart systemd-network
 #+end_run
 
 *** Test networking
+
+Verify the interface has the proper IP address for the LAN network.
+
+#+attr_shortcode: :style other :title Run this on a LAN client
+#+begin_run
+INTERFACE=lan
+ip addr show dev ${INTERFACE}
+#+end_run
+
+#+begin_stdout
+3: lan: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether 1c:fd:08:7c:74:b6 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global lan
+       valid_lft forever preferred_lft forever
+    inet6 fe80::1efd:8ff:fe7c:74b6/64 scope link proto kernel_ll 
+       valid_lft forever preferred_lft forever
+#+end_stdout
+
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+The proper IP address (e.g., =192.168.10.2=) should be according to
+your dnsmasq configuration, randomly in the range set by
+=DHCP_LAN_RANGE_START= to =DHCP_LAN_RANGE_END=, or explicly by the
+static lease in =DHCP_LAN_STATIC_LEASES=.
+#+end_notice
 
 Test that the client can ping the router IP address:
 
@@ -1424,7 +1452,7 @@ PING 192.168.10.1 (192.168.10.1) 56(84) bytes of data.
 64 bytes from 192.168.10.1: icmp_seq=3 ttl=64 time=0.847 ms
 #+end_run
 
-Test that the client can ping an Ineternet IP address:
+Test that the client can ping an Internet IP address:
 
 #+attr_shortcode: :style other :title Run this on a LAN client
 #+begin_run
