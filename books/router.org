@@ -1378,35 +1378,54 @@ boatymcboatface.    0       IN      A       192.168.10.3
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-Connect your LAN clients to the physical lan interface of the VM.
+You can connect up 254 LAN clients to the physical =lan= interface of
+the VM. For more than one connection, you'll need to use a network
+switch in between.
+
+#+begin_mermaid
+graph LR
+    A[LAN Client 1]
+    F[LAN Client 2]
+    B[...LAN Client X]
+    C[LAN switch]
+    D[LAN <<< Router >>> WAN]
+    E[Internet]
+
+    A --> C
+    F --> C
+    B --> C
+    C --> D
+    D --> E
+#+end_mermaid
 
 *** Setup DHCP client
 
-Most clients you simply need to plug the cable in and they will
-automatically configure themselves by DHCP.
+For most clients, you simply need to plug the cable in and they will
+automatically configure themselves via DHCP.
 
-To make this explicit in systemd-networkd:
+To make DHCP explicit on the client, configure systemd-network:
 
 #+attr_shortcode: :style other :title Run this on the LAN client machine
 #+begin_run
-INTERFACE=lan
+## The current interface name (this will be renamed 'lan'):
+INTERFACE=eth0
 
 ## Retrieve the MAC address of your interface:
 MAC=$(ip link show ${INTERFACE} | awk '/ether/ {print $2}')
 
 ## Create the systemd-network link config:
-cat &lt;&lt;EOF > /etc/systemd/network/01-${INTERFACE}.link
+cat &lt;&lt;EOF > /etc/systemd/network/01-lan.link
 [Match]
 MACAddress=${MAC}
 
 [Link]
-Name=${INTERFACE}
+Name=lan
 EOF
 
 ## Create the systemd-network DHCP config:
-cat &lt;&lt;EOF > /etc/systemd/network/20-${INTERFACE}.network
+cat &lt;&lt;EOF > /etc/systemd/network/20-lan.network
 [Match]
-Name=${INTERFACE}
+Name=lan
 
 [Network]
 DHCP=yes
@@ -1422,8 +1441,7 @@ Verify the interface has the proper IP address for the LAN network.
 
 #+attr_shortcode: :style other :title Run this on a LAN client
 #+begin_run
-INTERFACE=lan
-ip addr show dev ${INTERFACE}
+ip addr show dev lan
 #+end_run
 
 #+begin_stdout
@@ -1531,4 +1549,149 @@ $ curl https://ifconfig.me && echo
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-TODO
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Native LAN recap
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000402-a-recap
+:EXPORT_HUGO_WEIGHT: 402
+:EXPORT_HUGO_SLUG: a-recap
+:END:
+
+Let's recap what has been accomplished so far:
+
+#+begin_mermaid
+---
+title: A basic native LAN router
+---
+graph LR
+    A[LAN Client 1]
+    B[...LAN Client X]
+    C[LAN switch]
+    D[LAN <<< Router >>> WAN]
+    E[Internet]
+
+    A --> C
+    B --> C
+    C --> D
+    D --> E
+#+end_mermaid
+
+
+ * Proxmox has been installed to create a router VM with PCI
+   passthrough of two physical network interfaces.
+ * The VM uses one interface for the LAN and the other interface for
+   the WAN, and they are renamed =lan= and =wan= respectively.
+ * The router forwards connections from =lan= to =wan= (IP masquerade
+   / SNAT), providing Internet access to the LAN clients.
+ * The router forwards connections from =wan= to specific routes on
+   =lan= (DNAT), making select services available from the Internet.
+ * The router provides a DHCP and DNS service to the LAN, which
+   assists LAN clients to get online quickly with minimal client side
+   config.
+ * Up to 254 LAN clients can share the same switch and router and all
+   clients will be on the same native subnet.
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+A basic LAN router doesn't need anything more than this. If this is
+all you need you can stop right here.
+#+end_notice
+
+#+attr_shortcode: :style primary :title But don't you need more than one LAN?
+#+begin_notice
+The major drawback of this architecture is the last point:
+
+ * Up to 254 LAN clients can share the same switch and router and all
+   clients will be on the same native subnet.
+
+This means that all the clients connected to the switch are on the
+same physical network and they can all talk to each other. This is
+fine (even desirable) in the simple case where you only have a few
+clients and they are all friends and they all trust each other, but
+security is pretty lax with this strategy.
+
+Most likely you have some devices that don't need to (and shouldn't)
+talk to each other. Wouldn't it be great to be able to have multiple
+segmented networks, for different purposes? For example, a normal LAN
+network for the family, an office network for work, an IoT network for
+home automation, etc.
+
+If your router has additional network interfaces you can just create
+additional networks. If you buy another couple of switches, you can
+end up with something like this:
+
+#+begin_mermaid
+---
+title: Several segmented physical LANs
+---
+
+graph LR
+    A[Family PC 1]
+    B[Family Printer]
+    C[LAN switch]
+    H[Office workstation]
+    F[Office switch]
+    I[Camera 1]
+    G[IoT switch]
+    D[Router]
+    E[Internet]
+
+    A --> C
+    B --> C
+    C --> D
+    F --> D
+    G --> D
+    H --> F
+    I --> G
+    D --> E
+#+end_mermaid
+
+This physically segmented archicture is fine, but it has some major
+drawbacks as well:
+
+ * Its a lot of ethernet cables.
+ * Unless you run more than one cable to each room, a client's network
+   subnet is determined by its room location. You can't do work in the
+   family den. You can't print from the office.
+ * The number of LANs you can create is limited by the number of
+   physical interfaces on your router.
+
+This chapter will discuss a superiour strategy: VLANs
+
+ * VLANs allow multiple segmented networks to share a single ethernet
+   cable (up to 4096 VLANs).
+ * VLANs require a "managed" network switch, which means it has an
+   admin tool that allows you to configure each switch port to be on a
+   different (or multiple) VLANs.
+ * If you put a VLAN aware switch in each room, you only need one
+   cable going to each room, and you can setup clients in that room to
+   access any of your VLANs.
+
+The VLAN architecture looks like this:
+
+#+begin_mermaid
+---
+title: Several virtual LANs on one VLAN aware switch
+---
+
+graph LR
+    A[Family PC 1 - LAN]
+    B[Family Printer - LAN]
+    C[VLAN aware switch]
+    H[Office workstation - OFFICE]
+    I[Camera 1 - IOT]
+    D[Router]
+    E[Internet]
+
+    A --> C
+    B --> C
+    C --> D
+    H --> C
+    I --> C
+    D --> E
+#+end_mermaid
+#+end_notice
