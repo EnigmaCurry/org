@@ -1054,12 +1054,11 @@ nftables (netfilter) is used to configure the firewall and routes.
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-cat <<'EOF' > /etc/systemd/system/nifty-router.service
+cat <<'EOF' > /etc/systemd/system/nifty-filter.service
 [Unit]
 Description=Custom router script
-After=network.target
-Before=network-online.target nss-lookup.target
-Wants=nss-lookup.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
@@ -1067,6 +1066,7 @@ ExecStart=/usr/local/sbin/router.sh
 RemainAfterExit=yes
 PrivateDevices=true
 ProtectSystem=full
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
@@ -1120,7 +1120,8 @@ export UDP_FORWARD_WAN=
 sysctl -w net.ipv4.ip_forward=1
 
 echo "## Applying router config:"
-nifty-filter nftables --validate | nft -f -
+nifty-filter nftables --validate
+nifty-filter nftables | nft -f -
 nft list ruleset
 echo "## Applied router configuration successfully!"
 EOF
@@ -1153,8 +1154,8 @@ variables, which this script sets up:
 
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
-systemctl enable nifty-router
-systemctl restart nifty-router
+systemctl enable nifty-filter
+systemctl restart nifty-filter
 #+end_run
 
 
