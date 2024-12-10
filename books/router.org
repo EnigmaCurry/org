@@ -1889,49 +1889,54 @@ ip addr
 :EXPORT_HUGO_SLUG: configure-switch
 :END:
 
-Having just configured the physical network interface on the VM as a
-trunk port, it is important that you protect it. You should not let
-any client connect directly to the trunk interface -- You must use a
-managed switch as an intermediary. The switche's job is to enforce VLAN
-tagging on specific switch ports. Rather than configure your clients
-for specific VLANs, you configure the switch to do it all by itself,
-by assigning dedicated ports to specific clients.
+It is important that you protect the trunk interface of the router
+with a managed switch. You should not let any client connect directly
+to the trunk interface -- you must use a managed switch as an
+intermediary. One of the job's of the switch is to enforce VLAN
+tagging on specific switch ports. Don't require your clients to
+provide their own VLAN config: configure the VLANs on the switch
+itself and assign each port to specific VLANs.
 
 *** Example switch
 
-The example network is using a Sodola 9 port web managed switch ([[https://ec-share.nyc3.digitaloceanspaces.com/sodola-switch.pdf][PDF
-manual here]]).
+In this example, we will be working with a Sodola 9 port web managed
+switch ([[https://ec-share.nyc3.digitaloceanspaces.com/sodola-switch.pdf][PDF manual here]]).
+
+ * Ports 1-8 operate at 2.5Gbps, and these will be dedicated to specific VLANs.
+ * Port 9 operates at 10Gpbs, and this will provide the trunk
+   containing all VLANs.
+
+These ports will be assigned as follows:
 
 [[file:/img/router/sodola-9ports.webp]]
 
-For this example, the ports will be assigned as follows:
-
- * Port 1 - Management of the switch factory IP address: =192.168.2.1=
- * Port 2 - LAN (VLAN 10) - =192.168.10.1/24= subnet
- * Port 3 - LAN (VLAN 10) - =192.168.10.1/24= subnet
- * Port 4 - LAN (VLAN 10) - =192.168.10.1/24= subnet
- * Port 5 - reserved
- * Port 6 - reserved
- * Port 7 - reserved
- * Port 8 - reserved
- * Port 9 - TRUNK (all VLANs @10Gbps)
+   * Port 1 - MGMT is used only for the management of the Sodola
+     switch. Factory IP address: =192.168.2.1=.
+   * Port 2 - LAN (VLAN 10 untagged) - =192.168.10.1/24= subnet.
+   * Port 3 - LAN (VLAN 10 untagged) - =192.168.10.1/24= subnet.
+   * Port 4 - LAN (VLAN 10 untagged) - =192.168.10.1/24= subnet.
+   * Port 5 - WORK (VLAN 11 untagged) - =192.168.11.1/24= subnet.
+   * Port 6 - APPS (VLAN 12 untagged) - =192.168.12.1/24= subnet.
+   * Port 7 - APPS (VLAN 12 untagged) - =192.168.12.1/24= subnet.
+   * Port 8 - IOT (VLAN 13 untagged) - =192.168.13.1/24= subnet.
+   * Port 9 - TRUNK (all tagged VLANs @10Gbps.)
 
 *** Login to the management tool
 
-Plug a client into port 1 and set a static IP address of
-=192.168.2.2=. Open your browser to http://192.168.2.2.
+Plug a workstation client into port 1 and set a static IP address of
+=192.168.2.2=. Open your browser to [[http://192.168.2.1]].
 
 #+attr_shortcode: :style tip :title Tip
 #+begin_notice
 If you don't have a graphical session on the client (or no browser),
-you can forward the port over to another client that does.
+you can forward the port over to another workstation that does:
 
 #+begin_run
-## From your graphical workstation:
+## From your graphical workstation,
 ssh -L 8000:192.168.2.1:80 your-jump-server
 #+end_run
 
-Then open your browser to =http://localhost:8000=.
+Then open your browser to http://localhost:8000.
 #+end_notice
 
 Enter the credentials when prompted:
@@ -1939,18 +1944,46 @@ Enter the credentials when prompted:
  * Username: =admin=
  * Password: =admin=.
 
+*** Configure switch VLANs
+ 
 Find the =Configuration= menu.
  * Find the =VLAN= menu.
-   * Find the =802.1Q VLAN= menu:
+   * Find the =802.1Q VLAN= menu.
 
+Create the following VLANs:
+ 
 [[file:/img/router/sodola-lan-vlan.webp]]
 
-   * Create the VLAN:
-     * ID: =10=
-     * Name: =lan=
-     * Untagged Ports: 2,3,4
-     * Tagged Ports: 9
+   * Create VLAN 10: 
+     * VLAN: =10=
+     * VLAN Name: =lan=
+     * *Untagged* Ports: 2,3,4
+     * *Tagged* Ports: 9
+     * Click =Add / Modify=
+       
+   * Create VLAN 11: 
+     * VLAN: =11=
+     * VLAN Name: =work=
+     * *Untagged* Ports: 5
+     * *Tagged* Ports: 9
+     * Click =Add / Modify=
+       
+   * Create VLAN 12: 
+     * VLAN: =12=
+     * VLAN Name: =apps=
+     * *Untagged* Ports: 6,7
+     * *Tagged* Ports: 9
+     * Click =Add / Modify=
+              
+   * Create VLAN 13: 
+     * VLAN: =13=
+     * VLAN Name: =iot=
+     * *Untagged* Ports: 8
+     * *Tagged* Ports: 9
+     * Click =Add / Modify=
 
+Configure the PVID of each VLAN:
+   
    * Find the =802.1Q VID= menu:
 
 [[file:/img/router/sodola-lan-vlan-vid.webp]]
@@ -1958,8 +1991,153 @@ Find the =Configuration= menu.
      * For each port:
        * Set the PVID, which sets the native VLAN for that port.
        * Set the Accepted Frame Type, which sets the expected type of data to come in that port.
-         * For LANs (ports 2,3,4..), set this to =Untag-only= and
-           native traffic will become tagged automatically.
-         * For TRUNK (port 9), set this to =Tag-only= and all
-           pre-tagged traffic will flow unmodified.
+         * For MGMT (port 1), leave this as the default =All=.
+         * For VLANs (ports 2-8..), set this to =Untag-only= and then
+           native traffic will become tagged for that VLAN
+           automatically.
+         * For TRUNK (port 9), set this to =Tag-only= and
+           all traffic pre-tagged will flow unmodified.
 
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+By setting the ports Accepted Frame Type to =Untag-Only=, it makes it
+very easy to configure your clients. To work with an untagged port,
+you simply need to connect it to a normal (DHCP) client that has no
+VLAN config. A normal (DHCP) client's traffic /becomes/ tagged with
+the PVID assigned to that port.
+
+The same is true if you plug another unmanaged switch into the managed
+switch: all traffic coming from the unmanaged switch will become
+tagged with the PVID of the router switch port its plugged into, no
+configuration is necessary on the part of the unmanaged switch or any
+of its clients:
+
+
+#+begin_mermaid
+---
+title: One VLAN per room (with an unmanaged switch in each room)
+---
+graph LR
+    A[Living Room = LAN]
+    F[Office = WORK]
+    G[Kitchen = LAN]
+    C[Router Switch]
+    D[Router]
+    J[Laptop = LAN]
+    T[TV = LAN?!]
+    K[Workstation = WORK]
+    L[Refrigerator = LAN?!]
+    V[Laptop = LAN]
+    
+    J --> A
+    T --> A
+    K --> F
+    L --> G
+    A --> C
+    F --> C
+    G --> C
+    C --> D
+    V --> G
+#+end_mermaid
+
+
+If you have the managed router switch in a central location in a home,
+you can put unmanaged switches in every room that only require access
+to one VLAN. For rooms that require access to more than one VLAN, it
+requires placing another managed switch in that room, and then
+configuring the port for tagged traffic only, which creates a kind of
+sub-trunk port between the two managed switches:
+
+
+#+begin_mermaid
+---
+title: Several VLANs per room (with a managed switch in each room)
+---
+graph LR
+    A[Living Room = IOT, WORK, LAN]
+    F[Office = WORK]
+    G[Kitchen = IOT, LAN]
+    C[Router Switch]
+    D[Router]
+    J[Laptop = LAN or WORK]
+    K[Workstation = WORK]
+    L[Refrigerator = IOT]
+    T[TV = IOT]
+    V[Laptop = LAN]
+
+    J --> A
+    K --> F
+    L --> G
+    T --> A
+    V --> G
+    
+    A --> C
+    F --> C
+    G --> C
+    C --> D
+#+end_mermaid
+
+#+end_notice
+
+*** Set port isolation
+
+The port isolation setting can further isolate the networks between
+the VLAN ports. For example, ports 2,3,4 and 9 all need to talk to
+each other, but ports 1,5,6,7,8 should not be able to participate in
+those conversations. The isolation list can make this communication
+explicitly denied.
+ 
+ * Find the =Configuration= menu:
+
+  * Find the =Port Isolation= menu:
+
+   * Using the multi-select boxes, set the port isolation list for
+     each port, and then click the =Apply= button.
+
+Here are the final port isolation lists of the example:
+
+[[file:/img/router/sodola-port-isolation.webp]]
+
+ * Port 1 (MGMT):
+   * Isolation list: =1=
+   * Since this is the management interface of the switch itself, it
+     doesn't need to talk to any other ports.
+ * Port 2 (LAN):
+   * Isolation list: =2-4,9=
+   * LAN ports can talk to each other and to TRUNK.
+ * Port 3 (LAN):
+   * Isolation list: =2-4,9=
+   * LAN ports can talk to each other and to TRUNK.
+ * Port 4 (LAN):
+   * Isolation list: =2-4,9=
+   * LAN ports can talk to each other and to TRUNK.
+ * Port 5 (WORK):
+   * Isolation list: =5,9=
+   * Since there's only one WORK port, it only needs to talk to TRUNK.
+ * Port 6 (APPS):
+   * Isolation list: =6-7,9=
+   * APPS can talk to each other and to TRUNK.
+ * Port 7 (APPS):
+   * Isolation list: =6-7,9=
+   * APPS can talk to each other and to TRUNK.
+ * Port 8 (IOT):
+   * Isolation list: =8-9=
+   * Since there's only one IOT port, it only needs to talk to TRUNK.
+ * Port 9 (TRUNK):
+   * Isolation list: =2-9=
+   * TRUNK can talk to any port except for MGMT (port 1)
+
+*** Save the switch config
+
+After making changes on the switch you must save the config:
+
+* Find the =Tools= menu:
+
+  * Find the =Save= menu:
+    
+    * Click the =Save= button.
+      
+  * Find the =Reboot= menu:    
+
+    * Click the =Reboot= button to test that the config is still
+      applied on next boot.
