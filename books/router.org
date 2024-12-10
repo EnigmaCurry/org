@@ -1740,8 +1740,6 @@ The existing =lan= config needs to be removed:
 #+attr_shortcode: :style secondary :title Run this on the Router VM
 #+begin_run
 rm -f /etc/systemd/network/10-lan.{link,network}
-rm -f /usr/local/sbin/dnsmasq-lan.sh
-systemctl disable --now dnsmasq@lan
 #+end_run
 
 *** Create the trunk interface config 
@@ -1893,7 +1891,74 @@ ip addr
 Having just configured the physical network interface on the VM as a
 trunk port, it is important that you protect it. You should not let
 any client connect directly to the trunk interface -- You must use a
-managed switch as an intermediary. The switches job is to enforce VLAN
+managed switch as an intermediary. The switche's job is to enforce VLAN
 tagging on specific switch ports. Rather than configure your clients
 for specific VLANs, you configure the switch to do it all by itself,
 by assigning dedicated ports to specific clients.
+
+*** Example switch
+
+The example network is using a Sodola 9 port web managed switch ([[https://ec-share.nyc3.digitaloceanspaces.com/sodola-switch.pdf][PDF
+manual here]]).
+
+[[file:/img/router/sodola-9ports.webp]]
+
+For this example, the ports will be assigned as follows:
+
+ * Port 1 - Management of the switch factory IP address: =192.168.2.1=
+ * Port 2 - LAN (VLAN 10) - =192.168.10.1/24= subnet
+ * Port 3 - LAN (VLAN 10) - =192.168.10.1/24= subnet
+ * Port 4 - LAN (VLAN 10) - =192.168.10.1/24= subnet
+ * Port 5 - reserved
+ * Port 6 - reserved
+ * Port 7 - reserved
+ * Port 8 - reserved
+ * Port 9 - TRUNK (all VLANs @10Gbps)
+
+*** Login to the management tool
+
+Plug a client into port 1 and set a static IP address of
+=192.168.2.2=. Open your browser to http://192.168.2.2.
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+If you don't have a graphical session on the client (or no browser),
+you can forward the port over to another client that does.
+
+#+begin_run
+## From your graphical workstation:
+ssh -L 8000:192.168.2.1:80 your-jump-server
+#+end_run
+
+Then open your browser to =http://localhost:8000=.
+#+end_notice
+
+Enter the credentials when prompted:
+
+ * Username: =admin=
+ * Password: =admin=.
+
+Find the =Configuration= menu.
+ * Find the =VLAN= menu.
+   * Find the =802.1Q VLAN= menu:
+
+[[file:/img/router/sodola-lan-vlan.webp]]
+
+   * Create the VLAN:
+     * ID: =10=
+     * Name: =lan=
+     * Untagged Ports: 2,3,4
+     * Tagged Ports: 9
+
+   * Find the =802.1Q VID= menu:
+
+[[file:/img/router/sodola-lan-vlan-vid.webp]]
+
+     * For each port:
+       * Set the PVID, which sets the native VLAN for that port.
+       * Set the Accepted Frame Type, which sets the expected type of data to come in that port.
+         * For LANs (ports 2,3,4..), set this to =Untag-only= and
+           native traffic will become tagged automatically.
+         * For TRUNK (port 9), set this to =Tag-only= and all
+           pre-tagged traffic will flow unmodified.
+

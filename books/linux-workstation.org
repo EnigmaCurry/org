@@ -697,6 +697,18 @@ container. By default, new sites will always open in temporary ones,
 and so when you close your browser all the cookies for that site
 disappears.
 
+*** Install non-free codecs
+
+In order to play most videos in Firefox, you need to install non-free
+codecs from the rpm fusion repository:
+
+#+begin_run
+rpm-ostree install --reboot https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+rpm-ostree install --reboot libavcodec-freeworld
+#+end_run
+
+You will need to reboot to complete the install.
+
 ** Distrobox
 :PROPERTIES:
 :EXPORT_FILE_NAME: distrobox
@@ -959,9 +971,10 @@ This will invoke =distrobox= */on the host/*.
 ## Manual install:
 ##
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/toolbox
-sudo ln -s /usr/bin/host-spawn /usr/local/bin/distrobox
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/distroboxb
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/podman
 sudo ln -s /usr/bin/host-spawn /usr/local/bin/flatpak
+sudo ln -s /usr/bin/host-spawn /usr/local/bin/firefox
 #+end_run
 
 This will allow you to run the host programs =toolbox=, =podman= and
