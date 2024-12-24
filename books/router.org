@@ -1086,30 +1086,65 @@ cat &lt;&lt;'EOF' > /usr/local/sbin/router.sh
 #!/bin/bash
 set -e
 
-## Set network interface names:
+## Set logical interface names (physical and virtual):
+export PUBLIC_INTERFACES=wan
+## You can define arbitrary private interfaces:
+## mgmt and lan are standard, but you can add more:
+export PRIVATE_INTERFACES=mgmt,lan
+#export PRIVATE_INTERFACES=mgmt,lan,work,apps,iot
+## Ensure you duplicate all *_LAN variables for each new interface _NAME
+## (commented examples for *_WORK, *_APPS, *_IOT will follow)
+
+## Set network interface names (INTERFACE_LOGICAL=actual_interface_name):
+export INTERFACE_WAN=wan
 export INTERFACE_MGMT=mgmt
 export INTERFACE_LAN=lan
-export INTERFACE_WAN=wan
+# export INTERFACE_WORK=work
+# export INTERFACE_APPS=apps
+# export INTERFACE_IOT=iot
 
-## Configure LAN subnet:
+## Configure subnets per interface:
 export SUBNET_LAN=192.168.10.1/24
+# export SUBNET_WORK=192.168.11.1/24
+# export SUBNET_APPS=192.168.12.1/24
+# export SUBNET_IOT=192.168.13.1/24
 
-## Allow ping etc. from LAN side only:
-export ICMP_ACCEPT_LAN=echo-request,echo-reply,destination-unreachable,time-exceeded
+## Allow ping etc. from private subnets only:
 export ICMP_ACCEPT_WAN=
+export ICMP_ACCEPT_MGMT=echo-request,echo-reply,destination-unreachable,time-exceeded
+export ICMP_ACCEPT_LAN=echo-request,echo-reply,destination-unreachable,time-exceeded
+# export ICMP_ACCEPT_WORK=echo-request,echo-reply,destination-unreachable,time-exceeded
+# export ICMP_ACCEPT_APPS=echo-request,echo-reply,destination-unreachable,time-exceeded
+# export ICMP_ACCEPT_IOT=echo-request,echo-reply,destination-unreachable,time-exceeded
 
-## Allow LAN clients to access SSH, DNS, HTTP on the router:
-export TCP_ACCEPT_LAN=22,53,80,443
+## Allow different access to TCP ports on the router depending on interface:
 export TCP_ACCEPT_WAN=
+export TCP_ACCEPT_MGMT=22,80,443
+export TCP_ACCEPT_LAN=22,53,80,443
+# export TCP_ACCEPT_WORK=22,53,80,443
+# export TCP_ACCEPT_APPS=53
+# export TCP_ACCEPT_IOT=53
 
-## Allow LAN clients to access UDP DNS, DHCP on the router:
-export UDP_ACCEPT_LAN=53,67,68
+## Allow different access to UDP ports on the router depending on interface:
 export UDP_ACCEPT_WAN=
+export UDP_ACCEPT_MGMT=
+export UDP_ACCEPT_LAN=53,67,68
+# export UDP_ACCEPT_WORK=53,67,68
+# export UDP_ACCEPT_APPS=53,67,68
+# export UDP_ACCEPT_IOT=53,67,68
 
-## Forward connections from LAN:
+## Forward connections from private interfaces:
 ## IN_PORT:FORWARD_ADDRESS:FORWARD_PORT,...
+export TCP_FORWARD_MGMT=
+export UDP_FORWARD_MGMT=
 export TCP_FORWARD_LAN=
 export UDP_FORWARD_LAN=
+# export TCP_FORWARD_WORK=
+# export UDP_FORWARD_WORK=
+# export TCP_FORWARD_APPS=
+# export UDP_FORWARD_APPS=
+# export TCP_FORWARD_IOT=
+# export UDP_FORWARD_IOT=
 
 ## Forward connections from WAN:
 ## IN_PORT:FORWARD_ADDRESS:FORWARD_PORT,...
@@ -1882,6 +1917,28 @@ ip addr
     inet 192.168.12.1/24 brd 192.168.12.255 scope global apps
 #+end_stdout
 
+Review each of the VLAN configs:
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+ip -d link show dev lan
+ip -d link show dev work
+ip -d link show dev apps
+ip -d link show dev iot
+#+end_run
+
+#+begin_stdout
+...
+vlan protocol 802.1Q id 10
+...
+vlan protocol 802.1Q id 11
+...
+vlan protocol 802.1Q id 12
+...
+vlan protocol 802.1Q id 13
+...
+#+end_stdout
+
 ** Configure Switch
 :PROPERTIES:
 :EXPORT_FILE_NAME: 000405-configure-switch
@@ -1921,6 +1978,15 @@ These ports will be assigned as follows:
    * Port 8 - IOT (VLAN 13 untagged) - =192.168.13.1/24= subnet.
    * Port 9 - TRUNK (all tagged VLANs @10Gbps.)
 
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+It is recommended to print a sticker label to apply on the top of the
+physical switch plate, to label each port:
+
+
+#+end_notice
+
+   
 *** Login to the management tool
 
 Plug a workstation client into port 1 and set a static IP address of
@@ -2141,3 +2207,119 @@ After making changes on the switch you must save the config:
 
     * Click the =Reboot= button to test that the config is still
       applied on next boot.
+
+** DNS and DHCP for extra VLANs
+:PROPERTIES: 
+:EXPORT_FILE_NAME: 000410-configure-dns-for-extra-vlans
+:EXPORT_HUGO_WEIGHT: 410
+:EXPORT_HUGO_SLUG: configure-dns-for-extra-vlans
+:END:
+
+DNS and DHCP were both setup for the native LAN [[/router/create-router-vm/configure-dns/index.html][in an earlier chapter]].
+The same dnsmasq config can be used (and should still be working,
+because the name =lan= has not changed). You need to create additional
+dnsmasq configs for any extra VLANs you have configured.
+
+Following the example, you need create dnsmasq configs for the extra
+VLANs:
+
+ * =11= WORK
+ * =12= APPS
+ * =13= IOT
+
+*** Configure dnsmasq for WORK, APPS, IOT
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+#!/bin/bash
+set -e
+
+create_vlan_dnsmasq_config() {
+  local VLAN_ID=$1
+  local VLAN_NAME=$2
+
+  # Derive the IP subnet and addresses
+  local SUBNET_BASE="192.168"
+  local SUBNET="${SUBNET_BASE}.${VLAN_ID}.0"
+  local LISTEN_ADDRESS="${SUBNET_BASE}.${VLAN_ID}.1"
+  local DHCP_RANGE_START="${SUBNET_BASE}.${VLAN_ID}.50"
+  local DHCP_RANGE_END="${SUBNET_BASE}.${VLAN_ID}.250"
+
+  ## Bind to the VLAN interface:
+  export INTERFACE=${VLAN_NAME}
+  export LISTEN_ADDRESS=${LISTEN_ADDRESS}
+
+  ## DHCP config:
+  export DOMAIN_LAN=${VLAN_NAME}.example.com
+  export GATEWAY_LAN=${LISTEN_ADDRESS}
+  export DHCP_LAN_RANGE_START=${DHCP_RANGE_START}
+  export DHCP_LAN_RANGE_END=${DHCP_RANGE_END}
+  export DHCP_LAN_LEASE=12h
+
+  ## Static DHCP Leases:
+  ## bash array of "MAC_ADDRESS,IP_ADDRESS,HOST_NAME,LEASE_TIME"
+  STATIC_LEASES=(
+    # "9c:69:b4:65:7d:f8,${SUBNET_BASE}.${VLAN_ID}.2,arch-client1,12h"
+    # "9c:69:b4:65:7d:f9,${SUBNET_BASE}.${VLAN_ID}.3,arch-client2,12h"
+  )
+  ## Convert array to string:
+  export DHCP_LAN_STATIC_LEASES="${STATIC_LEASES[@]}"
+
+  ## DNS config - Forward DNS to dnscrypt on localhost
+  export DNS_LAN=${LISTEN_ADDRESS}
+  export DNS_UPSTREAM_1=::1
+  export DNS_UPSTREAM_2=127.0.0.1
+
+  nifty-filter dnsmasq | dnsmasq -C - --test
+
+  echo "## Applying dnsmasq config for VLAN ${VLAN_NAME}:"
+  (echo "## This file is generated by nifty-filter. DO NOT EDIT."; \
+   nifty-filter dnsmasq) > /tmp/dnsmasq-${INTERFACE}.conf
+
+  dnsmasq -C /tmp/dnsmasq-${INTERFACE}.conf -d --user=dnsmasq --pid-file
+}
+
+# Generate scripts for multiple VLANs
+declare -A vlan_names
+vlan_names=(
+  [11]="work"
+  [12]="apps"
+  [13]="iot"
+)
+
+for VLAN_ID in "${!vlan_names[@]}"; do
+  VLAN_NAME="${vlan_names[$VLAN_ID]}"
+  SCRIPT_NAME="dnsmasq-${VLAN_NAME}.sh"
+
+  cat &lt;&lt;EOF > /usr/local/sbin/"${SCRIPT_NAME}"
+#!/bin/bash
+$(declare -f create_vlan_dnsmasq_config)
+
+create_vlan_dnsmasq_config ${VLAN_ID} ${VLAN_NAME}
+EOF
+
+  chmod +x /usr/local/sbin/"${SCRIPT_NAME}"
+  echo "Generated script: ${SCRIPT_NAME}"
+  ln -sf /usr/local/sbin/"${SCRIPT_NAME}" ~/"${SCRIPT_NAME}"
+done
+#+end_run
+
+#+attr_shortcode: :style tip :title Tip
+#+begin_notice
+Make sure to edit the following config variables:
+
+ * =DOMAIN_LAN= customize your own LAN domain name.
+ * =DHCP_LAN_STATIC_LEASES= customize your own list of hosts that
+   should have static DHCP leases
+   * =STATIC_LEASES= is an intermediate array to help build
+     =DHCP_LAN_STATIC_LEASES=, with a set of examples commented out.
+#+end_notice
+
+*** Enable the dnsmasq services
+
+#+attr_shortcode: :style secondary :title Run this on the Router VM
+#+begin_run
+systemctl enable dnsmasq@{work,apps,iot}.service
+systemctl restart dnsmasq@{work,apps,iot}.service
+#+end_run
+
