@@ -71,15 +71,22 @@
 (message "Loading f.el library")
 (use-package f)
 
-(defun build (root-dir)
-  "Build all org files "
-  (message "Starting build process for Org root: %s" root-dir)
-  (let ((org-files (directory-files-recursively root-dir "\\.org$")))
+(defun build (paths)
+  "Build Org files and/or directories into Hugo markdown.
+`paths` should be a list of file paths or directories."
+  (message "Starting build process for: %s" paths)
+  (let ((org-files '()))
+    ;; Collect Org files from paths
+    (dolist (path paths)
+      (if (file-directory-p path)
+          (setq org-files (append org-files (directory-files-recursively path "\\.org$")))
+        (when (and (file-regular-p path) (string-match "\\.org$" path))
+          (push path org-files))))
+    ;; Process Org files
     (dolist (e org-files)
       (message "Building Org file: %s" e)
       (with-current-buffer (find-file-noselect e)
-        (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)
-        ))
-  (message "Build process complete for Org root: %s" root-dir)))
+        (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)))
+    (message "Build process complete for: %s" paths)))
 
 (message "init.el loading complete")

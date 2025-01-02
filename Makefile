@@ -25,13 +25,8 @@ emacs-batch:
 install:
 	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && mkdir -p hugo/themes && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
 
-build-md: build-notes build-books
-
-build-books:
-	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"books\"'
-
-build-notes:
-	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"notes\"'
+build-md:
+	${MAKE_} emacs-batch FUNC=build ARGS='(list \"license.org\" \"books.org\" \"books\")'
 
 build-hugo:
 	@_script/printable_books.sh
