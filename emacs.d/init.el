@@ -72,15 +72,14 @@
 (use-package f)
 
 (defun build (root-dir)
-  "Build all org books into hugo markdown"
-  (message "Starting build process for %s" root-dir)
-  (let ((org-files (append
-                    (directory-files root-dir "\\.org$")
-                    (directory-files (f-join root-dir "books") t "\\.org$"))))
+  "Build all org files "
+  (message "Starting build process for Org root: %s" root-dir)
+  (let ((org-files (directory-files-recursively root-dir "\\.org$")))
     (dolist (e org-files)
-      (message "Processing file: %s" e)
-      (find-file e)
-      (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)))
-  (message "Build process complete"))
+      (message "Building Org file: %s" e)
+      (with-current-buffer (find-file-noselect e)
+        (org-hugo-export-wim-to-md :all-subtrees nil nil :noerror)
+        ))
+  (message "Build process complete for Org root: %s" root-dir)))
 
 (message "init.el loading complete")

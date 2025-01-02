@@ -8,7 +8,7 @@ PUBLISH_RCLONE_DIRECTORY ?= book
 RELEARN_THEME_SNAPSHOT ?= 735297478651be4fbe77be739214ed73afc2e0ba
 RELEARN_THEME_TARBALL_URL_PREFIX ?= https://codeload.github.com/EnigmaCurry/hugo-theme-relearn/tar.gz/
 
-.PHONY: build # Export notes.org to separate markdown files and build hugo site
+.PHONY: build # Export Org docs to separate markdown files and build hugo site
 build: clean build-md build-hugo
 
 .PHONY: help # Show this help screen
@@ -25,8 +25,13 @@ emacs-batch:
 install:
 	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && mkdir -p hugo/themes && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
 
-build-md:
-	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"$${PWD}\"'
+build-md: build-notes build-books
+
+build-books:
+	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"books\"'
+
+build-notes:
+	PWD=$$(pwd) ${MAKE_} emacs-batch FUNC=build ARGS='\"notes\"'
 
 build-hugo:
 	@_script/printable_books.sh
