@@ -67,3 +67,22 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./public
         cname: book.rymcg.tech
+
+  notify:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send webhook notification
+        if: always()
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" == "success" ]; then
+            MESSAGE="SUCCESS in deployment"
+          else
+            MESSAGE="FAILURE in deployment"
+          fi
+          curl -X POST -H "Content-Type: application/json" \
+          -d '{"text": "'${MESSAGE}'"}' \
+          "$WEBHOOK_URL"
