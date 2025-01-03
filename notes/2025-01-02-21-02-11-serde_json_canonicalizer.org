@@ -1,0 +1,65 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /notes/Rust
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi
+#+STARTUP: align
+
+* Rust
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :alwaysopen false
+:END:
+#+BEGIN_COMMENT
+This is the default index for Rust and it is boilerplate.
+Don't write anything here.
+This section will be overwriten by the template
+(enigmacurry/org/notes/_template/note.o.txt).
+Write your new top level sections below this one.
+#+END_COMMENT
+#+attr_shortcode: :depth 999 :sort title
+#+begin_index
+index
+#+end_index
+
+
+* serde_json_canonicalizer
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000000-serde_json_canonicalizer
+:EXPORT_HUGO_SLUG: serde_json_canonicalizer
+:EXPORT_HUGO_WEIGHT: auto
+:END:
+
+#+begin_src rust :exports true :wrap stdout :linenos true :crates '((serde . *) (serde_json_canonicalizer . *)) :features '((serde . ("derive")))
+  extern crate serde;
+  extern crate serde_json_canonicalizer;
+  use serde_json_canonicalizer::{to_string, to_vec};
+
+  #[derive(serde::Serialize)]
+  struct Data {
+      c: isize,
+      b: bool,
+      a: String,
+  }
+  fn main() {
+      let data = Data {
+          c: 120,
+          b: false,
+          a: "Hello!".to_string(),
+      };
+      let expected = r#"{"a":"Hello!","b":false,"c":120}"#;
+
+      // serlialize to string or bytes, drop-in replacement for serde_json
+      let json_string = to_string(&data).unwrap();
+      let json_bytes = to_vec(&data).unwrap();
+
+      assert_eq!(json_string, expected);
+      assert_eq!(json_bytes, expected.as_bytes());
+      println!("{json_string}");
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_stdout
+{"a":"Hello!","b":false,"c":120}
+#+end_stdout

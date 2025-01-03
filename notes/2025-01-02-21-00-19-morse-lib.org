@@ -1,5 +1,5 @@
 #+hugo_base_dir: ../hugo
-#+hugo_section: /notes/rust
+#+hugo_section: /notes/Rust
 #+hugo_weight: auto
 #+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi
 #+STARTUP: align
@@ -11,7 +11,7 @@
 :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :alwaysopen false
 :END:
 #+BEGIN_COMMENT
-This is the default index for rust and it is boilerplate.
+This is the default index for Rust and it is boilerplate.
 Don't write anything here.
 This section will be overwriten by the template
 (enigmacurry/org/notes/_template/note.o.txt).
@@ -23,22 +23,24 @@ index
 #+end_index
 
 
-* Rust in Org-Mode
+* morse-lib
 :PROPERTIES:
-:EXPORT_FILE_NAME: 000000-testing-rust-in-org-mode
-:EXPORT_HUGO_SLUG: testing-rust-in-org-mode
+:EXPORT_FILE_NAME: 000000-morse-lib
+:EXPORT_HUGO_SLUG: morse-lib
 :EXPORT_HUGO_WEIGHT: auto
 :END:
-  
-#+begin_src rust :exports true :wrap stdout :linenos true
-  println!("Hello from Rust in Org-Mode!");
-  let (x, y) = (10, 1000);
-  println!("{x} * {y} = {}", x * y);
+
+#+begin_src rust :exports true :wrap stdout :linenos true :crates '(morse-lib) 
+  extern crate morse_lib;
+  use morse_lib::Morse;
+
+  let morse = Morse::from_text("HELLO")
+    .expect("expected string")
+    .to_string();
+  println!("{morse:?}");
 #+end_src
 
 #+RESULTS:
 #+begin_stdout
-Hello from Rust in Org-Mode!
-10 * 1000 = 10000
+". . . .   .   . ⚊ . .   . ⚊ . .   ⚊ ⚊ ⚊"
 #+end_stdout
-   
