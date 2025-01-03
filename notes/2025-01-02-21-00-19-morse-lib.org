@@ -30,14 +30,29 @@ index
 :EXPORT_HUGO_WEIGHT: auto
 :END:
 
-#+begin_src rust :exports true :wrap stdout :linenos true :crates '(morse-lib) 
-  extern crate morse_lib;
+** Define a function
+#+name: print_morse
+#+begin_src rust :exports true :linenos true :crates '(morse-lib) 
   use morse_lib::Morse;
 
-  let morse = Morse::from_text("HELLO")
-    .expect("expected morse decoded")
-    .to_string();
-  println!("{morse:?}");
+  pub fn print_morse(message: &str) {
+      let morse = Morse::from_text(message)
+          .expect("expected morse decoded")
+          .to_string();
+      println!("{morse:?}");
+  }
+#+end_src
+
+#+RESULTS: print_morse
+
+** Use the function
+
+#+BEGIN_COMMENT
+You can reference functions in other code blocks with =:include=
+#+END_COMMENT
+
+#+begin_src rust :exports true :wrap stdout :linenos true :crates '(morse-lib) :include '(print_morse)
+  print_morse("HELLO");
 #+end_src
 
 #+RESULTS:
