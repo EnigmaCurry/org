@@ -1,16 +1,18 @@
 ((org-mode
   (eval . (progn
             (defun my-org-babel-execute-and-save ()
-              "Evaluate all Babel code blocks, save buffer, and leave it unmodified."
+              "Evaluate all Babel code blocks, wait for completion, save buffer, and leave it unmodified."
               (remove-hook 'before-save-hook #'my-org-babel-execute-and-save 'local)
               (unwind-protect
                   (progn
                     ;; Execute all Babel code blocks
                     (org-babel-execute-buffer)
+                    ;; Wait for asynchronous processes to finish
+                    (while (get-process "rustic-babel-process")
+                      (accept-process-output (get-process "rustic-babel-process") 1))
                     ;; Save the buffer
                     (save-buffer)
                     ;; Ensure buffer is marked as unmodified
-                    ;; TODO: this doesn't work.
                     (set-buffer-modified-p nil))
                 ;; Re-enable the hook
                 (add-hook 'before-save-hook #'my-org-babel-execute-and-save nil 'local)))
