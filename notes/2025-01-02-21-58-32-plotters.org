@@ -1,0 +1,99 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /notes/Rust
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi expand
+#+STARTUP: align
+
+* Rust
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :alwaysopen false
+:END:
+#+BEGIN_COMMENT
+This is the default index for Rust and it is boilerplate.
+Don't write anything here.
+This section will be overwriten by the template
+(enigmacurry/org/notes/_template/note.o.txt).
+Write your new top level sections below this one.
+#+END_COMMENT
+#+attr_shortcode: :depth 999 :sort title
+#+begin_index
+index
+#+end_index
+
+
+* plotters
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000000-plotters
+:EXPORT_HUGO_SLUG: plotters
+:EXPORT_HUGO_WEIGHT: auto
+:header-args:  :results value drawer :exports true :linenos true :paths '((lib "/home/ryan/git/vendor/enigmacurry/org/src/rust/lib")) :crates '((lib . 1.0))
+:END:
+
+** Make a plot
+
+#+begin_src rust
+    use lib::*;
+    use lib::plotters::prelude::*;
+
+
+  fn main() -> Result<(), Box<dyn std::error::Error>> {
+      // Get new static file path for ox-hugo export:
+      let out_file = get_static_file("chart_dark_grey.png")?;
+
+      // Create the chart and save it
+      let root = BitMapBackend::new(&out_file, (640, 480)).into_drawing_area();
+      root.fill(&RGBColor(50, 50, 50))?;
+
+      let mut chart = ChartBuilder::on(&root)
+          .caption("Line Chart Example", ("sans-serif", 50).into_font().color(&WHITE))
+          .margin(10)
+          .x_label_area_size(30)
+          .y_label_area_size(30)
+          .build_cartesian_2d(0..10, 0..10)?;
+
+      chart
+          .configure_mesh()
+          .bold_line_style(&WHITE.mix(0.3))
+          .light_line_style(&WHITE.mix(0.1))
+          .x_labels(10)
+          .y_labels(10)
+          .x_label_formatter(&|x| format!("{}", x))
+          .y_label_formatter(&|y| format!("{}", y))
+          .x_label_style(("sans-serif", 12).into_font().color(&WHITE))
+          .y_label_style(("sans-serif", 12).into_font().color(&WHITE))
+          .x_desc("X-Axis")
+          .y_desc("Y-Axis")
+          .axis_desc_style(("sans-serif", 15).into_font().color(&WHITE))
+          .draw()?;
+
+      chart
+          .draw_series(LineSeries::new(
+              (0..10).map(|x| (x, x * x)),
+              &RED,
+          ))?
+          .label("y = x^2")
+          .legend(|(x, y)| PathElement::new(vec![(x, y), (x + 20, y)], &RED));
+
+      chart
+          .configure_series_labels()
+          .background_style(&RGBColor(30, 30, 30))
+          .border_style(&WHITE)
+          .label_font(("sans-serif", 15).into_font().color(&WHITE))
+          .draw()?;
+
+      get_static_file_link(&out_file)?;
+
+      Ok(())
+  }
+#+end_src
+
+#+RESULTS:
+:results:
+[[file:../hugo/static/ox-hugo/chart_dark_grey.png]]
+:end:
+
+
+
+

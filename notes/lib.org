@@ -1,0 +1,29 @@
+#+hugo_base_dir: ../hugo
+#+title: ox-hugo helpers
+
+#+begin_comment
+ox-hugo helper functions are hidden from export, as they are irrelevant to the reader.
+#+end_comment
+#+name: helpers
+#+begin_src rust :main no :exports none :linenos true
+  use std::path::Path;
+  use std::env;
+  
+  pub fn get_static_file(filename: &str) -> Result<String, Box<dyn std::error::Error>> {
+      Ok(format!("{}/{}", env::var("OX_HUGO_STATIC")?, filename))
+  }
+
+  pub fn get_static_file_url(filename: &str) -> Result<String, Box<dyn std::error::Error>> {
+      let org_dir = &env::var("ORG_DIR")?;
+      let org_dir = Path::new(&org_dir);
+      let full_path = Path::new(filename);
+      Ok(format!(
+          "file:../{}",
+          full_path
+              .strip_prefix(org_dir)?
+              .to_str()
+              .unwrap()
+              .trim_start_matches('/')
+      ))
+  }
+#+end_src
