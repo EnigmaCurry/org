@@ -34,94 +34,91 @@ index
 ** Koch Snowflake Swirl Mirror
 
 #+begin_src rust
-use lib::*;
-use lib::plotters::prelude::*;
+  use lib::{get_static_file, print_org_file_link};
+  use lib::plotters::prelude::*;
 
-use lib::*;
-use lib::plotters::prelude::*;
+  fn swirl_effect(point: (f64, f64), factor: f64) -> (f64, f64) {
+      let angle = (point.0.powi(2) + point.1.powi(2)).sqrt() * factor;
+      let cos_a = angle.cos();
+      let sin_a = angle.sin();
+      (
+          point.0 * cos_a - point.1 * sin_a,
+          point.0 * sin_a + point.1 * cos_a,
+      )
+  }
 
-fn swirl_effect(point: (f64, f64), factor: f64) -> (f64, f64) {
-    let angle = (point.0.powi(2) + point.1.powi(2)).sqrt() * factor;
-    let cos_a = angle.cos();
-    let sin_a = angle.sin();
-    (
-        point.0 * cos_a - point.1 * sin_a,
-        point.0 * sin_a + point.1 * cos_a,
-    )
-}
+  fn snowflake_iter(points: &[(f64, f64)]) -> Vec<(f64, f64)> {
+      let mut ret = vec![];
+      for i in 0..points.len() {
+          let (start, end) = (points[i], points[(i + 1) % points.len()]);
+          let t = ((end.0 - start.0) / 3.0, (end.1 - start.1) / 3.0);
+          let s = (
+              t.0 * 0.5 - t.1 * (0.75f64).sqrt(),
+              t.1 * 0.5 + (0.75f64).sqrt() * t.0,
+          );
+          ret.push(start);
+          ret.push((start.0 + t.0, start.1 + t.1));
+          ret.push((start.0 + t.0 + s.0, start.1 + t.1 + s.1));
+          ret.push((start.0 + t.0 * 2.0, start.1 + t.1 * 2.0));
+      }
+      ret
+  }
 
-fn snowflake_iter(points: &[(f64, f64)]) -> Vec<(f64, f64)> {
-    let mut ret = vec![];
-    for i in 0..points.len() {
-        let (start, end) = (points[i], points[(i + 1) % points.len()]);
-        let t = ((end.0 - start.0) / 3.0, (end.1 - start.1) / 3.0);
-        let s = (
-            t.0 * 0.5 - t.1 * (0.75f64).sqrt(),
-            t.1 * 0.5 + (0.75f64).sqrt() * t.0,
-        );
-        ret.push(start);
-        ret.push((start.0 + t.0, start.1 + t.1));
-        ret.push((start.0 + t.0 + s.0, start.1 + t.1 + s.1));
-        ret.push((start.0 + t.0 * 2.0, start.1 + t.1 * 2.0));
-    }
-    ret
-}
+  fn mirror_and_cut(points: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
+      let mut left_side = vec![];
+      for &(x, y) in &points {
+          if x <= 0.0 {
+              left_side.push((x, y));
+          }
+      }
+      let mut mirrored = left_side.clone();
+      for &(x, y) in &left_side {
+          mirrored.push((-x, y));
+      }
+      mirrored
+  }
 
-fn mirror_and_cut(points: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
-    let mut left_side = vec![];
-    for &(x, y) in &points {
-        if x <= 0.0 {
-            left_side.push((x, y));
-        }
-    }
-    let mut mirrored = left_side.clone();
-    for &(x, y) in &left_side {
-        mirrored.push((-x, y));
-    }
-    mirrored
-}
+  fn main() -> Result<(), Box<dyn std::error::Error>> {
+      let out_file = get_static_file("swirling_snowflake.png")?;
+      let MAX_ITER = 5;
+      let SWIRL_FACTOR = 2.0;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let out_file = get_static_file("swirling_snowflake.png")?;
-    let MAX_ITER = 5;
-    let SWIRL_FACTOR = 2.0;
+      let root = BitMapBackend::new(&out_file, (1024, 768)).into_drawing_area();
+      root.fill(&WHITE)?;
 
-    let root = BitMapBackend::new(&out_file, (1024, 768)).into_drawing_area();
-    root.fill(&WHITE)?;
+      let mut chart = ChartBuilder::on(&root)
+          .caption("Swirling Snowflake - Mirrored", ("sans-serif", 50))
+          .build_cartesian_2d(-1.5..1.5, -1.2..1.2)?;
 
-    let mut chart = ChartBuilder::on(&root)
-        .caption("Swirling Snowflake - Mirrored", ("sans-serif", 50))
-        .build_cartesian_2d(-1.5..1.5, -1.2..1.2)?;
+      let mut snowflake_vertices = {
+          let mut current: Vec<(f64, f64)> = vec![
+              (0.0, 1.0),
+              ((3.0f64).sqrt() / 2.0, -0.5),
+              (-(3.0f64).sqrt() / 2.0, -0.5),
+          ];
+          for _ in 0..MAX_ITER {
+              current = snowflake_iter(&current[..]);
+          }
+          current
+      };
 
-    let mut snowflake_vertices = {
-        let mut current: Vec<(f64, f64)> = vec![
-            (0.0, 1.0),
-            ((3.0f64).sqrt() / 2.0, -0.5),
-            (-(3.0f64).sqrt() / 2.0, -0.5),
-        ];
-        for _ in 0..MAX_ITER {
-            current = snowflake_iter(&current[..]);
-        }
-        current
-    };
+      snowflake_vertices = snowflake_vertices
+          .into_iter()
+          .map(|point| swirl_effect(point, SWIRL_FACTOR))
+          .collect();
 
-    snowflake_vertices = snowflake_vertices
-        .into_iter()
-        .map(|point| swirl_effect(point, SWIRL_FACTOR))
-        .collect();
+      snowflake_vertices = mirror_and_cut(snowflake_vertices);
 
-    snowflake_vertices = mirror_and_cut(snowflake_vertices);
+      chart.draw_series(std::iter::once(Polygon::new(
+          snowflake_vertices.clone(),
+          RED.mix(0.5),
+      )))?;
 
-    chart.draw_series(std::iter::once(Polygon::new(
-        snowflake_vertices.clone(),
-        RED.mix(0.5),
-    )))?;
+      root.present().expect("Unable to write file");
+      print_org_file_link(&out_file)?;
 
-    root.present().expect("Unable to write file");
-    print_org_file_link(&out_file)?;
-
-    Ok(())
-}
+      Ok(())
+  }
 #+end_src
 
 #+RESULTS:
@@ -132,3 +129,82 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 
 
+** Mandelbrot
+
+#+begin_src rust :exports true :wrap stdout :linenos true
+  use lib::{get_static_file, print_org_file_link};
+  use lib::plotters::prelude::*;
+  use std::ops::Range;
+
+  fn mandelbrot_set(
+      real: Range<f64>,
+      complex: Range<f64>,
+      samples: (usize, usize),
+      max_iter: usize,
+  ) -> impl Iterator<Item = (f64, f64, usize)> {
+      let step = (
+          (real.end - real.start) / samples.0 as f64,
+          (complex.end - complex.start) / samples.1 as f64,
+      );
+      (0..(samples.0 * samples.1)).map(move |k| {
+          let c = (
+              real.start + step.0 * (k % samples.0) as f64,
+              complex.start + step.1 * (k / samples.0) as f64,
+          );
+          let mut z = (0.0, 0.0);
+          let mut cnt = 0;
+          while cnt < max_iter && z.0 * z.0 + z.1 * z.1 <= 1e10 {
+              z = (z.0 * z.0 - z.1 * z.1 + c.0, 2.0 * z.0 * z.1 + c.1);
+              cnt += 1;
+          }
+          (c.0, c.1, cnt)
+      })
+  }
+
+
+
+  fn main() -> Result<(), Box<dyn std::error::Error>> {
+      let out_file = get_static_file("mandelbrot.png")?;
+      let root = BitMapBackend::new(&out_file, (800, 600)).into_drawing_area();
+
+      root.fill(&WHITE)?;
+
+      let mut chart = ChartBuilder::on(&root)
+          .margin(20)
+          .x_label_area_size(10)
+          .y_label_area_size(10)
+          .build_cartesian_2d(-2.1f64..0.6f64, -1.2f64..1.2f64)?;
+
+      chart
+          .configure_mesh()
+          .disable_x_mesh()
+          .disable_y_mesh()
+          .draw()?;
+
+      let plotting_area = chart.plotting_area();
+
+      let range = plotting_area.get_pixel_range();
+
+      let (pw, ph) = (range.0.end - range.0.start, range.1.end - range.1.start);
+      let (xr, yr) = (chart.x_range(), chart.y_range());
+
+      for (x, y, c) in mandelbrot_set(xr, yr, (pw as usize, ph as usize), 100) {
+          if c != 100 {
+              plotting_area.draw_pixel((x, y), &MandelbrotHSL::get_color(c as f64 / 100.0))?;
+          } else {
+              plotting_area.draw_pixel((x, y), &BLACK)?;
+          }
+      }
+
+      // To avoid the IO failure being ignored silently, we manually call the present function
+      root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
+      print_org_file_link(&out_file);
+      
+      Ok(())
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_stdout
+[[file:../hugo/static/ox-hugo/mandelbrot.png]]
+#+end_stdout
