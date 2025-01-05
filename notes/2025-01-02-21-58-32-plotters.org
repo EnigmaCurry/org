@@ -84,14 +84,14 @@ fn mirror_and_cut(points: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let out_file = get_static_file("swirling_snowflake.png")?;
     let MAX_ITER = 5;
-    let SWIRL_FACTOR = 2.0; // Control the swirl intensity
+    let SWIRL_FACTOR = 2.0;
 
     let root = BitMapBackend::new(&out_file, (1024, 768)).into_drawing_area();
     root.fill(&WHITE)?;
 
     let mut chart = ChartBuilder::on(&root)
         .caption("Swirling Snowflake - Mirrored", ("sans-serif", 50))
-        .build_cartesian_2d(-1.5..1.5, -1.2..1.2)?; // Zoomed in view
+        .build_cartesian_2d(-1.5..1.5, -1.2..1.2)?;
 
     let mut snowflake_vertices = {
         let mut current: Vec<(f64, f64)> = vec![
@@ -105,22 +105,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         current
     };
 
-    // Apply the swirl effect to each vertex
     snowflake_vertices = snowflake_vertices
         .into_iter()
         .map(|point| swirl_effect(point, SWIRL_FACTOR))
         .collect();
 
-    // Mirror and cut the vertices
     snowflake_vertices = mirror_and_cut(snowflake_vertices);
 
     chart.draw_series(std::iter::once(Polygon::new(
         snowflake_vertices.clone(),
-        RED.mix(0.5), // More vibrant color
+        RED.mix(0.5),
     )))?;
 
-    root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
-    get_static_file_link(&out_file)?;
+    root.present().expect("Unable to write file");
+    print_org_file_link(&out_file)?;
 
     Ok(())
 }

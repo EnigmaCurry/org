@@ -20,7 +20,7 @@ pub fn get_static_file_url(filename: &str) -> Result<String, Box<dyn std::error:
     ))
 }
 
-pub fn get_static_file_link(filename: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn print_org_file_link(filename: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("[[{}]]", get_static_file_url(filename)?);
     Ok(())
 }
