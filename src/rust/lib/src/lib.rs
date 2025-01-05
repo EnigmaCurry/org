@@ -17,6 +17,19 @@ pub fn get_static_file(filename: &str) -> Result<String, Box<dyn Error>> {
 }
 
 pub fn print_org_file_link(filename: &str) -> Result<(), Box<dyn Error>> {
-    println!("[[file:{filename}]]");
+    let static_dir = env::var("OX_HUGO_STATIC")?;
+    if let Some(stripped) = filename.strip_prefix(&static_dir) {
+        let stripped_path = Path::new(stripped)
+            .strip_prefix(Path::new("/"))?
+            .to_str()
+            .unwrap_or(stripped);
+        println!("[[file:../hugo/static/{}]]", stripped_path);
+    } else {
+        return Err(format!(
+            "Filename '{}' does not start with static_dir '{}'.",
+            filename, static_dir
+        )
+        .into());
+    }
     Ok(())
 }
