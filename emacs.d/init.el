@@ -54,6 +54,9 @@
 (use-package ox-hugo
   :after org
   :config
+  (setq org-directory default-directory)
+  (setenv "ORG_DIR" org-directory)
+  (setenv "OX_HUGO_STATIC" (concat org-directory "/hugo/static"))
   (setq org-hugo-special-block-type-properties
         '(("audio" :raw t)
           ("katex" :raw t)
