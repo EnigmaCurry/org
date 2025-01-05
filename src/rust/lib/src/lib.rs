@@ -1,33 +1,22 @@
 pub use plotters;
-//use std::env;
+use std::env;
+use std::error::Error;
 use std::fs;
 use std::path::Path;
 
-pub fn get_static_file(filename: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let filename = format!("static/{filename}");
-    if let Some(parent) = Path::new(&filename).parent() {
+pub fn get_static_file(filename: &str) -> Result<String, Box<dyn Error>> {
+    let static_dir = env::var("OX_HUGO_STATIC")?;
+    let full_path = Path::new(&static_dir).join(filename);
+    if let Some(parent) = Path::new(&full_path).parent() {
         fs::create_dir_all(parent)?;
     }
-    Ok(filename)
+    full_path
+        .to_str()
+        .ok_or_else(|| "Path string is invalid".into())
+        .map(|s| s.to_string())
 }
 
-pub fn get_static_file_url(filename: &str) -> Result<String, Box<dyn std::error::Error>> {
-    // let org_dir = &env::var("ORG_DIR")?;
-    // let org_dir = Path::new(&org_dir);
-    // let full_path = Path::new(filename);
-    // Ok(format!(
-    //     "file:../{}",
-    //     full_path
-    //         .strip_prefix(org_dir)?
-    //         .to_str()
-    //         .unwrap()
-    //         .trim_start_matches('/')
-    // ))
-    let full_path = Path::new(filename);
-    Ok(format!("file:{}", full_path.canonicalize()?.display()))
-}
-
-pub fn print_org_file_link(filename: &str) -> Result<(), Box<dyn std::error::Error>> {
-    println!("[[{}]]", get_static_file_url(filename)?);
+pub fn print_org_file_link(filename: &str) -> Result<(), Box<dyn Error>> {
+    println!("[[file:{filename}]]");
     Ok(())
 }
