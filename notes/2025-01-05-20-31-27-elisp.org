@@ -31,21 +31,42 @@ index
 :END:
 
 ** Hello
-#+begin_src elisp :exports true :wrap stdout :linenos true
+
+#+NAME: wrap-text-in-waves
+#+begin_src elisp :exports true :linenos true
   (defun wrap-text-in-waves (text)
     "Wrap TEXT in a wave-like decorative pattern and return the result."
     (let ((wave-pattern "⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅"))
       (concat wave-pattern " " text " " wave-pattern)))
+#+end_src
 
+#+RESULTS: wrap-text-in-waves
+: wrap-text-in-waves
+
+#+begin_src elisp :exports true :linenos true :include '(wrap-text-in-waves)
   ;; Example usage
   (message (wrap-text-in-waves "Hello, Emacs!"))
 #+end_src
 
 #+RESULTS:
-#+begin_stdout
-⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅ Hello, Emacs! ⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅
-#+end_stdout
+: ⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅ Hello, Emacs! ⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅
 
+** Helpers
+
+#+NAME: helpers
+#+begin_expand
+#+begin_src elisp :exports true
+(defun largest-n (numbers)
+  "Return the largest number from a list of NUMBERS."
+  (when numbers
+    (cl-reduce #'max numbers)))
+#+end_src
+
+#+RESULTS:
+: largest-n
+
+#+end_expand
+ 
 ** Sum the multiples of 3 or 5 below 1000.
 
 #+begin_expand
@@ -68,7 +89,7 @@ index
 ** Fibonacci Numbers
 
 #+NAME: fibonacci
-#+begin_src elisp :exports true :wrap stdout :linenos true
+#+begin_src elisp :exports true :linenos true
   (defun fibonacci (n)
     "Generate the fibonacci sequence below n."
     (let ((fib (lambda (a b)
@@ -78,6 +99,9 @@ index
       (funcall fib 1 2)))
 #+end_src
 
+#+RESULTS: fibonacci
+: fibonacci
+
 #+begin_src elisp :output value raw :exports true :linenos true :include '(fibonacci)
   (fibonacci 200) ;; generate all the fibonacci numbers below 200
 #+end_src
@@ -85,7 +109,7 @@ index
 #+RESULTS:
 | 1 | 2 | 3 | 5 | 8 | 13 | 21 | 34 | 55 | 89 | 144 |
 
-#+begin_src elisp :exports true :wrap stdout :linenos true :include '(fibonacci)
+#+begin_src elisp :exports true :linenos true :include
   (defun sum-even-valued-fibonacci-numbers-below-n (n)
     "Sum the even valued fibonacci numbers below n."
     (apply #'+
@@ -95,25 +119,49 @@ index
 #+end_src
 
 #+RESULTS:
-#+begin_stdout
-4613732
-#+end_stdout
+: 4613732
 
 ** Prime Factors
 
-#+begin_src elisp :exports true :wrap stdout :linenos true
-  (defun prime-factors-of-n (n &optional divisor factors)
-    "Calculate the prime factors of n"
-    (cond
-     ((<= n 1) (reverse factors))
-     ((zerop (mod n divisor))
-      (prime-factors-of-n (/ n divisor) divisor (cons divisor factors)))
-     (t
-      (prime-factors-of-n (1+ divisor) factors))))
-    (prime-factors-of-n 56)
+#+NAME: prime-factors
+#+begin_src elisp :exports true :linenos true
+  (defun prime-factors (n)
+  "Calculate the prime factors of n with optimizations."
+  (let ((factors '())
+        (divisor 2))
+    ;; Remove factors of 2
+    (while (zerop (mod n divisor))
+      (push divisor factors)
+      (setq n (/ n divisor)))
+    ;; Check odd divisors
+    (setq divisor 3)
+    (while (<= (* divisor divisor) n)
+      (if (zerop (mod n divisor))
+          (progn
+            (push divisor factors)
+            (setq n (/ n divisor)))
+        (setq divisor (+ divisor 2))))
+    ;; If n is still greater than 1, it is a prime number
+    (if (> n 1)
+        (push n factors))
+    (reverse factors)))
+#+end_src
+
+#+RESULTS: prime-factors
+: prime-factors
+
+#+begin_src elisp :exports true :linenos true
+(prime-factors 13195)
 #+end_src
 
 #+RESULTS:
-#+begin_stdout
-prime-factors-of-n
-#+end_stdout
+| 5 | 7 | 13 | 29 |
+
+#+begin_src elisp :exports true :linenos true
+  ;; What is the largest prime factor of 600851475143?
+  (largest-n (prime-factors 600851475143))
+#+end_src
+
+#+RESULTS:
+: 6857
+
