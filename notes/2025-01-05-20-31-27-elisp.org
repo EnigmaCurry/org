@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /notes/elisp
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi %expand
 #+STARTUP: align
 
 * Elisp
@@ -44,4 +44,76 @@ index
 #+RESULTS:
 #+begin_stdout
 ⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅ Hello, Emacs! ⋅.˳˳.⋅ॱ˙˙ॱ⋅.˳˳.⋅ॱ˙˙ॱᐧ.˳˳.⋅
+#+end_stdout
+
+** Sum the multiples of 3 or 5 below 1000.
+
+#+begin_expand
+#+begin_src elisp :exports true :linenos true
+  (defun sum-multiples-of-3-or-5-below-n (n)
+    "Sum the multiples of 3 or 5 below n."
+    (apply #'+
+           (seq-filter (lambda (x) (or (= (% x 3) 0) (= (% x 5) 0)))
+                       (number-sequence 1 (1- n)))))
+
+  (sum-multiples-of-3-or-5-below-n 1000)
+
+  #+end_src
+
+  #+RESULTS:
+  : 233168
+
+#+end_expand
+
+** Fibonacci Numbers
+
+#+NAME: fibonacci
+#+begin_src elisp :exports true :wrap stdout :linenos true
+  (defun fibonacci (n)
+    "Generate the fibonacci sequence below n."
+    (let ((fib (lambda (a b)
+                 (if (>= a n)
+                     nil
+                   (cons a (funcall fib b (+ a b) ))))))
+      (funcall fib 1 2)))
+#+end_src
+
+#+begin_src elisp :output value raw :exports true :linenos true :include '(fibonacci)
+  (fibonacci 200) ;; generate all the fibonacci numbers below 200
+#+end_src
+
+#+RESULTS:
+| 1 | 2 | 3 | 5 | 8 | 13 | 21 | 34 | 55 | 89 | 144 |
+
+#+begin_src elisp :exports true :wrap stdout :linenos true :include '(fibonacci)
+  (defun sum-even-valued-fibonacci-numbers-below-n (n)
+    "Sum the even valued fibonacci numbers below n."
+    (apply #'+
+           (seq-filter (lambda (x) (= (% x 2) 0) )
+                       (fibonacci n))))
+  (sum-even-valued-fibonacci-numbers-below-n 4000000)
+#+end_src
+
+#+RESULTS:
+#+begin_stdout
+4613732
+#+end_stdout
+
+** Prime Factors
+
+#+begin_src elisp :exports true :wrap stdout :linenos true
+  (defun prime-factors-of-n (n &optional divisor factors)
+    "Calculate the prime factors of n"
+    (cond
+     ((<= n 1) (reverse factors))
+     ((zerop (mod n divisor))
+      (prime-factors-of-n (/ n divisor) divisor (cons divisor factors)))
+     (t
+      (prime-factors-of-n (1+ divisor) factors))))
+    (prime-factors-of-n 56)
+#+end_src
+
+#+RESULTS:
+#+begin_stdout
+prime-factors-of-n
 #+end_stdout
