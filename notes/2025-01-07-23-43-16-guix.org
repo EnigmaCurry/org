@@ -1,0 +1,70 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /notes/scheme
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi
+#+STARTUP: align
+
+* Scheme
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_CUSTOM_FRONT_MATTER: :alwaysopen false
+:END:
+#+BEGIN_COMMENT
+This is the default index for Guix and it is boilerplate.
+Don't write anything here.
+This section will be overwriten by the template
+(enigmacurry/org/notes/_template/note.o.txt).
+Write your new top level sections below this one.
+#+END_COMMENT
+#+attr_shortcode: :depth 999 :sort title
+#+begin_index
+index
+#+end_index
+
+
+* Guix
+:PROPERTIES:
+:EXPORT_FILE_NAME: 000000-guix
+:EXPORT_HUGO_SLUG: guix
+:EXPORT_HUGO_WEIGHT: auto
+:END:
+
+
+** Guix Virtual Machine
+*** Download Qemu VM disk image and create instance overlay
+
+ * [[https://guix.gnu.org/en/download/][Find the latest release here]]
+
+#+begin_src shell :results output :wrap stdout :linenos true
+  GUIX_QEMU_URL=https://ftp.gnu.org/gnu/guix/guix-system-vm-image-1.4.0.x86_64-linux.qcow2
+  GUIX_IMAGE=$(basename ${GUIX_QEMU_URL})
+  mkdir -p ~/VM
+    (cd ~/VM && \
+         chmod u+w ${GUIX_IMAGE}
+         curl -C - -LO ${GUIX_QEMU_URL} && \
+         chmod a-w ${GUIX_IMAGE})
+    
+    qemu-img create -f qcow2 -b ~/VM/${GUIX_IMAGE} -F qcow2 ~/VM/guix-test.qcow2
+#+end_src
+
+#+RESULTS:
+#+begin_stdout
+Formatting '/home/ryan/VM/guix-test.qcow2', fmt=qcow2 cluster_size=65536 extended_l2=off compression_type=zlib size=32255246336 backing_file=/home/ryan/VM/guix-system-vm-image-1.4.0.x86_64-linux.qcow2 backing_fmt=qcow2 lazy_refcounts=off refcount_bits=16
+#+end_stdout
+
+*** Launch VM instance
+
+#+begin_src shell :async :results silent :wrap stdout :linenos true
+  qemu-system-x86_64 \
+     -nic user,model=virtio-net-pci \
+     -enable-kvm -m 4096 \
+     -device virtio-blk,drive=myhd \
+     -vga virtio \
+     -display gtk \
+     -device virtio-serial \
+     -chardev spicevmc,id=spicechannel0,name=vdagent \
+     -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
+     -spice port=5930,disable-ticketing=on \
+     -drive if=none,file=/home/ryan/VM/guix-test.qcow2,id=myhd
+#+end_src
