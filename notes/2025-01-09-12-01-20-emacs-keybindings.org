@@ -53,31 +53,33 @@ default keybinding and it creates your own personalized cheat sheet:
 #+begin_src emacs-lisp
     ;;; Example:
     ;;; Your custom global bindings for Emacs builtin functions::
-    (general-define-key
-     "C-h B" 'general-describe-keybindings
-     "s-b" 'quick-switch-buffer
-     "s-B" 'buffer-menu "C-x B" 'ibuffer-list-buffers
-     "s-o" 'browse-url
-     "C-;" 'comment-region                ; C-u C-; to uncomment
-     "s-<down-mouse-1>" 'mouse-drag-region-rectangle)
+  (general-define-key
+   "C-h B" 'general-describe-keybindings
+   "s-b" 'quick-switch-buffer
+   "s-B" 'buffer-menu-other-window
+   "C-x B" 'buffer-menu-other-window
+   "s-o" 'browse-url
+   "C-;" 'comment-region                ; C-u C-; to uncomment
+   "s-<down-mouse-1>" 'mouse-drag-region-rectangle
+   )
 
-    ;; The Emacs default bindings that you did not change, but you still
-    ;; want to remember (these will show up in general-describe-keybindings):
-    (general-define-key
-     "M-SPC" 'cycle-spacing   ; If you document it, you will use it.
-     "M-h" 'mark-paragraph    ; C-h B is like your personal cheat sheet.
-     "C-h b" 'describe-bindings 
-     "C-x 4 c" 'clone-indirect-buffer-other-window)
+  ;; The Emacs default bindings that you did not change, but you still
+  ;; want to remember (these will show up in general-describe-keybindings):
+  (general-define-key
+   "M-SPC" 'cycle-spacing   ; If you document it, you will use it.
+   "M-h" 'mark-paragraph    ; C-h B is like your personal cheat sheet.
+   "C-h b" 'describe-bindings 
+   "C-x 4 c" 'clone-indirect-buffer-other-window)
 
-    ;; To create global keybindings for optional packages, do this inside
-    ;; the use-package :general config:
-    (use-package amx
-      :general
-      ("M-x" 'amx
-       "<menu>" 'amx))
+  ;; To create global keybindings for optional packages, do this inside
+  ;; the use-package :general config:
+  (use-package amx
+    :general
+    ("M-x" 'amx
+     "<menu>" 'amx))
 
-    ;; You can customize the bindings of specific modes too:
-    (use-package paredit
+  ;; You can customize the bindings of specific modes too:
+  (use-package paredit
     :general
     (:keymaps 'paredit-mode-map
               "C-<right>" nil
@@ -105,11 +107,6 @@ block:
   * Global Keybindings
   | key                | command                              | previous                             |
   |--------------------+--------------------------------------+--------------------------------------|
-  | =C-h B=            | ~general-describe-keybindings~       | ~nil~                                |
-  | =s-B=              | ~buffer-menu~                        | ~nil~                                |
-  | =C-x B=            | ~ibuffer-list-buffers~               | ~nil~                                |
-  | =C-;=              | ~comment-region~                     | ~nil~                                |
-  | =s-<down-mouse-1>= | ~mouse-drag-region-rectangle~        | ~nil~                                |
   | =M-SPC=            | ~cycle-spacing~                      | ~cycle-spacing~                      |
   | =M-h=              | ~mark-paragraph~                     | ~mark-paragraph~                     |
   | =C-h b=            | ~describe-bindings~                  | ~describe-bindings~                  |
@@ -118,8 +115,6 @@ block:
   | =C--=              | ~default-text-scale-decrease~        | ~negative-argument~                  |
   | =M-x=              | ~amx~                                | ~execute-extended-command~           |
   | =<menu>=           | ~amx~                                | ~execute-extended-command~           |
-  | =M-y=              | ~counsel-yank-pop~                   | ~yank-pop~                           |
-  | =s-b=              | ~ivy-switch-buffer~                  | ~quick-switch-buffer~                |
   | =s-<up>=           | ~org-previous-visible-heading~       | ~nil~                                |
   | =s-<down>=         | ~org-next-visible-heading~           | ~nil~                                |
   | =C-c o k=          | ~org-babel-remove-result~            | ~nil~                                |
@@ -130,13 +125,20 @@ block:
   | =s-a=              | ~lsp-execute-code-action~            | ~nil~                                |
   | =C-c t=            | ~my-vterm-toggle~                    | ~nil~                                |
   | =M-o=              | ~ace-window~                         | ~nil~                                |
-  | =s-o=              | ~ace-window~                         | ~browse-url~                         |
   | =s-SPC=            | ~set-rectangular-region-anchor~      | ~nil~                                |
   | =s-n=              | ~mc/mark-next-like-this~             | ~nil~                                |
   | =s-N=              | ~mc/mark-all-like-this~              | ~nil~                                |
   | =<f5>=             | ~whisper-run~                        | ~nil~                                |
   | =M-<f5>=           | ~say-buffer-from-point~              | ~say-buffer-from-point~              |
   | =C-c C-g=          | ~gptel-menu~                         | ~nil~                                |
+  | =M-y=              | ~counsel-yank-pop~                   | ~yank-pop~                           |
+  | =C-h B=            | ~general-describe-keybindings~       | ~general-describe-keybindings~       |
+  | =s-b=              | ~quick-switch-buffer~                | ~ivy-switch-buffer~                  |
+  | =s-B=              | ~buffer-menu-other-window~           | ~ibuffer-list-buffers~               |
+  | =C-x B=            | ~buffer-menu-other-window~           | ~ibuffer-list-buffers~               |
+  | =s-o=              | ~browse-url~                         | ~ace-window~                         |
+  | =C-;=              | ~comment-region~                     | ~comment-region~                     |
+  | =s-<down-mouse-1>= | ~mouse-drag-region-rectangle~        | ~mouse-drag-region-rectangle~        |
   
   * Paredit-Mode-Map Keybindings
   | key         | command                      | previous                     |
