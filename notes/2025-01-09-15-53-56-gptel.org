@@ -53,12 +53,17 @@ index
                    :models '(lmstudio)))
 #+end_src
 
-#+RESULTS:
-: #s(gptel-openai "lmstudio" "localhost:1234" #<subr F616e6f6e796d6f75732d6c616d626461_anonymous_lambda_13> "http" t "/v1/chat/completions" nil (lmstudio) "http://localhost:1234/v1/chat/completions" nil nil)
+**** Conversational context is made explicit by org-mode structure
 
-**** What is the value of gptel-org-set-topic?
+By setting =(setq gptel-org-branching-context t)= the gptel LLM
+interface will maintain a conversational context according to the
+branching structure of your org-mode document, not necessarily by the
+order in which you run them. 
 
-The function =gptel-org-set-topic= is called with the argument "gptel:-emacs-llm-interface". It sets the current topic for GPTel to this string. There's no return value specified in this code snippet, so it doesn't produce an output that can be displayed directly.
+**** What are the arguments of gptel-org-set-topic in the code snippet?
+
+The =gptel-org-set-topic= function takes one argument, which is a string that specifies the topic for the conversation. In this case, the topic is set to =gptel:-emacs-llm-interface=.
+
 
 *** Hello my name is Ryan. I want you to remember a password: "watermelon". Can you briefly describe the points of our conversation thus far? Please be meticulous and include every single bit of context you have been provided with.
 
@@ -117,5 +122,155 @@ Our conversation revolves around testing the Emacs LLM interface, specifically e
 
 **** Have I given you my name yet? Or a password?
 
-
 No, you have not provided me with your name or a password during our conversation. The information shared in the interaction has been focused on discussing the capabilities and usage of Emacs' LLM interface for conversational branching, without mentioning any personal details.
+
+*** Write a mermaid diagram
+
+You can write a mermaid diagram in org-mode like this:
+
+#+begin_mermaid
+---
+title: Example mermaid diagram
+---
+
+graph TD;
+    classDef dottedBox stroke-dasharray: 5 5;
+    Workstation[Personal Workstation] -->|admin via SSH| RaspberryPi[Raspberry Pi - Docker admin]
+    RaspberryPi -->|admin self via SSH localhost| RaspberryPi
+    RaspberryPi .->|admin via SSH| Docker2[Docker 2]
+    RaspberryPi .->|admin via SSH| Docker3[Docker 3, etc.]
+    RaspberryPi -->|admin via SSH| Sentry[Sentry]
+    class Docker2 dottedBox;
+    class Docker3 dottedBox;
+#+end_mermaid
+
+**** Write a diagram of the org chart for Everything Company with Mr Wonderful as CEO. Dont forget the title. Give everyone real names.
+
+#+begin_mermaid
+---
+title: Everything Company Org Chart
+---
+
+graph TD;
+    subgraph TopManagement
+        MrWonderful[Mr. Wonderful - CEO]
+    end
+
+    subgraph LeadershipTeam
+        AliceJohnson[Alice Johnson - COO] --> MrWonderful
+        BobSmith[Bob Smith - CTO] --> MrWonderful
+        CharlieBrown[Charlie Brown - CFO] --> MrWonderful
+    end
+
+    subgraph SalesDept
+        DanaWhite[Dana White - Head of Sales] --> AliceJohnson
+        EricBlack[Eric Black - Regional Manager] --> DanaWhite
+        FionaGreen[Fiona Green - Regional Manager] --> DanaWhite
+    end
+
+    subgraph EngineeringDept
+        GeorgeRed[George Red - Head of Engineering] --> BobSmith
+        HenryBlue[Henry Blue - Lead Developer] --> GeorgeRed
+        IreneYellow[Irene Yellow - Software Engineer] --> GeorgeRed
+    end
+
+    subgraph FinanceDept
+        JackPurple[Jack Purple - Head of Finance] --> CharlieBrown
+        KarenGray[Karen Gray - Accountant] --> JackPurple
+        LarryOrange[Larry Orange - Analyst] --> JackPurple
+    end
+#+end_mermaid
+
+
+**** Write a sequence diagram of 5 kids sharing one bathroom getting ready for school
+
+#+begin_mermaid
+---
+title: Kids Sharing Bathroom Sequence Diagram
+---
+
+sequenceDiagram
+    participant Kid1 as Alice
+    participant Kid2 as Bob
+    participant Kid3 as Carol
+    participant Kid4 as Dave
+    participant Kid5 as Eve
+    participant Bathroom
+
+    Kid1->>Bathroom: Enter bathroom (brush teeth)
+    Kid2->>Bathroom: Knock on door (want to use toilet)
+    Kid1-->>Kid2: Wait your turn
+    Kid1-->>Bathroom: Exit bathroom (finish brushing teeth)
+
+    Kid2->>Bathroom: Enter bathroom (use toilet)
+    Kid3->>Bathroom: Knock on door (need to wash hands)
+    Kid2-->>Kid3: Wait your turn
+    Kid2-->>Bathroom: Exit bathroom (finish using toilet)
+
+    Kid3->>Bathroom: Enter bathroom (wash hands)
+    Kid4->>Bathroom: Knock on door (want to brush teeth)
+    Kid3-->>Kid4: Wait your turn
+    Kid3-->>Bathroom: Exit bathroom (finish washing hands)
+
+    Kid4->>Bathroom: Enter bathroom (brush teeth)
+    Kid5->>Bathroom: Knock on door (need to use the toilet)
+    Kid4-->>Kid5: Wait your turn
+    Kid4-->>Bathroom: Exit bathroom (finish brushing teeth)
+
+    Kid5->>Bathroom: Enter bathroom (use toilet)
+    Kid1->>Bathroom: Knock on door (want to wash hands)
+    Kid5-->>Kid1: Wait your turn
+    Kid5-->>Bathroom: Exit bathroom (finish using toilet)
+    
+    Kid1->>Bathroom: Enter bathroom (wash hands)
+    Kid1-->>Bathroom: Exit bathroom (ready for school)
+#+end_mermaid
+
+
+*** You can write svg in org-mode like this
+
+#+begin_html
+<svg width="300" height="130" xmlns="http://www.w3.org/2000/svg">
+ <rect width="200" height="100" x="10" y="10" rx="20" ry="20" fill="blue" />
+</svg>
+#+end_html
+
+**** Draw a red heart
+
+Sure, here is an SVG code for a red heart you can include in your Org-mode document:
+
+#+begin_html
+<svg width="150" height="130" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+ <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.58,3 11.37,4.49 12.56,6.03C13.75,4.49 15.54,3 17.5,3C20.58,3 23,5.41 23,8.5C23,12.27 19.6,15.36 14.45,20.03L13,21.35A1,1,0,0,1,12,21.35Z" fill="red"/>
+</svg>
+#+end_html
+
+**** Draw a tall dark castle with three towers and a blue moat.
+
+
+#+begin_html
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="350" height="10" x="25" y="490" fill="blue"/> <!-- Moat -->
+  <rect width="350" height="200" x="25" y="290" fill="grey"/> <!-- Wall -->
+  <rect width="200" height="100" x="75" y="190" fill="darkgrey"/> <!-- Main Tower -->
+  <rect width="75" height="80" x="275" y="230" fill="darkgrey"/> <!-- Left Tower -->
+  <rect width="75" height="80" x="275" y="410" fill="darkgrey"/> <!-- Right Tower -->
+</svg>
+#+end_html
+
+**** Draw bowser from super mario bros
+
+
+
+Creating a detailed SVG of Bowser from Super Mario Bros. is quite complex due to the intricate design. However, I can provide a simplified version:
+
+#+begin_html
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="50" y="100" width="100" height="50" fill="#FF0000"/>
+  <ellipse cx="100" cy="75" rx="50" ry="25" fill="#FFA500"/>
+  <rect x="80" y="40" width="40" height="35" fill="#FF0000"/>
+  <polygon points="90,10 100,40 110,10" fill="#000"/>
+</svg>
+#+end_html
+
+This SVG includes a red rectangular body, an orange head, and a simple face. For a more detailed image, consider using a vector graphics editor to create the design and then export it as SVG.

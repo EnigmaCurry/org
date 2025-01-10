@@ -65,6 +65,7 @@
           ("video" :raw t)
           ("run" :raw t)
           ("stdout" :raw t)
+          ("html" :raw t)
           ("mermaid" :raw t)
           ("edit" :raw t)
           ("env" :raw t)
