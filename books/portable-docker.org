@@ -2534,7 +2534,7 @@ sentry make traefik install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi whoami.pi.example.com
+sentry route set --layer7 whoami.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -3016,7 +3016,7 @@ pi make forgejo install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi git.pi.example.com
+sentry route set --layer7 git.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -3207,8 +3207,7 @@ Press =ESC= four times to quit the config tool.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi forgejo \
-  --layer4 --proxy-protocol false
+sentry route set ssh --layer4 10.13.16.2 2222 --proxy-protocol false
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -3351,7 +3350,7 @@ pi make traefik-forward-auth install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi auth.pi.example.com
+sentry route set --layer7 auth.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -3896,7 +3895,7 @@ After installation, press =ESC= to quit the config tool.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi ca.pi.example.com
+sentry route set --layer7 ca.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4162,7 +4161,7 @@ pi make registry install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi registry.pi.example.com
+sentry route set --layer7 registry.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4336,7 +4335,7 @@ All services healthy.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi immich.pi.example.com
+sentry route set --layer7 immich.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4421,7 +4420,7 @@ pi make thttpd install
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi www.pi.example.com
+sentry route set --layer7 www.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4559,8 +4558,7 @@ Press =ESC= three times to go back to the main menu.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi sftp \
-  --layer4 --proxy-protocol false
+sentry route set sftp --layer4 10.13.16.2 2223 --proxy-protocol false
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4846,10 +4844,8 @@ Create a route for S3 and the console:
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi s3.pi.example.com \
-  --restart false
-sentry route set pi s3-console.pi.example.com \
-  --restart true
+sentry route set --layer7 s3.pi.example.com 10.13.16.2 443 --proxy-protocol false --restart false
+sentry route set --layer7 s3-console.pi.example.com 10.13.16.2 443 --proxy-protocol false --restart true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -4953,7 +4949,7 @@ ARM64.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi filestash-test.pi.example.com
+sentry route set --layer7 filestash-test.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -5132,13 +5128,8 @@ webhooks:
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi \
-  homepage.pi.example.com \
-  --restart false
-
-sentry route set pi \
-  homepage-webhooks.pi.example.com \
-  --restart true
+sentry route set --layer7 homepage.pi.example.com 10.13.16.2 443 --proxy-protocol true --restart false
+sentry route set --layer7 homepage-webhooks.pi.example.com 10.13.16.2 443 --proxy-protocol true --restart true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -5299,7 +5290,7 @@ All services healthy.
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi yourls.pi.example.com
+sentry route set --layer7 yourls.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -5399,7 +5390,7 @@ pi make nginx install wait
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi nginx.pi.example.com
+sentry route set --layer7 nginx.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -5589,7 +5580,7 @@ pi make jupyterlab install wait
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi jupyterlab.pi.example.com
+sentry route set --layer7 jupyterlab.pi.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 #+attr_shortcode: :style tip :title Tip
@@ -6535,16 +6526,7 @@ CLI command:
 
 #+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
 #+begin_run
-sentry route set pi whoami.example.com
-#+end_run
-
-Or with all of the explicit options set:
-
-#+attr_shortcode: :style secondary :title Run this on your Raspberry Pi
-#+begin_run
-sentry route set pi \
-  whoami.example.com 10.13.16.2 443 \
-  --proxy-protocol true --restart true
+sentry route set --layer7 whoami.example.com 10.13.16.2 443 --proxy-protocol true
 #+end_run
 
 And you can list all of your routes:
