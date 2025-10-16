@@ -710,6 +710,27 @@ rpm-ostree install --reboot libavcodec-freeworld
 
 You will need to reboot to complete the install.
 
+*** Speech synthesis
+
+Open the URL =about:config= and search for the entry
+=media.webspeech.synth.enabled= and ensure that it is set to =true=.
+
+#+begin_run
+flatpak override --user   --socket=system-bus   --socket=session-bus   \
+                 --filesystem=~/.config/speech-dispatcher   \
+                 --filesystem=/run/user/$(id -u)/speech-dispatcher   \
+                 org.mozilla.firefox
+
+systemctl --user enable --now speech-dispatcher.socket
+
+mkdir -p ~/.local/share/piper/voices
+python3 -m piper.download_voices | xargs -iXX python3 -m piper.download_voices --data-dir ~/.local/share/piper/voices/ XX
+#+end_run
+
+Restart firefox.
+
+[[https://eeejay.github.io/webspeechdemos/][Test speech synthesis on this page]]
+
 ** Distrobox
 :PROPERTIES:
 :EXPORT_FILE_NAME: distrobox
