@@ -1,6 +1,6 @@
 MAKE_ := $(MAKE) -j1 --no-print-directory
 LIB ?= emacs.d/init.el
-SHELL := /bin/bash
+SHELL := /usr/bin/env bash
 
 PUBLISH_RCLONE_REMOTE ?= book
 PUBLISH_RCLONE_DIRECTORY ?= book
@@ -8,7 +8,12 @@ PUBLISH_RCLONE_DIRECTORY ?= book
 RELEARN_THEME_SNAPSHOT ?= 735297478651be4fbe77be739214ed73afc2e0ba
 RELEARN_THEME_TARBALL_URL_PREFIX ?= https://codeload.github.com/EnigmaCurry/hugo-theme-relearn/tar.gz/
 
-.PHONY: build # Export Org docs to separate markdown files and build hugo site
+# Hugo pinned via nixpkgs commit (override with `make HUGO=...`)
+HUGO_REV ?= 07518c851b0f12351d7709274bbbd4ecc1f089c7
+HUGO_FLAKE ?= github:nixos/nixpkgs/$(HUGO_REV)\#hugo
+HUGO ?= nix run $(HUGO_FLAKE) --
+
+x.PHONY: build # Export Org docs to separate markdown files and build hugo site
 build: clean build-md build-hugo
 
 .PHONY: help # Show this help screen
@@ -30,15 +35,15 @@ build-md:
 
 build-hugo:
 	@_script/printable_books.sh
-	@cd hugo && hugo
+	cd hugo && $(HUGO)
 
 .PHONY: serve # Build and serve the site on http://localhost:1313
 serve: build
-	@cd hugo && hugo server --buildDrafts --disableFastRender
+	@cd hugo && $(HUGO) server --buildDrafts --disableFastRender
 
 .PHONY: serve-prod
 serve-prod: build
-	@cd hugo && hugo && hugo server --navigateToChanged
+	@cd hugo && $(HUGO) && $(HUGO) server --navigateToChanged
 
 .PHONY: clean
 clean:

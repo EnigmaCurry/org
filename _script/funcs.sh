@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 stderr(){ echo "$@" >/dev/stderr; }
 error(){ stderr "Error: $@"; }
 fault(){ test -n "$1" && error $1; stderr "Exiting."; exit 1; }

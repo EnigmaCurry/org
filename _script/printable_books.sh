@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 cat <<EOF > hugo/content/portable-docker/single.md
 ---
 layout: "book"
