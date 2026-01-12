@@ -1,0 +1,350 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /nixos-workstation
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi %env toc
+#+STARTUP: align
+
+* NixOS Workstation
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_WEIGHT: 190
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+This book describes how I setup a Linux Workstation (on a personal
+Desktop or Laptop computer) using NixOS.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+* Build ISO
+* Install
+** Create ZFS pool (two drives mirrored)
+
+The following example shows how to create a root ZFS filesystem,
+mirrored on two identical NVME drives.
+
+Find the model name and serial numbers of your drives:
+
+#+begin_src bash
+  lsblk -o NAME,SIZE,MODEL,SERIAL
+#+end_src
+
+#+begin_example
+NAME     SIZE MODEL         SERIAL
+loop0    1.3G               
+nvme0n1  3.6T CT4000P3PSSD8 1234567890AA
+nvme1n1  3.6T CT4000P3PSSD8 1234567890AB
+#+end_example
+
+Identify the stable device path of the drives. (Don't use =/dev/nvme*=
+use =/dev/disk/by-id/*=) :
+
+#+begin_src bash
+  ls -ld /dev/disk/by-id/*
+#+end_src
+
+#+begin_example
+lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA -> ../../nvme1n1
+lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA_1 -> ../../nvme1n1
+lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890BB -> ../../nvme0n1
+lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890BB_1 -> ../../nvme0n1
+...
+#+end_example
+
+ - The symbolic device id you want is of the format
+   =/dev/disk/by-id/nvme-{MODEL}-{SERIAL}= (without the =_1= part.)
+ - Make sure the symbolic link points to the correct device reported
+   by =lsblk=.
+
+Set two temporary variables =DISK1= and =DISK2= to reference them:
+
+#+begin_example
+DISK1=/dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA
+DISK2=/dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AB
+#+end_example
+
+Wipe the drives and create new UEFI and ZFS partitions:
+
+#+begin_src bash
+  (
+      set -euo pipefail
+      : "${DISK1:?DISK1 is not set}"
+      : "${DISK2:?DISK2 is not set}"
+      for d in "$DISK1" "$DISK2"; do
+          blkdiscard -f "$d" || true
+          sgdisk --zap-all "$d"
+          wipefs -a "$d" || true
+          sgdisk -n1:1MiB:+1GiB -t1:EF00 -c1:EFI "$d"
+          sgdisk -n2:0:0       -t2:BF00 -c2:ZFS "$d"
+          partprobe "$d"
+          udevadm settle
+      done
+      mkfs.fat -F 32 -n EFI1 "${DISK1}_1-part1"
+      mkfs.fat -F 32 -n EFI2 "${DISK2}_1-part1"
+  )
+#+end_src
+
+Verify with =lsblk= that the new partitions have been created
+correctly:
+
+#+begin_example
+$ lsblk
+NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0  3.6T  0 disk 
+├─nvme0n1p1 259:5    0    1G  0 part 
+└─nvme0n1p2 259:6    0  3.6T  0 part 
+nvme1n1     259:1    0  3.6T  0 disk 
+├─nvme1n1p1 259:3    0    1G  0 part 
+└─nvme1n1p2 259:4    0  3.6T  0 part 
+#+end_example
+
+Create the mirrored ZFS pool:
+
+#+begin_src bash
+  (
+      set -euo pipefail
+      modprobe zfs
+
+      zpool create -f \
+            -o ashift=12 \
+            -o autotrim=on \
+            -O mountpoint=none \
+            -O compression=zstd \
+            -O atime=off \
+            -O xattr=sa \
+            -O acltype=posixacl \
+            -O normalization=formD \
+            rpool mirror "${DISK1}_1-part2" "${DISK2}_1-part2"
+  
+      zpool status
+  )
+#+end_src
+
+Create datasets. We’ll use =mountpoint=legacy= so NixOS mounts them
+declaratively:
+
+#+begin_src bash
+  (
+      set -euo pipefail
+      zfs create -o mountpoint=none -o canmount=off rpool/root
+      zfs create -o mountpoint=legacy -o canmount=noauto rpool/root/nixos
+      zfs create -o mountpoint=legacy rpool/nix
+      zfs create -o mountpoint=legacy rpool/home
+      zfs create -o mountpoint=legacy rpool/var
+      zfs create -o mountpoint=legacy rpool/var/log
+      zpool set bootfs=rpool/root/nixos rpool
+  )
+#+end_src
+
+Mount all the filesystems under =/mnt=, including the two UEFI boot
+partitions:
+
+#+begin_src bash
+  (
+      set -euo pipefail
+      mount -t zfs rpool/root/nixos /mnt
+
+      mkdir -p /mnt/{nix,home,var}
+      mount -t zfs rpool/nix  /mnt/nix
+      mount -t zfs rpool/home /mnt/home
+      mount -t zfs rpool/var  /mnt/var
+      
+      mkdir -p /mnt/var/log
+      mount -t zfs rpool/var/log /mnt/var/log
+      
+      mkdir -p /mnt/{boot,boot-fallback}
+      mount "${DISK1}_1-part1" /mnt/boot
+      mount "${DISK2}_1-part1" /mnt/boot-fallback
+  )
+#+end_src
+** Copy networking config
+Copy the network config from the minimal installer into the new NixOS install:
+
+#+begin_src bash
+  mkdir -p /mnt/etc/NetworkManager/system-connections
+  cp /etc/NetworkManager/system-connections/bootstrap-wifi.nmconnection \
+     /mnt/etc/NetworkManager/system-connections/primary-wifi.nmconnection
+#+end_src
+
+** Install minimal NixOS config
+
+Generate the =/etc/nixos/configuration.nix= and
+=/etc/nixos/hardware-configuration.nix=:
+
+#+begin_src bash
+  nixos-generate-config --root /mnt
+#+end_src
+
+Create the =/etc/nixos/zfs-root.nix= file:
+
+#+begin_src bash
+  (
+    set -euo pipefail
+
+    : "${DISK1:?DISK1 is not set}"
+    : "${DISK2:?DISK2 is not set}"
+    : "${MNT:=/mnt}"
+
+    CFG="${MNT}/etc/nixos/configuration.nix"
+    MOD="${MNT}/etc/nixos/zfs-root.nix"
+
+    [[ -f "$CFG" ]] || { echo >&2 "ERROR: missing $CFG (run nixos-generate-config --root /mnt)"; exit 1; }
+
+    P1_DISK1="${DISK1}_1-part1"
+    P1_DISK2="${DISK2}_1-part1"
+
+    [[ -e "$P1_DISK1" ]] || { echo >&2 "ERROR: expected ESP path missing: $P1_DISK1"; exit 1; }
+    [[ -e "$P1_DISK2" ]] || { echo >&2 "ERROR: expected ESP path missing: $P1_DISK2"; exit 1; }
+
+    HOSTID="$(head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n')"
+
+    echo "HOSTID:    $HOSTID"
+
+    # --- Write zfs-root.nix ----------------------------------------------------
+    cat > "$MOD" <<EOF
+  { config, lib, ... }:
+  let
+    boot1 = "${DISK1}_1-part1";
+    boot2 = "${DISK2}_1-part1";
+  in
+  {
+    boot.supportedFilesystems = [ "zfs" ];
+    boot.zfs.devNodes = "/dev/disk/by-id";
+
+    networking.hostId = "${HOSTID}";
+
+    # nixos-generate-config typically enables systemd-boot on UEFI; turn it off
+    boot.loader.systemd-boot.enable = lib.mkForce false;
+
+    boot.loader.grub = {
+      enable = lib.mkForce true;
+      efiSupport = true;
+      efiInstallAsRemovable = true;
+      devices = [ "nodev" ];
+      copyKernels = true;
+
+      mirroredBoots = [
+        { path = "/boot";          devices = [ boot1 ]; }
+        { path = "/boot-fallback"; devices = [ boot2 ]; }
+      ];
+    };
+
+    # Append without self-reference (avoids infinite recursion)
+    fileSystems."/boot".options = lib.mkAfter [ "nofail" ];
+
+    # fileSystems."/boot-fallback" = {
+    #  device = boot2;
+    #  fsType = "vfat";
+    #  options = [ "nofail" "umask=0077" ];
+    # };
+
+    services.zfs.autoScrub.enable = true;
+  }
+  EOF
+    echo "Wrote: $MOD"
+
+    # --- Remove systemd-boot enable lines from configuration.nix ---------------
+    # (so only one bootloader is enabled, and avoid redundant EFI var line)
+    tmp="$(mktemp)"
+    awk '
+      # Drop the specific generated comment line (safe)
+      /^[[:space:]]*#.*systemd-boot EFI boot loader\./ { next }
+
+      # Drop enabling systemd-boot
+      /^[[:space:]]*boot\.loader\.systemd-boot\.enable[[:space:]]*=[[:space:]]*true;[[:space:]]*$/ { next }
+
+      # Drop redundant EFI vars line (zfs-root.nix sets it)
+      /^[[:space:]]*boot\.loader\.efi\.canTouchEfiVariables[[:space:]]*=[[:space:]]*true;[[:space:]]*$/ { next }
+
+      { print }
+    ' "$CFG" > "$tmp"
+    cp -f "$tmp" "$CFG"
+    rm -f "$tmp"
+
+    # --- Merge ./zfs-root.nix into existing imports ----------------------------
+    if grep -q '[[:space:]]\./zfs-root\.nix\b' "$CFG"; then
+      echo "configuration.nix already imports ./zfs-root.nix; done."
+      exit 0
+    fi
+
+    # We do NOT create a new imports block. If imports= is missing, fail.
+    if ! grep -q '^[[:space:]]*imports[[:space:]]*=' "$CFG"; then
+      echo >&2 "ERROR: no imports= found in $CFG (unexpected)."
+      exit 1
+    fi
+
+    tmp="$(mktemp)"
+    awk '
+      BEGIN { added=0; waiting_bracket=0 }
+
+      # Single-line imports: imports = [ ... ];
+      !added && /^[[:space:]]*imports[[:space:]]*=[[:space:]]*\[.*\][[:space:]]*;[[:space:]]*$/ {
+        line=$0
+        sub(/\]/, " ./zfs-root.nix ]", line)
+        print line
+        added=1
+        next
+      }
+
+      # imports = (alone)
+      /^[[:space:]]*imports[[:space:]]*=[[:space:]]*$/ {
+        print
+        waiting_bracket=1
+        next
+      }
+
+      # imports = [ ... (possibly with trailing comment)
+      !added && /^[[:space:]]*imports[[:space:]]*=[[:space:]]*\[/ {
+        print
+        print "    ./zfs-root.nix"
+        added=1
+        next
+      }
+
+      # bracket line after a standalone "imports =" (may include trailing comment)
+      waiting_bracket && /^[[:space:]]*\[/ {
+        print
+        if (!added) {
+          print "    ./zfs-root.nix"
+          added=1
+        }
+        waiting_bracket=0
+        next
+      }
+
+      { print }
+    ' "$CFG" > "$tmp"
+
+    cp -f "$tmp" "$CFG"
+    rm -f "$tmp"
+
+    if ! grep -q '[[:space:]]\./zfs-root\.nix\b' "$CFG"; then
+      echo >&2 "ERROR: failed to merge ./zfs-root.nix into imports."
+      echo >&2 "Imports region:"
+      grep -n 'imports' -A20 "$CFG" >&2 || true
+      exit 1
+    fi
+
+    echo "Merged ./zfs-root.nix into imports in $CFG"
+  )
+#+end_src
+
+
+Install:
+
+#+begin_src bash
+nixos-install
+#+end_src
+
+At the end it will ask you to set the =root= password.
+
+Unmount filesystems and reboot:
+
+#+begin_src bash
+umount -R /mnt
+zpool export rpool
+reboot
+#+end_src
