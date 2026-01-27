@@ -101,14 +101,22 @@ directories, the root filesystem is immutable, so the process of
 installing packages might be a bit different than what you are familar
 with.
 
-If you want to install something that isn't in the base image,
-you have a few different options:
+If you want to install something that isn't in the base image, you
+have a few different options:
+
+ * [[https://nixos.org/][Nix]] is a declarative package manager that installs packages into
+   =/nix/store= without touching the root filesystem. Using [[https://github.com/nix-community/home-manager][Home
+   Manager]], you can manage your entire user environment (packages and
+   dotfiles) reproducibly. This is my preferred method for installing
+   user packages, as it provides rollback capabilities and works
+   identically across any Linux distribution.
 
  * Podman or Docker containers (including toolbox and distrobox).
    Since containers use their own image, they are separate from the
    root image, and can be freely created and destroyed separately (no
-   reboot).
-   
+   reboot). Distrobox is still useful for running applications that
+   need a traditional mutable Linux environment.
+
  * Flatpak is a type of application container that includes all of its
    dependencies, and it is sandboxed/isolated from the host system,
    therefore they can be installed/managed separately from the base
@@ -121,11 +129,13 @@ you have a few different options:
    machine must boot the combined layers as one image, so therefore
    you must reboot the machine each time you install new packages this
    way.
-   
-For almost everything, I use Podman containers via [[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][toolbox]] and/or
-[[https://distrobox.it/][distrobox]] and these can even include graphical applications. Flatpak
-doesn't appeal to me. For a few things that cannot be installed in a
-container, I have [[/linux-workstation/layering-packages][added them as an rpm-ostree layer]].
+
+For my user environment, I use [[https://github.com/EnigmaCurry/sway-home][sway-home]] with Nix Home Manager. This
+provides a declarative configuration for all my dotfiles and user
+packages that can be version controlled and easily reproduced on any
+machine. I use Flatpak for a few graphical desktop apps only. For a
+few system-level packages that cannot be installed via Nix, I have
+[[/linux-workstation/layering-packages][added them as an rpm-ostree layer]].
 
 ** Requirements
 :PROPERTIES:
@@ -766,6 +776,12 @@ Restart firefox.
 :EXPORT_FILE_NAME: distrobox
 :EXPORT_HUGO_SLUG: distrobox
 :END:
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you prefer to manage your user environment entirely with Nix and
+Home Manager, you can skip this section.
+#+end_notice
 
 [[https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/][Distrobox]] (and/or [[https://containertoolbx.org/][Toolbx]]) is an integral part of Fedora Atomic, being
 one of the main methods of installing software, it lets you run your
