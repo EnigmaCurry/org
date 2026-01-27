@@ -1881,14 +1881,159 @@ should be preferred. But if you want to have a mixed-mode native
 workstation, with extra server VMs, in the same portable platform,
 this setup works really well.
 
-This section used to have instructions for setting up libvirt, but it
-has been deprecated in favor of my new [[https://github.com/EnigmaCurry/nixos-vm-template][nixos-vm-template]] project instead.
+*** nixos-vm-template
+
+[[https://github.com/EnigmaCurry/nixos-vm-template][nixos-vm-template]] is a tool for building and managing NixOS virtual
+machines with an immutable (read-only) root filesystem design. If you
+installed [[*Install Home Manager][Home Manager]] earlier, the =vm= alias is already
+configured for you.
 
 Read these extra pages about nixos-vm-template:
 
  - https://github.com/EnigmaCurry/nixos-vm-template
  - https://blog.rymcg.tech/blog/linux/code-agent-vm/
  - https://blog.rymcg.tech/blog/linux/nixos-proxmox-vm/
+
+*** The =vm= alias
+
+The =vm= alias is configured via Home Manager and points to the
+nixos-vm-template Justfile. Configuration is stored in
+=~/.config/nixos-vm-template/env=, which sets writable paths for VM
+output and machine configs.
+
+The =vm= alias has full tab completion for all commands, VM names,
+profiles, and other arguments. Press =Tab= to see available options at
+any point.
+
+To see all available commands:
+
+#+begin_run
+vm
+#+end_run
+
+*** Available VM profiles
+
+List the available VM profiles (base images):
+
+#+begin_run
+vm list-profiles
+#+end_run
+
+*** Creating a VM
+
+Create a new VM with a given name and profile:
+
+#+begin_run
+vm create myvm dev
+#+end_run
+
+This will:
+ - Build the profile's base image (if not already built)
+ - Create machine identity files (hostname, SSH keys, etc.)
+ - Prompt for SSH public keys for admin and user accounts
+ - Create the boot and /var disks
+ - Define the VM in libvirt
+
+*** Starting and stopping VMs
+
+#+begin_run
+vm start myvm
+vm stop myvm
+vm force-stop myvm
+#+end_run
+
+*** Connecting to a VM
+
+SSH into the VM (defaults to the =user= account):
+
+#+begin_run
+vm ssh myvm
+vm ssh admin@myvm
+#+end_run
+
+Open the VM console:
+
+#+begin_run
+vm console myvm
+#+end_run
+
+*** Listing VMs
+
+List all defined VMs:
+
+#+begin_run
+vm list
+#+end_run
+
+List all machine configs:
+
+#+begin_run
+vm list-machines
+#+end_run
+
+*** Managing VMs
+
+Destroy a VM (removes disks but keeps machine config):
+
+#+begin_run
+vm destroy myvm
+#+end_run
+
+Completely remove a VM including its machine config:
+
+#+begin_run
+vm purge myvm
+#+end_run
+
+Recreate a VM from its existing machine config:
+
+#+begin_run
+vm recreate myvm
+#+end_run
+
+Upgrade a VM to a new base image (preserves /var data):
+
+#+begin_run
+vm upgrade myvm
+#+end_run
+
+*** Snapshots and backups
+
+Create a snapshot:
+
+#+begin_run
+vm snapshot myvm snapshot-name
+#+end_run
+
+List snapshots:
+
+#+begin_run
+vm snapshots myvm
+#+end_run
+
+Restore a snapshot:
+
+#+begin_run
+vm restore-snapshot myvm snapshot-name
+#+end_run
+
+Backup a VM:
+
+#+begin_run
+vm backup myvm
+#+end_run
+
+List backups:
+
+#+begin_run
+vm backups
+#+end_run
+
+Restore from backup:
+
+#+begin_run
+vm restore-backup myvm
+#+end_run
 
 * Firewall
 :PROPERTIES:
