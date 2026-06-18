@@ -1,0 +1,17 @@
+{{- /* Minimal replacement for Relearn's openapi partial: embed Swagger UI from a
+       CDN, pointed at the given spec `src`. */ -}}
+{{- $src := .src -}}
+{{- $id := printf "openapi-%d" (now.UnixNano) -}}
+<div class="openapi">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+  <div id="{{ $id }}"></div>
+  <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    (function(){
+      function init(){
+        window.SwaggerUIBundle({ url: {{ $src | jsonify }}, domNode: document.getElementById({{ $id | jsonify }}) });
+      }
+      if(window.SwaggerUIBundle){ init(); } else { window.addEventListener("load", init); }
+    })();
+  </script>
+</div>

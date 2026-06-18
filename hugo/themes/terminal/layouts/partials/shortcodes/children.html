@@ -1,0 +1,22 @@
+{{- /* Minimal replacement for Relearn's children partial, used by the project's
+       `index` shortcode to list a page's child pages (the book/chapter index).
+       Supports `depth` (recurse) and `description`; other Relearn options are
+       accepted but ignored for now. */ -}}
+{{- $page := .page -}}
+{{- $desc := .description -}}
+{{- $depth := 1 -}}
+{{- with .depth }}{{ $depth = (int .) }}{{ end -}}
+{{- $showDesc := eq (printf "%v" $desc) "true" -}}
+{{- with $page.Pages.ByWeight -}}
+<ul class="children">
+  {{- range . -}}
+    <li>
+      <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
+      {{- if $showDesc }}{{ with .Description }}<span class="children-desc"> — {{ . }}</span>{{ end }}{{ end -}}
+      {{- if and (gt $depth 1) (gt (len .Pages) 0) -}}
+        {{ partial "shortcodes/children.html" (dict "page" . "depth" (sub $depth 1) "description" $desc) }}
+      {{- end -}}
+    </li>
+  {{- end -}}
+</ul>
+{{- end -}}

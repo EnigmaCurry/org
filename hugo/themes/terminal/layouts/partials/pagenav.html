@@ -1,0 +1,40 @@
+{{- /* top-right cluster: previous page / page-outline (#) / next page.
+       prev/next walk the whole book depth-first (see walk.html), so they cross
+       chapter<->section boundaries in reading order. The "#" panel is filled
+       client-side from this page's headings (see terminal.js). */ -}}
+{{- $cur := . -}}
+{{- /* current book (top-level section ancestor) — for the TOC panel header */ -}}
+{{- $book := $cur -}}
+{{- range $a := $cur.Ancestors -}}
+  {{- if $a.Parent }}{{ if $a.Parent.IsHome }}{{ $book = $a }}{{ end }}{{ end -}}
+{{- end -}}
+{{- /* global reading order: the home page (intro) first, then every book in weight
+       order, each walked depth-first, so prev/next continue across book boundaries
+       (read the whole site end to end, starting on the landing page) */ -}}
+{{- $flat := slice $.Site.Home -}}
+{{- range $b := $.Site.Home.Sections.ByWeight -}}
+  {{- $flat = $flat | append $b -}}
+  {{- $flat = partial "walk.html" (dict "page" $b "acc" $flat) -}}
+{{- end -}}
+{{- $idx := -1 -}}
+{{- range $i, $p := $flat -}}{{- if eq $p.RelPermalink $cur.RelPermalink }}{{ $idx = $i }}{{ end -}}{{- end -}}
+{{- $prev := false -}}{{- $next := false -}}
+{{- if gt $idx 0 }}{{ $prev = index $flat (sub $idx 1) }}{{ end -}}
+{{- if and (ge $idx 0) (lt $idx (sub (len $flat) 1)) }}{{ $next = index $flat (add $idx 1) }}{{ end -}}
+<div class="topnav">
+  {{- if $prev -}}
+  <a class="navbtn navprev" href="{{ $prev.RelPermalink }}" aria-label="Previous: {{ partial "pagename.html" $prev }}" title="prev: {{ partial "pagename.html" $prev }}"></a>
+  {{- else -}}
+  <a class="navbtn navprev" aria-disabled="true" aria-label="No previous page"></a>
+  {{- end -}}
+  <button id="tocToggle" class="navbtn toc-toggle" aria-label="Sections in this page" aria-expanded="false"></button>
+  {{- if $next -}}
+  <a class="navbtn navnext" href="{{ $next.RelPermalink }}" aria-label="Next: {{ partial "pagename.html" $next }}" title="next: {{ partial "pagename.html" $next }}"></a>
+  {{- else -}}
+  <a class="navbtn navnext" aria-disabled="true" aria-label="No next page"></a>
+  {{- end -}}
+  <nav class="toc" id="toc" aria-label="Sections in this page" hidden>
+    <a class="toc-book" href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
+    <ul></ul>
+  </nav>
+</div>

@@ -1,0 +1,13 @@
+{{- /* terminal prompt bar: visitor@<site>:~/book/chapter/section
+       Built from the page's ancestors (home excluded) + the page itself. */ -}}
+{{- $cur := . -}}
+{{- $parts := slice -}}
+{{- range $a := $cur.Ancestors.Reverse -}}
+  {{- if not $a.IsHome }}{{ $parts = $parts | append (partial "pagename.html" $a) }}{{ end -}}
+{{- end -}}
+{{- if not $cur.IsHome }}{{ $parts = $parts | append (partial "pagename.html" $cur) }}{{ end -}}
+{{- $path := "~" -}}
+{{- if $parts }}{{ $path = printf "~/%s" (delimit $parts "/") }}{{ end -}}
+<div class="topbar">
+  <a class="cmd" href="{{ $cur.RelPermalink }}"><span class="seg prefix"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>{{ $cur.Site.Title }}</span>:</span><span class="seg pathseg"><span class="path">{{ $path }}</span></span></a>
+</div>

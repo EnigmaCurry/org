@@ -1,0 +1,12 @@
+{{- /* Recursive depth-first walk of a book, weight-ordered, returning a flat
+       slice of every page (chapters AND their sections). Drives prev/next so the
+       arrows traverse the whole book in reading order, across section boundaries.
+       Call: partial "walk.html" (dict "page" $book "acc" (slice $book)) */ -}}
+{{- $acc := .acc -}}
+{{- range .page.Pages.ByWeight -}}
+  {{- $acc = $acc | append . -}}
+  {{- if gt (len .Pages) 0 -}}
+    {{- $acc = partial "walk.html" (dict "page" . "acc" $acc) -}}
+  {{- end -}}
+{{- end -}}
+{{- return $acc -}}

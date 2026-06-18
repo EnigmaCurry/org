@@ -1,0 +1,25 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- page manages its own light/dark; tells UA + extensions to back off -->
+<meta name="color-scheme" content="dark light">
+<title>{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} · {{ .Site.Title }}{{ end }}</title>
+{{ with .Description }}<meta name="description" content="{{ . }}">{{ end }}
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700&display=swap" rel="stylesheet">
+<!-- Resolve the theme + hide-until-fonts BEFORE first paint, so the correct --bg
+     is set immediately (no flash of the default theme) and there's no font reflow.
+     Runs before the stylesheet; JS-disabled keeps the <html data-theme> default. -->
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+})();
+</script>
+{{ $base := resources.Get "css/terminal.css" }}
+{{ $add := resources.Get "css/theme-additions.css" }}
+{{ $css := slice $base $add | resources.Concat "css/terminal.bundle.css" | fingerprint }}
+<link rel="stylesheet" href="{{ $css.RelPermalink }}" integrity="{{ $css.Data.Integrity }}">

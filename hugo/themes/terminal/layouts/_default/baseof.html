@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode | default "en" }}" data-theme="amber">
+<head>
+{{ partial "head.html" . }}
+</head>
+<body>
+
+<!-- single fixed toggle: ○ when the menu is closed, ● when open (glyph set in CSS) -->
+<button id="menutoggle" class="menutoggle" aria-label="Toggle menu" aria-expanded="false"></button>
+
+<!-- top-right cluster: previous chapter / page outline (#) / next chapter -->
+{{ partial "pagenav.html" . }}
+
+<div class="wrap">
+
+  {{ partial "sidebar.html" . }}
+  <div class="nav-backdrop" id="navBackdrop"></div>
+
+  <!-- ============ main reading area =============================== -->
+  <div>
+    {{ partial "topbar.html" . }}
+    <main>
+      <div class="content" id="content">
+        {{ block "main" . }}{{ .Content }}{{ end }}
+      </div>
+    </main>
+  </div>
+</div>
+
+{{ $js := resources.Get "js/terminal.js" | fingerprint }}
+<script src="{{ $js.RelPermalink }}"></script>
+{{ if in .Content "class=\"mermaid\"" }}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true });
+</script>
+{{ end }}
+{{ if in .Content "math-block" }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body)"></script>
+{{ end }}
+</body>
+</html>

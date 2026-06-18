@@ -1,0 +1,84 @@
+/* ============================================================
+   THEME ADDITIONS (beyond the static prototype's <style>)
+   Kept separate so re-extracting the prototype never clobbers it.
+   - third level in the nav tree (book -> chapter -> section)
+   - notice style variants, badge, button, math block, children index
+   ============================================================ */
+
+/* --- nav tree: expandable middle (chapter) node + third (section) level --- */
+.tree .chapters li.node > a::before{ content:"\25B8 "; color:var(--fg-dim); }   /* ▸ */
+.tree .chapters li.node.open > a::before{ content:"\25BE "; color:var(--accent); }   /* ▾ */
+.tree .chapters li.node.open > a{ color:var(--fg-bright); }
+.tree .sections{ list-style:none; margin:.1rem 0 .55rem; padding:0 0 0 1.6ch; border-left:1px solid var(--rule); }
+.tree .sections a{ color:var(--fg); text-decoration:none; display:block; padding:1px 0; }
+.tree .sections a:hover{ color:var(--accent); }
+.tree .sections a.active{ color:var(--accent); }
+.tree .sections a.active::before{ content:"\203A "; color:var(--accent); }   /* › */
+
+/* --- notice style variants (accent stays palette-driven; hue shifts wash/line) --- */
+.notice-warning, .notice-orange{
+  --line:color-mix(in srgb, #e0a33a 60%, var(--rule));
+  background:color-mix(in srgb, #e0a33a, transparent 92%);
+}
+.notice-warning .label, .notice-orange .label{ color:#e8b552; }
+.notice-grey, .notice-credits{
+  --line:var(--rule);
+  background:color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.notice-grey .label, .notice-credits .label{ color:var(--fg-dim); }
+/* primary / info / blue fall through to the prototype's default accent .notice */
+
+/* --- inline badge --- */
+.badge{
+  display:inline-block; font-size:.8em; font-weight:700; line-height:1.3;
+  padding:.02em .6ch; border-radius:2px; vertical-align:.05em;
+  border:1px solid var(--accent); color:var(--accent);
+  background:color-mix(in srgb, var(--accent), transparent 88%);
+}
+.badge-green{ border-color:var(--accent-2); color:var(--accent-2); }
+
+/* --- link button --- */
+.button-link{
+  display:inline-block; font-weight:700; padding:.3em 1ch; margin:.3rem .5ch .3rem 0;
+  border:1px solid var(--accent); border-radius:3px;
+  color:var(--accent); text-decoration:none;
+}
+.button-link:hover{ background:var(--accent); color:var(--bg); border-bottom-color:var(--accent); }
+.button-green{ border-color:var(--accent-2); color:var(--accent-2); }
+.button-green:hover{ background:var(--accent-2); }
+
+/* --- math block --- */
+.math-block{ margin:1.4rem 0; overflow-x:auto; }
+
+/* --- fenced code blocks (Chroma .highlight): scroll long lines instead of
+       overflowing, and strip the inline-code pill styling that leaks onto the
+       block <code> (its background/padding drew stray edge lines) --- */
+.content .highlight{ margin:1.4rem 0; }
+/* smaller font so the reading column fits ~80+ monospace columns without scrolling */
+.content .highlight pre{ overflow-x:auto; max-width:100%; border-radius:3px; padding:.9rem .25rem; font-size:.7em; line-height:1.5; }
+.content pre code{ background:none; padding:0; color:inherit; border-radius:0; cursor:auto; }
+.content pre code:hover{ background:none; }
+/* match the fenced-code size (.7em above) for run-box text */
+.run .body pre, .run .body code{ font-size:.7em; line-height:1.5; }
+
+/* --- images / figures: fit the reading column, centered --- */
+.content img{ max-width:100%; height:auto; display:block; margin:0 auto; border-radius:2px; }
+.content figure{ margin:1.7rem auto; max-width:100%; text-align:center; }
+.content figure figcaption{ color:var(--fg-dim); font-size:.85em; margin-top:.5rem; }
+
+/* --- mermaid diagrams: light panel so the lines have contrast (mermaid's
+       default theme assumes a light background), centered and width-capped --- */
+.content .mermaid{
+  background:#f4f4ee;
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:1.2rem;
+  margin:1.7rem 0;
+  text-align:center;
+  overflow-x:auto;
+}
+.content .mermaid svg{ max-width:100%; height:auto; }
+
+/* --- children index list (book/chapter listing) --- */
+ul.children{ margin:.6rem 0; }
+ul.children .children-desc{ color:var(--fg-dim); }

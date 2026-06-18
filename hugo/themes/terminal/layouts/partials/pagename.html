@@ -1,0 +1,11 @@
+{{- /* terminal-style short name for a page: the slug / filename, lowercased,
+       with any numeric weight prefix stripped (e.g. "009000-firewall" -> "firewall").
+       Used in the nav tree, the prompt path, and prev/next labels. */ -}}
+{{- $n := "" -}}
+{{- with .File }}{{ $n = .ContentBaseName }}{{ end -}}
+{{- if not .IsSection -}}
+  {{- with .Slug }}{{ if ne . "_index" }}{{ $n = . }}{{ end }}{{ end -}}
+{{- end -}}
+{{- if not $n }}{{ $n = .LinkTitle }}{{ end -}}
+{{- $n = replaceRE "^[0-9]+-?" "" $n -}}
+{{- return $n -}}

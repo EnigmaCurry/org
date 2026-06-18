@@ -1,0 +1,18 @@
+{{- /* Replacement for Relearn's notice. ox-hugo passes :style and :title (and an
+       optional :icon, which this terminal theme renders as its own CSS chevron,
+       so the FontAwesome name is ignored). Rendered as the prototype .box.notice. */ -}}
+{{- $style := .Get "style" | default (.Get 0) | default "info" -}}
+{{- $title := .Get "title" -}}
+{{- /* This is a {{% %}} (markdown) shortcode, so Hugo markdownifies this
+       template's output together with the page. A line beginning with <div>
+       starts a CommonMark "HTML block" that runs until the next blank line,
+       suppressing markdown within it — so .Inner must be surrounded by blank
+       lines, otherwise links/emphasis on its first line render literally. */ -}}
+<div class="box notice notice-{{ $style }}">
+  {{- if $title }}<div class="label">{{ $title }}</div>{{ else }}<div class="label">{{ $style }}</div>{{ end }}
+  <div class="body">
+
+{{ .Inner }}
+
+  </div>
+</div>

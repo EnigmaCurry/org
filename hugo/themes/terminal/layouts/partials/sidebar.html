@@ -1,0 +1,46 @@
+{{- /* book-of-books sidebar. Tree is capped at three levels:
+         book  ->  chapter  ->  section
+       Books and chapters are clickable (their own _index) AND expandable when
+       they have children; the current branch auto-expands. */ -}}
+{{- $cur := . -}}
+<aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="{{ .Site.Home.RelPermalink }}">{{ .Site.Title }}</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree">
+    {{- range $book := .Site.Home.Sections.ByWeight -}}
+      {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) -}}
+      <li class="book{{ if $bookOpen }} open{{ end }}">
+        <a href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
+        {{- /* only the current book expands its chapters (link-based accordion) */ -}}
+        {{- if $bookOpen -}}{{- with $book.Pages.ByWeight -}}
+          <ul class="chapters">
+            {{- range $ch := . -}}
+              {{- $isNode := gt (len $ch.Pages) 0 -}}
+              {{- $chOpen := or ($ch.IsAncestor $cur) (eq $ch.RelPermalink $cur.RelPermalink) -}}
+              <li class="{{ if $isNode }}node {{ end }}{{ if $chOpen }}open{{ end }}">
+                <a class="{{ if eq $ch.RelPermalink $cur.RelPermalink }}active{{ end }}" href="{{ $ch.RelPermalink }}">{{ partial "pagename.html" $ch }}</a>
+                {{- /* and only the chapter on the current path expands its sections */ -}}
+                {{- if and $isNode $chOpen -}}
+                  <ul class="sections">
+                    {{- range $ch.Pages.ByWeight -}}
+                      <li><a class="{{ if eq .RelPermalink $cur.RelPermalink }}active{{ end }}" href="{{ .RelPermalink }}">{{ partial "pagename.html" . }}</a></li>
+                    {{- end -}}
+                  </ul>
+                {{- end -}}
+              </li>
+            {{- end -}}
+          </ul>
+        {{- end -}}{{- end -}}
+      </li>
+    {{- end -}}
+  </ul>
+  <div class="sidebar-controls">
+    <span class="ctl-label">theme:</span><button id="palette" class="btn">amber</button>
+    <span class="ctl-label">fx:</span><button id="fx" class="btn">on</button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> {{ now.Format "Jan 2, 2006 at 3:04pm (MST)" }}</div>
+</aside>

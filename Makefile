@@ -5,9 +5,6 @@ SHELL := /usr/bin/env bash
 PUBLISH_RCLONE_REMOTE ?= book
 PUBLISH_RCLONE_DIRECTORY ?= book
 
-RELEARN_THEME_SNAPSHOT ?= 735297478651be4fbe77be739214ed73afc2e0ba
-RELEARN_THEME_TARBALL_URL_PREFIX ?= https://codeload.github.com/EnigmaCurry/hugo-theme-relearn/tar.gz/
-
 # Hugo pinned via nixpkgs commit (override with `make HUGO=...`)
 HUGO_REV ?= 07518c851b0f12351d7709274bbbd4ecc1f089c7
 HUGO_FLAKE ?= github:nixos/nixpkgs/$(HUGO_REV)\#hugo
@@ -26,12 +23,8 @@ emacs-batch:
     (${FUNC} ${ARGS})\
 	)"
 
-.PHONY: install # Install the hugo theme
-install:
-	@test -d hugo/themes/relearn || (TMPDIR=$$(mktemp -d) && wget -O $${TMPDIR}/relearn-theme.tar.gz ${RELEARN_THEME_TARBALL_URL_PREFIX}${RELEARN_THEME_SNAPSHOT} && mkdir -p hugo/themes && tar xfv $${TMPDIR}/relearn-theme.tar.gz -C hugo/themes && rm -rf $${TMPDIR} && mv hugo/themes/hugo-theme-relearn-${RELEARN_THEME_SNAPSHOT} hugo/themes/relearn)
-
 build-md:
-	${MAKE_} emacs-batch FUNC=build ARGS='(list \"notes.org\" \"notes\" \"license.org\" \"books.org\" \"books\")'
+	${MAKE_} emacs-batch FUNC=build ARGS='(list \"license.org\" \"books.org\" \"books\")'
 
 build-hugo:
 	@_script/printable_books.sh
