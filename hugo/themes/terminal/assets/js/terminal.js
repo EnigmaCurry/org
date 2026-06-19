@@ -18,8 +18,10 @@ function textNodesIn(root){
       const p = n.parentElement;
       if(!p) return NodeFilter.FILTER_REJECT;
       if(p.tagName==="SCRIPT"||p.tagName==="STYLE") return NodeFilter.FILTER_REJECT;
-      if(p.closest(".typed")) return NodeFilter.FILTER_REJECT;   // typed heading, not rained
       if(p.closest(".mermaid, .no-rain")) return NodeFilter.FILTER_REJECT;   // mermaid source is parsed as code — scrambling it breaks rendering
+      // running prose is set in a proportional reading font; the scramble assumes
+      // a monospace grid, so decoding it would reflow each line. Leave it static.
+      if(p.closest(".content") && p.closest("p, li, blockquote, dd, dt")) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }
   });
@@ -99,6 +101,96 @@ function rain(root, firstScreenOnly=true){
       }
       it.node.nodeValue=out;
       if(done) it.done=true; else allDone=false;
+    }
+    if(!allDone) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ===========================================================
+   DECOMPRESS REVEAL — proportional prose (reading column)
+   The decode-rain assumes a monospace grid, so it can't run on the
+   variable-width reading font without reflowing every line. Instead each
+   WORD is given a fixed-width box measured from its real glyphs, then its
+   content resolves: a dim field of garbled glyphs (slow shimmer) -> a brief
+   bright garble at the head -> the real word, a decode head crawling linearly
+   through the paragraph (reading order). Fixed boxes => zero reflow; each box
+   is released back to natural width the instant its word locks, so the resting
+   text keeps real kerning. */
+const DC_GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#%&@$*?/<>=+-_".split("");
+const dcGarble = n => { let s=""; for(let i=0;i<n;i++) s += DC_GLYPHS[(Math.random()*DC_GLYPHS.length)|0]; return s; };
+
+function decompress(root){
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const vh = window.innerHeight;
+
+  // only the prose blocks on the first screen take part
+  const blocks = [...root.querySelectorAll("p, li, blockquote, dd, dt")].filter(el=>{
+    const r = el.getBoundingClientRect(); return r.top < vh && r.bottom > 0;
+  });
+
+  // wrap each word in a span (whitespace stays as text, preserving break points);
+  // text inside code stays monospace + static, so skip it
+  const words = [];
+  for(const el of blocks){
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode(n){
+        if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const p = n.parentElement;
+        if(!p || p.closest("code, kbd, samp")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = []; let n; while((n=walker.nextNode())) nodes.push(n);
+    for(const node of nodes){
+      const frag = document.createDocumentFragment();
+      for(const tok of node.nodeValue.split(/(\s+)/)){
+        if(!tok) continue;
+        if(/\s/.test(tok)){ frag.appendChild(document.createTextNode(tok)); }
+        else { const s=document.createElement("span"); s.className="dc"; s.textContent=tok; frag.appendChild(s); words.push(s); }
+      }
+      node.parentNode.replaceChild(frag, node);
+    }
+  }
+
+  // PASS 1 (read): measure each word's natural box; drop any now below the fold
+  const items = [];
+  for(const s of words){
+    const r = s.getBoundingClientRect();
+    if(r.top >= vh) continue;                 // below first screen -> leave as real text
+    items.push({ s, w:r.width, text:s.textContent });
+  }
+  if(!items.length) return;
+
+  // PASS 2 (write): pin each box to its measured width, dim it, and seed it with garble
+  for(const it of items){
+    it.s.style.cssText = "display:inline-block;overflow:hidden;white-space:pre;vertical-align:baseline;color:var(--fg-dim);width:" + it.w + "px";
+    it.s.textContent = dcGarble(it.text.length);
+    it.nextFlip = 0; it.locked = false; it.lit = false;
+  }
+
+  // linear crawl: word i lights up at i*STEP, garbles brightly for GARBLE ms, then locks.
+  // STEP shrinks with length so the first screen always finishes in ~SPAN ms. Words still
+  // ahead of the head shimmer slowly (WAIT_FLIP) as a dim field of "compressed" data.
+  const SPAN = 1100, GARBLE = 200, FLIP = 45, WAIT_FLIP = 260;
+  const STEP = Math.min(22, SPAN / items.length);
+  items.forEach((it,i)=>{ it.startAt = i*STEP; it.lockAt = i*STEP + GARBLE; });
+
+  const t0 = performance.now();
+  function frame(now){
+    const t = now - t0; let allDone = true;
+    for(const it of items){
+      if(it.locked) continue;
+      if(t >= it.lockAt){                       // lock: real word, release the box (natural width = measured)
+        it.s.style.cssText = ""; it.s.textContent = it.text; it.locked = true;
+      } else if(t >= it.startAt){               // head: brighten + fast garble flicker
+        if(!it.lit){ it.s.style.color = ""; it.lit = true; }
+        if(t >= it.nextFlip){ it.s.textContent = dcGarble(it.text.length); it.nextFlip = t + FLIP*(0.6+Math.random()*0.8); }
+        allDone = false;
+      } else {                                  // waiting: dim, slow shimmer of garbled data
+        if(t >= it.nextFlip){ it.s.textContent = dcGarble(it.text.length); it.nextFlip = t + WAIT_FLIP*(0.6+Math.random()*0.8); }
+        allDone = false;
+      }
     }
     if(!allDone) requestAnimationFrame(frame);
   }
@@ -329,19 +421,6 @@ document.querySelectorAll(".content code").forEach(code=>{
 
 // reveal the page only once the web font is ready (no fallback->webfont reflow),
 // then run the decode. Guarded + timeout so it always reveals even if fonts hang.
-// typewriter reveal for the top heading (instead of the decode rain)
-function typewriter(el){
-  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const text = el.textContent;
-  el.textContent = ""; el.classList.add("typing");
-  let i = 0;
-  (function tick(){
-    el.textContent = text.slice(0, ++i);
-    if(i < text.length) setTimeout(tick, 60 + Math.random()*45);
-    else el.classList.remove("typing");   // drop the caret immediately when the last char lands
-  })();
-}
-
 // point each box's draw-on start at its top-right CORNER (angle depends on aspect ratio)
 function setBeamStarts(){
   document.querySelectorAll(".box").forEach(box=>{
@@ -353,7 +432,6 @@ let beamRAF;
 window.addEventListener("resize", ()=>{ cancelAnimationFrame(beamRAF); beamRAF = requestAnimationFrame(setBeamStarts); });
 setBeamStarts();
 
-const topHeading = content.querySelector("h1");
 let revealed=false;
 function reveal(){
   if(revealed) return; revealed=true;
@@ -361,15 +439,14 @@ function reveal(){
   if(!fxOn) return;                         // fx off: everything is already static
   setBeamStarts();                          // corner angles current after font-load layout
   document.body.classList.add("go");        // border-beam draws the boxes
-  if(topHeading) topHeading.classList.add("typed");  // keep it out of the rain
-  rain(content, true);
+  rain(content, true);                      // headings, code + run boxes decode on the monospace grid
+  decompress(content);                      // proportional reading prose streams in linearly
   // decode the sidebar only on the first load of this tab; on later in-tab
   // navigations it appears instantly (the content area still rains every page)
   if(sidebarEl && getComputedStyle(sidebarEl).display !== "none" && !ssGet("sidebar-rained")){
     rain(sidebarEl, false);
     ssSet("sidebar-rained", "1");
   }
-  if(topHeading) typewriter(topHeading);    // ...and type it instead
 }
 if(document.fonts && document.fonts.ready){ document.fonts.ready.then(reveal); }
 window.addEventListener("load", ()=> setTimeout(reveal, 50));  // fallback

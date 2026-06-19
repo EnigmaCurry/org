@@ -1,6 +1,7 @@
 /* ============================================================
    TERMINAL THEME PROTOTYPE
-   - Inconsolata (readable coding monospace) everywhere
+   - Inconsolata (readable coding monospace) for chrome, headings, and code;
+     Inter (proportional) for the running prose of the reading column
    - phosphor palette (amber default; green / mono via toggle)
    - faint scanline + vignette CRT overlay
    - decode "rain" reveal scoped to the first screen
@@ -22,6 +23,8 @@
   --sel-bg:    #fff;      /* copy select-all reverse video (bg) */
   --sel-fg:    #000;      /* ...and text */
   --col: 74ch;            /* reading column width */
+  --font-mono: "Inconsolata", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-read: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;  /* proportional reading face for prose */
   color-scheme:dark;      /* native UI (scrollbars, etc.) match the dark themes */
 }
 /* palette variants -------------------------------------------------*/
@@ -47,7 +50,7 @@ body{
   min-height:100vh;
   background:var(--bg);
   color:var(--fg);
-  font-family:"Inconsolata", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-family:var(--font-mono);
   font-size:1rem;
   line-height:1.7;
   letter-spacing:.1px;
@@ -227,14 +230,17 @@ main{ padding:0.5rem 1rem 6rem; }
 .content{ max-width:var(--col); margin:0 auto;
   overflow-wrap:anywhere; }   /* break-less scramble tokens still wrap -> page width never grows */
 
+/* Running prose reads in a proportional face; the terminal chrome, headings, and
+   ALL code stay monospace (Inconsolata). Code inside a paragraph must re-assert
+   the mono var so it doesn't inherit the reading font from its <p>. */
+.content p, .content li, .content blockquote, .content dd, .content dt{
+  font-family:var(--font-read); letter-spacing:0;
+}
+.content code, .content pre, .content kbd, .content samp{ font-family:var(--font-mono); }
+
 h1,h2,h3{ color:var(--fg-bright); font-weight:600; line-height:1.3; letter-spacing:.3px; }
 h1{ font-size:1.55rem; margin:.2rem 0 1.4rem; }
 h1::before{ content:"# "; color:var(--accent); }
-h1.typing::after{                      /* typewriter caret on the top heading */
-  content:""; display:inline-block; width:.55ch; height:.95em;
-  background:var(--accent); margin-left:.12ch; vertical-align:-.1em;
-  animation:blink 1.05s steps(1) infinite;
-}
 h2{ font-size:1.15rem; margin:2.6rem 0 .9rem; padding-top:.8rem; border-top:1px dashed var(--rule); }
 h2::before{ content:"## "; color:var(--accent); }
 h3{ font-size:1rem; margin:1.8rem 0 .6rem; }
