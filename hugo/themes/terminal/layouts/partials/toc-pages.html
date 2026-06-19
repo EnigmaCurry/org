@@ -1,0 +1,13 @@
+{{- /* Recursive child-page renderer for the "#" outline on section pages (book
+       and chapter indexes). These pages carry little heading content of their
+       own, so the outline lists the section's child pages instead — and unlike
+       the heading entries these are real RelPermalink links that navigate.
+       Emits the same flat <li class="lvlN"> shape as toc-tree.html; capped at
+       3 levels to match. */ -}}
+{{- $level := .level -}}
+{{- range .pages.ByWeight -}}
+  <li class="lvl{{ $level }} page"><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></li>
+  {{- if and .Pages (lt $level 3) -}}
+    {{- partial "toc-pages.html" (dict "pages" .Pages "level" (add $level 1)) -}}
+  {{- end -}}
+{{- end -}}

@@ -1,0 +1,19 @@
+{{- /* Recursive page-outline renderer. Emits a FLAT list of <li class="lvlN">
+       (depth shows as #/##/### via CSS, not nested <ul>s), mirroring the
+       client-built list this replaced. Hugo's .Fragments tree nests by real
+       heading level, and the page's h1 title appears as an id-less wrapper node
+       holding the h2s — so id-less nodes are unwrapped (their children render at
+       the same level) and the h1 title is rendered separately as lvl1 by the
+       caller. Capped at 3 levels; titles are plainified to drop inline markup. */ -}}
+{{- $level := .level -}}
+{{- range .headings -}}
+  {{- if .ID -}}
+    <li class="lvl{{ $level }}"><a href="#{{ .ID }}">{{ .Title | plainify }}</a></li>
+    {{- if and .Headings (lt $level 3) -}}
+      {{- partial "toc-tree.html" (dict "headings" .Headings "level" (add $level 1)) -}}
+    {{- end -}}
+  {{- else if .Headings -}}
+    {{- /* id-less wrapper (the h1 title node): lift its children to this level */ -}}
+    {{- partial "toc-tree.html" (dict "headings" .Headings "level" $level) -}}
+  {{- end -}}
+{{- end -}}

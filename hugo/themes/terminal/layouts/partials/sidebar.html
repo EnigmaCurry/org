@@ -38,9 +38,28 @@
       </li>
     {{- end -}}
   </ul>
-  <div class="sidebar-controls">
-    <span class="ctl-label">theme:</span><button id="palette" class="btn">amber</button>
-    <span class="ctl-label">fx:</span><button id="fx" class="btn">on</button>
+  {{- /* action row: external links + the settings gear. Sits above the build date. */ -}}
+  <div class="sidebar-actions">
+    {{- with .Site.Params.repo -}}
+    <a class="btn iconbtn" href="{{ . }}" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank">
+      {{- /* generic git icon: a commit node with a branch forking off */ -}}
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a>
+    {{- end -}}
+    {{- /* settings gear: opens the modal below. JS-only (the controls inside need
+           JS to take effect), so it's hidden via html.js when scripting is off. */ -}}
+    <button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
   </div>
   <div class="build-date"><span class="lbl">build:</span> {{ now.Format "Jan 2, 2006 at 3:04pm (MST)" }}</div>
 </aside>

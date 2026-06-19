@@ -82,3 +82,44 @@
 /* --- children index list (book/chapter listing) --- */
 ul.children{ margin:.6rem 0; }
 ul.children .children-desc{ color:var(--fg-dim); }
+
+/* --- intro λ logo (home page only): an oversized lambda centered like an
+       image, with a matrix-style glyph-rain canvas fading in behind it.
+       The canvas is wired up + animated in terminal.js (lambdaRain). --- */
+.lambda-logo{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:clamp(360px, 64vh, 680px);
+  margin:1.4rem auto 2.6rem;
+  overflow:hidden;
+}
+.lambda-logo .lambda-rain{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1.4s ease;
+}
+.lambda-logo.rain-on .lambda-rain{ opacity:.5; }
+.lambda-logo .lambda-glyph{
+  position:relative; z-index:1;
+  font-family:var(--font-mono);
+  font-size:clamp(7rem, 22vh, 15rem);
+  line-height:1;
+  color:var(--accent);
+  text-shadow:0 0 24px color-mix(in srgb, var(--accent), transparent 55%);
+  user-select:none;
+}
+/* fx off: no animated field, just the static glyph */
+.no-fx .lambda-logo .lambda-rain{ display:none; }
+
+/* lite (light) palette: the page is pale, so back the scene with a translucent
+   gray panel — the dark phosphor trails read much better against it than on white */
+:root[data-theme="lite"] .lambda-logo{ background:rgba(20,24,18,0.12); border-radius:4px; }
+
+/* when a maxed mother core detonates, its glyph ascends to replace the λ here —
+   flash + scale-pop so the swap reads as a climactic event */
+@keyframes lambda-swap{ 0%{ transform:scale(1.7); filter:brightness(2.4); } 100%{ transform:scale(1); filter:none; } }
+.lambda-logo .lambda-glyph.swap{ animation:lambda-swap .7s ease-out; }

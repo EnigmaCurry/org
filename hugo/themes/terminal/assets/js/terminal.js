@@ -197,6 +197,384 @@ function decompress(root){
   requestAnimationFrame(frame);
 }
 
+/* ===========================================================
+   INTRO λ LOGO — a small swarm of phosphor glyph "entities" roaming a
+   2D grid behind the oversized lambda (home page only). Each entity
+   walks cell-to-cell (up/down/left/right), keeps some momentum, turns,
+   pauses to "think", and drifts its own step rate — leaving a fading
+   glyph trail as it goes. A shared, jumping "focus" cell gives them a
+   loose common goal (a cryptographic problem they converge on, flare
+   over, then chase to its next position). Trails fade via
+   destination-out so the page bg shows through on any palette; the
+   accent/bright colours are re-read on palette change. Paused with fx.
+   =========================================================== */
+function lambdaRain(){
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = document.querySelector(".lambda-logo");
+  const canvas = box && box.querySelector(".lambda-rain");
+  const ctx = canvas && canvas.getContext("2d");
+  if(!ctx) return;
+
+  // weighted toward λ so the field reads as lambdas with the odd glyph mixed in
+  const GLYPHS = "λλλABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&@$*?/<>=+-_".split("");
+  const CELL = 16;                                    // glyph cell size (css px)
+  const CW = [{dx:1,dy:0},{dx:0,dy:1},{dx:-1,dy:0},{dx:0,dy:-1}];   // E S W N, in clockwise order
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let accent  = cssVar("--accent")    || "#dfa22c";
+  let bright  = cssVar("--fg-bright") || "#d6ddd0";
+  const refreshColors = () => { accent = cssVar("--accent")||accent; bright = cssVar("--fg-bright")||bright; };
+  const mono = cssVar("--font-mono") || "monospace";
+  const rint = n => (Math.random()*n)|0;
+  const rng  = (lo,hi) => lo + Math.random()*(hi-lo);
+  let w=0, h=0, gc=0, gr=0, agents=[];
+
+  // A small ecology behind the λ:
+  //  · SEEDS  — lone exotic-glyph cells; snakes circle them to grow, then they
+  //             EXPLODE into a MOTHER CORE (1/4/9 cells of the same glyph).
+  //  · MOTHERS— dense bright cores that emit new snakes, hand snakes their glyph
+  //             to ferry off and seed elsewhere, and themselves grow 1->4->9 then
+  //             detonate — the survivor's glyph ASCENDS to replace the λ overlay.
+  // a deep well of esoteric candidate glyphs (Greek, math, set/logic, fraktur &
+  // letterlike, supplemental operators, runic, geometric). Font coverage varies by
+  // OS/browser, so this pool is filtered at runtime (see pickRenderable) down to
+  // the glyphs that actually render — wide ones are squeezed to the cell on draw.
+  const SIGIL_POOL = (
+    "ΓΔΘΛΞΠΣΦΨΩαβγδεζηθλμξπρςστφχψϝϕϖϰϱϴ" +
+    "∀∂∃∄∅∆∇∈∉∋∌∏∐∑∓∕∗∘∙√∛∜∝∞∟∠∡∢∣∤∥∦∧∨∩∪∫∬∭∮∯∰∱∲∳" +
+    "∴∵∸∺∻∼∽∾≀≁≂≃≄≅≆≇≈≉≊≋≌≍≎≏≐≑≒≓≖≗≘≙≚≛≜≝≞≟≠≡≢≣≤≥≦≧≨≩≪≫≬≭" +
+    "⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊌⊍⊎⊏⊐⊑⊒⊓⊔⊕⊖⊗⊘⊙⊚⊛⊜⊝⊞⊟⊠⊡⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊰⊱⊲⊳⊴⊵⊶⊷⊸⊹⊺⊻⊼⊽⊾⊿" +
+    "⋀⋁⋂⋃⋄⋅⋆⋇⋈⋉⋊⋋⋌⋍⋎⋏⋐⋑⋒⋓⋔⋕⋖⋗⋘⋙⋚⋛⋜⋝⋞⋟⋠⋡⋢⋣⋈⋔⋊⋉" +
+    "ℂℇℊℋℌℍℎℏℐℑℒℓℕ℘ℙℚℛℜℝℤℨℬℭℯℰℱℲℳℴℵℶℷℸⅅⅆⅈⅉ" +
+    "⟀⟁⟂⟃⟄⟇⟊⟐⟑⟒⟓⟔⟕⟖⟗⟠⟡⟢⟣⟤⟥⦀⦁⦙⦚⦛⦜⦝⦣⦤⦥⦦⦧" +
+    "⨀⨁⨂⨃⨄⨅⨆⨉⨊⨍⨎⨏⨐⨑⨒⨓⨔⨕⨖⨗⨙⨚⨛⨜⨝⨞⨟⨠⨡⩀⩁⩂⩃⩄⩅⩆⩇⩈⩉⩊⩋⩌⩍" +
+    "ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚻᚾᛁᛃᛇᛈᛉᛊᛋᛏᛒᛖᛗᛚᛝᛟᛞᛤᛥ" +
+    "◆◇◈◉◊◍◎◐◑◒◓◔◕△▽◁▷⟁✶✷✸✹✺❉❈⁂⁕⌖⍟⎔⏥"
+  ).split("");
+
+  // Keep only glyphs the font stack can actually draw: render each to an offscreen
+  // canvas and drop the ones that come out blank or as tofu. Tofu is detected by
+  // comparing against the .notdef rendering of codepoints guaranteed missing in
+  // every font: a ".notdef box" (incl. the "hex-in-a-box" kind, whose interior
+  // digits differ per codepoint) has the SAME outer rectangle + border frame as
+  // the reference, so matching that signature is robust where a fixed shape test
+  // isn't. One-time, at start.
+  function pickRenderable(pool){
+    const S = 22, pad = 4, W = S + pad*2;
+    const cv = document.createElement("canvas"); cv.width = cv.height = W;
+    const o = cv.getContext("2d", { willReadFrequently:true });
+    if(!o) return pool;
+    o.textBaseline = "top";
+    // bitmap signature for one char: bounding box + how solid its border ring is
+    const sig = ch => {
+      o.clearRect(0,0,W,W); o.font = S + "px " + mono; o.fillStyle = "#fff";
+      o.fillText(ch, pad, pad);
+      const d = o.getImageData(0,0,W,W).data;
+      const on = (x,y)=> d[(y*W+x)*4+3] > 40;
+      let n=0, minx=W,miny=W,maxx=-1,maxy=-1;
+      for(let y=0;y<W;y++) for(let x=0;x<W;x++) if(on(x,y)){ n++; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }
+      if(n < 3) return { blank:true };
+      const bw = maxx-minx+1, bh = maxy-miny+1;
+      let edge=0, tot=0;
+      for(let x=minx;x<=maxx;x++){ edge += on(x,miny)+on(x,maxy); tot+=2; }
+      for(let y=miny;y<=maxy;y++){ edge += on(minx,y)+on(maxx,y); tot+=2; }
+      return { blank:false, bw, bh, frame: tot ? edge/tot : 0 };
+    };
+    // reference tofu: codepoints no font assigns (a noncharacter + far unassigned
+    // planes). Whatever the platform draws for these IS its .notdef box.
+    const refs = [0x10FFFF, 0xFDD0, 0xE0FFF].map(cp=> sig(String.fromCodePoint(cp))).filter(s=> !s.blank);
+    const looksLikeRef = s => refs.some(r=>
+      Math.abs(s.bw-r.bw) <= 2 && Math.abs(s.bh-r.bh) <= 2 && s.frame > 0.5 && r.frame > 0.5);
+    const renderable = ch => {
+      const s = sig(ch);
+      if(s.blank) return false;                                 // renders nothing -> missing
+      if(looksLikeRef(s)) return false;                         // matches the .notdef box -> tofu
+      if(s.bw >= S*0.55 && s.bh >= S*0.65 && s.frame > 0.7) return false;  // fallback: solid cell-filling frame
+      return true;
+    };
+    const out = pool.filter(renderable);
+    return out.length >= 12 ? out : pool;                       // safety: never end up with too few
+  }
+  const SIGILS = pickRenderable(SIGIL_POOL);
+  const MAX_SEEDS = 14, MAX_LEVEL = 5, MAX_SNAKES = 40;
+  const OFFSETS = { 1:[[0,0]], 4:[[0,0],[1,0],[0,1],[1,1]], 9:[[-1,-1],[0,-1],[1,-1],[-1,0],[0,0],[1,0],[-1,1],[0,1],[1,1]] };
+  let seeds = [], cores = [], occupied = new Set(), sites = [], nextSpawn = 0;
+  const key = (x,y) => x + "," + y;
+  const glyphEl = box.querySelector(".lambda-glyph");
+
+  // draw a glyph fitted to the grid cell — if the font substitutes a wider glyph
+  // for an exotic symbol, squeeze it horizontally so it never overdraws its cell
+  function drawGlyph(g, cx, cy, fontSize, color, alpha){
+    ctx.font = fontSize + "px " + mono; ctx.fillStyle = color; ctx.globalAlpha = alpha;
+    const wd = ctx.measureText(g).width;
+    if(wd > CELL){ ctx.save(); ctx.translate(cx, cy); ctx.scale(CELL/wd, 1); ctx.fillText(g, 0, 0); ctx.restore(); }
+    else ctx.fillText(g, cx, cy);
+    ctx.globalAlpha = 1;
+  }
+
+  // persistent personalities so each entity reads as its own creature, not one
+  // shared clock: how fast (iv ms/step), how straight (mom), how shy of reversing
+  // (rev), whether it traces loops (turn: steps/side -> squares & figure-eights),
+  // how strongly it's drawn to the nearest structure, and how often/long it rests.
+  const KINDS = [
+    {k:"dart",  iv:[42,72],   mom:7,  rev:0.15, turn:0,    focus:3.0, rest:0.16, restMs:[150,650],  flip:0.30},
+    {k:"crawl", iv:[180,320], mom:3,  rev:0.30, turn:0,    focus:4.5, rest:0.05, restMs:[300,1000], flip:0.15},
+    {k:"line",  iv:[80,130],  mom:16, rev:0.04, turn:0,    focus:0.8, rest:0.03, restMs:[200,500],  flip:0.08},
+    {k:"loop",  iv:[70,120],  mom:0,  rev:0,    turn:[3,6],focus:0.1, rest:0.02, restMs:[150,400],  flip:0.20},
+    {k:"rest",  iv:[95,170],  mom:4,  rev:0.30, turn:0,    focus:3.5, rest:0.42, restMs:[500,1700], flip:0.22},
+  ];
+  const rotate = (d, b) => CW[(CW.findIndex(c=> c.dx===d.dx && c.dy===d.dy) + b + 4) & 3];
+
+  const spawn = (x, y) => {
+    const t = KINDS[rint(KINDS.length)];
+    return {
+      t,
+      x: x === undefined ? rint(gc) : x,
+      y: y === undefined ? rint(gr) : y,
+      dir: CW[rint(4)],
+      interval: rng(t.iv[0], t.iv[1]),    // fixed characteristic cadence (+ jitter per step)
+      next: performance.now() + rng(0, 500),   // de-sync the first move so they don't tick together
+      glyph: GLYPHS[rint(GLYPHS.length)],
+      turnEvery: t.turn ? Math.round(rng(t.turn[0], t.turn[1])) : 0,
+      bias: Math.random()<0.5 ? 1 : -1,   // loop handedness (CW / CCW)
+      n: 0,                               // step counter (drives looper turns)
+      carry: null, carryAt: 0, cooldown: 0,   // a glyph picked up from a mother, to seed elsewhere
+    };
+  };
+
+  function resize(){
+    const r = box.getBoundingClientRect();
+    w = r.width; h = r.height;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.max(1, Math.round(w*dpr));
+    canvas.height = Math.max(1, Math.round(h*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.font = CELL + "px " + mono;
+    ctx.textBaseline = "top";
+    gc = Math.max(1, Math.floor(w / CELL));
+    gr = Math.max(1, Math.floor(h / CELL));
+    const want = Math.min(22, Math.max(6, Math.round(gc*gr/70)));
+    agents = Array.from({length:want}, ()=> spawn());
+    // reset the world for the new grid, then seed a few growable cells
+    seeds = []; cores = []; occupied = new Set(); sites = []; nextSpawn = 0;
+    for(let i=0;i<3;i++) seedCell();
+  }
+
+  const inBounds = (x,y) => x>=0 && x<gc && y>=0 && y<gr;
+  const passable = (x,y) => inBounds(x,y) && !occupied.has(key(x,y));   // structure cells are walls -> snakes circle them
+
+  function emptyCell(){
+    for(let i=0;i<24;i++){ const x=rint(gc), y=rint(gr); if(!occupied.has(key(x,y))) return {x,y}; }
+    return null;
+  }
+  // GROWABLE SEED — a lone cell snakes circle to grow; matures into a mother core
+  function seedCell(x, y, glyph){
+    if(seeds.length >= MAX_SEEDS) return;
+    if(x === undefined){ const c = emptyCell(); if(!c) return; x = c.x; y = c.y; }
+    if(!inBounds(x,y) || occupied.has(key(x,y))) return;
+    seeds.push({ x, y, glyph: glyph || SIGILS[rint(SIGILS.length)], energy: 50, level: 1, flash: 0, born: performance.now() });
+    occupied.add(key(x,y));
+  }
+  const removeSeed = s => { const k = seeds.indexOf(s); if(k>=0) seeds.splice(k,1); occupied.delete(key(s.x,s.y)); };
+
+  // MOTHER CORE — a dense block (1/4/9 cells) of one glyph. coreCells lays out the
+  // footprint; makeCore claims it; expandCore grows the footprint; remove frees it.
+  const coreCells = (ax,ay,size) => OFFSETS[size].map(([dx,dy])=>({x:ax+dx,y:ay+dy})).filter(c=> inBounds(c.x,c.y));
+  function makeCore(ax, ay, glyph, size, now){
+    const cells = coreCells(ax,ay,size).filter(c=> !occupied.has(key(c.x,c.y)));
+    if(!cells.length) return;
+    for(const c of cells) occupied.add(key(c.x,c.y));
+    cores.push({ ax, ay, glyph, size, cells, energy: 45, flash: now, born: now, emitAt: now + rng(1500,3500) });
+  }
+  function expandCore(c, size, now){
+    for(const cell of c.cells) occupied.delete(key(cell.x,cell.y));        // release old footprint
+    c.cells = coreCells(c.ax,c.ay,size).filter(cc=> !occupied.has(key(cc.x,cc.y)));
+    for(const cell of c.cells) occupied.add(key(cell.x,cell.y));
+    c.size = size; c.flash = now;
+  }
+  const removeCore = c => { const k = cores.indexOf(c); if(k>=0) cores.splice(k,1); for(const cell of c.cells) occupied.delete(key(cell.x,cell.y)); };
+
+  resize();
+  let rraf;
+  window.addEventListener("resize", ()=>{ cancelAnimationFrame(rraf); rraf = requestAnimationFrame(()=>{ refreshColors(); resize(); }); });
+  // adopt the palette live when the theme toggle flips data-theme on <html>
+  if(window.MutationObserver) new MutationObserver(refreshColors).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+
+  function step(a, now){
+    const t = a.t;
+    // rest/think: hold still and let the trail fade — no re-stamp (no blink)
+    if(Math.random() < t.rest){ a.next = now + rng(t.restMs[0], t.restMs[1]); return; }
+
+    if(a.turnEvery){
+      // looper: turn a fixed amount every few steps -> squares; flip handedness
+      // once per loop -> figure-eights. bounce off walls by turning until clear.
+      a.n++;
+      if(a.n % a.turnEvery === 0) a.dir = rotate(a.dir, a.bias);
+      if(a.n % (a.turnEvery*4) === 0) a.bias = -a.bias;
+      let d = a.dir, tries = 0;
+      while(!passable(a.x+d.dx, a.y+d.dy) && tries++ < 4) d = rotate(d, a.bias);
+      a.dir = d; if(passable(a.x+d.dx, a.y+d.dy)){ a.x += d.dx; a.y += d.dy; }
+    } else {
+      // wanderer: weight in-bounds moves by momentum + reverse-aversion, plus a
+      // pull toward the nearest structure. It can't step onto one (impassable),
+      // so the attraction makes it orbit — circling the cell it's feeding.
+      let tx=0, ty=0, best=1e9;
+      if(!a.carry) for(const s of sites){ const dd = Math.abs(s.x-a.x)+Math.abs(s.y-a.y); if(dd<best){ best=dd; tx=s.x; ty=s.y; } }
+      const seek = best < 1e9;   // a courier carrying a glyph ignores sites and drifts off to deposit it
+      const cand = [];
+      for(const d of CW){
+        if(!passable(a.x+d.dx, a.y+d.dy)) continue;          // walls + structures: impassable
+        let wgt = 1;
+        if(d === a.dir) wgt += t.mom;                        // keep heading
+        else if(d.dx === -a.dir.dx && d.dy === -a.dir.dy) wgt *= t.rev;   // seldom about-face
+        if(seek){
+          const pull = t.focus * (best <= 5 ? 2 : 1);     // commit harder once close -> locks into orbit
+          if(Math.sign(tx-a.x) === d.dx && d.dx) wgt += pull;
+          if(Math.sign(ty-a.y) === d.dy && d.dy) wgt += pull;
+        }
+        cand.push({d, wgt});
+      }
+      if(cand.length){
+        let total = 0; for(const c of cand) total += c.wgt;
+        let pick = Math.random()*total, chosen = cand[0].d;
+        for(const c of cand){ pick -= c.wgt; if(pick <= 0){ chosen = c.d; break; } }
+        a.dir = chosen; a.x += chosen.dx; a.y += chosen.dy;
+      }
+    }
+    // keep the glyph mostly stable so the head glides instead of flickering
+    if(Math.random() < t.flip && !a.carry) a.glyph = GLYPHS[rint(GLYPHS.length)];
+
+    // circling a growable seed feeds it
+    for(const s of seeds){ const dd = Math.abs(s.x-a.x)+Math.abs(s.y-a.y); if(dd<=2) s.energy += dd===1 ? 11 : 5; }
+    // at a mother core: feed it, and pick up its glyph to ferry to a fresh site
+    for(const c of cores){
+      let dd = 1e9; for(const cell of c.cells){ const e = Math.abs(cell.x-a.x)+Math.abs(cell.y-a.y); if(e<dd) dd=e; }
+      if(dd<=2){ c.energy += dd===1 ? 9 : 4; if(!a.carry && now>=a.cooldown){ a.carry = c.glyph; a.carryAt = now; } }
+    }
+    // carrying: once clear of every site, drop the glyph as a new growing cell
+    if(a.carry){
+      let near=false; for(const s of sites){ if(Math.abs(s.x-a.x)+Math.abs(s.y-a.y) <= 3){ near=true; break; } }
+      if(!near && now-a.carryAt>1200 && passable(a.x,a.y) && Math.random()<0.2){ seedCell(a.x,a.y,a.carry); a.carry=null; a.cooldown=now+4000; }
+      else if(now-a.carryAt > 12000){ a.carry=null; a.cooldown=now+2000; }   // gave up — drop the payload
+    }
+
+    if(a.carry){
+      // couriers (the bright ones) are EATERS: they carve the trail field to black
+      // in their wake — the head cell + the cell just behind it form a clean black
+      // channel — then glow with the payload glyph. (Structures are repainted by
+      // drawSites afterward, so only loose trail glyphs get eaten.)
+      ctx.clearRect(a.x*CELL, a.y*CELL, CELL, CELL);
+      ctx.clearRect((a.x-a.dir.dx)*CELL, (a.y-a.dir.dy)*CELL, CELL, CELL);
+      drawGlyph(a.carry, a.x*CELL, a.y*CELL, CELL, bright, 1);
+    }
+    else { ctx.fillStyle = accent; ctx.fillText(a.glyph, a.x*CELL, a.y*CELL); }   // colored snakes leave a fading trail
+
+    // light per-step jitter so the cadence isn't metronomic; base rate persists
+    a.next = now + a.interval*(0.85 + Math.random()*0.3);
+  }
+
+  // grow / decay / explode the growable seeds (snapshot-safe against blasts)
+  function updateSeeds(now){
+    for(const s of seeds.slice()){
+      if(seeds.indexOf(s) < 0) continue;                  // already gone (caught in a blast this tick)
+      s.energy -= (now - s.born < 6000) ? 0.02 : 0.06;    // grace so fresh cells can attract a snake
+      const need = 45 + 30*s.level;
+      if(s.energy >= need){
+        if(s.level >= MAX_LEVEL){ explodeSeed(s, now); continue; }   // matured -> detonate into a mother
+        s.level++; s.energy = need*0.35; s.flash = now;
+        const nb = CW.map(d=>({x:s.x+d.dx, y:s.y+d.dy})).filter(c=> passable(c.x,c.y));
+        if(nb.length){ const c = nb[rint(nb.length)]; seedCell(c.x, c.y, s.glyph); }   // sprout the same glyph
+      }
+      if(s.energy <= 0){ if(--s.level <= 0) removeSeed(s); else s.energy = 12; }
+    }
+    if(now >= nextSpawn){ nextSpawn = now + rng(2600, 6000); seedCell(); }   // a fresh random lineage now and then
+  }
+
+  // a matured seed detonates: clear a radius (paths back to black), wipe seeds in
+  // it, and GIVE RISE to a mother core (1/4/9 cells of the same glyph)
+  function explodeSeed(s, now){
+    const R = 4;
+    ctx.clearRect((s.x-R)*CELL, (s.y-R)*CELL, (2*R+1)*CELL, (2*R+1)*CELL);
+    for(const o of seeds.slice()){ if(Math.abs(o.x-s.x)<=R && Math.abs(o.y-s.y)<=R) removeSeed(o); }
+    makeCore(s.x, s.y, s.glyph, 1, now);                 // mothers are always born small and must grow 1->4->9
+    for(const a of agents){ if(Math.abs(a.x-s.x)<=R && Math.abs(a.y-s.y)<=R){ a.dir = a.x>=s.x?CW[0]:CW[2]; a.glyph = GLYPHS[rint(GLYPHS.length)]; } }
+  }
+
+  // mother cores: emit snakes, grow 1->4->9 as snakes feed them, then detonate
+  function updateCores(now){
+    for(const c of cores.slice()){
+      if(cores.indexOf(c) < 0) continue;
+      c.energy -= 0.04;                                    // durable: slow decay
+      if(now >= c.emitAt){                                 // birth a snake from the anchor
+        c.emitAt = now + rng(4000,8000) * (3/(c.size+2));  // denser cores emit faster
+        if(agents.length < MAX_SNAKES) agents.push(spawn(c.ax, c.ay));
+      }
+      const need = c.size===1 ? 120 : c.size===4 ? 210 : 360;
+      if(c.energy >= need){
+        if(c.size < 9){ expandCore(c, c.size===1 ? 4 : 9, now); c.energy = need*0.4; }
+        else { finalExplode(c, now); continue; }           // a 9-core grown further -> detonate + claim the overlay
+      }
+      if(c.energy <= 0) removeCore(c);                      // starved core dissolves
+    }
+  }
+
+  // the climactic blast: a maxed mother detonates and its glyph ASCENDS to replace
+  // the big λ on the overlay (the world's new sigil). Ascending costs every OTHER
+  // mother one tier (9->4, 4->1, 1->dead) so the new champion reigns while they
+  // recuperate — and one fresh size-1 mother of the same glyph keeps its lineage.
+  function finalExplode(c, now){
+    const R = 6;
+    ctx.clearRect((c.ax-R)*CELL, (c.ay-R)*CELL, (2*R+1)*CELL, (2*R+1)*CELL);
+    for(const s of seeds.slice()){ if(Math.abs(s.x-c.ax)<=R && Math.abs(s.y-c.ay)<=R) removeSeed(s); }
+    removeCore(c);                                       // the champion is consumed by its ascent
+    for(const o of cores.slice()){                       // every rival recedes one tier and must rebuild
+      const ns = o.size>=9 ? 4 : o.size>=4 ? 1 : 0;
+      if(ns === 0) removeCore(o);                         // a size-1 rival dies outright
+      else { expandCore(o, ns, now); o.energy = 35; }
+    }
+    if(glyphEl){ glyphEl.textContent = c.glyph; glyphEl.classList.remove("swap"); void glyphEl.offsetWidth; glyphEl.classList.add("swap"); }
+    const heir = emptyCell();                             // guarantee the lineage continues
+    if(heir) makeCore(heir.x, heir.y, c.glyph, 1, now);
+    let rivalGlyph = SIGILS[rint(SIGILS.length)];          // and seed a rival of a different glyph to even things out
+    if(SIGILS.length > 1) while(rivalGlyph === c.glyph) rivalGlyph = SIGILS[rint(SIGILS.length)];
+    const rivalAt = emptyCell();
+    if(rivalAt) makeCore(rivalAt.x, rivalAt.y, rivalGlyph, 1, now);
+    for(const a of agents){ if(Math.abs(a.x-c.ax)<=R && Math.abs(a.y-c.ay)<=R) a.dir = a.x>=c.ax?CW[0]:CW[2]; }
+  }
+
+  // sites are redrawn each frame so the trail-fade never erases them
+  function drawSites(now){
+    for(const s of seeds){                                 // growable seeds: dim accent, brightening with level
+      const flaring = now - s.flash < 220;
+      drawGlyph(s.glyph, s.x*CELL, s.y*CELL, CELL + (s.level-1)*3, flaring ? bright : accent,
+                Math.min(1, 0.4 + 0.13*s.level + (flaring ? 0.35 : 0)));
+    }
+    for(const c of cores){                                 // mother cells: bright phosphene block
+      for(const cell of c.cells) drawGlyph(c.glyph, cell.x*CELL, cell.y*CELL, CELL+2, bright, 1);
+    }
+    ctx.font = CELL + "px " + mono;                         // restore for snake glyphs
+  }
+
+  function frame(now){
+    if(!document.body.classList.contains("no-fx")){
+      ctx.globalCompositeOperation = "destination-out";   // fade the field -> trails
+      ctx.fillStyle = "rgba(0,0,0,0.025)";                 // gentle fade: instant-on glyphs ease off, not blink
+      ctx.fillRect(0,0,w,h);
+      ctx.globalCompositeOperation = "source-over";
+      sites = [];                                          // everything snakes can sense/orbit this tick
+      for(const s of seeds) sites.push(s);
+      for(const c of cores) for(const cell of c.cells) sites.push(cell);
+      ctx.font = CELL + "px " + mono;
+      for(const a of agents){ if(now >= a.next) step(a, now); }
+      updateSeeds(now);
+      updateCores(now);
+      drawSites(now);
+    }
+    requestAnimationFrame(frame);
+  }
+  box.classList.add("rain-on");        // CSS fades the canvas in
+  requestAnimationFrame(frame);
+}
+
 /* toggles ---------------------------------------------------- */
 const content = document.getElementById("content");
 
@@ -234,64 +612,92 @@ function applyFx(){
 fxBtn.addEventListener("click", ()=>{ fxOn = !fxOn; applyFx(); });
 applyFx();
 
-// off-canvas sidebar on narrow screens
-const menutoggle = document.getElementById("menutoggle");
-const navBackdrop = document.getElementById("navBackdrop");
-const sidebarEl = document.querySelector(".sidebar");
-function setNav(open){
-  document.body.classList.toggle("nav-open", open);
-  if(menutoggle) menutoggle.setAttribute("aria-expanded", String(open));
-  if(open && sidebarEl && fxOn) rain(sidebarEl, false);   // redraw the menu like a terminal, decoding in
-}
-if(menutoggle) menutoggle.addEventListener("click", ()=> setNav(!document.body.classList.contains("nav-open")));
-if(navBackdrop) navBackdrop.addEventListener("click", ()=> setNav(false));
-document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("click", ()=> setNav(false)));
-
-// page outline: build the SECOND index (this page's h2/h3 sections) into the
-// header "#" expander. The sidebar handles site/book/chapter nav; this handles
-// the sub-headings that don't belong there.
+// settings modal: the gear in the sidebar action row opens a <dialog> holding the
+// theme + fx controls above. Escape closes natively; we add open / close-button /
+// click-on-backdrop handling.
 (function(){
-  const toggle = document.getElementById("tocToggle");
+  const open = document.getElementById("settings-open");
+  const dlg  = document.getElementById("settings");
+  if(!open || !dlg || typeof dlg.showModal !== "function") return;
+  open.addEventListener("click", ()=> dlg.showModal());
+  const x = dlg.querySelector(".settings-close");
+  if(x) x.addEventListener("click", ()=> dlg.close());
+  // a click whose target is the dialog itself landed on the backdrop, not the content
+  dlg.addEventListener("click", e=>{ if(e.target === dlg) dlg.close(); });
+})();
+
+// off-canvas sidebar on narrow screens. Open/closed is a pure-CSS checkbox
+// (#navtoggle) so the menu works with JS disabled; here we only enhance it with
+// the terminal decode-in on first open and an eager close on in-page nav.
+const navToggle = document.getElementById("navtoggle");
+const sidebarEl = document.querySelector(".sidebar");
+function onNavChange(){
+  // decode the menu like a terminal, but only the first time it opens this tab
+  // (matches the wide-view reveal gating; later opens appear instantly)
+  if(navToggle && navToggle.checked && sidebarEl && fxOn && !ssGet("sidebar-rained")){
+    rain(sidebarEl, false);
+    ssSet("sidebar-rained", "1");
+  }
+}
+if(navToggle) navToggle.addEventListener("change", onNavChange);
+// the backdrop <label> already closes via CSS; closing on tree-link clicks also
+// covers same-page anchor jumps that don't reload (a full navigation resets the
+// checkbox on its own).
+document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("click", ()=>{ if(navToggle) navToggle.checked = false; }));
+
+// page outline: the SECOND index (this page's h2/h3 sections) shown in the
+// header "#" expander. The list and open/close are rendered/handled by the
+// template + a CSS checkbox (see pagenav.html), so the outline works with JS
+// off; here we add smooth scrolling, close-on-pick / outside / Escape, and the
+// scroll-spy highlight.
+(function(){
+  const cb     = document.getElementById("toctoggle");
   const panel  = document.getElementById("toc");
-  if(!toggle || !panel || !content) return;
-  const list  = panel.querySelector("ul");
-  const slug  = s => s.toLowerCase().trim().replace(/[^\w]+/g,"-").replace(/^-+|-+$/g,"");
-  const links = [];
-  // the page title (h1) is the first list item, styled like the rest
-  const heads = [...content.querySelectorAll("h1, h2, h3")];
-  let h1link = null;
-  heads.forEach(h=>{
-    if(!h.id) h.id = slug(h.textContent);
-    const li = document.createElement("li");
-    li.className = h.tagName === "H1" ? "lvl1" : (h.tagName === "H3" ? "lvl3" : "lvl2");
-    const a = document.createElement("a");
-    a.href = "#" + h.id; a.textContent = h.textContent;
-    li.appendChild(a); list.appendChild(li); links.push(a);
-    if(h.tagName === "H1") h1link = a;
-  });
-  const setOpen = open => { panel.hidden = !open; toggle.setAttribute("aria-expanded", String(open)); };
-  toggle.addEventListener("click", e=>{ e.stopPropagation(); setOpen(panel.hidden); });
+  if(!cb || !panel || !content) return;
+  const toggle = document.querySelector(".toc-toggle");
+  const links  = [...panel.querySelectorAll("a[href^='#']")];
+  const close  = () => { cb.checked = false; };
   panel.addEventListener("click", e=>{
     const a = e.target.closest("a"); if(!a) return;
-    e.preventDefault();
-    if(a === h1link){                                 // title -> all the way to the very top
+    const href = a.getAttribute("href");
+    if(href === "#"){                                 // title -> all the way to the very top
+      e.preventDefault();
       window.scrollTo({ top:0, behavior:"smooth" });
-    } else {
-      const el = document.getElementById(a.getAttribute("href").slice(1));
-      if(el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+    } else if(href && href.charAt(0) === "#"){        // in-page heading -> smooth scroll
+      const el = document.getElementById(decodeURIComponent(href.slice(1)));
+      if(el){ e.preventDefault(); el.scrollIntoView({ behavior:"smooth", block:"start" }); }
     }
-    setOpen(false);
+    // any other href (a child-page link on a book/chapter index) navigates normally
+    close();
   });
-  document.addEventListener("click", e=>{ if(!panel.hidden && !panel.contains(e.target) && e.target !== toggle) setOpen(false); });
-  document.addEventListener("keydown", e=>{ if(e.key === "Escape") setOpen(false); });
-  // scroll-spy: highlight whichever section is nearest the top of the viewport
-  if("IntersectionObserver" in window){
-    let active = null;
-    const io = new IntersectionObserver(ents=>{
-      ents.forEach(en=>{ if(en.isIntersecting) active = en.target.id; });
-      links.forEach(a=> a.classList.toggle("active", a.getAttribute("href") === "#" + active));
-    }, { rootMargin:"-80px 0px -70% 0px", threshold:0 });
-    heads.forEach(h=> io.observe(h));
+  // close on a click outside the panel. Ignore the checkbox's own toggle click
+  // (clicking the label synthesizes a click on the input) — otherwise the open
+  // click would be read as an outside click and close it again immediately.
+  document.addEventListener("click", e=>{ if(cb.checked && e.target !== cb && !panel.contains(e.target) && !(toggle && toggle.contains(e.target))) close(); });
+  document.addEventListener("keydown", e=>{ if(e.key === "Escape") close(); });
+  // scroll-spy: highlight the section the viewport is currently in — the last
+  // heading whose top has scrolled past a line near the top of the viewport.
+  // Recomputed on every scroll (not just when a heading enters a band) so it's
+  // never stale: above the first heading it falls back to the title entry.
+  const heads = [...content.querySelectorAll("h2, h3")].filter(h=> h.id);
+  if(heads.length){
+    const byId = {};
+    links.forEach(a=>{ byId[a.getAttribute("href")] = a; });
+    const titleLink = byId["#"];   // the lvl1 page-title entry (jumps to top)
+    const OFFSET = 90;             // px below the viewport top counted as "here"
+    let raf = 0;
+    function spy(){
+      raf = 0;
+      let current = null;
+      for(const h of heads){
+        if(h.getBoundingClientRect().top <= OFFSET) current = h.id; else break;
+      }
+      const want = current ? byId["#" + current] : titleLink;
+      links.forEach(a=> a.classList.toggle("active", a === want));
+    }
+    addEventListener("scroll", ()=>{ if(!raf) raf = requestAnimationFrame(spy); }, { passive:true });
+    addEventListener("resize", ()=>{ if(!raf) raf = requestAnimationFrame(spy); }, { passive:true });
+    spy();
   }
 })();
 
@@ -441,6 +847,8 @@ function reveal(){
   document.body.classList.add("go");        // border-beam draws the boxes
   rain(content, true);                      // headings, code + run boxes decode on the monospace grid
   decompress(content);                      // proportional reading prose streams in linearly
+  // intro logo: let the page resolve first, then bring the glyph-rain field up behind the λ
+  setTimeout(lambdaRain, 1800);
   // decode the sidebar only on the first load of this tab; on later in-tab
   // navigations it appears instantly (the content area still rains every page)
   if(sidebarEl && getComputedStyle(sidebarEl).display !== "none" && !ssGet("sidebar-rained")){

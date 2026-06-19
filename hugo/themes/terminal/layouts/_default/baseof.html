@@ -5,8 +5,13 @@
 </head>
 <body>
 
-<!-- single fixed toggle: ○ when the menu is closed, ● when open (glyph set in CSS) -->
-<button id="menutoggle" class="menutoggle" aria-label="Toggle menu" aria-expanded="false"></button>
+<!-- single fixed toggle: ○ when the menu is closed, ● when open (glyph set in CSS).
+     A hidden checkbox is the open/closed state and the <label> is the visible
+     button, so the off-canvas sidebar opens with pure CSS even when JS is off.
+     The checkbox must precede .topnav and .wrap so the sibling (~) selectors that
+     drive them can see it. -->
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
 
 <!-- top-right cluster: previous chapter / page outline (#) / next chapter -->
 {{ partial "pagenav.html" . }}
@@ -14,7 +19,9 @@
 <div class="wrap">
 
   {{ partial "sidebar.html" . }}
-  <div class="nav-backdrop" id="navBackdrop"></div>
+  <!-- backdrop is a <label> for the same checkbox, so clicking it closes the
+       menu without JS (and link navigation reloads with the box unchecked). -->
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
 
   <!-- ============ main reading area =============================== -->
   <div>
@@ -26,6 +33,25 @@
     </main>
   </div>
 </div>
+
+{{- /* settings modal: theme + fx controls, opened by the #settings-open gear in
+       the sidebar. Kept at body level (not inside the off-canvas sidebar) so the
+       <dialog> top layer is never under a display:none / transformed ancestor. */ -}}
+<dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog>
 
 {{ $js := resources.Get "js/terminal.js" | fingerprint }}
 <script src="{{ $js.RelPermalink }}"></script>

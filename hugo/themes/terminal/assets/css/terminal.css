@@ -157,19 +157,29 @@ body{
 .navprev::before{ content:"\2039"; }   /* ‹ previous chapter */
 .navnext::before{ content:"\203A"; }   /* › next chapter */
 .toc-toggle::before{ content:"#"; font-size:.95em; }
-.toc-toggle[aria-expanded="true"]{ color:var(--bg); background:var(--accent); border-color:var(--accent); }
+.toc-toggle.is-home::before{ content:"\03BB"; }   /* root page: the index is the book list -> lambda, not # */
+/* the checkbox holds open/closed state; clip it offscreen but keep it focusable */
+.toc-checkbox{ position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  border:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+#toctoggle:checked ~ .toc-toggle{ color:var(--bg); background:var(--accent); border-color:var(--accent); }
+.toc-checkbox:focus-visible ~ .toc-toggle{ outline:2px solid var(--accent); outline-offset:2px; }
 
 .toc{
+  display:none;   /* shown when #toctoggle is checked (label click); works without JS */
   position:absolute; top:100%; right:0; margin-top:.4rem; z-index:30;
-  width:min(92vw, 40ch); max-height:min(70vh, 26rem); overflow:auto;
+  width:min(92vw, 40ch); max-height:75vh; overflow:auto;
   background:var(--panel); border:1px solid var(--accent); border-radius:3px;
   padding:.85rem 1rem 1rem; box-shadow:0 12px 30px rgba(0,0,0,.45);
 }
-.toc[hidden]{ display:none; }
+#toctoggle:checked ~ .toc{ display:block; }
 /* book title: the container context, in case the breadcrumb truncated it away */
 .toc .toc-book{ display:block; color:var(--fg-bright); font-weight:700; font-size:.78rem; text-decoration:none;
   border-bottom:1px solid var(--rule); padding-bottom:.5rem; margin-bottom:.5rem; overflow-wrap:anywhere; }
-.toc .toc-book::before{ content:none; }   /* the book is not a heading -> no ## marker */
+/* the header link always goes up one level (book index, or site root from a book
+   index) -> a turn-up arrow instead of the #-heading marker, to advertise it */
+.toc .toc-book::before{ content:"\2191\00a0"; color:var(--fg-dim); font-weight:400; }   /* ↑ (basic arrow: renders where the turn-arrows don't) */
+.toc .toc-book:hover::before{ color:var(--accent); }
+.toc .toc-book.is-root::before{ content:none; }   /* root page: nowhere up to go */
 .toc .toc-book:hover{ color:var(--accent); }
 .toc ul{ list-style:none; margin:0; padding:0; font-size:.92rem; }
 .toc li{ overflow-wrap:anywhere; padding-left:0; }
@@ -178,27 +188,59 @@ body{
 .toc a::before{ content:"## "; color:var(--fg-dim); }    /* mirror the heading's own # markers */
 .toc li.lvl1 a::before{ content:"# "; }                  /* the page title (h1), first in the list */
 .toc li.lvl3 a::before{ content:"### "; }                /* h3 -> ###, flush left (the # count shows depth) */
+/* child-page links (book/chapter index) navigate elsewhere -> a "go to" arrow
+   instead of a #-heading marker, with nesting shown by indent rather than depth */
+.toc li.page a::before{ content:"\2192\00a0"; color:var(--fg-dim); }   /* → */
+.toc li.page.lvl3{ padding-left:1.6ch; }
 .toc a:hover, .toc a:hover::before, .toc a.active, .toc a.active::before{ color:var(--accent); }
 
 /* sidebar theme control */
-.sidebar-controls{
-  flex:none; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--rule);   /* pinned bottom */
-  display:grid; grid-template-columns:repeat(4, max-content); gap:.55rem .8ch; align-items:center;   /* theme + fx on one line */
+/* action row: external-link + settings icon buttons, pinned near the bottom */
+.sidebar-actions{
+  flex:none; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--rule);
+  display:flex; flex-wrap:wrap; gap:.55rem;
 }
-.sidebar-controls .ctl-label{ color:var(--accent); font-size:.82rem; }
-.sidebar-controls .btn{ justify-self:start; min-width:7ch; text-align:center; }
-/* site build date, pinned beneath the controls (templated by Hugo in the real theme) */
+.iconbtn{ display:inline-flex; align-items:center; justify-content:center;
+  width:2.1rem; height:2.1rem; padding:0; min-width:0; }
+.iconbtn svg{ display:block; }
+/* JS-only chrome (the settings gear): shown only once scripting is confirmed */
+.js-only{ display:none; }
+html.js .iconbtn.js-only{ display:inline-flex; }
+/* site build date, pinned beneath the actions (templated by Hugo in the real theme) */
 .build-date{ flex:none; margin-top:.6rem; color:var(--fg-dim); font-size:.62rem;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .build-date .lbl{ color:var(--accent); }
 
+/* settings modal (theme + fx controls), opened from the gear in the action row */
+.settings-modal{
+  margin:auto; padding:0; max-width:min(92vw, 30ch); width:max-content;
+  color:var(--fg); background:var(--panel); border:1px solid var(--accent); border-radius:3px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+.settings-modal::backdrop{ background:rgba(4,5,4,.74); }
+.settings-head{ display:flex; align-items:center; justify-content:space-between; gap:1ch;
+  padding:.55rem .7rem; border-bottom:1px solid var(--rule); }
+.settings-title{ color:var(--fg-bright); font-weight:700; font-size:.82rem; }
+.settings-close{ width:2.1rem; height:2.1rem; padding:0; min-width:0; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center; }
+.settings-body{ display:grid; grid-template-columns:max-content max-content; gap:.7rem .8ch;
+  align-items:center; padding:.85rem .9rem 1rem; }
+.settings-row{ display:contents; }   /* label + button land in the grid columns */
+.settings-body .ctl-label{ color:var(--accent); font-size:.82rem; }
+.settings-body .btn{ justify-self:start; min-width:7ch; text-align:center; }
+
 /* menu toggle: a circle glyph, hidden on wide screens, shown when the sidebar
    collapses. ○ (hollow) = closed, ● (filled) = open. Both circles exist in
    virtually every monospace font, so it degrades cleanly to the system fallback. */
+/* the checkbox itself is the open/closed state; keep it off-screen but still
+   focusable (clip, not display:none) so the menu is keyboard-reachable. */
+.nav-checkbox{ position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  border:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .menutoggle{ display:none; }
 .menutoggle::before{ content:"\25CB"; }                  /* ○ menu closed */
-body.nav-open .menutoggle::before{ content:"\25CF"; }    /* ● menu open */
-body.nav-open .menutoggle{ color:var(--bg); background:var(--accent); border-color:var(--accent); } /* reverse-video when open, matching the # toggle */
+#navtoggle:checked ~ .menutoggle::before{ content:"\25CF"; }    /* ● menu open */
+#navtoggle:checked ~ .menutoggle{ color:var(--bg); background:var(--accent); border-color:var(--accent); } /* reverse-video when open, matching the # toggle */
+.nav-checkbox:focus-visible ~ .menutoggle{ outline:2px solid var(--accent); outline-offset:2px; }
 
 /* inline UI widget demos: rendered on the intro page in place of screenshots, so
    the docs always show the live chrome (and follow the active theme). They reuse
@@ -413,7 +455,7 @@ pre.tui{ color:var(--accent); background:var(--code-bg); padding:1rem 1.1rem; ma
     background:var(--panel); border:1px solid var(--rule); border-radius:3px; cursor:pointer;
   }
   .menutoggle:hover{ color:var(--fg-bright); border-color:var(--accent); }
-  body.nav-open .topnav{ opacity:.32; pointer-events:none; }   /* sidebar overlay covers the page -> dim/disable the right-hand page-nav cluster */
+  #navtoggle:checked ~ .topnav{ opacity:.32; pointer-events:none; }   /* sidebar overlay covers the page -> dim/disable the right-hand page-nav cluster */
   .topbar{ padding-left:4rem; }     /* clear the fixed toggle */
   .sidebar{ padding-top:.55rem; }   /* align header with the toggle's top, not below it */
   .sidebar .brand, .sidebar .tag{ padding-left:2rem; }   /* sit to the right of the toggle */
@@ -423,9 +465,9 @@ pre.tui{ color:var(--accent); background:var(--code-bg); padding:1rem 1.1rem; ma
     display:none; border-right:1px solid var(--accent);
     overscroll-behavior:contain;                          /* keep scroll momentum inside the panel */
   }
-  body.nav-open .sidebar{ display:flex; }   /* flex (not block) so the pinned-header/scroll-tree/pinned-footer layout holds on mobile */
+  #navtoggle:checked ~ .wrap .sidebar{ display:flex; }   /* flex (not block) so the pinned-header/scroll-tree/pinned-footer layout holds on mobile */
   .nav-backdrop{                              /* solid console dim, snaps in */
     display:none; position:fixed; inset:0; z-index:55; background:rgba(4,5,4,.74);
   }
-  body.nav-open .nav-backdrop{ display:block; }
+  #navtoggle:checked ~ .wrap .nav-backdrop{ display:block; }
 }
