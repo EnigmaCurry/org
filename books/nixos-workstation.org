@@ -657,9 +657,8 @@ After you confirm, it:
 ? Reboot now? (y/N)
 #+end_src
 
-When it finishes, reboot. There is no separate bootstrap step -- the
-machine comes up fully configured, and your config repo is already on
-disk at =~/nixos=, owned by your user.
+When it finishes, reboot. The machine comes up fully configured, and your
+config repo is already on disk at =~/nixos=, owned by your user.
 #+end_annotate
 
 * Making changes going forward
@@ -679,13 +678,13 @@ cd ~/nixos
 
 It contains:
 
- - =flake.nix=  --  depends on =sway-home= (pinned) and calls
-   =sway-home.lib.mkHost=.
- - =disko.nix=  --  the declarative disk layout.
- - =hardware.nix=  --  detected hardware (no filesystems; disko owns those).
- - =config.nix=  --  your host-specific overrides (locale, packages,
-   services, SSH keys).
- - =Justfile=  --  convenience recipes, run via the =admin= alias below.
+| File          | What it is                                                          |
+|---------------+--------------------------------------------------------------------|
+| =flake.nix=   | Depends on =sway-home= (pinned) and calls =sway-home.lib.mkHost=.   |
+| =disko.nix=   | The declarative disk layout.                                        |
+| =hardware.nix= | Detected hardware (no filesystems; disko owns those).             |
+| =config.nix=  | Your host-specific overrides (locale, packages, services, SSH keys). |
+| =Justfile=    | Convenience recipes, run via the =admin= alias below.              |
 
 ** Applying changes with =admin=
 
@@ -771,30 +770,20 @@ my.profiles.libvirt.enable = true;
 
 You choose which profiles to switch on when you run =setup host= (the
 multi-select prompt), and you can enable or disable any of them later by
-editing =~/nixos/config.nix= and re-applying with =admin upgrade=. There is
-no separate "minimal vs sway" install mode: a *minimal* server is simply a
-host with no profiles enabled, and every option -- including the whole
-desktop -- is one of these toggles.
+editing =~/nixos/config.nix= and re-applying with =admin upgrade=. Everything
+optional -- including the entire desktop -- is one of these toggles, so a
+headless server is just a host with no profiles enabled.
 
 ** The available profiles
 
- - =dotfiles=  --  your shell/CLI home environment with *no* GUI: the
-   =sway-home= bashrc, the =~/bin= scripts, the =~/.config= dotfiles, git
-   config, emacs, the =vm= command's setup, and the command-line package
-   toolbox (ripgrep, fzf, bat, just, babashka, docker, kubectl, and so on).
-   This is what you want on a headless server that you still live in over SSH.
- - =sway=  --  the full [[https://swaywm.org/][Sway]] desktop: a Wayland login greeter, the Sway
-   compositor, fonts, firefox, and the Wayland desktop package set (waybar,
-   foot, rofi, grim, ...). Enabling =sway= *implies* =dotfiles=, so a desktop
-   gets the shell environment too -- you don't need to tick both.
- - =sound=  --  PipeWire audio (ALSA + PulseAudio compatibility). Nothing
-   else in sway-home enables sound, so a desktop that wants audio needs this.
- - =podman=  --  Podman containers (Docker-compatible), with container DNS.
- - =flatpak=  --  Flatpak with the Flathub remote pre-added, ready for
-   =flatpak install flathub <app>=.
- - =libvirt=  --  libvirt/KVM virtualization: virt-manager and the =vm=
-   command (nixos-vm-template). It also adds your user to the =libvirtd=
-   group.
+| Profile     | What it enables                                                                                                                                                                                                                                          |
+|-------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =dotfiles=  | Your shell/CLI home environment with *no* GUI: the =sway-home= bashrc, the =~/bin= scripts, the =~/.config= dotfiles, git config, emacs, the =vm= command's setup, and the command-line package toolbox (ripgrep, fzf, bat, just, babashka, docker, kubectl, and so on). This is what you want on a headless server that you still live in over SSH. |
+| =sway=      | The full [[https://swaywm.org/][Sway]] desktop: a Wayland login greeter, the Sway compositor, fonts, firefox, and the Wayland desktop package set (waybar, foot, rofi, grim, ...). Enabling =sway= *implies* =dotfiles=, so a desktop gets the shell environment too -- you don't need to tick both. |
+| =sound=     | PipeWire audio (ALSA + PulseAudio compatibility). Nothing else in sway-home enables sound, so a desktop that wants audio needs this.                                                                                                                       |
+| =podman=    | Podman containers (Docker-compatible), with container DNS.                                                                                                                                                                                                |
+| =flatpak=   | Flatpak with the Flathub remote pre-added, ready for =flatpak install flathub <app>=.                                                                                                                                                                     |
+| =libvirt=   | libvirt/KVM virtualization: virt-manager and the =vm= command (nixos-vm-template). It also adds your user to the =libvirtd= group.                                                                                                                         |
 
 Each profile is a module under =nixos/modules/profiles/= in sway-home. They
 are *always* imported but do nothing until their flag is set, so enabling one

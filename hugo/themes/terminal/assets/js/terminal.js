@@ -34,7 +34,7 @@ function textNodesIn(root){
    COLSPREAD ms of random head-start between columns (the staggered rain look)
    SCRAMBLE ms each char briefly flickers glyphs before locking (0 = dot straight to letter)
    FLIP     ms between glyph changes during the scramble window                       */
-const SETTLE = 60, DOWN = 0.5, COLSPREAD = 220, SCRAMBLE = 110, FLIP = 45;
+const SETTLE = 30, DOWN = 0.25, COLSPREAD = 110, SCRAMBLE = 55, FLIP = 22.5;
 const DOT = ".";
 
 function rain(root, firstScreenOnly=true){
@@ -76,7 +76,7 @@ function rain(root, firstScreenOnly=true){
     for(const c of it.chars){
       if(c.ws) continue;
       const col = Math.round(c.x / charW);
-      c.lockAt  = SETTLE + colOffset(col) + Math.max(0,c.y)*DOWN + Math.random()*40;
+      c.lockAt  = SETTLE + colOffset(col) + Math.max(0,c.y)*DOWN + Math.random()*20;
       c.startAt = c.lockAt - SCRAMBLE;     // dots until the column's drop reaches it
       c.glyph   = DOT; c.nextFlip = 0;
     }
@@ -172,8 +172,8 @@ function decompress(root){
   // linear crawl: word i lights up at i*STEP, garbles brightly for GARBLE ms, then locks.
   // STEP shrinks with length so the first screen always finishes in ~SPAN ms. Words still
   // ahead of the head shimmer slowly (WAIT_FLIP) as a dim field of "compressed" data.
-  const SPAN = 1100, GARBLE = 200, FLIP = 45, WAIT_FLIP = 260;
-  const STEP = Math.min(22, SPAN / items.length);
+  const SPAN = 550, GARBLE = 100, FLIP = 22.5, WAIT_FLIP = 130;
+  const STEP = Math.min(11, SPAN / items.length);
   items.forEach((it,i)=>{ it.startAt = i*STEP; it.lockAt = i*STEP + GARBLE; });
 
   const t0 = performance.now();

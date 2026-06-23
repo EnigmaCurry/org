@@ -137,3 +137,31 @@ ul.children .children-desc{ color:var(--fg-dim); }
   color:inherit; text-decoration:none; border-bottom:none;
 }
 .content a.heading-anchor:hover{ color:var(--accent); }
+
+/* --- content tables: the theme body font is monospace, and the prose-face rule
+       only covers p/li/blockquote/dd/dt, so cells would inherit mono and the
+       columns size by content (squeezing a short first column to nothing).
+       Give tables the reading face, full width, and a fixed-ish layout where the
+       first column hugs its label and the rest goes to the body column. --- */
+.content table{
+  width:100%; border-collapse:collapse; margin:1.5rem 0;
+  font-family:var(--font-read); font-size:.95em; line-height:1.55;
+}
+.content table th,
+.content table td{
+  font-family:var(--font-read);
+  text-align:left; vertical-align:top;
+  padding:.5rem .75rem; border:1px solid var(--rule);
+}
+.content table th{
+  color:var(--accent); font-weight:700;
+  border-bottom:2px solid var(--rule); background:var(--bg-soft);
+}
+.content table tbody tr:hover{ background:color-mix(in srgb, var(--fg) 6%, transparent); }
+/* the first column is a short identifier/label: keep it on one line so it sizes
+   to its content instead of wrapping char-by-char (the .content overflow-wrap
+   rule otherwise shatters short =code= tokens). */
+.content table td:first-child,
+.content table th:first-child{ white-space:nowrap; width:1%; }
+/* inline =code= stays monospace inside cells, like everywhere else */
+.content table code{ font-family:var(--font-mono); }

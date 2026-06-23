@@ -34,6 +34,18 @@ build-hugo:
 serve: build
 	@cd hugo && $(HUGO) server --buildDrafts --disableFastRender
 
+.PHONY: watch # Serve with live-reload, re-exporting Markdown when Org sources change
+watch: build
+	@HUGO="$(HUGO)" _script/watch.clj
+
+.PHONY: pull
+pull:
+	@git pull --ff-only
+
+.PHONY: autowatch # Like watch, but also run `git autopull` to sync the remote
+autowatch: pull build
+	@AUTOPULL=1 HUGO="$(HUGO)" _script/watch.clj
+
 .PHONY: serve-prod
 serve-prod: build
 	@cd hugo && $(HUGO) && $(HUGO) server --navigateToChanged
