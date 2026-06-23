@@ -56,14 +56,14 @@
                 {{ $indexPage := .Site.GetPage $indexPagePath }}
                 {{ if $indexPage }}
                 <div class="introduction" style="page-break-after: always;">
-                    <h1 id="{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</h1>
+                    <h1 id="{{ $indexPage.File.BaseFileName }}"><a class="heading-anchor" href="#{{ $indexPage.File.BaseFileName }}">{{ $indexPage.Title }}</a></h1>
 {{ $indexPage.Content | safeHTML }}
                 </div>
                 {{ end }}
                 <!-- Render all the individual chapters -->
                 {{ range (where .Site.RegularPages "Section" $section) }}
                 <div class="chapter" style="page-break-after: always;">
-                    <h1 id="{{ .File.BaseFileName }}">{{ .Title }}</h1>
+                    <h1 id="{{ .File.BaseFileName }}"><a class="heading-anchor" href="#{{ .File.BaseFileName }}">{{ .Title }}</a></h1>
                     <div class="chapter-content">
                         {{- $uniqueId := .File.BaseFileName }}
                         {{- $content := .Content | safeHTML }}
@@ -73,7 +73,7 @@
                         {{- if findRE "^<h([1-6])>(.*)</h[1-6]>$" . }}
                         {{- $level := index (findRE "^<h([1-6])>" .) 1 }}
                         {{- $title := index (findRE "^<h[1-6]>(.*)</h[1-6]>$" .) 1 }}
-                        <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</h{{ $level }}>
+                        <h{{ $level }} id="{{ $uniqueId }}-{{ $title | urlize }}"><a class="heading-anchor" href="#{{ $uniqueId }}-{{ $title | urlize }}">{{ $title }}</a></h{{ $level }}>
                         {{- else }}
 {{ . | safeHTML }}
                         {{- end }}

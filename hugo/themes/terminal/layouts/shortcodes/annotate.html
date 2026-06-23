@@ -1,0 +1,35 @@
+{{- /* A source block with an attached explanatory annotation.
+
+       Authored as an ox-hugo `annotate` special block whose body is a normal
+       Org source block (the code/prompt being shown) followed by prose (the
+       note that explains it):
+
+           #+begin_annotate
+           #+begin_src bash
+           ? Installer hostname (nixos-installer)
+           #+end_src
+
+           Enter the installer hostname ...
+           #+end_annotate
+
+       Registered as a %-paired shortcode (see each book's
+       #+hugo_paired_shortcodes), so .Inner is the markdownified body: the src
+       block renders as a Chroma .highlight, the prose as <p>/<ul>. The CSS
+       (.annotate in terminal.css) frames the two together and draws a corner
+       connector from the code down to the note -- the automatic replacement
+       for the hand-typed "└──". An optional :title becomes the box label.
+
+       This is a {{% %}} (markdown) shortcode, so Hugo markdownifies this
+       template's output together with the page. A line beginning with <div>
+       starts a CommonMark "HTML block" that runs until the next blank line,
+       suppressing markdown within it -- so .Inner must be surrounded by blank
+       lines, otherwise its first code fence / emphasis renders literally. */ -}}
+{{- $title := .Get "title" | default (.Get 0) -}}
+<div class="box annotate">
+  {{- if $title }}<div class="label">{{ $title }}</div>{{ end }}
+  <div class="body">
+
+{{ .Inner }}
+
+  </div>
+</div>

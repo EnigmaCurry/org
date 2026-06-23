@@ -70,7 +70,60 @@
           ("edit" :raw t)
           ("env" :raw t)
           ("math" :raw t)))
-  )
+
+  ;; Make `run'/`stdout' blocks robust for arbitrary embedded scripts.
+  ;; These render as <pre> via a paired Hugo shortcode, but Org otherwise
+  ;; parses their bodies as markup -- so shell syntax like `[[ -f x ]]' or
+  ;; awk `[[:space:]]' is misread as an Org [[link]] and aborts the export
+  ;; ("Unable to resolve link"). Rewrite them into verbatim
+  ;; `#+begin_export hugo' blocks (which Org never parses for markup)
+  ;; emitting the same shortcode, before ox-hugo parses the buffer.
+  (defvar my/verbatim-special-blocks '("run")
+    "Special-block types whose bodies must be emitted verbatim.")
+
+  (defun my/rawify-verbatim-special-blocks (&rest _)
+    "Rewrite `my/verbatim-special-blocks' special blocks in the current
+buffer into verbatim Hugo export blocks emitting the matching paired
+shortcode. Parsing is used to locate blocks, so any such markers shown
+inside example/src blocks are left untouched."
+    (let ((blocks '()))
+      (org-element-map (org-element-parse-buffer) 'special-block
+        (lambda (sb)
+          (when (member (org-element-property :type sb) my/verbatim-special-blocks)
+            (push sb blocks))))
+      ;; `blocks' is in reverse document order; editing back-to-front keeps
+      ;; the remaining buffer positions valid.
+      (dolist (sb blocks)
+        (let* ((type (org-element-property :type sb))
+               (beg (org-element-property :begin sb))
+               (end (org-element-property :end sb))
+               (cbeg (org-element-property :contents-begin sb))
+               (cend (org-element-property :contents-end sb))
+               (post-blank (or (org-element-property :post-blank sb) 0))
+               (body (if (and cbeg cend)
+                         (buffer-substring-no-properties cbeg cend)
+                       ""))
+               ;; Trim surrounding blank lines only; keep each line's indentation.
+               (body (replace-regexp-in-string "\\`[\n\r]+\\|[ \t\n\r]+\\'" "" body))
+               ;; Preserve #+attr_shortcode: args exactly as ox-hugo would
+               ;; (named ":style x :title y" -> style="x" title="y", or
+               ;; positional args passed through verbatim).
+               (attr-sc (org-export-read-attribute :attr_shortcode sb))
+               (pos-args (and (null attr-sc)
+                              (org-string-nw-p
+                               (mapconcat #'identity
+                                          (org-element-property :attr_shortcode sb) " "))))
+               (named-args (unless pos-args
+                             (org-string-nw-p (org-html--make-attribute-string attr-sc))))
+               (sc-args (or pos-args named-args))
+               (sc-args (if sc-args (concat " " sc-args " ") " ")))
+          (delete-region beg end)
+          (goto-char beg)
+          (insert (format "#+begin_export hugo\n{{<%s%s>}}\n%s\n{{< /%s >}}\n#+end_export\n"
+                          (concat " " type) sc-args body type))
+          (insert (make-string post-blank ?\n))))))
+
+  (advice-add 'org-hugo-export-wim-to-md :before #'my/rawify-verbatim-special-blocks))
 
 (message "Loading f.el library")
 (use-package f)

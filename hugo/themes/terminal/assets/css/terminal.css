@@ -130,9 +130,10 @@ body{
 .topbar .prompt{ color:var(--accent); }
 .topbar .prompt .at{ color:var(--fg-dim); }
 .topbar .username{ font-weight:700; color:color-mix(in srgb, var(--accent), #fff 18%); }
-.topbar a.cmd{ text-decoration:none; border-bottom:none; color:inherit; cursor:pointer; }
+.topbar .cmd a{ text-decoration:none; border-bottom:none; color:inherit; cursor:pointer; }
 .topbar .path{ color:var(--fg); }
-.topbar a.cmd:hover .path{ color:var(--accent); }
+.topbar .cmd a.pathseg:hover .path{ color:var(--accent); }
+.topbar .cmd a.prefix:hover .prompt{ color:color-mix(in srgb, var(--accent), #fff 30%); }
 .btn{
   font:inherit; font-size:.82em; background:transparent; color:var(--fg-dim);
   border:1px solid var(--rule); padding:.15rem .6rem; cursor:pointer; border-radius:2px;
@@ -368,6 +369,42 @@ code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg
   transform:rotate(45deg);
 }
 .notice .body{ color:var(--fg); }
+
+/* annotated source block: a framed code sample (the Chroma .highlight) with an
+   explanatory note attached directly beneath it. Replaces the hand-typed
+   "└──" connector -- the frame groups code+note unambiguously, and a CSS
+   corner ties the note to the code above. Authored as an `annotate` special
+   block: a normal Org src block followed by the note prose (see the paired
+   shortcode in themes/terminal/layouts/shortcodes/annotate.html). */
+.annotate{
+  --line:color-mix(in srgb, var(--accent) 50%, var(--rule));
+  --bw:2px; --bs:solid;
+  background:color-mix(in srgb, var(--accent), transparent 94%);
+}
+.annotate .label{ color:var(--accent); }
+.annotate .body{ color:var(--fg); }
+/* the shown code renders as an ordinary Chroma .highlight (same as every other
+   src block on the site); just pull it flush to the top of the frame */
+.annotate .body .highlight{ margin:0; }
+/* the attached note: every block following the code, dimmed and indented
+   under a drawn corner-connector */
+.annotate .body .highlight ~ p,
+.annotate .body .highlight ~ ul,
+.annotate .body .highlight ~ ol{
+  color:var(--fg-dim); margin:.6rem 0 0 2.4ch; padding-left:.2ch;
+  position:relative; font-size:.95em; line-height:1.55;
+}
+.annotate .body .highlight ~ *:last-child{ margin-bottom:0; }
+.annotate .body .highlight ~ p:first-of-type::before{   /* the └─ connector, drawn in CSS */
+  content:""; position:absolute; left:-1.6ch; top:-.55rem;
+  width:1ch; height:1.1rem;
+  border-left:2px solid var(--line);
+  border-bottom:2px solid var(--line);
+  border-bottom-left-radius:2px;
+}
+.annotate .body .highlight ~ p code,                    /* inline =code= in the note */
+.annotate .body .highlight ~ ul code,
+.annotate .body .highlight ~ ol code{ color:var(--accent); }
 
 /* draw-on border-beam: a glowing head circles the frame and PAINTS the line
    behind it (the box draws itself), in sync with the text rain. Then the real

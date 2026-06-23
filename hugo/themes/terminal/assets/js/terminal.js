@@ -720,8 +720,9 @@ document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("cl
   });
 })();
 
-// clicking the prompt path replays the intro animation (simplest: reload the page)
-const cmdLink = document.querySelector(".topbar a.cmd");
+// clicking the prompt path (after the ":") replays the intro animation (simplest:
+// reload the page); the visitor@host: prefix is a normal link to the site root.
+const cmdLink = document.querySelector(".topbar a.pathseg");
 if(cmdLink) cmdLink.addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
 
 // keep the prompt on ONE line: drop the visitor@host: prefix when the whole line

@@ -1,8 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /nixos-workstation
 #+hugo_weight: auto
-#+hugo_draft: true
-#+hugo_paired_shortcodes: %notice badge button %children %index run stdout edit math mermaid openapi %env toc
+#+hugo_paired_shortcodes: %notice %annotate badge button %children %index run stdout edit math mermaid openapi %env toc
 #+STARTUP: align
 
 * NixOS Workstation
@@ -12,14 +11,7 @@
 :EXPORT_HUGO_SLUG: _index
 :END:
 
-This book describes how I setup a Linux Workstation (on a personal
-Desktop or Laptop computer) using NixOS.
-
-#+attr_shortcode: :style warning :title Warning
-#+begin_notice
-This book is still being written. Although it is written in the style
-of a how-to, it represents a current learning process.
-#+end_notice
+This book describes how I setup a Linux Workstation using NixOS.
 
 #+attr_shortcode: :depth 999
 #+begin_index
@@ -36,467 +28,844 @@ index
 :EXPORT_HUGO_WEIGHT: 200
 :EXPORT_HUGO_SLUG: _index
 :END:
+*** What is a workstation?
 
-A Linux Workstation is a single user computer that you use as your
-primary interface for computing, especially for "work" purposes. At a
-bare minimum, a workstation includes a keyboard and a display
-(although a workstation could also be a VPS that you SSH into, this book
-will focus on /physical/ workstations).
+If a server is a machine whose role it is to serve applications to
+many people over a network, a workstation is a machine whose role it
+is to serve a local operator stationed at the computer. 
 
-Historically, there has been a hardware distinction between a personal
-computer (PC) and a Unix workstation, but ever since the introduction
-of Linux, the difference in hardware doesn't really matter anymore,
-and any computing device can become a workstation. The only important
-distinction for a workstation is the role that it serves, and how
-/you/ configure and use it on a daily basis.
+A Linux workstation is therefore a personal computer that you use for
+"work": development, administration, writing, research. Your
+workstation might be a desktop computer, a laptop, or even a headless
+VM that you SSH into. It is the /role/ of the machine that matters,
+not its form factor.
 
-The role of a workstation is very different than that of a server. A
-workstation's only purpose is to serve /you/, during the moments that
-you are interfacing with its physical keyboard/display. A workstation
-is usually connected to a network, but only as a client (terminal, web
-browser, etc.), not as a server. (Of course, you may bend this rule if
-you like, to make your computer a server-workstation, or
-"Sworkstation", but it is cleaner, and more secure, to use separate
-[virtual] machines for all servers, even for development purposes.)
+A workstation is often used to develop network software, but its role
+is to serve only your local user account, for testing and development.
+Your workstation may be connected to a broader network, but it is
+primarily a client: a terminal, web browser, editor, and control panel
+for other systems -- not a server for a wider audience.
 
-This book will describe my preferred method for setting up a new
-computer, for use as a personal Linux workstation. It will also show
-you how to bend the rules a bit, and create a few virtual machines
-(VM) for running local development servers (Docker), or even public,
-production-lite, and/or LAN party services.
+These roles matter for both security and data hygiene. The two rules
+are simple: never keep production data on your work machine, and never
+work directly in production.
 
-* Build ISO
+Bend those rules however you like, but do so knowingly. Otherwise, you
+will create unenviable new breeds: Sworkstations, Desktop
+Infrastructure, and Production Laptops. If you let a machine become a
+/pet-with-ports/, you may lose the ability to reason clearly about where
+it is deployed, what it contains, and who depends on it.
+
+*** NixOS
+
+Most Linux distributions are installed in a particular moment in time.
+
+You begin with an installer, choose some packages, adjust a few
+settings, add repositories, copy in configuration files, and eventually
+reach a system that feels correct. A month later, you install one more
+tool. Six months later, you have forgotten why a service is enabled,
+which package provided a command, or whether a file in =/etc= came from
+you, the distribution, or an application that was feeling ambitious.
+
+The machine works, but its configuration is no longer entirely
+described anywhere. It lives partly in package databases, partly in
+configuration files, partly in shell history, and partly in your memory.
+This is manageable for one machine -- until it is not.
+
+NixOS takes a different approach. Rather than treating the installed
+system as the source of truth, NixOS asks you to describe the desired
+system in code. Packages, users, services, fonts, desktop settings,
+kernel options, and much of the operating system itself can all be
+declared in config files. You describe the workstation you want; NixOS
+builds and activates it.
+
+This is not magic. It is more like insisting that your computer keep
+its receipts. NixOS makes the entire system configuration reproducible
+/by construction/. It is similar to how Rust addresses memory safety:
+by making it mandatory to keep track of its ownership. NixOS makes it
+mandatory to track all of your configuration and package sources in a
+git repository, so that it is reproducible completely from a particular
+snapshot in time.
+
+If you've ever programmed in JavaScript, you might be familiar with a
+file named =package-lock.json=. This file describes the exact version
+numbers of your application's dependencies, and all of their
+dependencies recursively. This is for the integrity of your app, to
+make sure that when you install your app, you install the exact
+versions of the dependencies you need. NixOS does that too, but for
+the entire operating system!
+
+A NixOS configuration can be stored in a Git repository, reviewed,
+copied to another machine, and rebuilt later. A new workstation does
+not need to become a fresh archaeological site where you rediscover
+every prior decision. Instead, it can start from the same configuration
+as your previous machine, with only the differences that its hardware
+or purpose require.
+
+This makes NixOS especially useful for workstations. A workstation is
+personal, and personal configurations tend to accumulate. Your editor,
+shell, window manager, fonts, SSH settings, development toolchains,
+hardware quirks, command-line utilities, and small quality-of-life
+preferences all matter. On a conventional system, recreating that
+environment often means a long sequence of remembered installation
+steps. On NixOS, the goal is to make it an automated rebuild.
+
+This system is designed around generations. When you change the
+configuration, NixOS builds a new system generation rather than
+mutating the current one in place. If the new configuration turns out
+to be wrong, inconvenient, or merely too clever, you can boot or switch
+back to an earlier generation.
+
+This does not make mistakes impossible. It simply makes them less
+permanent.
+
+NixOS is therefore a good fit for the kind of workstation described in
+this book: one that is clearly yours, reproducible from source, and
+safe to experiment with. You should be able to install a new machine,
+apply your configuration, and arrive at a familiar environment without
+performing a ritual reconstruction of your past self.
+
+*** sway-home
+
+This book is built around [[https://github.com/EnigmaCurry/sway-home][sway-home]], which is EnigmaCurry's personal
+NixOS configuration, packaged as a reusable library of modules: the
+[[https://swaywm.org/][Sway]] desktop and its companion programs (waybar, foot, rofi), a curated
+package set, shell and editor configuration, and the home-manager
+dotfiles that tie them together. Every machine you install depends on
+sway-home as a pinned flake input, so you get its defaults for free
+while keeping your own per-host configuration separate.
+
+sway-home is used here as an opinionated *base*, not a finished product.
+It makes a particular set of choices -- one person's choices -- so that
+the install has a concrete, working desktop to point at from the start.
+You are not expected to keep all of those choices. The intent is that
+you *fork* sway-home into your own copy and point your machines at it,
+then change the colors, swap the window manager, and add or remove
+programs to taste. Because the whole system is reproducible from
+source, such changes are deliberate, reviewable, and reversible.
+
+* Build a custom installer ISO
 :PROPERTIES:
 :EXPORT_FILE_NAME: build-iso
 :EXPORT_HUGO_SLUG: build-iso
 :END:
 
-From another existing Linux machine, download the iso builder script:
+This book will take a slightly unconventional approach to installing
+NixOS. Instead of using the [[https://nixos.org/download/][official NixOS graphical installer ISO]], we
+will build our own custom ISO. While this will take a bit longer the
+first time you do it, it will greatly enhance your ability to
+reproduce your environment on any new hardware in the future.
 
+Let's build a customized, *headless* NixOS installer ISO that will
+bake in our personal SSH keys and our WiFi credentials, so that the
+target machine boots straight onto the home/lab network, and will let us drive
+the whole install process over SSH, with no monitor or keyboard
+attached.
+
+To build this custom ISO, you need an existing machine that already
+has [[https://nixos.org/download/][Nix]] installed; it does *not* have to be NixOS. The [[https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/nix_build_iso.bb][build script]]
+itself is launched through =nix run nixpkgs#babashka=, so Nix is the
+only requirement on the build host.
+
+Run the script directly over the network, without cloning anything:
+
+#+begin_run
+nix run --extra-experimental-features "nix-command flakes" \
+  nixpkgs#babashka -- \
+  -e '(load-string (slurp "https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/nix_build_iso.bb"))'
+#+end_run
+
+Or, if you have a clone of the [[https://github.com/EnigmaCurry/sway-home][sway-home]] repository, run it from
+there:
+
+#+begin_run
+./bin/nix_build_iso.bb
+#+end_run
+
+**** Answer the questions to customize the installer:
+
+#+begin_annotate
 #+begin_src bash
-curl -LO https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/refs/heads/master/src/nix/nix-build-iso.sh
-chmod +x nix-build-iso.sh
+== Customize your NixOS ISO ==
+? Installer hostname (nixos-installer)
 #+end_src
 
-Run the script to build the .iso file:
+Enter the installer hostname (default =nixos-installer=, this will be
+the host name of the live NixOS USB stick, not the final installation
+host).
+#+end_annotate
 
+#+begin_annotate
 #+begin_src bash
-./nix-build-iso.sh
+? Build from the default nixpkgs source (github:NixOS/nixpkgs/nixos-26.05)? (Y/n)
 #+end_src
 
-Answer the questions to customize the installer:
+Choose the nixpkgs source: the default release channel, another recent
+release, =nixos-unstable=, or a custom flake ref. Press =Y= for the
+default, which is the only version thats been tested to work.
+#+end_annotate
 
- - Enter the installer hostname
- - Enter your SSH keys
- - Enter your WiFi SSID and credentials
- - Enable serial console
- - Enter a webhook to receive a message when fully booted, that will
-   contain the local IP address
+#+begin_annotate
+#+begin_src bash
+? Select SSH keys from your ssh-agent (or select none to enter keys manually)
+  [x] 256 SHA256:xxxxxxxx/yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy  (ED25519-SK)
+  [ ] 4096 SHA256:xxxxxxx/vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv root@boulder (RSA)
+> [x] 256 SHA256:zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz enigma@flux (ED25519)
+[spacebar: toggle one, right/left: select all/none, type to filter, ESC to cancel]
+#+end_src
 
-WARNING: All of this will be burned into the =.iso== file you build.
-Do not publish your =.iso= file.
+Provide your SSH public keys. If you are running an ssh-agent, you can
+select one or more keys directly from it; if you select none it will
+offer to let you manually paste keys. The keys are installed for the
+=root= user (password login is disabled), so you log in with =ssh
+root@<ip>=.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Pre-seed WiFi credentials into the ISO? Yes
+? WiFi SSID
+? WiFi PSK (password)
+? NetworkManager connection name
+#+end_src
+
+Optionally enter your WiFi SSID and password, so the installer joins
+your wireless network automatically on boot. The key gets baked into
+the ISO.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Enable serial console (kernel + serial getty)? (y/N)
+#+end_src
+
+Optionally enable a serial console (kernel console + serial getty).
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+> Enable webhook notify after network-online? Yes
+? Webhook URL (will receive JSON POST)     https://my-server-somewhere.example.com/path/to/my/webhook
+#+end_src
+
+Optionally enter a webhook URL. Once the network is up, the installer
+POSTs a JSON message to it containing the hostname, the local IP
+address, the login user, and a ready-to-use =ssh= command, so you can
+find out where it landed on the network. It keeps retrying until it
+gets a response, so it will still reach you even if the network only
+comes up later. This is commonly used with something like
+[[https://github.com/matrix-org/matrix-hookshot][matrix-hookshot]] to bridge these notifications to your Matrix chat
+client.
+#+end_annotate
+
+#+attr_shortcode: :style warning
+#+begin_notice
+All of this is burned into the =.iso= file you build, including your
+SSH public keys and, if you enable WiFi, your WiFi password in
+cleartext. Do not publish your =.iso= file.
+#+end_notice
+
+After a review screen, the finished ISO is copied to your =~/Downloads=
+directory, named like =<hostname>-<username>-custom-<date>.iso=.
+
+**** Create bootable USB stick
 
 Write the =.iso= file to a USB drive to boot in your target machine.
+You can use a user friendly image writer app like [[https://flathub.org/en/apps/org.fedoraproject.MediaWriter][Fedora Media Writer]],
+or if you know how to identify your USB device file, you can use the
+venerable =dd=:
 
-#+begin_src bash
-sudo dd if=~/Downloads/name_of_your.iso of=/dev/name_of_your_usb bs=16M status=progress
-#+end_src
+#+begin_run
+sudo dd if=~/Downloads/name_of_your.iso of=/dev/name_of_your_usb bs=4M status=progress conv=fsync
+#+end_run
 
 * Install
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: install
 :END:
-** Boot the machine using your custom installer
-
-Once the machine boots, your webhook should receive the local IP
-address of the machine.
-
-SSH into the machine to finish the installation.
-
-** Create ZFS pool (two drives mirrored)
+** Boot the installer and run setup
 :PROPERTIES:
-:EXPORT_FILE_NAME: create-zfs-pool
-:EXPORT_HUGO_SLUG: create-zfs-pool
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
 :END:
 
-The following example shows how to create a root ZFS filesystem,
-mirrored on two identical NVME drives.
+With your custom ISO written to a USB stick, you are ready to install
+NixOS onto the target machine.
 
-Find the model name and serial numbers of your drives:
+*** Boot the machine
 
+Plug the USB stick into the target machine and boot from it. The first
+time, you will likely need a monitor and keyboard attached to tell the
+machine to boot from USB: many computers let you pick a one-time boot
+device from a menu (often =F12=, but the key varies by manufacturer),
+or you can enter the UEFI/BIOS setup and change the boot order
+permanently. Once the machine boots the installer, the rest of the
+install is fully headless -- you can unplug the monitor and keyboard and
+continue over SSH.
+
+Because the ISO is headless, the installer brings up the network on its
+own, joining the WiFi network you pre-seeded (if any).
+
+Once the network is up, the webhook you configured (if any) receives a
+JSON message with the machine's hostname, its local IP address, the
+login user, and a ready-to-use =ssh= command. This tells you where the
+machine landed on your network.
+
+*** Connect over SSH
+
+SSH into the machine as =root=, using one of the SSH keys you baked
+into the ISO (password login is disabled):
+
+#+begin_run
+ssh root@<ip>
+#+end_run
+
+You can also log in at the physical console (or over the serial
+console, if you enabled one), but SSH is the universal path.
+
+*** Run setup
+
+Everything from here on is done with a single command. Run =setup= with
+no arguments to open the installer's main menu:
+
+#+begin_annotate
 #+begin_src bash
-  lsblk -o NAME,SIZE,MODEL,SERIAL
+sway-home NixOS setup main menu
+> Configure Disk
+  Configure Host
+  Install
+  Done
 #+end_src
 
-#+begin_example
-NAME     SIZE MODEL         SERIAL
-loop0    1.3G               
-nvme0n1  3.6T CT4000P3PSSD8 1234567890AA
-nvme1n1  3.6T CT4000P3PSSD8 1234567890AB
-#+end_example
+The install is three phases, run in order. Pick each one to run it,
+then return to the menu for the next, until you choose =Done= (or press
+=ESC=). The menu lets you re-run a single phase on its own if it fails.
+#+end_annotate
 
-Identify the stable device path of the drives. (Don't use =/dev/nvme*=
-use =/dev/disk/by-id/*=) :
+The three phases are:
 
-#+begin_src bash
-  ls -ld /dev/disk/by-id/*
-#+end_src
+ 1. *Configure Disk*  --  partition, format, and mount the target disk.
+ 2. *Configure Host*  --  generate this machine's own NixOS flake
+    repository.
+ 3. *Install*  --  run =nixos-install= and set the passwords.
 
-#+begin_example
-lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA -> ../../nvme1n1
-lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA_1 -> ../../nvme1n1
-lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890BB -> ../../nvme0n1
-lrwxrwxrwx 1 root root 13 Jan 11 16:22 /dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890BB_1 -> ../../nvme0n1
-...
-#+end_example
+If you would rather skip the menu and run all three back to back, =setup
+nixos= chains them in order, each with its own prompts, stopping at the
+first failure.
 
- - The symbolic device id you want is of the format
-   =/dev/disk/by-id/nvme-{MODEL}-{SERIAL}= (without the =_1= part.)
- - Make sure the symbolic link points to the correct device reported
-   by =lsblk=.
+The remaining pages in this chapter walk through each phase in order.
 
-Set two temporary variables =DISK1= and =DISK2= to reference them:
-
-#+begin_example
-export DISK1=/dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AA
-export DISK2=/dev/disk/by-id/nvme-CT4000P3PSSD8_1234567890AB
-#+end_example
-
-Wipe the drives and create new UEFI and ZFS partitions:
-
-#+begin_src bash
-  (
-      set -euo pipefail
-      : "${DISK1:?DISK1 is not set}"
-      : "${DISK2:?DISK2 is not set}"
-      for d in "$DISK1" "$DISK2"; do
-          blkdiscard -f "$d" || true
-          sgdisk --zap-all "$d"
-          wipefs -a "$d" || true
-          sgdisk -n1:1MiB:+1GiB -t1:EF00 -c1:EFI "$d"
-          sgdisk -n2:0:0       -t2:BF00 -c2:ZFS "$d"
-          partprobe "$d"
-          udevadm settle
-      done
-      mkfs.fat -F 32 -n EFI1 "${DISK1}-part1"
-      mkfs.fat -F 32 -n EFI2 "${DISK2}-part1"
-  )
-#+end_src
-
-Verify with =lsblk= that the new partitions have been created
-correctly:
-
-#+begin_example
-$ lsblk
-NAME        MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-nvme0n1     259:0    0  3.6T  0 disk 
-├─nvme0n1p1 259:5    0    1G  0 part 
-└─nvme0n1p2 259:6    0  3.6T  0 part 
-nvme1n1     259:1    0  3.6T  0 disk 
-├─nvme1n1p1 259:3    0    1G  0 part 
-└─nvme1n1p2 259:4    0  3.6T  0 part 
-#+end_example
-
-Create the mirrored ZFS pool:
-
-#+begin_src bash
-  (
-      set -euo pipefail
-      modprobe zfs
-      zpool create -f \
-            -o ashift=12 \
-            -o autotrim=on \
-            -O mountpoint=none \
-            -O compression=zstd \
-            -O atime=off \
-            -O xattr=sa \
-            -O acltype=posixacl \
-            -O normalization=formD \
-            rpool mirror "${DISK1}-part2" "${DISK2}-part2"
-      zpool status
-  )
-#+end_src
-
-Create datasets. We’ll use =mountpoint=legacy= so NixOS mounts them
-declaratively:
-
-#+begin_src bash
-  (
-      set -euo pipefail
-      zfs create -o mountpoint=none -o canmount=off rpool/root
-      zfs create -o mountpoint=legacy -o canmount=noauto rpool/root/nixos
-      zfs create -o mountpoint=legacy rpool/nix
-      zfs create -o mountpoint=legacy rpool/home
-      zfs create -o mountpoint=legacy rpool/var
-      zfs create -o mountpoint=legacy rpool/var/log
-      zpool set bootfs=rpool/root/nixos rpool
-  )
-#+end_src
-
-Mount all the filesystems under =/mnt=, including the two UEFI boot
-partitions:
-
-#+begin_src bash
-  (
-      set -euo pipefail
-      mount -t zfs rpool/root/nixos /mnt
-      mkdir -p /mnt/{nix,home,var}
-      mount -t zfs rpool/nix  /mnt/nix
-      mount -t zfs rpool/home /mnt/home
-      mount -t zfs rpool/var  /mnt/var
-      mkdir -p /mnt/var/log
-      mount -t zfs rpool/var/log /mnt/var/log
-      mkdir -p /mnt/{boot,boot-fallback}
-      mount "${DISK1}-part1" /mnt/boot
-      mount "${DISK2}-part1" /mnt/boot-fallback
-  )
-#+end_src
-** Copy config from the iso
+** Configure the disk
 :PROPERTIES:
-:EXPORT_FILE_NAME: copy-config-from-iso
-:EXPORT_HUGO_SLUG: copy-config-from-iso
+:EXPORT_FILE_NAME: setup-disk
+:EXPORT_HUGO_SLUG: setup-disk
 :END:
 
-*** Copy network config
+The first phase partitions, formats, and mounts the target disk. It
+lays out the filesystem declaratively with [[https://github.com/nix-community/disko][disko]], as a GPT disk with:
 
-Copy the network config from the minimal installer into the new NixOS install:
+ - a [[https://btrfs.readthedocs.io/][btrfs]] root, all mounted with =compress=zstd= and =noatime=,
+   split into subvolumes:
+   - =@= → =/=
+   - =@home= → =/home=
+   - =@nix= → =/nix=
+ - a boot partition chosen automatically from the detected firmware: an
+   EFI System Partition on UEFI machines, or a small =bios_grub=
+   partition on legacy BIOS machines;
+ - optionally, full-disk LUKS encryption of the root;
+ - optionally, a swap partition.
 
+Start it from the menu, or directly:
+
+#+begin_run
+setup disk
+#+end_run
+
+It detects your firmware (UEFI vs. legacy BIOS) automatically, then
+shows the disks you can install onto:
+
+#+begin_annotate
 #+begin_src bash
-  mkdir -p /mnt/etc/NetworkManager/system-connections
-  cp /etc/NetworkManager/system-connections/bootstrap-wifi.nmconnection \
-     /mnt/etc/NetworkManager/system-connections/primary-wifi.nmconnection
+== Configure a disk for NixOS ==
+Firmware detected: UEFI
+
+Select the target disk:
+> /dev/nvme0n1   --   3.6T     --   CT4000P3PSSD8     --   (NVME, SSD)
+  /dev/sda       --   931.5G   --   Samsung SSD 870   --   (SATA, SSD)
 #+end_src
 
-*** Copy SSH pubkeys
+Disks that are currently in use by the running system -- most importantly
+the live USB stick you booted from -- are hidden, so you cannot
+accidentally wipe them. (Pass =--include-mounted= to override this, but
+that is rarely what you want.)
+#+end_annotate
 
-Copy the SSH pubkeys from the minimal installer into the new NixOS system:
+*** Encryption
 
+#+begin_annotate
 #+begin_src bash
-  mkdir -p /mnt/etc/ssh/authorized_keys.d
-  cp /etc/ssh/authorized_keys.d/root /mnt/etc/ssh/authorized_keys.d/root
+? Encrypt the disk with LUKS? (disko will prompt for a passphrase during formatting) (y/N)
 #+end_src
 
-** Install minimal NixOS config
+Optionally encrypt the root with [[https://gitlab.com/cryptsetup/cryptsetup][LUKS]]. Answer =y= and the btrfs
+root is placed inside a LUKS2 container; disko itself prompts you to
+set (and confirm) the passphrase during formatting, and the system
+prompts for it again at every boot to unlock the disk. The tool never
+handles the passphrase -- so keep it safe, *it cannot be recovered*.
+
+If you also add swap (below), the swap partition is re-keyed with a
+random passphrase on every boot, so it never leaks RAM contents in
+plaintext on an otherwise-encrypted disk. The trade-off is that this
+rules out hibernation (suspend-to-disk), since the swap contents are
+unreadable after a reboot.
+
+Encryption is a fresh-install choice only: an existing encrypted disk
+is not recognized as a reusable btrfs layout, so the reinstall option
+below is not offered for it.
+#+end_annotate
+
+*** Swap
+
+#+begin_annotate
+#+begin_src bash
+Detected RAM: 15.3G.
+? Add a swap partition? (recommended for low-RAM machines) (y/N)
+? Swap size (e.g. 8G, 2048M) (8G)
+#+end_src
+
+Optionally add a swap partition. This matters most on low-RAM
+machines: the live ISO's Nix store is held in RAM (tmpfs), so without
+swap, a large download or build during =nixos-install= can exhaust
+memory. The default size is =8G=.
+#+end_annotate
+
+*** Confirm and apply
+
+Because this erases the disk, you have to re-type the device path to
+confirm, and then approve a review screen:
+
+#+begin_annotate
+#+begin_src bash
+About to DESTROY everything on: /dev/nvme0n1
+? Type '/dev/nvme0n1' to confirm
+
+================ Review =================
+Target disk:  /dev/nvme0n1
+Firmware:     UEFI (ESP /boot)
+Filesystem:   btrfs
+Encryption:   LUKS2 (passphrase set during format, prompted at boot)
+Subvolumes:   @ -> /, @home -> /home, @nix -> /nix
+Swap:         8G (random-key encrypted)
+Config:       /tmp/nixos-disk-xxxx/disko.nix
+=========================================
+
+⚠️  This ERASES ALL DATA on /dev/nvme0n1 and mounts the new
+    filesystems under /mnt.
+
+    disko will prompt you to set the LUKS passphrase during
+    formatting -- keep it safe, it cannot be recovered.
+
+? Proceed? (y/N)
+#+end_src
+
+Once you confirm, it fetches and runs disko (over the network) to wipe
+the disk, create the partitions and subvolumes, and mount everything
+under =/mnt=. The generated layout is saved into the new system at
+=/mnt/etc/nixos/disko.nix=, where the next phase picks it up.
+#+end_annotate
+
+*** Reinstalling over an existing layout
+
+If the disk you select *already* has this btrfs layout (=@=, =@home=,
+=@nix=) from a previous install, =setup disk= offers a *reinstall*
+option instead of erasing everything:
+
+#+begin_annotate
+#+begin_src bash
+⚠️  /dev/nvme0n1 already has a NixOS btrfs layout (@, @home, @nix).
+? How do you want to install?
+> Reinstall -- keep /home and /nix, wipe / and reinstall the bootloader
+  Fresh install -- ERASE the entire disk and recreate everything
+#+end_src
+
+A *reinstall* wipes only =@= (the root filesystem) and reformats the
+ESP for a fresh bootloader, but keeps =@home= and =@nix=, so your home
+directory (including the config repo generated in the next phase) and
+the Nix store survive. After a reinstall you skip *Configure Host* (the
+preserved config repo is reused) and go straight to *Install*, which
+rebuilds that existing configuration. =setup nixos= detects this and
+skips the host phase for you.
+#+end_annotate
+
+When the disk is ready and mounted under =/mnt=, continue to the next
+phase.
+** Generate the host configuration
 :PROPERTIES:
-:EXPORT_FILE_NAME: install-minimal-nixos
-:EXPORT_HUGO_SLUG: install-minimal-nixos
+:EXPORT_FILE_NAME: setup-host
+:EXPORT_HUGO_SLUG: setup-host
 :END:
 
-*** Generate the initial config files
+The second phase generates a fresh, self-contained NixOS flake
+repository for *this one machine*, and places it on the freshly mounted
+target at =/mnt/home/<user>/nixos=.
 
+This is a key idea in the sway-home design: [[https://github.com/EnigmaCurry/sway-home][sway-home]] itself holds *no*
+per-host configuration. It is a shared *library* of NixOS modules. Each
+machine you own gets its own small repo that depends on sway-home as a
+pinned flake input and calls =sway-home.lib.mkHost=. That per-host repo
+holds only this machine's =disko.nix= (disk layout), =hardware.nix=
+(detected hardware, no filesystems -- disko owns those), and =config.nix=
+(your overrides).
+
+Run it from the menu, or directly:
+
+#+begin_run
+setup host
+#+end_run
+
+*** Answer the prompts
+
+#+begin_annotate
 #+begin_src bash
-  nixos-generate-config --root /mnt
+== Generate a per-host NixOS config ==
+
+? Hostname (nixos)
+? Primary username
+? Time zone (America/Denver)
+? Select profiles to enable (space toggles, enter confirms; none = minimal server):
+> [ ] dotfiles - Shell/CLI home environment (bashrc, ~/.config dotfiles, emacs, CLI tools) -- no GUI
+  [ ] sway - Sway desktop (greetd login, sway, fonts, firefox; implies dotfiles)
+  [ ] sound - PipeWire audio
+  [ ] podman - Podman containers (Docker-compatible)
+  [ ] flatpak - Flatpak + Flathub remote
+  [ ] libvirt - libvirt/KVM virtualization (the `vm` command, virt-manager)
 #+end_src
 
-This will generate the following files:
+ - *Hostname*  --  the name of this machine (default =nixos=).
+ - *Primary username*  --  your login account (required).
+ - *Time zone*  --  an IANA time zone like =America/Denver=.
+ - *Profiles*  --  a multi-select of optional subsystems to switch on. Press
+   space to toggle each, enter to confirm. Selecting *nothing* gives a bare
+   =minimal= server (sshd plus your user, no desktop); =sway= adds the full
+   desktop. Whatever you pick is written into =config.nix= as a
+   =my.profiles.<name>.enable= toggle, and the rest are left there as
+   commented examples. Nothing here is permanent -- you can enable or disable
+   any profile later. See the *Profiles* chapter.
+#+end_annotate
 
- - =/etc/nixos/configuration.nix=
- - =/etc/nixos/hardware-configuration.nix=
+*** Review
 
-*** Create the ZFS config
+The SSH public keys currently authorized on the ISO (the ones you
+baked in when you built it) are seeded into the new =config.nix=, so
+the installed machine stays reachable over SSH -- sshd is key-only.
 
+#+begin_annotate
 #+begin_src bash
-    (
-      set -euo pipefail
+================ Review =================
+Hostname:      box
+Username:      ryan
+Profiles:      (none -- minimal server, sshd only)
+Time zone:     America/Denver
+System:        x86_64-linux
+SSH keys:      1 (seeded from ISO)
+sway-home:     github:EnigmaCurry/sway-home
+Host repo:     /mnt/home/ryan/nixos
+=========================================
 
-      : "${DISK1:?DISK1 is not set}"
-      : "${DISK2:?DISK2 is not set}"
-      : "${MNT:=/mnt}"
-
-      CFG="${MNT}/etc/nixos/configuration.nix"
-      MOD="${MNT}/etc/nixos/zfs-root.nix"
-
-      [[ -f "$CFG" ]] || { echo >&2 "ERROR: missing $CFG (run nixos-generate-config --root /mnt)"; exit 1; }
-
-      P1_DISK1="${DISK1}-part1"
-      P1_DISK2="${DISK2}-part1"
-
-      [[ -e "$P1_DISK1" ]] || { echo >&2 "ERROR: expected ESP path missing: $P1_DISK1"; exit 1; }
-      [[ -e "$P1_DISK2" ]] || { echo >&2 "ERROR: expected ESP path missing: $P1_DISK2"; exit 1; }
-
-      HOSTID="$(head -c4 /dev/urandom | od -A none -t x4 | tr -d ' \n')"
-
-      echo "HOSTID:    $HOSTID"
-
-      # --- Write zfs-root.nix ----------------------------------------------------
-      cat > "$MOD" <<EOF
-    { config, lib, ... }:
-    let
-      boot1 = "${DISK1}-part1";
-      boot2 = "${DISK2}-part1";
-    in
-    {
-      boot.supportedFilesystems = [ "zfs" ];
-      boot.zfs.devNodes = "/dev/disk/by-id";
-
-      networking.hostId = "${HOSTID}";
-
-      # nixos-generate-config typically enables systemd-boot on UEFI; turn it off
-      boot.loader.systemd-boot.enable = lib.mkForce false;
-
-      boot.loader.grub = {
-        enable = lib.mkForce true;
-        efiSupport = true;
-        efiInstallAsRemovable = true;
-        devices = [ "nodev" ];
-        copyKernels = true;
-
-        mirroredBoots = [
-          { path = "/boot";          devices = [ boot1 ]; }
-          { path = "/boot-fallback"; devices = [ boot2 ]; }
-        ];
-      };
-
-      # Append without self-reference (avoids infinite recursion)
-      fileSystems."/boot".options = lib.mkAfter [ "nofail" ];
-
-      services.zfs.autoScrub.enable = true;
-    }
-EOF
-      echo "Wrote: $MOD"
-
-      # --- Remove systemd-boot enable lines from configuration.nix ---------------
-      # (so only one bootloader is enabled, and avoid redundant EFI var line)
-      # --- enable SSH ---
-      tmp="$(mktemp)"
-      awk '
-        # Drop the specific generated comment line (safe)
-        /^[[:space:]]*#.*systemd-boot EFI boot loader\./ { next }
-      
-        # Drop enabling systemd-boot
-        /^[[:space:]]*boot\.loader\.systemd-boot\.enable[[:space:]]*=[[:space:]]*true;[[:space:]]*$/ { next }
-      
-        # Drop redundant EFI vars line (zfs-root.nix sets it)
-        /^[[:space:]]*boot\.loader\.efi\.canTouchEfiVariables[[:space:]]*=[[:space:]]*true;[[:space:]]*$/ { next }
-      
-        # Uncomment OpenSSH enable line if present
-        /^[[:space:]]*#[[:space:]]*services\.openssh\.enable[[:space:]]*=[[:space:]]*true;[[:space:]]*$/ {
-          sub(/^[[:space:]]*#[[:space:]]*/, "")
-          print
-          next
-        }
-      
-        { print }
-      ' "$CFG" > "$tmp"
-      cp -f "$tmp" "$CFG"
-      rm -f "$tmp"
-      
-      # --- Merge ./zfs-root.nix into existing imports ----------------------------
-      if grep -q '[[:space:]]\./zfs-root\.nix\b' "$CFG"; then
-        echo "configuration.nix already imports ./zfs-root.nix; done."
-        exit 0
-      fi
-
-      # We do NOT create a new imports block. If imports= is missing, fail.
-      if ! grep -q '^[[:space:]]*imports[[:space:]]*=' "$CFG"; then
-        echo >&2 "ERROR: no imports= found in $CFG (unexpected)."
-        exit 1
-      fi
-
-      tmp="$(mktemp)"
-      awk '
-        BEGIN { added=0; waiting_bracket=0 }
-
-        # Single-line imports: imports = [ ... ];
-        !added && /^[[:space:]]*imports[[:space:]]*=[[:space:]]*\[.*\][[:space:]]*;[[:space:]]*$/ {
-          line=$0
-          sub(/\]/, " ./zfs-root.nix ]", line)
-          print line
-          added=1
-          next
-        }
-
-        # imports = (alone)
-        /^[[:space:]]*imports[[:space:]]*=[[:space:]]*$/ {
-          print
-          waiting_bracket=1
-          next
-        }
-
-        # imports = [ ... (possibly with trailing comment)
-        !added && /^[[:space:]]*imports[[:space:]]*=[[:space:]]*\[/ {
-          print
-          print "    ./zfs-root.nix"
-          added=1
-          next
-        }
-
-        # bracket line after a standalone "imports =" (may include trailing comment)
-        waiting_bracket && /^[[:space:]]*\[/ {
-          print
-          if (!added) {
-            print "    ./zfs-root.nix"
-            added=1
-          }
-          waiting_bracket=0
-          next
-        }
-
-        { print }
-      ' "$CFG" > "$tmp"
-
-      cp -f "$tmp" "$CFG"
-      rm -f "$tmp"
-
-      if ! grep -q '[[:space:]]\./zfs-root\.nix\b' "$CFG"; then
-        echo >&2 "ERROR: failed to merge ./zfs-root.nix into imports."
-        echo >&2 "Imports region:"
-        grep -n 'imports' -A20 "$CFG" >&2 || true
-        exit 1
-      fi
-
-      echo "Merged ./zfs-root.nix into imports in $CFG"
-    )
+? Generate this host config? (Y/n)
 #+end_src
+#+end_annotate
 
-*** Install NixOS (minimal)
+After you confirm, it:
 
-#+begin_src bash
-nixos-install
-#+end_src
+ 1. Detects the hardware with =nixos-generate-config --no-filesystems=
+    (disko owns the filesystems, so they are intentionally excluded).
+ 2. Writes the repo: =flake.nix=, =config.nix=, =hardware.nix=, a copy
+    of =disko.nix= from the previous phase, a =Justfile=, and a
+    =.gitignore=.
+ 3. Runs =git init=, resolves and pins sway-home into =flake.lock=, and
+    commits.
 
-At the end it will ask you to set the =root= password.
+The repo is left root-owned for now; the *Install* phase fixes its
+ownership once your user account exists in the installed system.
 
-*** Reboot
-
-Unmount filesystems and reboot:
-
-#+begin_src bash
-umount -R /mnt
-zpool export rpool
-reboot
-#+end_src
-** Install sway-home config
+#+attr_shortcode: :style warning
+#+begin_notice
+If no SSH keys were found on the ISO, the review shows =NONE FOUND= and
+you *must* add at least one key to =config.nix= before installing, or
+you will be locked out of the headless machine after reboot (sshd is
+key-only).
+#+end_notice
+** Install NixOS
 :PROPERTIES:
-:EXPORT_FILE_NAME: install-sway-home
-:EXPORT_HUGO_SLUG: install-sway-home
+:EXPORT_FILE_NAME: setup-install
+:EXPORT_HUGO_SLUG: setup-install
 :END:
- 
-*** Clone the repository
 
+The final phase builds and installs NixOS from the per-host repo that
+=setup host= generated, sets your passwords, and makes the machine
+reachable after reboot.
+
+Run it from the menu, or directly:
+
+#+begin_run
+setup install
+#+end_run
+
+It auto-discovers the host repo and reads the host name from its flake,
+then shows a review screen:
+
+#+begin_annotate
 #+begin_src bash
-GIT_URL=https://github.com/EnigmaCurry/sway-home.git
-GIT_REPO=~/git/vendor/enigmacurry/sway-home
-nix-shell -p git --run "git clone ${GIT_URL} ${GIT_REPO}"
+================ Review =================
+Host repo:     /mnt/home/ryan/nixos
+Host:          box
+User:          ryan
+Target root:   /mnt
+=========================================
+
+This builds and installs NixOS into /mnt (downloads the system
+    closure from the binary cache) and sets passwords.
+
+? Proceed with install? (Y/n)
+#+end_src
+#+end_annotate
+
+After you confirm, it:
+
+ 1. Re-pins sway-home to its latest commit (so a fresh fix is picked up
+    without regenerating the repo) and commits the updated lock. Pass
+    =--no-update= to install from the committed pin instead.
+ 2. Runs =nixos-install=, which downloads and builds the system and, at
+    the end, prompts you to set the *root* password.
+ 3. Sets a password for your user account.
+ 4. Fixes ownership of the config repo so it belongs to your user after
+    reboot.
+ 5. Copies the live ISO's NetworkManager profiles (e.g. your pre-seeded
+    WiFi) into the target, so a headless machine stays reachable.
+ 6. Copies the live ISO's SSH *host keys* into the target, so the
+    installed machine keeps the same SSH identity -- no "REMOTE HOST
+    IDENTIFICATION HAS CHANGED" warning for anyone who already trusted
+    the live host key.
+
+#+begin_annotate
+#+begin_src bash
+✅ Install complete.
+   Config repo: /home/ryan/nixos  (owned by ryan after reboot)
+   Apply future changes with:  sudo nixos-rebuild switch --flake .#box
+
+? Reboot now? (y/N)
 #+end_src
 
-*** Create the host configuration
+When it finishes, reboot. There is no separate bootstrap step -- the
+machine comes up fully configured, and your config repo is already on
+disk at =~/nixos=, owned by your user.
+#+end_annotate
 
-#+begin_src bash
-USERNAME=your_user
-GIT_REPO=~/git/vendor/enigmacurry/sway-home
-JUST_JUSTFILE=${GIT_REPO}/Justfile \
-    nix-shell -p just -p python3 -p git --run "USERNAME=${USERNAME} just add-host && git -C $GIT_REPO add nixos/hosts"
+* Making changes going forward
+:PROPERTIES:
+:EXPORT_FILE_NAME: making-changes
+:EXPORT_HUGO_SLUG: making-changes
+:EXPORT_HUGO_WEIGHT: 3000
+:END:
+
+Once the machine reboots, log in as your user. The installation is
+complete, but the more important habit starts now: your machine's
+entire configuration lives in its own git repo in your home directory.
+
+#+begin_run
+cd ~/nixos
+#+end_run
+
+It contains:
+
+ - =flake.nix=  --  depends on =sway-home= (pinned) and calls
+   =sway-home.lib.mkHost=.
+ - =disko.nix=  --  the declarative disk layout.
+ - =hardware.nix=  --  detected hardware (no filesystems; disko owns those).
+ - =config.nix=  --  your host-specific overrides (locale, packages,
+   services, SSH keys).
+ - =Justfile=  --  convenience recipes, run via the =admin= alias below.
+
+** Applying changes with =admin=
+
+The repo's recipes are driven by the =admin= alias, which runs =just=
+against =~/nixos/Justfile= from *any* directory, with full recipe and
+argument tab completion. Run =admin help= to list the recipes. (It is set
+up by home-manager on both profiles, so it works the same whether you are
+on =minimal= or =sway=.)
+
+Edit =config.nix= (or add modules) for changes specific to this
+machine, and edit sway-home itself for changes you want shared across
+all of your machines. After editing, =git add= and *commit* your changes
+(a flake only sees files git tracks -- it reads edits to tracked files even
+when dirty, but a brand-new module file is invisible until you =git add=
+it), then apply them with =admin upgrade=, which pulls the latest shared
+config and rebuilds the system:
+
+#+begin_run
+git -C ~/nixos commit -am "describe your change"
+admin upgrade
+#+end_run
+
+#+attr_shortcode: :style warning
+#+begin_notice
+=git add= any *new* files before =admin upgrade=. Nix warns when the git
+tree is dirty but still builds from your edits to tracked files; a file
+git has never seen, though, is silently left out of the flake -- so a new
+module appears to "do nothing" until you add it. Committing as you go is
+the simplest way to never hit this.
+#+end_notice
+
+#+attr_shortcode: :style tip
+#+begin_notice
+To try a config without making it permanent, use =admin test=. Test
+generations are temporary and are not added to the boot menu, so a
+reboot returns you to the last generation you applied permanently.
+#+end_notice
+
+** Back up your config to a git remote
+
+Your per-host repo is the only complete, declarative record of how this
+machine is built. NixOS keeps its *generations* on the local disk, so
+you can roll back -- but if that disk dies, the history of your
+configuration dies with it. The repo is the part you are responsible for
+preserving, so treat =~/nixos= like any other source code you care
+about and push it somewhere off the machine.
+
+Make it a *private* repository. It describes your machine in detail -- its
+hardware, accounts, services, and authorized SSH keys -- which is not
+something you want to publish, even though it holds no passwords. Add a
+remote (any Git host -- GitHub, a self-hosted [[https://forgejo.org/][Forgejo]], or a bare repo over
+SSH) and push the =main= branch that =setup host= created:
+
+#+begin_run
+git -C ~/nixos remote add origin git@github.com:youruser/nixos-<host>.git
+git -C ~/nixos push -u origin main
+#+end_run
+
+After that, push whenever you commit a change:
+
+#+begin_run
+git -C ~/nixos push
+#+end_run
+
+With the repo safely pushed, you can rebuild this machine -- or stand up a
+replacement -- by cloning it back to =~/nixos= and running =admin upgrade=.
+
+* Profiles
+:PROPERTIES:
+:EXPORT_FILE_NAME: profiles
+:EXPORT_HUGO_SLUG: profiles
+:EXPORT_HUGO_WEIGHT: 3100
+:END:
+
+A *profile* is a composable feature toggle. Each one wires up a whole
+subsystem -- the daemon, the user groups, the packages, and (for the
+desktop) the home-manager dotfiles -- from a single line in your
+=config.nix=:
+
+#+begin_src nix
+my.profiles.libvirt.enable = true;
 #+end_src
 
-*** Apply the configuration
+You choose which profiles to switch on when you run =setup host= (the
+multi-select prompt), and you can enable or disable any of them later by
+editing =~/nixos/config.nix= and re-applying with =admin upgrade=. There is
+no separate "minimal vs sway" install mode: a *minimal* server is simply a
+host with no profiles enabled, and every option -- including the whole
+desktop -- is one of these toggles.
 
-#+begin_src bash
-GIT_REPO=~/git/vendor/enigmacurry/sway-home
-JUST_JUSTFILE=${GIT_REPO}/Justfile \
-    nix-shell -p just --run 'just switch'
+** The available profiles
+
+ - =dotfiles=  --  your shell/CLI home environment with *no* GUI: the
+   =sway-home= bashrc, the =~/bin= scripts, the =~/.config= dotfiles, git
+   config, emacs, the =vm= command's setup, and the command-line package
+   toolbox (ripgrep, fzf, bat, just, babashka, docker, kubectl, and so on).
+   This is what you want on a headless server that you still live in over SSH.
+ - =sway=  --  the full [[https://swaywm.org/][Sway]] desktop: a Wayland login greeter, the Sway
+   compositor, fonts, firefox, and the Wayland desktop package set (waybar,
+   foot, rofi, grim, ...). Enabling =sway= *implies* =dotfiles=, so a desktop
+   gets the shell environment too -- you don't need to tick both.
+ - =sound=  --  PipeWire audio (ALSA + PulseAudio compatibility). Nothing
+   else in sway-home enables sound, so a desktop that wants audio needs this.
+ - =podman=  --  Podman containers (Docker-compatible), with container DNS.
+ - =flatpak=  --  Flatpak with the Flathub remote pre-added, ready for
+   =flatpak install flathub <app>=.
+ - =libvirt=  --  libvirt/KVM virtualization: virt-manager and the =vm=
+   command (nixos-vm-template). It also adds your user to the =libvirtd=
+   group.
+
+Each profile is a module under =nixos/modules/profiles/= in sway-home. They
+are *always* imported but do nothing until their flag is set, so enabling one
+never requires touching =flake.nix=.
+
+** Enabling a profile
+
+The =config.nix= that =setup host= generated already lists every profile as a
+commented example. Open =~/nixos/config.nix= and uncomment the one(s) you
+want:
+
+#+begin_src nix
+  # --- Profiles (sway-home) ---
+  # my.profiles.sway.enable    = true;   # Sway desktop
+  # my.profiles.sound.enable   = true;   # PipeWire audio
+  # my.profiles.podman.enable  = true;   # Podman containers (Docker-compatible)
+  # my.profiles.flatpak.enable = true;   # Flatpak + Flathub remote
+  my.profiles.libvirt.enable = true;     # <-- enabled
 #+end_src
 
-*** Log into your new account
+Then commit and apply:
 
-It's ready to use.
+#+begin_run
+git -C ~/nixos commit -am "Enable the libvirt profile"
+admin upgrade
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+A profile that adds you to a group (=libvirt= adds you to =libvirtd=) only
+takes effect on your *next login*, since group membership is established at
+login. Log out and back in (or reboot) before using =virsh= or the =vm=
+command -- otherwise you'll get a permission error reaching the libvirt
+socket.
+#+end_notice
+
+** The Sway desktop
+
+=sway= is the largest profile: enabling it is the difference between a
+headless server and a full graphical workstation. It turns on the system
+desktop (the Wayland login greeter and the Sway compositor) and your complete
+home-manager user environment.
+
+#+begin_src nix
+my.profiles.sway.enable = true;
+#+end_src
+
+#+begin_run
+git -C ~/nixos commit -am "Enable the sway profile"
+admin upgrade
+#+end_run
+
+This downloads and builds the desktop closure (the first build is large),
+enables the greetd login manager, and installs your home-manager
+environment. When it finishes, *reboot* to land on the graphical greeter;
+log in and you are in Sway.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Want to preview the desktop without committing to it across reboots? Use
+=admin test= instead of =admin upgrade=. The test generation is temporary
+and is not added to the boot menu, so a reboot returns you to your previous
+system.
+#+end_notice
+
+** Turning a profile off
+
+Reverting is symmetric: set the flag back to =false= (or re-comment the
+line), commit, and =admin upgrade=. Because every profile is gated
+internally, disabling it removes *everything* it added. For =sway= that
+includes the dotfiles home-manager wrote into your home directory
+(=~/.config/sway=, the desktop scripts in =~/bin=, and so on) -- home-manager
+stays active and prunes what it no longer manages, so the next boot is a
+clean headless server again, with no leftovers to tidy by hand.
