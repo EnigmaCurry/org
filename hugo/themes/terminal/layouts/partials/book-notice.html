@@ -1,0 +1,13 @@
+{{- /* Per-book deprecation banner. A book whose root section carries an
+       `archived` front-matter param (markdown) gets that notice rendered as a
+       warning box at the top of EVERY page in the book — not just its index.
+       `.FirstSection` is the nearest top-level section in the page's ancestry
+       (the book root, or the page itself when it IS the root). */ -}}
+{{- with .FirstSection -}}
+  {{- with .Params.archived -}}
+  <div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">{{ . | markdownify }}</div>
+  </div>
+  {{- end -}}
+{{- end -}}
