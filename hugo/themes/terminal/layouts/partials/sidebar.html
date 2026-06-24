@@ -11,7 +11,20 @@
   </div>
   <div class="tag">// books by EnigmaCurry</div>
   <ul class="tree">
+    {{- /* Books flagged `group = "old"` (front matter) are gathered, in weight
+           order, under a single non-clickable "old" header so archived books sit
+           nested together (just above LICENSE) without leaving the linked list —
+           prev/next and the arrow keys still walk through them. */ -}}
+    {{- $oldOpen := false -}}
     {{- range $book := .Site.Home.Sections.ByWeight -}}
+      {{- $isOld := eq (printf "%v" $book.Params.group) "old" -}}
+      {{- if and $isOld (not $oldOpen) -}}
+        <li class="group"><span class="gname">old</span><ul class="grouped">
+        {{- $oldOpen = true -}}
+      {{- else if and $oldOpen (not $isOld) -}}
+        </ul></li>
+        {{- $oldOpen = false -}}
+      {{- end -}}
       {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) -}}
       <li class="book{{ if $bookOpen }} open{{ end }}">
         <a href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
@@ -37,6 +50,7 @@
         {{- end -}}{{- end -}}
       </li>
     {{- end -}}
+    {{- if $oldOpen -}}</ul></li>{{- end -}}
   </ul>
   {{- /* action row: external links + the settings gear. Sits above the build date. */ -}}
   <div class="sidebar-actions">
