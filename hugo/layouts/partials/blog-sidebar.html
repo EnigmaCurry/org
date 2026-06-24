@@ -1,8 +1,7 @@
 {{- $cur := .cur -}}
 {{- $book := .book -}}
-{{- $isBlogPost := and (eq $cur.Section "blog") (not $cur.IsSection) (ne $cur.RelPermalink "/blog/license/") -}}
+{{- $isBlogPost := and (eq $cur.Section "blog") (not $cur.IsSection) -}}
 {{- $blogPosts := where .site.RegularPages "Section" "blog" -}}
-{{- $blogPosts = where $blogPosts "RelPermalink" "ne" "/blog/license/" -}}
 <ul class="chapters blog-nav">
   <li class="node{{ if $isBlogPost }} open{{ end }}">
     <a class="{{ if eq $book.RelPermalink $cur.RelPermalink }}active{{ end }}" href="{{ $book.RelPermalink }}#by-date">by date</a>
@@ -18,7 +17,7 @@
     {{- $tagPosts := slice -}}
     {{- $tagOpen := false -}}
     {{- range .WeightedPages -}}
-      {{- if and (eq .Page.Section "blog") (ne .Page.RelPermalink "/blog/license/") -}}
+      {{- if eq .Page.Section "blog" -}}
         {{- $tagPosts = $tagPosts | append .Page -}}
         {{- if eq .Page.RelPermalink $cur.RelPermalink -}}
           {{- $tagOpen = true -}}
