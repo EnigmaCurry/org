@@ -633,10 +633,10 @@ const navToggle = document.getElementById("navtoggle");
 const sidebarEl = document.querySelector(".sidebar");
 function scrollActiveBlogTagIntoView(){
   const tree = sidebarEl && sidebarEl.querySelector(".tree");
-  const activeTag = tree && tree.querySelector(".blog-nav > li.node.open > a.active[href^='/tags/']");
-  if(!tree || !activeTag || tree.clientHeight === 0) return;
+  const activeLink = tree && tree.querySelector(".blog-nav a.active");
+  if(!tree || !activeLink || tree.clientHeight === 0) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  activeTag.scrollIntoView({ block:"center", inline:"nearest", behavior: reduce ? "auto" : "smooth" });
+  activeLink.scrollIntoView({ block:"center", inline:"nearest", behavior: reduce ? "auto" : "smooth" });
 }
 function queueActiveBlogTagScroll(){
   requestAnimationFrame(()=> requestAnimationFrame(scrollActiveBlogTagIntoView));
