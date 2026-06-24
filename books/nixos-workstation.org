@@ -858,3 +858,273 @@ includes the dotfiles home-manager wrote into your home directory
 (=~/.config/sway=, the desktop scripts in =~/bin=, and so on) -- home-manager
 stays active and prunes what it no longer manages, so the next boot is a
 clean headless server again, with no leftovers to tidy by hand.
+
+* Sudo with a Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: sudo-solokey
+:EXPORT_HUGO_SLUG: sudo-solokey
+:EXPORT_HUGO_WEIGHT: 3200
+:END:
+
+A [[https://solokeys.com/][Solokey]] (or any FIDO2/U2F security key) can stand in for your
+password when you run =sudo=: you touch the key instead of typing a
+passphrase. This chapter sets that up on NixOS.
+
+The [[/linux-workstation/sudo-2fa][Linux Workstation book covers Solokeys in depth]] -- where to buy
+them, the v1 vs. v2 split, firmware updates, and the imperative Fedora
+setup. That background applies here unchanged, so this chapter does not
+repeat it. What /is/ different on NixOS is the wiring: on Fedora you
+hand-edit =/etc/u2f_authorized_keys= and =/etc/pam.d/sudo= and hope you
+remember why later. On NixOS you *declare* the key mappings and the PAM
+rule in =config.nix=, the system regenerates =/etc/pam.d= for you, and
+the whole thing is reproducible from your repo on the next machine.
+
+We make the key *sufficient* for =sudo= rather than *required*:
+
+ - *sufficient* (this chapter) -- a key touch authorizes =sudo= /instead
+   of/ a password. If no key is present, or it fails, =sudo= falls back
+   to asking for your password. You therefore *cannot lock yourself out*
+   by losing a key -- the password still works.
+ - *required* -- a key touch /and/ a password, i.e. real two-factor
+   =sudo=. This is stricter, but a lost/forgotten key now blocks =sudo=
+   entirely. Switching to it is a one-word change, shown at the end.
+
+The whole thing is offered as a *commented-out block* in =config.nix=:
+a placeholder you fill in with your registered key and uncomment when
+you are ready. Until then it does nothing.
+
+** Make the key usable
+
+Before =sudo= can use the key, your *user* needs to be able to talk to
+the device -- to set its PIN and to register it. That means two things in
+=config.nix=: the FIDO2 command-line tools, and the udev rules that let a
+non-root user open the device node.
+
+#+begin_src nix
+  # FIDO2 / Solokey tooling and device access.
+  environment.systemPackages = [
+    pkgs.libfido2    # fido2-token: set the device PIN, list devices
+    pkgs.pam_u2f     # pamu2fcfg: register a key into the authfile format
+    pkgs.solo2-cli   # solo2: firmware updates for Solokey v2 (optional)
+  ];
+  # udev rules so your normal user (not just root) can reach the key --
+  # needed for registration here, and for SSH and browser WebAuthn too.
+  services.udev.packages = [ pkgs.libfido2 pkgs.solo2-cli ];
+#+end_src
+
+Add that to =~/nixos/config.nix=, then commit and apply:
+
+#+begin_run
+git -C ~/nixos commit -am "Add FIDO2 tooling and udev rules"
+admin upgrade
+#+end_run
+
+Unplug and replug the key after the rebuild so the new udev rules apply
+to it.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+These two lines are worth keeping enabled on their own, even if you
+never wire up =sudo=: they are what make the Solokey usable as your
+normal user for *SSH* keys and for *WebAuthn* logins in the browser.
+Only the PAM rule further down is the optional =sudo= piece.
+#+end_notice
+
+** Set a device PIN
+
+Set a PIN on the device so a stolen key is useless on its own. Find the
+device node:
+
+#+begin_run
+fido2-token -L
+#+end_run
+
+#+begin_stdout
+/dev/hidraw0: vendor=0x1209, product=0xbeee (SoloKeys Solo 2)
+#+end_stdout
+
+Then set the PIN on that device (=/dev/hidraw0= here):
+
+#+begin_run
+fido2-token -C /dev/hidraw0
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This is the same PIN step as the [[/linux-workstation/sudo-2fa][Linux Workstation book]]. If your
+Solokey v2 firmware is out of date, update it first with =solo2 update=
+(installed above) -- see that book for the full firmware procedure.
+#+end_notice
+
+** Register your Solokeys
+
+=pamu2fcfg= reads a key and prints one line in the =pam_u2f= /authfile/
+format. We will capture that line (or lines) now and paste it into
+=config.nix= in the next step.
+
+Register *at least two* keys -- a primary and a backup -- so losing one
+key does not cost you the convenience.
+
+Plug in the *primary* key and run:
+
+#+begin_run
+pamu2fcfg
+#+end_run
+
+It prompts for the PIN, then asks you to touch the key. It prints a line
+beginning with your username:
+
+#+begin_stdout
+ryan:hQ2k...long...base64...,es256,+presence
+#+end_stdout
+
+Now unplug it, plug in the *backup* key, and run =pamu2fcfg= again --
+this time with =-n=, which omits the username so the output can be
+appended to the same user's line:
+
+#+begin_run
+pamu2fcfg -n
+#+end_run
+
+#+begin_stdout
+:tZ9p...long...base64...,es256,+presence
+#+end_stdout
+
+Combine them into a *single line* for your user, with each key separated
+by a colon:
+
+#+begin_stdout
+ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
+#+end_stdout
+
+That one line is what goes into =config.nix=.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This mapping contains only *public* key handles, not a secret -- it is
+the FIDO2 equivalent of an =authorized_keys= entry. It is safe to commit
+to your (private) =~/nixos= repo.
+
+By default =pamu2fcfg= and =pam_u2f= both derive their origin from
+=pam://$HOSTNAME=, so the registration keeps working across rebuilds and
+reinstalls *as long as the hostname stays the same*. If you change the
+hostname, re-register.
+#+end_notice
+
+** The optional sudo profile
+
+Here is the block to add to =~/nixos/config.nix=. Paste it in
+*commented out*, as a placeholder -- it does nothing until you uncomment
+it and drop in your registered key:
+
+#+begin_src nix
+  # --- Optional: Solokey (FIDO2) as sudo authentication ------------------
+  # Touch a registered Solokey *instead* of typing a password for sudo.
+  # `control = "sufficient"` => the key REPLACES the password; if no key
+  # is present sudo falls back to the password, so you can't lock yourself
+  # out. Change it to "required" for true 2FA (key AND password).
+  #
+  # Paste the line from `pamu2fcfg` (see the Register chapter) below:
+  # environment.etc."u2f_keys".text = ''
+  #   ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
+  # '';
+  # security.pam.u2f = {
+  #   control  = "sufficient";                       # key instead of password
+  #   settings = { cue = true; authfile = "/etc/u2f_keys"; };
+  # };
+  # # Turn u2f on for the sudo PAM service ONLY (not login, ssh, greetd):
+  # security.pam.services.sudo.u2fAuth = true;
+#+end_src
+
+What each piece does:
+
+ - =environment.etc."u2f_keys"= writes your mapping declaratively to
+   =/etc/u2f_keys=. No hand-editing of =/etc=; rebuild and it is there.
+ - =security.pam.u2f.settings.authfile= points =pam_u2f= at that file
+   (the default is a per-user =~/.config/Yubico/u2f_keys=, which is not
+   reproducible -- a central file in your repo is).
+ - =cue = true= prints the =Please touch the device= prompt; without it
+   =sudo= just hangs silently waiting for a touch.
+ - =control = "sufficient"= is the key-instead-of-password behavior.
+ - =security.pam.services.sudo.u2fAuth = true= is what scopes this to
+   =sudo=. We set it *per-service* on purpose.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Do *not* reach for =security.pam.u2f.enable = true=. That global switch
+turns =pam_u2f= on for /every/ PAM service at once -- login, =su=, the
+greeter, even =sshd= -- because each service's u2f flag defaults to it.
+Enabling it per-service with =security.pam.services.sudo.u2fAuth= keeps
+the key bound to =sudo= and nothing else. The =control= and =settings=
+under =security.pam.u2f= are just shared configuration; they do not, by
+themselves, switch u2f on anywhere.
+#+end_notice
+
+** Enable it
+
+When you are ready, uncomment the block, paste your real mapping line
+into the =u2f_keys= text, then test it *without* making it permanent:
+
+#+begin_run
+git -C ~/nixos commit -am "Enable Solokey sudo authentication"
+admin test
+#+end_run
+
+=admin test= builds and activates the change but does *not* add it to
+the boot menu, so if something is wrong a reboot returns you to the
+previous generation. Open a *new terminal* and test =sudo= (see below).
+Once you are happy, make it permanent:
+
+#+begin_run
+admin upgrade
+#+end_run
+
+*** Test sudo
+
+#+attr_shortcode: :style tip
+#+begin_notice
+=sudo= caches a successful authentication per terminal for a few
+minutes, so always test in a *fresh terminal* (or run =sudo -k= first to
+clear the cache).
+#+end_notice
+
+#+begin_run
+sudo -k; sudo true
+#+end_run
+
+With the key plugged in you are prompted to touch it, and on a touch
+=sudo= succeeds with *no password*:
+
+#+begin_stdout
+Please touch the device.
+#+end_stdout
+
+Unplug the key and try again: because the rule is only =sufficient=,
+=sudo= falls back to asking for your password, exactly as before.
+
+** Two-factor instead (required)
+
+To demand the key *and* the password -- real two-factor =sudo= -- change a
+single word, =control=, from =sufficient= to =required=:
+
+#+begin_src nix
+  security.pam.u2f = {
+    control  = "required";                          # key AND password
+    settings = { cue = true; authfile = "/etc/u2f_keys"; };
+  };
+#+end_src
+
+#+attr_shortcode: :style warning
+#+begin_notice
+With =required=, a lost or forgotten key blocks =sudo= entirely -- the
+password alone is no longer enough. Register a backup key first, keep a
+root shell open while you test (=admin test=, not =admin upgrade=), and
+remember you can always reboot back to the previous generation.
+#+end_notice
+
+** Turning it off
+
+Reverting is symmetric: re-comment the block (or set =u2fAuth = false=),
+commit, and =admin upgrade=. The PAM rule disappears from the
+regenerated =/etc/pam.d/sudo= and =sudo= goes back to password-only --
+nothing left behind in =/etc= to clean up by hand.
