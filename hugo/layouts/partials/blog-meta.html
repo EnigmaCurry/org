@@ -1,0 +1,14 @@
+{{- if and (eq .Section "blog") (not .IsSection) -}}
+<div class="blog-meta">
+  <span>published <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time></span>
+  <span>updated <time datetime="{{ .Lastmod.Format "2006-01-02" }}">{{ .Lastmod.Format "2006-01-02" }}</time></span>
+  {{- with .Params.tags }}
+  <span class="blog-tags">
+    tags
+    {{- range . }}
+      <a href="{{ printf "/tags/%s/" (. | urlize) | relURL }}">{{ . }}</a>
+    {{- end }}
+  </span>
+  {{- end }}
+</div>
+{{- end -}}
