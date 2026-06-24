@@ -39,7 +39,7 @@
       {{- if and $isOld (not $inOld) -}}{{- continue -}}{{- end -}}
       {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) (and (eq $book.Section "blog") $isBlogTagPage) -}}
       <li class="book{{ if $bookOpen }} open{{ end }}">
-        <a href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
+        <a href="{{ $book.RelPermalink }}">{{ if eq $book.Section "blog" }}blogs{{ else }}{{ partial "pagename.html" $book }}{{ end }}</a>
         {{- /* only the current book expands its chapters (link-based accordion) */ -}}
         {{- if $bookOpen -}}
           {{- if eq $book.Section "blog" -}}
