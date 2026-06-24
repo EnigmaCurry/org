@@ -14,17 +14,28 @@
     {{- /* Books flagged `group = "old"` (front matter) are gathered, in weight
            order, under a single non-clickable "old" header so archived books sit
            nested together (just above LICENSE) without leaving the linked list —
-           prev/next and the arrow keys still walk through them. */ -}}
+           prev/next and the arrow keys still walk through them. The group behaves
+           like a book in the accordion: collapsed to just the "old" header until
+           the current page is inside it, then expanded to reveal its books. */ -}}
+    {{- $inOld := false -}}
+    {{- range $b := .Site.Home.Sections.ByWeight -}}
+      {{- if and (eq (printf "%v" $b.Params.group) "old")
+                 (or ($b.IsAncestor $cur) (eq $b.RelPermalink $cur.RelPermalink)) -}}
+        {{- $inOld = true -}}
+      {{- end -}}
+    {{- end -}}
     {{- $oldOpen := false -}}
     {{- range $book := .Site.Home.Sections.ByWeight -}}
       {{- $isOld := eq (printf "%v" $book.Params.group) "old" -}}
       {{- if and $isOld (not $oldOpen) -}}
-        <li class="group"><span class="gname">old</span><ul class="grouped">
+        <li class="group{{ if $inOld }} open{{ end }}"><span class="gname">old</span>{{ if $inOld }}<ul class="grouped">{{ end }}
         {{- $oldOpen = true -}}
       {{- else if and $oldOpen (not $isOld) -}}
-        </ul></li>
+        {{- if $inOld }}</ul>{{ end }}</li>
         {{- $oldOpen = false -}}
       {{- end -}}
+      {{- /* collapsed group: render the header only, skip its books */ -}}
+      {{- if and $isOld (not $inOld) -}}{{- continue -}}{{- end -}}
       {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) -}}
       <li class="book{{ if $bookOpen }} open{{ end }}">
         <a href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
@@ -50,7 +61,7 @@
         {{- end -}}{{- end -}}
       </li>
     {{- end -}}
-    {{- if $oldOpen -}}</ul></li>{{- end -}}
+    {{- if $oldOpen -}}{{ if $inOld }}</ul>{{ end }}</li>{{- end -}}
   </ul>
   {{- /* action row: external links + the settings gear. Sits above the build date. */ -}}
   <div class="sidebar-actions">
