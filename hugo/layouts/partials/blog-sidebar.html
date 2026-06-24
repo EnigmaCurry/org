@@ -1,6 +1,11 @@
 {{- $cur := .cur -}}
 {{- $book := .book -}}
 {{- $isBlogPost := and (eq $cur.Section "blog") (not $cur.IsSection) -}}
+{{- $isBlogTagPage := and (eq $cur.Kind "term") (eq $cur.Data.Singular "tag") -}}
+{{- $currentTag := "" -}}
+{{- if $isBlogTagPage -}}
+  {{- $currentTag = $cur.Data.Term -}}
+{{- end -}}
 {{- $blogPosts := where .site.RegularPages "Section" "blog" -}}
 <ul class="chapters blog-nav">
   <li class="node{{ if $isBlogPost }} open{{ end }}">
@@ -15,7 +20,8 @@
   </li>
   {{- range .site.Taxonomies.tags.Alphabetical -}}
     {{- $tagPosts := slice -}}
-    {{- $tagOpen := false -}}
+    {{- $tagSlug := .Name | urlize -}}
+    {{- $tagOpen := eq $tagSlug ($currentTag | urlize) -}}
     {{- range .WeightedPages -}}
       {{- if eq .Page.Section "blog" -}}
         {{- $tagPosts = $tagPosts | append .Page -}}
@@ -26,7 +32,7 @@
     {{- end -}}
     {{- if gt (len $tagPosts) 0 -}}
       <li class="node{{ if $tagOpen }} open{{ end }}">
-        <a href="{{ printf "/tags/%s/" (.Name | urlize) | relURL }}">{{ .Name }}</a>
+        <a class="{{ if $tagOpen }}active{{ end }}" href="{{ printf "/tags/%s/" $tagSlug | relURL }}">{{ .Name }}</a>
         {{- if $tagOpen }}
           <ul class="sections">
             {{- range sort $tagPosts "Date" "desc" -}}

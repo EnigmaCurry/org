@@ -3,6 +3,7 @@
        Books and chapters are clickable (their own _index) AND expandable when
        they have children; the current branch auto-expands. */ -}}
 {{- $cur := . -}}
+{{- $isBlogTagPage := and (eq $cur.Kind "term") (eq $cur.Data.Singular "tag") -}}
 <aside class="sidebar">
   <div class="brand">
     <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
@@ -36,7 +37,7 @@
       {{- end -}}
       {{- /* off the old path: omit the group and its books from the sidebar */ -}}
       {{- if and $isOld (not $inOld) -}}{{- continue -}}{{- end -}}
-      {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) -}}
+      {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) (and (eq $book.Section "blog") $isBlogTagPage) -}}
       <li class="book{{ if $bookOpen }} open{{ end }}">
         <a href="{{ $book.RelPermalink }}">{{ partial "pagename.html" $book }}</a>
         {{- /* only the current book expands its chapters (link-based accordion) */ -}}
