@@ -1201,9 +1201,135 @@ in the boot menu still has password =sudo=. In *Mode 2* the same test
 falls back to the password prompt instead; in *Mode 3* you are asked for
 the password /after/ the touch.
 
+** Unlocking sudo remotely over SSH
+
+Everything above wires =sudo= to =pam_u2f=, which talks to a FIDO2 device
+on the *local* USB bus. That is fine at the machine's own keyboard, but
+this book builds toward a *headless* box you drive over SSH -- and
+=pam_u2f= has no way to reach a key plugged into your laptop. Run =sudo=
+in an SSH session and it looks for a Solokey in the *server*, not in your
+hand, so for a headless host =pam_u2f= is effectively ruled out as a
+remote =sudo= factor.
+
+The fix is a different module, =pam_ssh_agent_auth=, which authenticates
+against a key in your *forwarded SSH agent* instead of a local device.
+Pair it with a FIDO2-backed SSH key and the touch happens on the Solokey
+plugged into your *laptop* (the SSH client): =sudo= on the box asks your
+forwarded agent to sign a challenge, your local key blinks, you touch it,
+and =sudo= succeeds -- with no key in the server at all.
+
+*** Create and declare a hardware-backed SSH key
+
+On your *laptop*, with the Solokey plugged in, create an =ed25519-sk= key
+-- the =-sk= ("security key") private half lives on the Solokey and
+cannot be copied off it:
+
+#+begin_run
+ssh-keygen -t ed25519-sk -C "ryan@laptop"
+#+end_run
+
+(This uses the =libfido2= tooling from the /Make the key usable/ step --
+another reason to keep those two lines enabled even if you skip the local
+=pam_u2f= setup.)
+
+Then declare the *public* key on the box. It has to live somewhere root
+owns: =pam_ssh_agent_auth= deliberately ignores =~/.ssh/authorized_keys=
+(a user-writable file there would let any process running as you forge
+its own =sudo= access), and NixOS goes further -- =authorizedKeysFiles=
+defaults to just =/etc/ssh/authorized_keys.d/%u= and *asserts* against any
+home-directory path. The declarative home for it is your user's
+=openssh.authorizedKeys=, which NixOS writes into that root-owned
+directory:
+
+#+begin_src nix
+  users.users.ryan.openssh.authorizedKeys.keys = [
+    "sk-ssh-ed25519@openssh.com AAAA... ryan@laptop"
+  ];
+#+end_src
+
+That is the same list that already authorizes your SSH *login*, so the
+one key both logs you in and unlocks =sudo=.
+
+*** Turn on agent auth
+
+Add these alongside your chosen mode in the optional block:
+
+#+begin_src nix
+  # Authenticate sudo against the forwarded SSH agent (remote Solokey):
+  security.pam.sshAgentAuth.enable        = true;
+  security.pam.services.sudo.sshAgentAuth = true;
+#+end_src
+
+NixOS gives =pam_ssh_agent_auth= the control =sufficient= and slots it at
+the *front* of the =sudo= auth stack -- ahead of =pam_u2f= -- and it also
+adds =Defaults env_keep+=SSH_AUTH_SOCK= to =sudoers= so the forwarded
+agent socket survives into =sudo=. None of that is something you
+configure; it follows from the two lines above.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Unlike =security.pam.u2f.enable= (the global switch we warned against,
+which turns u2f on for /every/ service), =security.pam.sshAgentAuth.enable=
+is safe to leave on: the per-service =sshAgentAuth= flag defaults to
+=false=, so agent auth is active only where you set it -- here, =sudo=
+alone.
+#+end_notice
+
+Finally, connect with agent forwarding so the box can see your laptop's
+agent:
+
+#+begin_run
+ssh -A box
+#+end_run
+
+(or =ForwardAgent yes= for that host in =~/.ssh/config=). Now =sudo -k;
+sudo true= on the box prompts a touch on the key in your *laptop*.
+
+*** How it layers on the modes
+
+The remote path does not add a new mode; it is an extra =sufficient=
+branch on top of whichever mode you already picked. Because its control
+is *fixed* at =sufficient= -- you cannot make it =required= -- it only
+composes with the single-factor modes:
+
+ - *With Mode 1* (key only): =sudo= now accepts the *local* Solokey *or*
+   the *forwarded* key, and still asks for no password. The natural choice
+   for a headless box -- touch locally when you are sitting at it, touch
+   your laptop's key when you are not.
+ - *With Mode 2* (key or password): the forwarded key becomes a third way
+   in, alongside the local key and the password.
+
+You do not touch the =control= settings or any ordering to get this --
+the default stack already runs the agent check first (it fails instantly
+when there is no forwarded key, so sitting at the machine falls straight
+through to the local touch) and the local =pam_u2f= second.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+*Do not combine this with Mode 3.* Mode 3's two-factor guarantee depends
+on =pam_u2f= being =required= so the touch can never be skipped -- but
+=pam_ssh_agent_auth= is hardcoded =sufficient= and runs *first*, so a
+forwarded key short-circuits to success /before/ the password is ever
+asked. Enabling =sshAgentAuth= therefore silently downgrades Mode 3 to
+single-factor for any forwarded session. If you want real two-factor
+=sudo=, leave =sshAgentAuth= off and =sudo= from the local console.
+#+end_notice
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Agent forwarding lets any host you are connected to *ask* your agent to
+sign while you are logged in, so only forward to machines you trust. A
+FIDO2/=-sk= key blunts the risk: every signature needs a physical touch,
+so a compromised box can never use your key /silently/ -- it can only
+trigger a press you would see and refuse. That touch-per-use property is
+what makes forwarding a hardware key reasonable where forwarding a
+software key would not be.
+#+end_notice
+
 ** Turning it off
 
 Reverting is symmetric: re-comment the block (or set =u2fAuth = false=
-and drop =unixAuth = false=), commit, and =admin upgrade=. The PAM rule
+and drop =unixAuth = false=, plus =sshAgentAuth = false= if you enabled
+remote auth), commit, and =admin upgrade=. The PAM rule
 disappears from the regenerated =/etc/pam.d/sudo= and =sudo= goes back to
 password-only -- nothing left behind in =/etc= to clean up by hand.
