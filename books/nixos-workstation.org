@@ -866,9 +866,10 @@ clean headless server again, with no leftovers to tidy by hand.
 :EXPORT_HUGO_WEIGHT: 3200
 :END:
 
-A [[https://solokeys.com/][Solokey]] (or any FIDO2/U2F security key) can stand in for your
-password when you run =sudo=: you touch the key instead of typing a
-passphrase. This chapter sets that up on NixOS.
+A [[https://solokeys.com/][Solokey]] (or any FIDO2/U2F security key) can authenticate =sudo=: you
+touch the key instead of typing a password. This chapter sets that up on
+NixOS, with the key as the *only* factor -- a press is required and no
+password is asked.
 
 The [[/linux-workstation/sudo-2fa][Linux Workstation book covers Solokeys in depth]] -- where to buy
 them, the v1 vs. v2 split, firmware updates, and the imperative Fedora
@@ -879,19 +880,31 @@ remember why later. On NixOS you *declare* the key mappings and the PAM
 rule in =config.nix=, the system regenerates =/etc/pam.d= for you, and
 the whole thing is reproducible from your repo on the next machine.
 
-We make the key *sufficient* for =sudo= rather than *required*:
+The =config.nix= block below is configurable for *three modes*, and you
+pick one by uncommenting a line or two:
 
- - *sufficient* (this chapter) -- a key touch authorizes =sudo= /instead
-   of/ a password. If no key is present, or it fails, =sudo= falls back
-   to asking for your password. You therefore *cannot lock yourself out*
-   by losing a key -- the password still works.
- - *required* -- a key touch /and/ a password, i.e. real two-factor
-   =sudo=. This is stricter, but a lost/forgotten key now blocks =sudo=
-   entirely. Switching to it is a one-word change, shown at the end.
+ - *Mode 1 -- key only* (this chapter's default): a key press is *required*
+   and *no password* is asked. The strongest option, and what you asked
+   for. The trade-off is real: if you lose /every/ registered key you can
+   no longer =sudo= at all (escape hatches below).
+ - *Mode 2 -- key or password*: touch the key, or fall back to typing your
+   password. The most convenient option -- you can never be locked out.
+ - *Mode 3 -- key and password*: real two-factor =sudo=, both required.
 
 The whole thing is offered as a *commented-out block* in =config.nix=:
 a placeholder you fill in with your registered key and uncomment when
 you are ready. Until then it does nothing.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Mode 1 removes the password from =sudo= entirely, so a lost or broken key
+matters. Before you commit to it: register a *backup* key (below), make
+sure you know the *root* password (=su -= still uses it and is unaffected
+by this change -- it is your way back in), and test with =admin test=
+rather than =admin upgrade= so a reboot reverts it. As a last resort you
+can always boot the *previous generation* from the boot menu, which still
+has password =sudo=.
+#+end_notice
 
 ** Make the key usable
 
@@ -1018,22 +1031,30 @@ Here is the block to add to =~/nixos/config.nix=. Paste it in
 it and drop in your registered key:
 
 #+begin_src nix
-  # --- Optional: Solokey (FIDO2) as sudo authentication ------------------
-  # Touch a registered Solokey *instead* of typing a password for sudo.
-  # `control = "sufficient"` => the key REPLACES the password; if no key
-  # is present sudo falls back to the password, so you can't lock yourself
-  # out. Change it to "required" for true 2FA (key AND password).
+  # --- Optional: Solokey (FIDO2) authentication for sudo -----------------
+  # Register your key(s) first (see "Register your Solokeys"), paste the
+  # pamu2fcfg line below, uncomment this block, then pick ONE mode.
   #
-  # Paste the line from `pamu2fcfg` (see the Register chapter) below:
   # environment.etc."u2f_keys".text = ''
   #   ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
   # '';
-  # security.pam.u2f = {
-  #   control  = "sufficient";                       # key instead of password
-  #   settings = { cue = true; authfile = "/etc/u2f_keys"; };
-  # };
+  # security.pam.u2f.settings = { cue = true; authfile = "/etc/u2f_keys"; };
   # # Turn u2f on for the sudo PAM service ONLY (not login, ssh, greetd):
   # security.pam.services.sudo.u2fAuth = true;
+  #
+  # --- Pick ONE mode ----------------------------------------------------
+  #
+  # Mode 1 -- KEY ONLY: a key press is required; no password is asked.
+  #   (Strongest. Lose every key => no more sudo; mind the warning above.)
+  # security.pam.u2f.control            = "sufficient";
+  # security.pam.services.sudo.unixAuth = false;
+  #
+  # Mode 2 -- KEY OR PASSWORD: touch the key, or fall back to the password.
+  #   (Most convenient; you can never lock yourself out.)
+  # security.pam.u2f.control            = "sufficient";
+  #
+  # Mode 3 -- KEY AND PASSWORD: real two-factor (both required).
+  # security.pam.u2f.control            = "required";
 #+end_src
 
 What each piece does:
@@ -1045,9 +1066,24 @@ What each piece does:
    reproducible -- a central file in your repo is).
  - =cue = true= prints the =Please touch the device= prompt; without it
    =sudo= just hangs silently waiting for a touch.
- - =control = "sufficient"= is the key-instead-of-password behavior.
- - =security.pam.services.sudo.u2fAuth = true= is what scopes this to
-   =sudo=. We set it *per-service* on purpose.
+ - =security.pam.services.sudo.u2fAuth = true= scopes u2f to the =sudo=
+   service. We set it *per-service* on purpose.
+ - =security.pam.services.sudo.unixAuth = false= (Mode 1 only) removes the
+   password module from =sudo=, leaving the key as the only way in.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+*Why Mode 1 keeps =control = "sufficient"= and does not use =required=.*
+On NixOS the =sudo= auth stack ends in =pam_deny= (always fails), and a
+=sufficient= module that succeeds is what short-circuits to success
+/before/ reaching it. With the password removed (=unixAuth = false=), the
+key is the only module that can grant success -- so =sufficient= makes the
+key *de facto required* while still short-circuiting. If you instead set
+=control = "required"= with no password module, the key would pass but
+control would fall through to =pam_deny=, and =sudo= would be denied even
+with a correct touch. So: Mode 1 is =sufficient= + =unixAuth = false=,
+*not* =required=.
+#+end_notice
 
 #+attr_shortcode: :style warning
 #+begin_notice
@@ -1063,7 +1099,8 @@ themselves, switch u2f on anywhere.
 ** Enable it
 
 When you are ready, uncomment the block, paste your real mapping line
-into the =u2f_keys= text, then test it *without* making it permanent:
+into the =u2f_keys= text, uncomment the *one mode* you want, then test it
+*without* making it permanent:
 
 #+begin_run
 git -C ~/nixos commit -am "Enable Solokey sudo authentication"
@@ -1093,38 +1130,29 @@ sudo -k; sudo true
 #+end_run
 
 With the key plugged in you are prompted to touch it, and on a touch
-=sudo= succeeds with *no password*:
+=sudo= succeeds with *no password* asked at all:
 
 #+begin_stdout
 Please touch the device.
 #+end_stdout
 
-Unplug the key and try again: because the rule is only =sufficient=,
-=sudo= falls back to asking for your password, exactly as before.
+Now unplug the key and try again in a fresh terminal. In *Mode 1* there
+is no password fallback, so =sudo= is simply denied:
 
-** Two-factor instead (required)
+#+begin_stdout
+Please touch the device.
+sudo: no authentication methods succeeded
+#+end_stdout
 
-To demand the key *and* the password -- real two-factor =sudo= -- change a
-single word, =control=, from =sufficient= to =required=:
-
-#+begin_src nix
-  security.pam.u2f = {
-    control  = "required";                          # key AND password
-    settings = { cue = true; authfile = "/etc/u2f_keys"; };
-  };
-#+end_src
-
-#+attr_shortcode: :style warning
-#+begin_notice
-With =required=, a lost or forgotten key blocks =sudo= entirely -- the
-password alone is no longer enough. Register a backup key first, keep a
-root shell open while you test (=admin test=, not =admin upgrade=), and
-remember you can always reboot back to the previous generation.
-#+end_notice
+This is the moment your escape hatches matter: =su -= (still password,
+unchanged by this) gets you a root shell, and the *previous generation*
+in the boot menu still has password =sudo=. In *Mode 2* the same test
+falls back to the password prompt instead; in *Mode 3* you are asked for
+the password /after/ the touch.
 
 ** Turning it off
 
-Reverting is symmetric: re-comment the block (or set =u2fAuth = false=),
-commit, and =admin upgrade=. The PAM rule disappears from the
-regenerated =/etc/pam.d/sudo= and =sudo= goes back to password-only --
-nothing left behind in =/etc= to clean up by hand.
+Reverting is symmetric: re-comment the block (or set =u2fAuth = false=
+and drop =unixAuth = false=), commit, and =admin upgrade=. The PAM rule
+disappears from the regenerated =/etc/pam.d/sudo= and =sudo= goes back to
+password-only -- nothing left behind in =/etc= to clean up by hand.
