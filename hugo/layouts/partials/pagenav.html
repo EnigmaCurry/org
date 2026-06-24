@@ -1,15 +1,21 @@
 {{- /* top-right cluster: previous page / page-outline (#) / next page.
-       prev/next walk the whole book depth-first (see walk.html), so they cross
-       chapter<->section boundaries in reading order. The "#" panel is filled
-       client-side from this page's headings (see terminal.js). */ -}}
+       Blog posts use publish-date order within the blog; everything else keeps
+       the existing depth-first site walk. The "#" panel is filled client-side
+       from this page's headings (see terminal.js). */ -}}
 {{- $cur := . -}}
-{{- /* global reading order: the home page (intro) first, then every book in weight
-       order, each walked depth-first, so prev/next continue across book boundaries
-       (read the whole site end to end, starting on the landing page) */ -}}
-{{- $flat := slice $.Site.Home -}}
-{{- range $b := $.Site.Home.Sections.ByWeight -}}
-  {{- $flat = $flat | append $b -}}
-  {{- $flat = partial "walk.html" (dict "page" $b "acc" $flat) -}}
+{{- $flat := slice -}}
+{{- if and (eq $cur.Section "blog") (not $cur.IsSection) -}}
+  {{- $flat = sort (where $.Site.RegularPages "Section" "blog") "Date" "desc" -}}
+{{- else -}}
+  {{- /* global reading order: the home page (intro) first, then every book in
+         weight order, each walked depth-first, so prev/next continue across
+         book boundaries (read the whole site end to end, starting on the
+         landing page) */ -}}
+  {{- $flat = slice $.Site.Home -}}
+  {{- range $b := $.Site.Home.Sections.ByWeight -}}
+    {{- $flat = $flat | append $b -}}
+    {{- $flat = partial "walk.html" (dict "page" $b "acc" $flat) -}}
+  {{- end -}}
 {{- end -}}
 {{- $idx := -1 -}}
 {{- range $i, $p := $flat -}}{{- if eq $p.RelPermalink $cur.RelPermalink }}{{ $idx = $i }}{{ end -}}{{- end -}}
