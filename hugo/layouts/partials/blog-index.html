@@ -1,0 +1,23 @@
+{{- $blogPosts := where .Site.RegularPages "Section" "blog" -}}
+{{- $blogPosts = where $blogPosts "RelPermalink" "ne" "/blog/license/" -}}
+<section class="blog-index" aria-labelledby="by-date">
+  <h2 id="by-date"><a class="heading-anchor" href="#by-date">by date</a></h2>
+  {{ partial "blog-post-list.html" (dict "pages" $blogPosts) }}
+
+  <h2 id="by-tag"><a class="heading-anchor" href="#by-tag">by tag</a></h2>
+  {{- range .Site.Taxonomies.tags.Alphabetical -}}
+    {{- $tagPosts := slice -}}
+    {{- range .WeightedPages -}}
+      {{- if and (eq .Page.Section "blog") (ne .Page.RelPermalink "/blog/license/") -}}
+        {{- $tagPosts = $tagPosts | append .Page -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if gt (len $tagPosts) 0 -}}
+      {{- $tagID := printf "tag-%s" (.Name | urlize) -}}
+      <section class="blog-tag-index" aria-labelledby="{{ $tagID }}">
+        <h3 id="{{ $tagID }}"><a class="heading-anchor" href="#{{ $tagID }}">{{ .Name }}</a></h3>
+        {{ partial "blog-post-list.html" (dict "pages" $tagPosts) }}
+      </section>
+    {{- end -}}
+  {{- end -}}
+</section>

@@ -1,0 +1,17 @@
+{{- $page := .page -}}
+{{- $level := .level | default 2 -}}
+{{- $blogPosts := where $page.Site.RegularPages "Section" "blog" -}}
+{{- $blogPosts = where $blogPosts "RelPermalink" "ne" "/blog/license/" -}}
+<li class="lvl{{ $level }} page"><a href="{{ $page.RelPermalink }}#by-date">by date</a></li>
+<li class="lvl{{ $level }} page"><a href="{{ $page.RelPermalink }}#by-tag">by tag</a></li>
+{{- range $page.Site.Taxonomies.tags.Alphabetical -}}
+  {{- $tagPosts := slice -}}
+  {{- range .WeightedPages -}}
+    {{- if and (eq .Page.Section "blog") (ne .Page.RelPermalink "/blog/license/") -}}
+      {{- $tagPosts = $tagPosts | append .Page -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if gt (len $tagPosts) 0 -}}
+    <li class="lvl{{ add $level 1 }} page"><a href="{{ $page.RelPermalink }}#tag-{{ .Name | urlize }}">{{ .Name }}</a></li>
+  {{- end -}}
+{{- end -}}

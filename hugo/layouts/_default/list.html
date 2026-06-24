@@ -1,0 +1,16 @@
+{{ define "main" }}
+<h1><a class="heading-anchor" href="#">{{ .Title }}</a></h1>
+{{ if .IsHome }}
+{{/* oversized lambda logo, centered like an image; a glyph-rain canvas comes up
+     behind it a beat after the page decodes (wired in terminal.js) */}}
+<div class="lambda-logo no-rain" aria-hidden="true">
+  <canvas class="lambda-rain"></canvas>
+  <span class="lambda-glyph">&#955;</span>
+</div>
+{{ end }}
+{{ partial "book-notice.html" . }}
+{{ .Content }}
+{{ if and .IsSection (eq .Section "blog") }}
+  {{ partial "blog-index.html" . }}
+{{ end }}
+{{ end }}
