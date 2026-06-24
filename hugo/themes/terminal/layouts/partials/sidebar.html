@@ -14,9 +14,9 @@
     {{- /* Books flagged `group = "old"` (front matter) are gathered, in weight
            order, under a single non-clickable "old" header so archived books sit
            nested together (just above LICENSE) without leaving the linked list —
-           prev/next and the arrow keys still walk through them. The group behaves
-           like a book in the accordion: collapsed to just the "old" header until
-           the current page is inside it, then expanded to reveal its books. */ -}}
+           prev/next and the arrow keys still walk through them. The "old" header
+           has no page of its own, so it's shown (expanded) only while the current
+           page is inside it; on every other page the group is hidden entirely. */ -}}
     {{- $inOld := false -}}
     {{- range $b := .Site.Home.Sections.ByWeight -}}
       {{- if and (eq (printf "%v" $b.Params.group) "old")
@@ -27,14 +27,14 @@
     {{- $oldOpen := false -}}
     {{- range $book := .Site.Home.Sections.ByWeight -}}
       {{- $isOld := eq (printf "%v" $book.Params.group) "old" -}}
-      {{- if and $isOld (not $oldOpen) -}}
-        <li class="group{{ if $inOld }} open{{ end }}"><span class="gname">old</span>{{ if $inOld }}<ul class="grouped">{{ end }}
+      {{- if and $isOld $inOld (not $oldOpen) -}}
+        <li class="group open"><span class="gname">old</span><ul class="grouped">
         {{- $oldOpen = true -}}
       {{- else if and $oldOpen (not $isOld) -}}
-        {{- if $inOld }}</ul>{{ end }}</li>
+        </ul></li>
         {{- $oldOpen = false -}}
       {{- end -}}
-      {{- /* collapsed group: render the header only, skip its books */ -}}
+      {{- /* off the old path: omit the group and its books from the sidebar */ -}}
       {{- if and $isOld (not $inOld) -}}{{- continue -}}{{- end -}}
       {{- $bookOpen := or ($book.IsAncestor $cur) (eq $book.RelPermalink $cur.RelPermalink) -}}
       <li class="book{{ if $bookOpen }} open{{ end }}">
@@ -61,7 +61,7 @@
         {{- end -}}{{- end -}}
       </li>
     {{- end -}}
-    {{- if $oldOpen -}}{{ if $inOld }}</ul>{{ end }}</li>{{- end -}}
+    {{- if $oldOpen -}}</ul></li>{{- end -}}
   </ul>
   {{- /* action row: external links + the settings gear. Sits above the build date. */ -}}
   <div class="sidebar-actions">
