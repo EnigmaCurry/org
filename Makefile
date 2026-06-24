@@ -24,7 +24,7 @@ emacs-batch:
 	)"
 
 build-md:
-	${MAKE_} emacs-batch FUNC=build ARGS='(list \"license.org\" \"books.org\" \"books\")'
+	${MAKE_} emacs-batch FUNC=build ARGS='(list \"license.org\" \"books.org\" \"blog.org\" \"blog-tags.org\" \"books\")'
 
 build-hugo:
 	@_script/printable_books.sh

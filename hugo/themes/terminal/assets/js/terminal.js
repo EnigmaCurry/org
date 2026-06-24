@@ -631,6 +631,16 @@ applyFx();
 // the terminal decode-in on first open and an eager close on in-page nav.
 const navToggle = document.getElementById("navtoggle");
 const sidebarEl = document.querySelector(".sidebar");
+function scrollActiveBlogTagIntoView(){
+  const tree = sidebarEl && sidebarEl.querySelector(".tree");
+  const activeTag = tree && tree.querySelector(".blog-nav > li.node.open > a.active[href^='/tags/']");
+  if(!tree || !activeTag || tree.clientHeight === 0) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  activeTag.scrollIntoView({ block:"center", inline:"nearest", behavior: reduce ? "auto" : "smooth" });
+}
+function queueActiveBlogTagScroll(){
+  requestAnimationFrame(()=> requestAnimationFrame(scrollActiveBlogTagIntoView));
+}
 function onNavChange(){
   // decode the menu like a terminal, but only the first time it opens this tab
   // (matches the wide-view reveal gating; later opens appear instantly)
@@ -638,8 +648,12 @@ function onNavChange(){
     rain(sidebarEl, false);
     ssSet("sidebar-rained", "1");
   }
+  if(navToggle && navToggle.checked) queueActiveBlogTagScroll();
 }
 if(navToggle) navToggle.addEventListener("change", onNavChange);
+queueActiveBlogTagScroll();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(queueActiveBlogTagScroll);
+window.addEventListener("load", queueActiveBlogTagScroll);
 // the backdrop <label> already closes via CSS; closing on tree-link clicks also
 // covers same-page anchor jumps that don't reload (a full navigation resets the
 // checkbox on its own).

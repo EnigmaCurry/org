@@ -1,0 +1,31 @@
+{{- $pages := where .Site.RegularPages "Section" "blog" -}}
+{{- $pages = sort $pages "Date" "desc" -}}
+{{- $limit := .Site.Config.Services.RSS.Limit -}}
+{{- if ge $limit 1 -}}
+  {{- $pages = $pages | first $limit -}}
+{{- end -}}
+{{- printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>{{ .Title }} on {{ .Site.Title }}</title>
+    <link>{{ .Permalink }}</link>
+    <description>{{ with .Description }}{{ . }}{{ else }}Recent blog posts on {{ .Site.Title }}{{ end }}</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>{{ .Site.LanguageCode }}</language>
+    {{- with index $pages 0 }}
+    <lastBuildDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</lastBuildDate>
+    {{- end }}
+    {{- with .OutputFormats.Get "RSS" }}
+    <atom:link href="{{ .Permalink }}" rel="self" type="application/rss+xml" />
+    {{- end }}
+    {{- range $pages }}
+    <item>
+      <title>{{ .Title }}</title>
+      <link>{{ .Permalink }}</link>
+      <pubDate>{{ .Date.Format "Mon, 02 Jan 2006 15:04:05 -0700" | safeHTML }}</pubDate>
+      <guid>{{ .Permalink }}</guid>
+      <description>{{ or .Description .Summary | plainify | htmlUnescape | chomp | transform.XMLEscape | safeHTML }}</description>
+    </item>
+    {{- end }}
+  </channel>
+</rss>
