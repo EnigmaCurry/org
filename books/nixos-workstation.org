@@ -884,12 +884,16 @@ The =config.nix= block below is configurable for *three modes*, and you
 pick one by uncommenting a line or two:
 
  - *Mode 1 -- key only* (this chapter's default): a key press is *required*
-   and *no password* is asked. The strongest option. The trade-off is
-   real: if you lose /every/ registered key you can no longer =sudo= at
+   and *no password* is asked. This swaps your password for the key as a
+   single factor -- not stronger than a password on its own, but it moves
+   =sudo= from something you /know/ to something you /hold/. The trade-off
+   is real: if you lose /every/ registered key you can no longer =sudo= at
    all (escape hatches below).
  - *Mode 2 -- key or password*: touch the key, or fall back to typing your
-   password. The most convenient option -- you can never be locked out.
+   password. The most convenient option -- you can never be locked out, but
+   also the weakest, since either factor alone is enough.
  - *Mode 3 -- key and password*: real two-factor =sudo=, both required.
+   The strongest option, at the cost of doing both every time.
 
 The whole thing is offered as a *commented-out block* in =config.nix=:
 a placeholder you fill in with your registered key and uncomment when
