@@ -42,7 +42,7 @@ watch: build
 pull:
 	@git pull --ff-only
 
-.PHONY: autowatch # Like watch, but also run `git autopull` to sync the remote
+.PHONY: autowatch # Like watch, but also fast-forward from the upstream branch and rebuild
 autowatch: pull build
 	@AUTOPULL=1 HUGO="$(HUGO)" _script/watch.clj
 

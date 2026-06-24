@@ -9,7 +9,15 @@
 {{- $showDesc := eq (printf "%v" $desc) "true" -}}
 {{- with $page.Pages.ByWeight -}}
 <ul class="children">
+  {{- /* Pages flagged `group = "old"` are gathered under a single "old" header so
+         archived books are listed nested together (just above LICENSE), matching
+         the sidebar. Only triggers where a child carries the flag (the site root);
+         every other index lists its children flat as before. */ -}}
+  {{- $oldOpen := false -}}
   {{- range . -}}
+    {{- $isOld := eq (printf "%v" .Params.group) "old" -}}
+    {{- if and $isOld (not $oldOpen) -}}<li class="group-old"><span class="gname">old</span><ul class="children">{{- $oldOpen = true -}}
+    {{- else if and $oldOpen (not $isOld) -}}</ul></li>{{- $oldOpen = false -}}{{- end -}}
     <li>
       <a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
       {{- if $showDesc }}{{ with .Description }}<span class="children-desc"> — {{ . }}</span>{{ end }}{{ end -}}
@@ -18,5 +26,6 @@
       {{- end -}}
     </li>
   {{- end -}}
+  {{- if $oldOpen -}}</ul></li>{{- end -}}
 </ul>
 {{- end -}}

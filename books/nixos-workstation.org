@@ -144,6 +144,47 @@ then change the colors, swap the window manager, and add or remove
 programs to taste. Because the whole system is reproducible from
 source, such changes are deliberate, reviewable, and reversible.
 
+*** This book is the evolution of my Fedora workstation
+
+This book grew out of an earlier one: my [[/linux-workstation][Linux Workstation]] book, which
+documented the same goal -- a personal, security-minded developer
+workstation -- but built on Fedora Atomic (Silverblue/Sericea). That book
+leaned on =rpm-ostree= for an immutable base, =distrobox= for mutable
+toolchains, and a good deal of by-hand configuration of =/etc=, dotfiles,
+and packages.
+
+It worked, but the configuration was never fully captured in one place.
+The system was the source of truth, and reproducing it on a new machine
+meant remembering and repeating a long sequence of steps. NixOS solves
+exactly that: the same workstation, but described entirely in code, so
+that a rebuild is automatic rather than archaeological.
+
+I have since moved my own machines to NixOS, and the Fedora book is no
+longer maintained. The ideas there still hold -- the [[/linux-workstation/sudo-2fa][Solokey]] hardware-key
+chapters in particular carry straight over, and this book links back to
+them rather than repeating them -- but if you are starting fresh, start
+here.
+
+*** This book is written with AI
+
+I write this book with the help of AI, and I would rather say so plainly
+than pretend otherwise. If that bothers you, that is fine -- I am not
+writing for that objection.
+
+I do it because it makes the book a *malleable* product. The hard part of
+documentation has never been producing prose; it is keeping the prose
+true as the system underneath it changes. When a command, an option, or a
+whole workflow shifts, AI lets me revise the affected chapters quickly and
+keep everything consistent, instead of letting pages quietly rot. A book
+that is cheap to update is one that stays correct.
+
+What matters here is the *information* and the *flow*: that the steps are
+accurate, that they are in the right order, and that the reasoning behind
+them is clear. Hitting a particular literary tone or vibe is not the
+point. I review what goes in, the decisions and the setup described are
+genuinely mine and what I run, and the goal is simply that you can follow
+it and end up with a working machine.
+
 * Build a custom installer ISO
 :PROPERTIES:
 :EXPORT_FILE_NAME: build-iso
@@ -155,6 +196,15 @@ NixOS. Instead of using the [[https://nixos.org/download/][official NixOS graphi
 will build our own custom ISO. While this will take a bit longer the
 first time you do it, it will greatly enhance your ability to
 reproduce your environment on any new hardware in the future.
+
+#+begin_notice
+If you *do* want to use the official NixOS graphical installer instead,
+follow the [[https://github.com/EnigmaCurry/sway-home/blob/master/NIXOS.md][NIXOS.md guide]] from the [[https://github.com/EnigmaCurry/sway-home][sway-home]] repository,
+specifically the section titled /Option B/. You still end up with the
+same per-host =~/nixos= repo: after the graphical install you run the
+same =setup-host= tool (straight from GitHub) with its =--adopt= flag,
+which reuses the installer's existing partitioning instead of disko.
+#+end_notice
 
 Let's build a customized, *headless* NixOS installer ISO that will
 bake in our personal SSH keys and our WiFi credentials, so that the
@@ -567,6 +617,7 @@ Username:      ryan
 Profiles:      (none -- minimal server, sshd only)
 Time zone:     America/Denver
 System:        x86_64-linux
+Disk:          disko (from `setup disk`)
 SSH keys:      1 (seeded from ISO)
 sway-home:     github:EnigmaCurry/sway-home
 Host repo:     /mnt/home/ryan/nixos
@@ -858,3 +909,431 @@ includes the dotfiles home-manager wrote into your home directory
 (=~/.config/sway=, the desktop scripts in =~/bin=, and so on) -- home-manager
 stays active and prunes what it no longer manages, so the next boot is a
 clean headless server again, with no leftovers to tidy by hand.
+
+* Sudo with a Solokey
+:PROPERTIES:
+:EXPORT_FILE_NAME: sudo-solokey
+:EXPORT_HUGO_SLUG: sudo-solokey
+:EXPORT_HUGO_WEIGHT: 3200
+:END:
+
+A [[https://solokeys.com/][Solokey]] (or any FIDO2/U2F security key) can authenticate =sudo=: you
+touch the key instead of typing a password. This chapter sets that up on
+NixOS, with the key as the *only* factor -- a press is required and no
+password is asked.
+
+The [[/linux-workstation/sudo-2fa][Linux Workstation book covers Solokeys in depth]] -- where to buy
+them, the v1 vs. v2 split, firmware updates, and the imperative Fedora
+setup. That background applies here unchanged, so this chapter does not
+repeat it. What /is/ different on NixOS is the wiring: on Fedora you
+hand-edit =/etc/u2f_authorized_keys= and =/etc/pam.d/sudo= and hope you
+remember why later. On NixOS you *declare* the key mappings and the PAM
+rule in =config.nix=, the system regenerates =/etc/pam.d= for you, and
+the whole thing is reproducible from your repo on the next machine.
+
+The =config.nix= block below is configurable for *three modes*, and you
+pick one by uncommenting a line or two:
+
+ - *Mode 1 -- key only* (this chapter's default): a key press is *required*
+   and *no password* is asked. This swaps your password for the key as a
+   single factor -- not stronger than a password on its own, but it moves
+   =sudo= from something you /know/ to something you /hold/. The trade-off
+   is real: if you lose /every/ registered key you can no longer =sudo= at
+   all (escape hatches below).
+ - *Mode 2 -- key or password*: touch the key, or fall back to typing your
+   password. The most convenient option -- you can never be locked out, but
+   also the weakest, since either factor alone is enough.
+ - *Mode 3 -- key and password*: real two-factor =sudo=, both required.
+   The strongest option, at the cost of doing both every time.
+
+The whole thing is offered as a *commented-out block* in =config.nix=:
+a placeholder you fill in with your registered key and uncomment when
+you are ready. Until then it does nothing.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Mode 1 removes the password from =sudo= entirely, so a lost or broken key
+matters. Before you commit to it: register a *backup* key (below), make
+sure you know the *root* password (=su -= still uses it and is unaffected
+by this change -- it is your way back in), and test with =admin test=
+rather than =admin upgrade= so a reboot reverts it. As a last resort you
+can always boot the *previous generation* from the boot menu, which still
+has password =sudo=.
+#+end_notice
+
+** Make the key usable
+
+Before =sudo= can use the key, your *user* needs to be able to talk to
+the device -- to set its PIN and to register it. That means two things in
+=config.nix=: the FIDO2 command-line tools, and the udev rules that let a
+non-root user open the device node.
+
+#+begin_src nix
+  # FIDO2 / Solokey tooling and device access.
+  environment.systemPackages = [
+    pkgs.libfido2    # fido2-token: set the device PIN, list devices
+    pkgs.pam_u2f     # pamu2fcfg: register a key into the authfile format
+    pkgs.solo2-cli   # solo2: firmware updates for Solokey v2 (optional)
+  ];
+  # udev rules so your normal user (not just root) can reach the key --
+  # needed for registration here, and for SSH and browser WebAuthn too.
+  services.udev.packages = [ pkgs.libfido2 pkgs.solo2-cli ];
+#+end_src
+
+Add that to =~/nixos/config.nix=, then commit and apply:
+
+#+begin_run
+git -C ~/nixos commit -am "Add FIDO2 tooling and udev rules"
+admin upgrade
+#+end_run
+
+Unplug and replug the key after the rebuild so the new udev rules apply
+to it.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+These two lines are worth keeping enabled on their own, even if you
+never wire up =sudo=: they are what make the Solokey usable as your
+normal user for *SSH* keys and for *WebAuthn* logins in the browser.
+Only the PAM rule further down is the optional =sudo= piece.
+#+end_notice
+
+** Set a device PIN
+
+Set a PIN on the device so a stolen key is useless on its own. Find the
+device node:
+
+#+begin_run
+fido2-token -L
+#+end_run
+
+#+begin_stdout
+/dev/hidraw0: vendor=0x1209, product=0xbeee (SoloKeys Solo 2)
+#+end_stdout
+
+Then set the PIN on that device (=/dev/hidraw0= here):
+
+#+begin_run
+fido2-token -C /dev/hidraw0
+#+end_run
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This is the same PIN step as the [[/linux-workstation/sudo-2fa][Linux Workstation book]]. If your
+Solokey v2 firmware is out of date, update it first with =solo2 update=
+(installed above) -- see that book for the full firmware procedure.
+#+end_notice
+
+** Register your Solokeys
+
+=pamu2fcfg= reads a key and prints one line in the =pam_u2f= /authfile/
+format. We will capture that line (or lines) now and paste it into
+=config.nix= in the next step.
+
+Register *at least two* keys -- a primary and a backup -- so losing one
+key does not cost you the convenience.
+
+Plug in the *primary* key and run:
+
+#+begin_run
+pamu2fcfg
+#+end_run
+
+It prompts for the PIN, then asks you to touch the key. It prints a line
+beginning with your username:
+
+#+begin_stdout
+ryan:hQ2k...long...base64...,es256,+presence
+#+end_stdout
+
+Now unplug it, plug in the *backup* key, and run =pamu2fcfg= again --
+this time with =-n=, which omits the username so the output can be
+appended to the same user's line:
+
+#+begin_run
+pamu2fcfg -n
+#+end_run
+
+#+begin_stdout
+:tZ9p...long...base64...,es256,+presence
+#+end_stdout
+
+Combine them into a *single line* for your user, with each key separated
+by a colon:
+
+#+begin_stdout
+ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
+#+end_stdout
+
+That one line is what goes into =config.nix=.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+This mapping contains only *public* key handles, not a secret -- it is
+the FIDO2 equivalent of an =authorized_keys= entry. It is safe to commit
+to your (private) =~/nixos= repo.
+
+By default =pamu2fcfg= and =pam_u2f= both derive their origin from
+=pam://$HOSTNAME=, so the registration keeps working across rebuilds and
+reinstalls *as long as the hostname stays the same*. If you change the
+hostname, re-register.
+#+end_notice
+
+** The optional sudo profile
+
+Here is the block to add to =~/nixos/config.nix=. Paste it in
+*commented out*, as a placeholder -- it does nothing until you uncomment
+it and drop in your registered key:
+
+#+begin_src nix
+  # --- Optional: Solokey (FIDO2) authentication for sudo -----------------
+  # Register your key(s) first (see "Register your Solokeys"), paste the
+  # pamu2fcfg line below, uncomment this block, then pick ONE mode.
+  #
+  # environment.etc."u2f_keys".text = ''
+  #   ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
+  # '';
+  # security.pam.u2f.settings = { cue = true; authfile = "/etc/u2f_keys"; };
+  # # Turn u2f on for the sudo PAM service ONLY (not login, ssh, greetd):
+  # security.pam.services.sudo.u2fAuth = true;
+  #
+  # --- Pick ONE mode ----------------------------------------------------
+  #
+  # Mode 1 -- KEY ONLY: a key press is required; no password is asked.
+  #   (Strongest. Lose every key => no more sudo; mind the warning above.)
+  # security.pam.u2f.control            = "sufficient";
+  # security.pam.services.sudo.unixAuth = false;
+  #
+  # Mode 2 -- KEY OR PASSWORD: touch the key, or fall back to the password.
+  #   (Most convenient; you can never lock yourself out.)
+  # security.pam.u2f.control            = "sufficient";
+  #
+  # Mode 3 -- KEY AND PASSWORD: real two-factor (both required).
+  # security.pam.u2f.control            = "required";
+#+end_src
+
+What each piece does:
+
+ - =environment.etc."u2f_keys"= writes your mapping declaratively to
+   =/etc/u2f_keys=. No hand-editing of =/etc=; rebuild and it is there.
+ - =security.pam.u2f.settings.authfile= points =pam_u2f= at that file
+   (the default is a per-user =~/.config/Yubico/u2f_keys=, which is not
+   reproducible -- a central file in your repo is).
+ - =cue = true= prints the =Please touch the device= prompt; without it
+   =sudo= just hangs silently waiting for a touch.
+ - =security.pam.services.sudo.u2fAuth = true= scopes u2f to the =sudo=
+   service. We set it *per-service* on purpose.
+ - =security.pam.services.sudo.unixAuth = false= (Mode 1 only) removes the
+   password module from =sudo=, leaving the key as the only way in.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+*Why Mode 1 keeps =control = "sufficient"= and does not use =required=.*
+On NixOS the =sudo= auth stack ends in =pam_deny= (always fails), and a
+=sufficient= module that succeeds is what short-circuits to success
+/before/ reaching it. With the password removed (=unixAuth = false=), the
+key is the only module that can grant success -- so =sufficient= makes the
+key *de facto required* while still short-circuiting. If you instead set
+=control = "required"= with no password module, the key would pass but
+control would fall through to =pam_deny=, and =sudo= would be denied even
+with a correct touch. So: Mode 1 is =sufficient= + =unixAuth = false=,
+*not* =required=.
+#+end_notice
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Do *not* reach for =security.pam.u2f.enable = true=. That global switch
+turns =pam_u2f= on for /every/ PAM service at once -- login, =su=, the
+greeter, even =sshd= -- because each service's u2f flag defaults to it.
+Enabling it per-service with =security.pam.services.sudo.u2fAuth= keeps
+the key bound to =sudo= and nothing else. The =control= and =settings=
+under =security.pam.u2f= are just shared configuration; they do not, by
+themselves, switch u2f on anywhere.
+#+end_notice
+
+** Enable it
+
+When you are ready, uncomment the block, paste your real mapping line
+into the =u2f_keys= text, uncomment the *one mode* you want, then test it
+*without* making it permanent:
+
+#+begin_run
+git -C ~/nixos commit -am "Enable Solokey sudo authentication"
+admin test
+#+end_run
+
+=admin test= builds and activates the change but does *not* add it to
+the boot menu, so if something is wrong a reboot returns you to the
+previous generation. Open a *new terminal* and test =sudo= (see below).
+Once you are happy, make it permanent:
+
+#+begin_run
+admin upgrade
+#+end_run
+
+*** Test sudo
+
+#+attr_shortcode: :style tip
+#+begin_notice
+=sudo= caches a successful authentication per terminal for a few
+minutes, so always test in a *fresh terminal* (or run =sudo -k= first to
+clear the cache).
+#+end_notice
+
+#+begin_run
+sudo -k; sudo true
+#+end_run
+
+With the key plugged in you are prompted to touch it, and on a touch
+=sudo= succeeds with *no password* asked at all:
+
+#+begin_stdout
+Please touch the device.
+#+end_stdout
+
+Now unplug the key and try again in a fresh terminal. In *Mode 1* there
+is no password fallback, so =sudo= is simply denied:
+
+#+begin_stdout
+Please touch the device.
+sudo: no authentication methods succeeded
+#+end_stdout
+
+This is the moment your escape hatches matter: =su -= (still password,
+unchanged by this) gets you a root shell, and the *previous generation*
+in the boot menu still has password =sudo=. In *Mode 2* the same test
+falls back to the password prompt instead; in *Mode 3* you are asked for
+the password /after/ the touch.
+
+** Unlocking sudo remotely over SSH
+
+Everything above wires =sudo= to =pam_u2f=, which talks to a FIDO2 device
+on the *local* USB bus. That is fine at the machine's own keyboard, but
+this book builds toward a *headless* box you drive over SSH -- and
+=pam_u2f= has no way to reach a key plugged into your laptop. Run =sudo=
+in an SSH session and it looks for a Solokey in the *server*, not in your
+hand, so for a headless host =pam_u2f= is effectively ruled out as a
+remote =sudo= factor.
+
+The fix is a different module, =pam_ssh_agent_auth=, which authenticates
+against a key in your *forwarded SSH agent* instead of a local device.
+Pair it with a FIDO2-backed SSH key and the touch happens on the Solokey
+plugged into your *laptop* (the SSH client): =sudo= on the box asks your
+forwarded agent to sign a challenge, your local key blinks, you touch it,
+and =sudo= succeeds -- with no key in the server at all.
+
+*** Create and declare a hardware-backed SSH key
+
+On your *laptop*, with the Solokey plugged in, create an =ed25519-sk= key
+-- the =-sk= ("security key") private half lives on the Solokey and
+cannot be copied off it:
+
+#+begin_run
+ssh-keygen -t ed25519-sk -C "ryan@laptop"
+#+end_run
+
+(This uses the =libfido2= tooling from the /Make the key usable/ step --
+another reason to keep those two lines enabled even if you skip the local
+=pam_u2f= setup.)
+
+Then declare the *public* key on the box. It has to live somewhere root
+owns: =pam_ssh_agent_auth= deliberately ignores =~/.ssh/authorized_keys=
+(a user-writable file there would let any process running as you forge
+its own =sudo= access), and NixOS goes further -- =authorizedKeysFiles=
+defaults to just =/etc/ssh/authorized_keys.d/%u= and *asserts* against any
+home-directory path. The declarative home for it is your user's
+=openssh.authorizedKeys=, which NixOS writes into that root-owned
+directory:
+
+#+begin_src nix
+  users.users.ryan.openssh.authorizedKeys.keys = [
+    "sk-ssh-ed25519@openssh.com AAAA... ryan@laptop"
+  ];
+#+end_src
+
+That is the same list that already authorizes your SSH *login*, so the
+one key both logs you in and unlocks =sudo=.
+
+*** Turn on agent auth
+
+Add these alongside your chosen mode in the optional block:
+
+#+begin_src nix
+  # Authenticate sudo against the forwarded SSH agent (remote Solokey):
+  security.pam.sshAgentAuth.enable        = true;
+  security.pam.services.sudo.sshAgentAuth = true;
+#+end_src
+
+NixOS gives =pam_ssh_agent_auth= the control =sufficient= and slots it at
+the *front* of the =sudo= auth stack -- ahead of =pam_u2f= -- and it also
+adds =Defaults env_keep+=SSH_AUTH_SOCK= to =sudoers= so the forwarded
+agent socket survives into =sudo=. None of that is something you
+configure; it follows from the two lines above.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Unlike =security.pam.u2f.enable= (the global switch we warned against,
+which turns u2f on for /every/ service), =security.pam.sshAgentAuth.enable=
+is safe to leave on: the per-service =sshAgentAuth= flag defaults to
+=false=, so agent auth is active only where you set it -- here, =sudo=
+alone.
+#+end_notice
+
+Finally, connect with agent forwarding so the box can see your laptop's
+agent:
+
+#+begin_run
+ssh -A box
+#+end_run
+
+(or =ForwardAgent yes= for that host in =~/.ssh/config=). Now =sudo -k;
+sudo true= on the box prompts a touch on the key in your *laptop*.
+
+*** How it layers on the modes
+
+The remote path does not add a new mode; it is an extra =sufficient=
+branch on top of whichever mode you already picked. Because its control
+is *fixed* at =sufficient= -- you cannot make it =required= -- it only
+composes with the single-factor modes:
+
+ - *With Mode 1* (key only): =sudo= now accepts the *local* Solokey *or*
+   the *forwarded* key, and still asks for no password. The natural choice
+   for a headless box -- touch locally when you are sitting at it, touch
+   your laptop's key when you are not.
+ - *With Mode 2* (key or password): the forwarded key becomes a third way
+   in, alongside the local key and the password.
+
+You do not touch the =control= settings or any ordering to get this --
+the default stack already runs the agent check first (it fails instantly
+when there is no forwarded key, so sitting at the machine falls straight
+through to the local touch) and the local =pam_u2f= second.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+*Do not combine this with Mode 3.* Mode 3's two-factor guarantee depends
+on =pam_u2f= being =required= so the touch can never be skipped -- but
+=pam_ssh_agent_auth= is hardcoded =sufficient= and runs *first*, so a
+forwarded key short-circuits to success /before/ the password is ever
+asked. Enabling =sshAgentAuth= therefore silently downgrades Mode 3 to
+single-factor for any forwarded session. If you want real two-factor
+=sudo=, leave =sshAgentAuth= off and =sudo= from the local console.
+#+end_notice
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Agent forwarding lets any host you are connected to *ask* your agent to
+sign while you are logged in, so only forward to machines you trust. A
+FIDO2/=-sk= key blunts the risk: every signature needs a physical touch,
+so a compromised box can never use your key /silently/ -- it can only
+trigger a press you would see and refuse. That touch-per-use property is
+what makes forwarding a hardware key reasonable where forwarding a
+software key would not be.
+#+end_notice
+
+** Turning it off
+
+Reverting is symmetric: re-comment the block (or set =u2fAuth = false=
+and drop =unixAuth = false=, plus =sshAgentAuth = false= if you enabled
+remote auth), commit, and =admin upgrade=. The PAM rule
+disappears from the regenerated =/etc/pam.d/sudo= and =sudo= goes back to
+password-only -- nothing left behind in =/etc= to clean up by hand.
