@@ -1,4 +1,5 @@
-{{- $pages := sort .Site.RegularPages "Date" "desc" -}}
+{{- $pages := where .Site.RegularPages "Date.IsZero" false -}}
+{{- $pages = sort $pages "Date" "desc" -}}
 {{- $limit := .Site.Config.Services.RSS.Limit -}}
 {{- if ge $limit 1 -}}
   {{- $pages = $pages | first $limit -}}
