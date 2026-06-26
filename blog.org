@@ -9586,9 +9586,9 @@ re-exporting them over virtiofs or 9p and hoping the semantics line up.
 A Proxmox **LXC container** can do the real thing:
 
 #+end_export
-#+begin_run
+#+begin_src bash
 pct set <vmid> -mp0 /tank/nas,mp=/srv/nas
-#+end_run
+#+end_src
 #+begin_export hugo
 
 That's a first-class host bind mount. The dataset appears *inside* the
@@ -9633,13 +9633,13 @@ configured in `~/.ssh/config`. Create a `.env` in the project root and
 set the backend:
 
 #+end_export
-#+begin_run
+#+begin_env
 BACKEND=proxmox-lxc
 PVE_HOST=pve
 PVE_STORAGE=local-zfs
 PVE_BRIDGE=vmbr0
 PVE_BACKUP_STORAGE=local
-#+end_run
+#+end_env
 #+begin_export hugo
 
 One gotcha worth calling out, because it's the most common first-run
@@ -9721,23 +9721,23 @@ commented templates for all of them.
 line:
 
 #+end_export
-#+begin_run
+#+begin_src text
 # user   password
 alice    s3cret
 bob      hunter2
-#+end_run
+#+end_src
 #+begin_export hugo
 
 `nas_acl` (no secrets) grants access, one `<user> <share> <access>` per
 line, where access is `r` (read-only) or `rw`:
 
 #+end_export
-#+begin_run
+#+begin_src text
 # user   share   access
 alice    *       rw     # alice: read-write on EVERY share
 bob      nas     r      # bob: read-only on share 'nas'
 *        media   r      # guest (anonymous): read-only on 'media'
-#+end_run
+#+end_src
 #+begin_export hugo
 
 The model is **deny-by-default, unconditionally**: a user or guest gets
@@ -9753,10 +9753,10 @@ authentication - the client just asserts its own uid. So NFS access is
 **host-based** and also deny-by-default, in `nfs_clients`:
 
 #+end_export
-#+begin_run
+#+begin_src text
 10.13.0.0/16       # a LAN subnet, read-write
 192.168.1.50 ro    # a single host, read-only
-#+end_run
+#+end_src
 #+begin_export hugo
 
 With no entries, NFS exports nothing to anyone (Samba and copyparty are
@@ -9812,10 +9812,10 @@ front end and a WebDAV endpoint on port 3923, using the *same* users and
 permissions as Samba:
 
 #+end_export
-#+begin_run
+#+begin_src text
 http://<ip>:3923/             # web UI - log in as a nas_passwd user
 http://<ip>:3923/<share>      # a share; this is also its WebDAV URL
-#+end_run
+#+end_src
 #+begin_export hugo
 
 Uploads land as the `nas` user like everything else, so a file dropped in
