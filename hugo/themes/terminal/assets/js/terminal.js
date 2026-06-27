@@ -896,8 +896,11 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
   sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
   if(copyBtn) copyBtn.addEventListener("click", ()=>{
     doCopy(body.textContent, ()=>{
-      copyBtn.classList.add("copied");
-      clearTimeout(copyBtn._t); copyBtn._t = setTimeout(()=> copyBtn.classList.remove("copied"), 1200);
+      copyBtn.textContent = "copied ✓";
+      copyBtn.classList.remove("flash"); void copyBtn.offsetWidth;   // restart the pulse on repeat taps
+      copyBtn.classList.add("flash");
+      clearTimeout(copyBtn._t);
+      copyBtn._t = setTimeout(()=>{ copyBtn.textContent = "copy"; copyBtn.classList.remove("flash"); }, 1200);
     });
   });
 })();

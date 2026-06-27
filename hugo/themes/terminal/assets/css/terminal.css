@@ -385,8 +385,14 @@ html.wrap-code .box .body pre{ white-space:pre-wrap; overflow:visible; text-over
   flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   color:var(--fg-dim); font-size:.8rem; }
 /* match the icon close button's 2.1rem box so both head buttons are the same height */
-.code-sheet-copy{ height:2.1rem; padding:0 .7rem; display:inline-flex; align-items:center; }
-.code-sheet-copy.copied{ color:var(--accent); border-color:var(--accent); }
+.code-sheet-copy{ height:2.1rem; padding:0 .7rem; display:inline-flex; align-items:center;
+  justify-content:center; min-width:8ch; }   /* fixed width so the "copied" swap doesn't reflow */
+/* a one-shot pulse (fill -> fade back to normal): reads as "action done", not a toggle */
+.code-sheet-copy.flash{ animation:copyflash .5s ease-out; }
+@keyframes copyflash{
+  0%{   background:var(--accent); color:var(--bg);      border-color:var(--accent); }
+  100%{ background:transparent;   color:var(--fg-dim);  border-color:var(--rule); }
+}
 .code-sheet-body{
   flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
   margin:0; padding:1rem .9rem 2.5rem; color:var(--fg-bright);
