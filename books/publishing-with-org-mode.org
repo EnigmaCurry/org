@@ -365,33 +365,43 @@ index
 :EXPORT_HUGO_SLUG: shader-background
 :END:
 
-A =shader= block embeds the built-in WebGL effect in a small live window.
-Each window has a single *play/stop* control — stopping rewinds to the
-start, so play always begins fresh. With no attributes a window starts
-stopped on its first frame; press play to run it:
+A =shader= block embeds a live WebGL window in the page. Each window has
+a single *play/stop* control — stopping rewinds to the start, so play
+always begins fresh. With no body and no attributes, the built-in shader
+runs (stopped on its first frame until you press play):
 
 #+begin_shader
 #+end_shader
 
-The =shader= block takes a few attributes:
+For a literate book, write the fragment shader *in the block itself*. The
+body is a Shadertoy-style =mainImage= and the engine compiles and runs it
+in the window. The inputs are =iResolution= (vec3), =iTime= (float), and
+=iAccent= (vec3, the current theme accent). When a block has a body its
+source is shown alongside the window by default:
 
-- =:autoplay= — start animating on load instead of showing a paused
+#+attr_shortcode: :autoplay true
+#+begin_shader
+void mainImage(out vec4 fragColor, in vec2 fragCoord){
+  vec2 uv = fragCoord / iResolution.xy;
+  float wave = sin(uv.x * 12.0 + iTime)
+             * cos(uv.y * 9.0 - iTime * 0.6);
+  float v = 0.5 + 0.5 * wave;
+  vec3 col = mix(vec3(0.03, 0.03, 0.06), iAccent, v);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
+
+A GLSL compile error is shown right in the window, so you can iterate on
+the shader as you write. The =shader= block also takes a few attributes:
+
+- =:autoplay= — start animating on load instead of showing a stopped
   preview.
-- =:effect takeover= — render the effect full-screen behind the *whole*
-  page using a single persistent canvas that survives navigation (it is
-  only reconfigured, never recreated, as you move between pages), rather
-  than as an inline window.
+- =:source false= — hide the source box for a block that has one.
+- =:effect takeover= — render the built-in effect full-screen behind the
+  *whole* page using a single persistent canvas that survives navigation
+  (only reconfigured, never recreated), rather than as an inline window.
 - =:hidden= — don't draw the inline window. Only useful together with
   =:effect takeover=, where the full-screen background is the visual.
-- =:source= — also show the block's source below the window.
-
-For example, this block autoplays *and* shows its source:
-
-#+attr_shortcode: :autoplay true :source true
-#+begin_shader
-// A future release will compile custom GLSL from the block body.
-// For now the built-in shader runs.
-#+end_shader
 
 And this one is a hidden full-screen takeover — look at the page
 background rather than this spot, then navigate away to see it switch

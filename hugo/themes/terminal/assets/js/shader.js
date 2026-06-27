@@ -63,6 +63,18 @@ window.Shader = (function(){
       gl_FragColor = mix(vec4(col, a), vec4(solid, 1.0), u_opaque);
     }`;
 
+  // Custom shaders (literate blocks) supply a Shadertoy-style mainImage(); we wrap
+  // it with this preamble + main. #line 1 makes compile errors report the user's
+  // own line numbers. Available inputs: iResolution (vec3), iTime, iAccent (vec3).
+  const CUSTOM_PREAMBLE =
+    "precision mediump float;\n" +
+    "uniform vec3 iResolution;\n" +
+    "uniform float iTime;\n" +
+    "uniform vec3 iAccent;\n" +
+    "#line 1\n";
+  const CUSTOM_MAIN =
+    "\nvoid main(){ vec4 c = vec4(0.0,0.0,0.0,1.0); mainImage(c, gl_FragCoord.xy); gl_FragColor = c; }\n";
+
   // ---- shared state ---------------------------------------------------------
   const SCALES = [1, 0.66, 0.4];                 // render-resolution steps under load
   let perfKilled = false;
@@ -92,16 +104,23 @@ window.Shader = (function(){
   function compile(gl, type, src){
     const s = gl.createShader(type);
     gl.shaderSource(s, src); gl.compileShader(s);
-    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){ gl.deleteShader(s); return null; }
-    return s;
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)){
+      const err = gl.getShaderInfoLog(s) || "compile failed";
+      gl.deleteShader(s);
+      return { err: err };
+    }
+    return { shader: s };
   }
-  function buildProgram(gl){
+  // Build a program from a fragment source (built-in FRAG or a wrapped custom one).
+  // Returns { prog, loc } on success or { err } with the GLSL info log on failure.
+  function buildProgram(gl, fragSrc){
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
-    const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
-    if(!vs || !fs) return null;
+    if(vs.err) return { err: vs.err };
+    const fs = compile(gl, gl.FRAGMENT_SHADER, fragSrc);
+    if(fs.err) return { err: fs.err };
     const prog = gl.createProgram();
-    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
-    if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.attachShader(prog, vs.shader); gl.attachShader(prog, fs.shader); gl.linkProgram(prog);
+    if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) return { err: gl.getProgramInfoLog(prog) || "link failed" };
     gl.useProgram(prog);
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -109,13 +128,11 @@ window.Shader = (function(){
     const a = gl.getAttribLocation(prog, "a_pos");
     gl.enableVertexAttribArray(a);
     gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+    const u = n => gl.getUniformLocation(prog, n);   // null for uniforms a given program omits -> ignored on set
     return { prog, loc: {
-      res: gl.getUniformLocation(prog, "u_res"),
-      time: gl.getUniformLocation(prog, "u_time"),
-      intensity: gl.getUniformLocation(prog, "u_intensity"),
-      effect: gl.getUniformLocation(prog, "u_effect"),
-      opaque: gl.getUniformLocation(prog, "u_opaque"),
-      accent: gl.getUniformLocation(prog, "u_accent"),
+      res: u("u_res"), time: u("u_time"), intensity: u("u_intensity"),
+      effect: u("u_effect"), opaque: u("u_opaque"), accent: u("u_accent"),
+      iRes: u("iResolution"), iTime: u("iTime"), iAccent: u("iAccent"),
     }};
   }
   function checkSoftware(gl){
@@ -141,12 +158,31 @@ window.Shader = (function(){
     // control panel: an inline window's figure, or the floating background panel
     const playBtn = controlsEl && controlsEl.querySelector(".shader-play");
 
+    // literate shaders: an inline window may carry its own GLSL (a Shadertoy-style
+    // mainImage) in a <script class="shader-glsl">. If present, compile that instead
+    // of the built-in shader; compile errors surface in the .shader-error overlay.
+    const figure = isBg ? null : canvas.closest(".shader-window");
+    const glslEl = figure && figure.querySelector(".shader-glsl");
+    const errEl  = figure && figure.querySelector(".shader-error");
+    const userGlsl = glslEl ? glslEl.textContent.trim() : "";
+    const fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
+
+    function showError(msg){
+      if(errEl){ errEl.textContent = msg; errEl.hidden = false; }
+      else console.warn("[shader] " + msg);
+    }
+    function build(){
+      const b = buildProgram(gl, fragSrc);
+      if(b.prog){ prog = b.prog; loc = b.loc; if(errEl) errEl.hidden = true; return true; }
+      prog = null; showError(b.err);   // keep the context; draw nothing; show the log
+      return false;
+    }
+
     try {
       gl = canvas.getContext("webgl", { alpha:true, depth:false, antialias:false, premultipliedAlpha:false })
         || canvas.getContext("experimental-webgl", { alpha:true, depth:false, antialias:false });
     } catch(e){ gl = null; }
-    if(gl){ const b = buildProgram(gl); if(b){ prog = b.prog; loc = b.loc; } else gl = null; }
-    if(gl) checkSoftware(gl);
+    if(gl){ build(); checkSoftware(gl); }
 
     function size(){
       if(!gl) return;
@@ -179,6 +215,10 @@ window.Shader = (function(){
       gl.uniform1f(loc.effect, effect);
       gl.uniform1f(loc.opaque, opaque);
       gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
+      // Shadertoy-style inputs for custom shaders (null locations are ignored)
+      gl.uniform3f(loc.iRes, canvas.width, canvas.height, 1.0);
+      gl.uniform1f(loc.iTime, phase);
+      gl.uniform3f(loc.iAccent, accent[0], accent[1], accent[2]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
     }
@@ -197,13 +237,13 @@ window.Shader = (function(){
       raf = requestAnimationFrame(frame);
     }
     function renderStill(){                                 // one static frame at full strength (paused preview)
-      if(!gl) return;
+      if(!gl || !prog) return;
       intensity = targetIntensity; effect = targetEffect;
       paint();
     }
 
     function start(){
-      if(running || !gl) return;
+      if(running || !gl || !prog) return;
       running = true;
       lastNow = 0; pfFrames = 0; pfAccum = 0; pfWarm = 0;
       if(!raf) raf = requestAnimationFrame(frame);
@@ -259,7 +299,7 @@ window.Shader = (function(){
 
     if(gl){
       canvas.addEventListener("webglcontextlost", e=>{ e.preventDefault(); stop(false); }, false);
-      canvas.addEventListener("webglcontextrestored", ()=>{ const b = buildProgram(gl); if(b){ prog = b.prog; loc = b.loc; size(); sync(); } }, false);
+      canvas.addEventListener("webglcontextrestored", ()=>{ if(build()){ size(); sync(); } }, false);
       if(!isBg && window.ResizeObserver){
         ro = new ResizeObserver(()=>{ size(); if(!running && paused && active && !blocked()) renderStill(); });
         ro.observe(canvas);
