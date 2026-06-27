@@ -365,14 +365,19 @@ index
 :EXPORT_HUGO_SLUG: shader-background
 :END:
 
-A =shader= block embeds the built-in WebGL effect. With no attributes it
-renders a small live window inline in the page:
+A =shader= block embeds the built-in WebGL effect in a small live window.
+Each window has controls: *play/pause*, and a *reset/clear* button that
+restarts the animation while playing or blanks the canvas while paused.
+With no attributes a window starts paused on a static preview — press
+play to run it:
 
 #+begin_shader
 #+end_shader
 
 The =shader= block takes a few attributes:
 
+- =:autoplay= — start animating on load instead of showing a paused
+  preview.
 - =:effect takeover= — render the effect full-screen behind the *whole*
   page using a single persistent canvas that survives navigation (it is
   only reconfigured, never recreated, as you move between pages), rather
@@ -381,9 +386,9 @@ The =shader= block takes a few attributes:
   =:effect takeover=, where the full-screen background is the visual.
 - =:source= — also show the block's source below the window.
 
-For example, this block renders a window *and* shows its source:
+For example, this block autoplays *and* shows its source:
 
-#+attr_shortcode: :source true
+#+attr_shortcode: :autoplay true :source true
 #+begin_shader
 // A future release will compile custom GLSL from the block body.
 // For now the built-in shader runs.

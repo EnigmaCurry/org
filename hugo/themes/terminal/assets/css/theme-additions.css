@@ -243,3 +243,19 @@ html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown *
 }
 html.js .shader-window .shader-canvas.fx-ready{ opacity:1; }
 html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
+
+/* shader window controls: play/pause + reset(playing)/clear(paused) */
+.shader-ctl{ position:absolute; top:.4rem; right:.4rem; display:flex; gap:.3rem; z-index:1; }
+.shader-ctl button{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.7rem; height:1.7rem; padding:0; cursor:pointer;
+  color:var(--fg-dim); background:color-mix(in srgb, var(--panel) 72%, transparent);
+  border:1px solid var(--rule); border-radius:3px;
+}
+.shader-ctl button:hover{ color:var(--accent); border-color:var(--accent); }
+.shader-ctl svg{ display:block; }
+/* show the icon matching the current state (figure.paused toggled by the engine) */
+.shader-window:not(.paused) .ico-play{ display:none; }
+.shader-window.paused .ico-pause{ display:none; }
+.shader-window:not(.paused) .ico-clear{ display:none; }
+.shader-window.paused .ico-reset{ display:none; }

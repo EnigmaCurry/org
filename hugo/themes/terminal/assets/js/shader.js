@@ -126,9 +126,14 @@ window.Shader = (function(){
   function makeRenderer(canvas, isBg){
     let gl = null, prog = null, loc = {}, raf = 0, ro = null;
     let phase = 0, lastNow = 0;
-    let running = false, ready = false, active = false;
+    let running = false, ready = false, active = false, paused = false;
     let intensity = 0, targetIntensity = 0, effect = 0, targetEffect = 0;
     let scaleIdx = 0, pfFrames = 0, pfAccum = 0, pfLast = 0, pfWarm = 0;
+
+    // optional control panel (inline windows only)
+    const fig = isBg ? null : canvas.closest(".shader-window");
+    const playBtn  = fig && fig.querySelector(".shader-play");
+    const resetBtn = fig && fig.querySelector(".shader-reset");
 
     try {
       gl = canvas.getContext("webgl", { alpha:true, depth:false, antialias:false, premultipliedAlpha:false })
@@ -160,6 +165,16 @@ window.Shader = (function(){
       else if(avg > 45) killAll();                         // minimal & still < ~22fps -> stop everything
     }
 
+    function paint(){                                      // draw current state once
+      gl.useProgram(prog);
+      gl.uniform2f(loc.res, canvas.width, canvas.height);
+      gl.uniform1f(loc.time, phase);
+      gl.uniform1f(loc.intensity, intensity);
+      gl.uniform1f(loc.effect, effect);
+      gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
+    }
     function frame(now){
       raf = 0;
       if(!running) return;
@@ -171,15 +186,13 @@ window.Shader = (function(){
       const dt = Math.min(0.05, (now - lastNow) / 1000);   // clamp big gaps
       lastNow = now;
       phase += dt * (0.5 + 0.5 * effect);                  // ambient half speed, takeover full
-      gl.useProgram(prog);
-      gl.uniform2f(loc.res, canvas.width, canvas.height);
-      gl.uniform1f(loc.time, phase);
-      gl.uniform1f(loc.intensity, intensity);
-      gl.uniform1f(loc.effect, effect);
-      gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
+      paint();
       raf = requestAnimationFrame(frame);
+    }
+    function renderStill(){                                 // one static frame at full strength (paused preview)
+      if(!gl) return;
+      intensity = targetIntensity; effect = targetEffect;
+      paint();
     }
 
     function start(){
@@ -188,13 +201,17 @@ window.Shader = (function(){
       lastNow = 0; pfFrames = 0; pfAccum = 0; pfWarm = 0;
       if(!raf) raf = requestAnimationFrame(frame);
     }
-    function stop(){
+    function stop(keepFrame){
       running = false;
       if(raf){ cancelAnimationFrame(raf); raf = 0; }
-      ready = false; canvas.classList.remove("fx-ready");
-      clear();
+      if(!keepFrame){ ready = false; canvas.classList.remove("fx-ready"); clear(); }
     }
-    function sync(){ if(active && gl && !blocked()) start(); else stop(); }
+    function sync(){
+      if(active && gl && !blocked() && !paused){ start(); return; }
+      const freeze = paused && active && !blocked();       // user-paused: hold a static frame
+      stop(freeze);
+      if(freeze && !ready) renderStill();                  // first paused view -> static preview
+    }
 
     function configure(cfg){
       cfg = cfg || {};
@@ -207,22 +224,40 @@ window.Shader = (function(){
       targetIntensity = e >= 1 ? 1.0 : 0.8;
     }
 
+    // play/pause + reset/clear panel control (inline windows only)
+    function setPaused(p){
+      paused = !!p;
+      if(fig){
+        fig.classList.toggle("paused", paused);
+        if(playBtn)  playBtn.setAttribute("aria-label",  paused ? "Play"  : "Pause");
+        if(resetBtn) resetBtn.setAttribute("aria-label", paused ? "Clear" : "Reset");
+      }
+      sync();
+    }
+    // reset while playing = restart from t0; clear while paused = blank the canvas
+    function resetOrClear(){ if(paused) clear(); else { phase = 0; lastNow = 0; } }
+
     function activate(on){ active = !!on; size(); sync(); }
 
     function dispose(){
-      active = false; stop();
+      active = false; stop(false);
       if(ro){ ro.disconnect(); ro = null; }
       try { const ext = gl && gl.getExtension("WEBGL_lose_context"); if(ext) ext.loseContext(); } catch(e){}
       gl = null;
     }
 
     if(gl){
-      canvas.addEventListener("webglcontextlost", e=>{ e.preventDefault(); stop(); }, false);
+      canvas.addEventListener("webglcontextlost", e=>{ e.preventDefault(); stop(false); }, false);
       canvas.addEventListener("webglcontextrestored", ()=>{ const b = buildProgram(gl); if(b){ prog = b.prog; loc = b.loc; size(); sync(); } }, false);
-      if(!isBg && window.ResizeObserver){ ro = new ResizeObserver(()=> size()); ro.observe(canvas); }
+      if(!isBg && window.ResizeObserver){
+        ro = new ResizeObserver(()=>{ size(); if(!running && paused && active && !blocked()) renderStill(); });
+        ro.observe(canvas);
+      }
+      if(playBtn)  playBtn.addEventListener("click", ()=> setPaused(!paused));
+      if(resetBtn) resetBtn.addEventListener("click", resetOrClear);
       size();
     }
-    return { configure, activate, sync, size, dispose, ok: !!gl };
+    return { configure, activate, setPaused, sync, size, dispose, ok: !!gl };
   }
 
   // ---- manager: one persistent background + N per-page inline windows -------
@@ -253,6 +288,7 @@ window.Shader = (function(){
       const r = makeRenderer(cv, false);
       if(!r.ok) return;
       r.configure(cfgFromEl(fig));
+      r.setPaused(!fig.hasAttribute("data-autoplay"));   // autoplay defaults OFF -> start paused on a preview
       r.activate(true);
       inlines.push(r);
     });
