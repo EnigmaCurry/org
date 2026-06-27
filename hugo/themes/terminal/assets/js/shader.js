@@ -28,6 +28,7 @@ window.Shader = (function(){
     uniform float u_time;
     uniform float u_intensity;
     uniform float u_effect;
+    uniform float u_opaque;
     uniform vec3  u_accent;
 
     float wave(vec2 p, float t){
@@ -55,7 +56,11 @@ window.Shader = (function(){
       float a = field * baseA * u_intensity;
 
       vec3 col = u_accent * (0.6 + 0.7 * field);
-      gl_FragColor = vec4(col, a);
+      // inline windows render OPAQUE (a solid little screen: accent plasma on a near
+      // black panel); the full-screen background renders translucent so the page
+      // shows through it as an ambient wash.
+      vec3 solid = mix(vec3(0.02, 0.02, 0.03), col, clamp(field, 0.0, 1.0));
+      gl_FragColor = mix(vec4(col, a), vec4(solid, 1.0), u_opaque);
     }`;
 
   // ---- shared state ---------------------------------------------------------
@@ -109,6 +114,7 @@ window.Shader = (function(){
       time: gl.getUniformLocation(prog, "u_time"),
       intensity: gl.getUniformLocation(prog, "u_intensity"),
       effect: gl.getUniformLocation(prog, "u_effect"),
+      opaque: gl.getUniformLocation(prog, "u_opaque"),
       accent: gl.getUniformLocation(prog, "u_accent"),
     }};
   }
@@ -129,6 +135,8 @@ window.Shader = (function(){
     let running = false, ready = false, active = false, paused = false;
     let intensity = 0, targetIntensity = 0, effect = 0, targetEffect = 0;
     let scaleIdx = 0, pfFrames = 0, pfAccum = 0, pfLast = 0, pfWarm = 0;
+
+    const opaque = isBg ? 0 : 1;   // inline = solid screen; background = translucent wash
 
     // control panel: an inline window's figure, or the floating background panel
     const playBtn  = controlsEl && controlsEl.querySelector(".shader-play");
@@ -170,6 +178,7 @@ window.Shader = (function(){
       gl.uniform1f(loc.time, phase);
       gl.uniform1f(loc.intensity, intensity);
       gl.uniform1f(loc.effect, effect);
+      gl.uniform1f(loc.opaque, opaque);
       gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
