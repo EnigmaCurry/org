@@ -139,8 +139,7 @@ window.Shader = (function(){
     const opaque = isBg ? 0 : 1;   // inline = solid screen; background = translucent wash
 
     // control panel: an inline window's figure, or the floating background panel
-    const playBtn  = controlsEl && controlsEl.querySelector(".shader-play");
-    const resetBtn = controlsEl && controlsEl.querySelector(".shader-reset");
+    const playBtn = controlsEl && controlsEl.querySelector(".shader-play");
 
     try {
       gl = canvas.getContext("webgl", { alpha:true, depth:false, antialias:false, premultipliedAlpha:false })
@@ -232,18 +231,18 @@ window.Shader = (function(){
       targetIntensity = e >= 1 ? 1.0 : 0.8;
     }
 
-    // play/pause + reset/clear panel control (inline windows only)
+    // single play/stop toggle: stopping rewinds to the start (t=0) so play always
+    // begins fresh — there's no separate reset.
     function setPaused(p){
       paused = !!p;
+      if(paused){ phase = 0; lastNow = 0; }
       if(controlsEl){
         controlsEl.classList.toggle("paused", paused);
-        if(playBtn)  playBtn.setAttribute("aria-label",  paused ? "Play"  : "Pause");
-        if(resetBtn) resetBtn.setAttribute("aria-label", paused ? "Clear" : "Reset");
+        if(playBtn) playBtn.setAttribute("aria-label", paused ? "Play" : "Stop");
       }
       sync();
+      if(paused && gl && active && !blocked()) renderStill();   // show the rewound t=0 frame
     }
-    // reset while playing = restart from t0; clear while paused = blank the canvas
-    function resetOrClear(){ if(paused) clear(); else { phase = 0; lastNow = 0; } }
 
     function activate(on){
       active = !!on;
@@ -265,8 +264,7 @@ window.Shader = (function(){
         ro = new ResizeObserver(()=>{ size(); if(!running && paused && active && !blocked()) renderStill(); });
         ro.observe(canvas);
       }
-      if(playBtn)  playBtn.addEventListener("click", ()=> setPaused(!paused));
-      if(resetBtn) resetBtn.addEventListener("click", resetOrClear);
+      if(playBtn) playBtn.addEventListener("click", ()=> setPaused(!paused));
       size();
     }
     return { configure, activate, setPaused, sync, size, dispose, ok: !!gl };
