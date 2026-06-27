@@ -69,6 +69,7 @@ window.Shader = (function(){
   let accent = [0.87, 0.64, 0.17];               // amber fallback (#dfa22c)
   let intensity = 0, targetIntensity = 0;
   let effect = 0, targetEffect = 0;
+  let active = false;                             // does THIS page opt into a shader? (else idle)
 
   // perf watchdog: a fullscreen per-pixel shader is cheap on a real GPU but brutal
   // under software WebGL. Measure frame time and respond gracefully — first shed
@@ -93,7 +94,7 @@ window.Shader = (function(){
 
   const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fxOff = () => document.body.classList.contains("no-fx");
-  const shouldRun = () => !!gl && !perfKilled && !document.hidden && !fxOff() && !reduceMotion();
+  const shouldRun = () => !!gl && active && !perfKilled && !document.hidden && !fxOff() && !reduceMotion();
 
   // detect a software/non-accelerated renderer (the classic perf cliff)
   function isSoftware(){
@@ -219,19 +220,22 @@ window.Shader = (function(){
   }
 
   // read a page's optional <div class="shader-config"> marker and reconfigure.
-  // absent -> fall back to the calm ambient default. Called at startup and after
-  // every soft-nav swap (by spa.js).
+  // The shader is OPT-IN: a page with no marker renders nothing (the theme --bg
+  // shows), the persistent context just idles. Called at startup and after every
+  // soft-nav swap (by spa.js).
   function scan(root){
     const cfg = (root || document).querySelector(".shader-config");
     if(cfg){
+      active = true;
       configure({
         effect: cfg.dataset.effect || "ambient",
         fullscreen: cfg.hasAttribute("data-fullscreen"),
         intensity: cfg.dataset.intensity,
       });
     } else {
-      configure({ effect: "ambient" });
+      active = false;   // no opt-in marker on this page -> no background shader
     }
+    sync();             // start/stop to match this page (the GL context stays alive either way)
   }
 
   function init(){
@@ -268,8 +272,7 @@ window.Shader = (function(){
     const mm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
     if(mm && mm.addEventListener) mm.addEventListener("change", sync);
 
-    scan(document);   // pick up a shader-config on the first page, else ambient
-    sync();
+    scan(document);   // activate only if the first page opts in (scan() calls sync)
   }
 
   // clear an auto-disable (perf kill / software / data-saver) and try again — handy

@@ -365,11 +365,13 @@ index
 :EXPORT_HUGO_SLUG: shader-background
 :END:
 
-The site has a persistent WebGL background that survives navigation: it
-never restarts as you click between pages, because the canvas lives
-outside the swapped content area and the soft-navigation shell only
-reconfigures it. Most pages use a calm =ambient= field; a page can opt
-into a stronger =takeover= effect with a =shader= block:
+The site has a persistent WebGL background canvas that survives
+navigation: it never restarts as you click between pages, because the
+canvas lives outside the swapped content area and the soft-navigation
+shell only reconfigures it. The background is *opt-in*: ordinary pages
+render nothing (you just see the normal theme background), and a page
+turns the effect on with a =shader= block — =ambient= for a calm field
+or =takeover= for something stronger:
 
 #+begin_src org
 ,#+attr_shortcode: :effect takeover
@@ -385,8 +387,8 @@ requests the takeover effect:
 #+begin_shader
 #+end_shader
 
-Navigate to any other page and watch it ease back to the ambient field —
-the same WebGL context, reconfigured rather than recreated.
+Navigate to any other page and watch the effect switch off (the same
+WebGL context stays alive, just idle), then return when you come back.
 
 ** Example Org Blocks
 :PROPERTIES:
