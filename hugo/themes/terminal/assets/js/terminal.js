@@ -635,14 +635,13 @@ function scrollActiveBlogTagIntoView(){
   const tree = sidebarEl && sidebarEl.querySelector(".tree");
   const activeLink = tree && tree.querySelector(".blog-nav a.active");
   if(!tree || !activeLink || tree.clientHeight === 0) return;
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // scroll the active tag to the middle of the tree *only* — scrollIntoView would
+  // position the active tag at the middle of the tree *only* — scrollIntoView would
   // also bubble up and scroll the page/window (yanking the article to the top).
+  // Jump there instantly (no smooth motion): it should just be where it needs to be.
   const treeRect = tree.getBoundingClientRect();
   const linkRect = activeLink.getBoundingClientRect();
   const target = tree.scrollTop + (linkRect.top - treeRect.top) - (tree.clientHeight - linkRect.height) / 2;
-  const top = Math.max(0, Math.min(target, tree.scrollHeight - tree.clientHeight));
-  tree.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+  tree.scrollTop = Math.max(0, Math.min(target, tree.scrollHeight - tree.clientHeight));
 }
 function queueActiveBlogTagScroll(){
   requestAnimationFrame(()=> requestAnimationFrame(scrollActiveBlogTagIntoView));
