@@ -336,14 +336,20 @@ html.js .box .body pre{ overflow:hidden; text-overflow:ellipsis; }
 .run .body{ background:none; }   /* let the box's accent wash show through */
 
 /* secondary run box: a command meant for *another* machine (a Pi, a server).
-   Same TUI frame, recolored to the theme's second accent so it reads as a
-   distinct host at a glance without leaving the palette. */
-.run-secondary{ --line:color-mix(in srgb, var(--accent-2) 65%, var(--rule));
-  background:color-mix(in srgb, var(--accent-2), transparent 92%); }
-.run-secondary .label{ color:var(--accent-2);
-  border-color:color-mix(in srgb, var(--accent-2), #fff 28%); }
+   Same TUI frame, but a fixed cyan hue -- not the amber the primary run box
+   owns -- so a different host reads at a glance. Like .notice-orange this hue
+   is deliberately off-palette and fixed across themes (the primary's amber is
+   palette-driven), guaranteeing the two stay distinct in every theme -- incl.
+   the green theme, where --accent-2 would have collapsed onto --accent. The
+   wash is stronger than the primary's so the whole box, not just the line,
+   shifts color. */
+.run-secondary{ --sec:#39b3c4;
+  --line:color-mix(in srgb, var(--sec) 75%, var(--rule));
+  background:color-mix(in srgb, var(--sec), transparent 86%); }
+.run-secondary .label{ color:var(--sec);
+  border-color:color-mix(in srgb, var(--sec), #fff 22%); }
 .run-secondary .label .lt::before{ content:"\2197 $ "; }   /* ↗ : runs elsewhere */
-.run-secondary .copy:hover{ color:var(--accent-2); }
+.run-secondary .copy:hover{ color:var(--sec); }
 
 /* copy button: a second cutout in the top-right border of run boxes */
 .box .copy{
