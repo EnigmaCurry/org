@@ -77,11 +77,12 @@
   background:transparent !important;   /* override Chroma's inline background-color */
 }
 .box .highlight pre{ padding:.9rem .25rem; }
-/* Chroma bakes its token colors inline (monokai: light text for a dark panel),
-   so they can't follow the theme. On the dark themes that reads fine, but on the
-   light `lite` theme it's near-white text on a light wash. lite is already a
-   monochrome (reverse-video mono) palette, so drop the syntax colors there and
-   render code in the theme foreground -- readable, and on-brand for lite. */
+/* Chroma bakes its token colors inline (monokai), so they can't follow the
+   theme. The colorful amber/green themes keep them, but the `mono` and `lite`
+   palettes are deliberately monochrome -- so there we drop the syntax colors and
+   render code in the theme foreground (light on mono, near-black on lite). */
+:root[data-theme="mono"] .content .highlight pre,
+:root[data-theme="mono"] .content .highlight pre *,
 :root[data-theme="lite"] .content .highlight pre,
 :root[data-theme="lite"] .content .highlight pre *{ color:var(--fg-bright) !important; }
 .content pre code{ background:none; padding:0; color:inherit; border-radius:0; cursor:auto; }
