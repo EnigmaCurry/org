@@ -9693,8 +9693,32 @@ just create mynas
 #+end_run
 #+begin_export hugo
 
-The create wizard prompts for the usual things (profile, cores, memory,
-rootfs size), and then two things specific to this backend:
+The wizard opens with a profile picker. On the `proxmox-lxc` backend the
+LXC-only `nas` profile shows up in the list (while the kernel-bound
+`nvidia`, `pipewire`, and `zram` profiles are hidden) - check it and
+continue:
+
+#+end_export
+#+begin_stdout
+Select profile(s) to include:
+
+  [ ] claude
+  [ ] dev
+  [ ] docker
+  [ ] kubernetes
+> [x] nas
+  [ ] podman
+  [ ] python
+  [ ] rust
+  [ ] step-ca
+
+Selected profile(s): nas
+Privileged: yes (required by the nas profile for kernel NFS)
+#+end_stdout
+#+begin_export hugo
+
+From there it prompts for the usual resources (cores, memory, rootfs
+size), plus the two things specific to this backend:
 
 - **Privileged**: the `nas` profile forces this to `yes` automatically.
   Kernel `nfsd` does not work in an unprivileged container, so the
