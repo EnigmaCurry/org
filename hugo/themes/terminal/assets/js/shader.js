@@ -55,7 +55,7 @@ window.Shader = (function(){
       field *= scan;
 
       // base alpha: subtle when ambient, stronger on takeover
-      float baseA = mix(0.10, 0.32, u_effect);
+      float baseA = mix(0.16, 0.45, u_effect);
       float a = field * baseA * u_intensity;
 
       vec3 col = u_accent * (0.6 + 0.7 * field);
@@ -172,7 +172,7 @@ window.Shader = (function(){
       if(!isNaN(n)) { targetIntensity = Math.max(0, Math.min(1, n)); return; }
     }
     // sensible defaults per effect when no explicit intensity is given
-    targetIntensity = e >= 1 ? 1.0 : 0.6;
+    targetIntensity = e >= 1 ? 1.0 : 0.8;
   }
 
   // read a page's optional <div class="shader-config"> marker and reconfigure.
