@@ -63,7 +63,8 @@ window.Shader = (function(){
     }`;
 
   // ---- state ----------------------------------------------------------------
-  let canvas, gl, prog, loc = {}, raf = 0, t0 = 0;
+  let canvas, gl, prog, loc = {}, raf = 0;
+  let phase = 0, lastNow = 0;                     // accumulated shader time (rate varies by effect)
   let running = false, ready = false, started = false;
   let accent = [0.87, 0.64, 0.17];               // amber fallback (#dfa22c)
   let intensity = 0, targetIntensity = 0;
@@ -168,15 +169,18 @@ window.Shader = (function(){
   function frame(now){
     raf = 0;
     if(!running) return;
-    if(!t0) t0 = now;
     perfTick(now);
     if(!running) return;                                 // perfTick may have disabled us
-    const t = (now - t0) / 1000;
     // ease the intensity/effect toward their targets for smooth ambient<->takeover
     intensity += (targetIntensity - intensity) * 0.05;
     effect    += (targetEffect    - effect)    * 0.05;
+    // advance shader time by real dt, but at half rate for ambient (full for takeover)
+    if(!lastNow) lastNow = now;
+    const dt = Math.min(0.05, (now - lastNow) / 1000);   // clamp big gaps (tab refocus / resume)
+    lastNow = now;
+    phase += dt * (0.5 + 0.5 * effect);
     gl.uniform2f(loc.res, canvas.width, canvas.height);
-    gl.uniform1f(loc.time, t);
+    gl.uniform1f(loc.time, phase);
     gl.uniform1f(loc.intensity, intensity);
     gl.uniform1f(loc.effect, effect);
     gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
@@ -188,6 +192,7 @@ window.Shader = (function(){
   function start(){
     if(running || !gl || perfKilled) return;
     running = true;
+    lastNow = 0;                                         // avoid a dt spike across the pause
     pfLast = 0; pfFrames = 0; pfAccum = 0; pfWarm = 0;   // restart timing cleanly after a pause
     if(!raf) raf = requestAnimationFrame(frame);
   }
