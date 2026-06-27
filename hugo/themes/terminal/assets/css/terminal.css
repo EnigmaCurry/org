@@ -22,6 +22,7 @@
   --code-bg:   #0c0e0c;   /* run box command panel */
   --sel-bg:    #fff;      /* copy select-all reverse video (bg) */
   --sel-fg:    #000;      /* ...and text */
+  --sec:       #39b3c4;   /* secondary run box hue (another machine); off-palette, fixed across the dark themes */
   --col: 74ch;            /* reading column width */
   --font-mono: "Inconsolata", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-read: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;  /* proportional reading face for prose */
@@ -29,12 +30,13 @@
 }
 /* palette variants -------------------------------------------------*/
 :root[data-theme="green"]{ --accent:#5fd75f; --accent-2:#5fd75f; --fg:#b4deac; --fg-bright:#c8f5c8; --selection:#16320f; }
-:root[data-theme="mono"]{  --accent:#cdd3c8; --accent-2:#9aa394; --fg:#d2d5cd; --fg-bright:#e6ebe2; --selection:#2c2f29; }
+:root[data-theme="mono"]{  --accent:#cdd3c8; --accent-2:#9aa394; --fg:#d2d5cd; --fg-bright:#e6ebe2; --selection:#2c2f29; --sec:#b7f6ff; }
 /* lite: mono, but reverse video (light bg / dark text). reverse-video bits flip back. */
 :root[data-theme="lite"]{
   --bg:#d3d6cd; --panel:#c7cabf; --fg:#2b2e28; --fg-dim:#5f645a; --fg-bright:#111310;
   --accent:#2f332b; --accent-2:#4a4f44; --rule:#a6aa9f; --selection:#b3b7a8;
   --code-bg:#c4c7bd; --sel-bg:#16180f; --sel-fg:#e8eadf;
+  --sec:#98844a;          /* the cyan washes out on the pale bg -- use a darker amber */
   color-scheme:light;     /* lite is a light theme */
 }
 
@@ -336,20 +338,16 @@ html.js .box .body pre{ overflow:hidden; text-overflow:ellipsis; }
 .run .body{ background:none; }   /* let the box's accent wash show through */
 
 /* secondary run box: a command meant for *another* machine (a Pi, a server).
-   Same TUI frame, but a fixed cyan hue -- not the amber the primary run box
-   owns -- so a different host reads at a glance. Like .notice-orange this hue
-   is deliberately off-palette and fixed across themes (the primary's amber is
-   palette-driven), guaranteeing the two stay distinct in every theme -- incl.
-   the green theme, where --accent-2 would have collapsed onto --accent. The
-   wash is stronger than the primary's so the whole box, not just the line,
-   shifts color. */
-.run-secondary{ --sec:#39b3c4;
+   Same TUI frame, but a distinct hue (--sec) -- not the amber the primary run
+   box owns -- so a different host reads at a glance. Like .notice-orange the
+   hue is deliberately off-palette (the primary's amber is palette-driven),
+   guaranteeing the two stay distinct in every theme -- incl. the green theme,
+   where --accent-2 would have collapsed onto --accent. Its per-theme values
+   live with the palette blocks up top. The wash is stronger than the primary's
+   so the whole box, not just the line, shifts color. */
+.run-secondary{
   --line:color-mix(in srgb, var(--sec) 75%, var(--rule));
   background:color-mix(in srgb, var(--sec), transparent 86%); }
-/* the cyan washes out on the lite theme's pale bg -- use a darker amber there */
-:root[data-theme="lite"] .run-secondary{ --sec:#98844a; }
-/* slightly subdued cyan on the mono theme */
-:root[data-theme="mono"] .run-secondary{ --sec:#b7f6ff; }
 .run-secondary .label{ color:var(--sec);
   border-color:color-mix(in srgb, var(--sec), #fff 22%); }
 .run-secondary .label .lt::before{ content:"\2197 "; }   /* ↗ : runs elsewhere */
