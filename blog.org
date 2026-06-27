@@ -7282,6 +7282,7 @@ needs `edk2-ovmf` installed (`pacman -S edk2-ovmf`).
 2. *[Bootstrapping a Docker server with immutable NixOS on Proxmox](/blog/linux/nixos-proxmox-vm/)*
 3. *[Mutable VMs are cool too](/blog/linux/mutable-vms/)*
 4. *[Managing VMs with home-manager and sway-home](/blog/linux/nixos-vm-home-manager/)*
+5. *[A NixOS NAS in a Proxmox LXC container](/blog/linux/nixos-lxc-nas/)*
 
 ---
 
@@ -8564,6 +8565,7 @@ to know where to look.
 2. *[Bootstrapping a Docker server with immutable NixOS on Proxmox](/blog/linux/nixos-proxmox-vm/)*
 3. *Mutable VMs are cool too (this post)*
 4. *[Managing VMs with home-manager and sway-home](/blog/linux/nixos-vm-home-manager/)*
+5. *[A NixOS NAS in a Proxmox LXC container](/blog/linux/nixos-lxc-nas/)*
 
 ---
 
@@ -8778,6 +8780,7 @@ learning, development, and experimentation, mutable VMs are cool too.
 2. *Bootstrapping a Docker server with immutable NixOS on Proxmox (this post)*
 3. *[Mutable VMs are cool too](/blog/linux/mutable-vms/)*
 4. *[Managing VMs with home-manager and sway-home](/blog/linux/nixos-vm-home-manager/)*
+5. *[A NixOS NAS in a Proxmox LXC container](/blog/linux/nixos-lxc-nas/)*
 
 ---
 
@@ -9199,6 +9202,7 @@ machine is reproducible from the Nix config in your git repository
 2. *[Bootstrapping a Docker server with immutable NixOS on Proxmox](/blog/linux/nixos-proxmox-vm/)*
 3. *[Mutable VMs are cool too](/blog/linux/mutable-vms/)*
 4. *Managing VMs with home-manager and sway-home (this post)*
+5. *[A NixOS NAS in a Proxmox LXC container](/blog/linux/nixos-lxc-nas/)*
 
 ---
 
@@ -9540,6 +9544,425 @@ The key things to remember:
 - Machine configs live in `~/.config/nixos-vm-template/machines/`
 - Use `nix-collect-garbage` periodically to reclaim disk space
 - Create separate aliases and machine directories for each backend
+#+end_export
+
+
+* NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container
+:PROPERTIES:
+:EXPORT_FILE_NAME: nixos-lxc-nas
+:EXPORT_HUGO_SECTION_FRAG: linux
+:EXPORT_DATE: 2026-06-26T12:00:00-06:00
+:EXPORT_HUGO_TAGS: linux nixos proxmox lxc zfs nas samba nfs nixos-vm-template
+:EXPORT_HUGO_LASTMOD: 2026-06-26T12:00:00-06:00
+:END:
+
+#+begin_export hugo
+
+*This is part 5 of a series on [nixos-vm-template](https://github.com/EnigmaCurry/nixos-vm-template):*
+1. *[Running code agents in an immutable NixOS VM](/blog/linux/code-agent-vm/)*
+2. *[Bootstrapping a Docker server with immutable NixOS on Proxmox](/blog/linux/nixos-proxmox-vm/)*
+3. *[Mutable VMs are cool too](/blog/linux/mutable-vms/)*
+4. *[Managing VMs with home-manager and sway-home](/blog/linux/nixos-vm-home-manager/)*
+5. *A NixOS NAS in a Proxmox LXC container (this post)*
+
+---
+
+Every post in this series so far has been about *virtual machines* -
+libvirt on a laptop, KVM on Proxmox, immutable or mutable, but always a
+full guest with its own kernel. This post is about the thing a VM
+fundamentally *can't* do well, and the new backend
+[nixos-vm-template](https://github.com/EnigmaCurry/nixos-vm-template)
+grew to do it: run NixOS in a **Proxmox LXC container** so it can
+bind-mount a host ZFS dataset directly, and serve it as a NAS over NFS,
+Samba, and a web UI - all from one declarative profile.
+
+You could just as easily read this as a continuation of the older
+[Proxmox series](/tags/proxmox/), picking up from
+[part 8: TrueNAS Core](/blog/proxmox/08-truenas/). Running TrueNAS as a
+VM on top of Proxmox was an interesting design, but it had a fundamental
+awkwardness: the storage lived *inside* the TrueNAS guest, so if you
+wanted to use that storage for your *other* Proxmox VMs, you had to
+funnel the disks back out over NFS - Proxmox mounting a network share
+that was served by a VM running on Proxmox itself. A storage round-trip
+through a guest, just to get back to disks the host already had.
+
+The LXC NAS turns that inside out. Proxmox keeps its **native ZFS pool**
+and uses it directly for VM disks - no NFS round-trip, no TrueNAS in the
+middle. The container doesn't *own* the storage; it just bind-mounts
+whichever datasets you want to *share* and serves them over kernel NFS,
+Samba, or copyparty. The pool is the host's; the container is only the
+file server sitting in front of it.
+
+## Why a container instead of a VM?
+
+A KVM virtual machine cannot bind-mount a host directory. It can only
+*share* one over a network protocol or hand it a virtual disk. If you
+want a VM to serve files that live on the host's ZFS pool, you're stuck
+re-exporting them over virtiofs or 9p and hoping the semantics line up.
+
+A Proxmox **LXC container** can do the real thing:
+
+#+end_export
+#+begin_src bash
+pct set <vmid> -mp0 /tank/nas,mp=/srv/nas
+#+end_src
+#+begin_export hugo
+
+That's a first-class host bind mount. The dataset appears *inside* the
+container as a real `zfs` mount - same xattrs, same ZFS semantics, no
+translation layer. That makes LXC the natural home for a NAS that serves
+host-native ZFS, which is exactly what the new `proxmox-lxc` backend and
+its `nas` profile are built around.
+
+The tradeoff is that a container shares the host kernel, so this backend
+is **mutable-only**: no bootloader and no read-only root, so the
+immutable and semi-mutable modes from the earlier posts don't apply. But
+don't read "mutable" as "manage it from the inside." The container
+carries no durable state of its own - all of its configuration is
+injected from your workstation when it's built, and all of its *data*
+lives on the host ZFS dataset that's bind-mounted in. So the right mental
+model isn't the in-container `nixos-rebuild` workflow from the mutable
+VMs in [part 3](/blog/linux/mutable-vms/); it's *stateless*. To change
+the system you edit your config on the workstation and `just recreate` -
+blow the container away and build a fresh one. The bind-mounted dataset
+isn't part of the container, so your files are untouched. That's the
+payoff for giving up the read-only root: host bind mounts, which no KVM
+backend can offer.
+
+## How the backend works
+
+Same shape as the Proxmox KVM backend from
+[part 2](/blog/linux/nixos-proxmox-vm/): build locally, ship over SSH, no
+API tokens or web-UI clicking. The difference is what gets built and how
+it lands:
+
+1. **Build**: Nix builds a NixOS **rootfs tarball** (`vm.container =
+   true`) - no bootloader, no virtio disks.
+2. **Transfer**: `rsync` sends the tarball to the PVE node.
+3. **Create**: `pct create … --ostype unmanaged --rootfs <storage>:<size>`
+   with a per-machine **pinned MAC**.
+4. **Bind mounts**: each configured host dataset is attached with `pct
+   set -mpN <hostpath>,mp=<ctpath>` - and the dataset is *created on the
+   host if it doesn't exist yet*.
+5. **Inject identity**: the stopped rootfs is opened with `pct mount` and
+   the hostname, machine-id, SSH keys, firewall ports, and an
+   `/etc/nixos` flake are rsynced into `/etc`.
+6. **Start**: `pct start`. The IP comes from `lxc-info -iH` (no guest
+   agent needed).
+
+## Set up the connection
+
+Like the KVM Proxmox backend, all you need is SSH access to your PVE node
+configured in `~/.ssh/config`. Create a `.env` in the project root and
+set the backend:
+
+#+end_export
+#+begin_env
+BACKEND=proxmox-lxc
+PVE_HOST=pve
+PVE_STORAGE=local-zfs
+PVE_BRIDGE=vmbr0
+PVE_BACKUP_STORAGE=local
+#+end_env
+#+begin_export hugo
+
+One gotcha worth calling out, because it's the most common first-run
+mistake: `PVE_STORAGE` is a Proxmox **storage name** (a `zfspool` or
+`dir` storage, like `local-zfs`), *not* a bare ZFS pool path. A pool
+named `rust` only works if a storage of that name exists - check with
+`ssh pve pvesm status`.
+
+Test the connection:
+
+#+end_export
+#+begin_run
+just test-connection
+#+end_run
+#+begin_export hugo
+
+## Build and create the NAS
+
+The `nas` profile is **LXC-only** - it asserts `vm.container`, so trying
+to build it on a KVM backend fails with a friendly message. Build the
+rootfs tarball for it, then create the container:
+
+#+end_export
+#+begin_run
+just build nas
+just create mynas
+#+end_run
+#+begin_export hugo
+
+The wizard opens with a profile picker. On the `proxmox-lxc` backend the
+LXC-only `nas` profile shows up in the list (while the kernel-bound
+`nvidia`, `pipewire`, and `zram` profiles are hidden) - check it and
+continue:
+
+#+end_export
+#+begin_stdout
+Select profile(s) to include:
+
+  [ ] claude
+  [ ] dev
+  [ ] docker
+  [ ] kubernetes
+> [x] nas
+  [ ] podman
+  [ ] python
+  [ ] rust
+  [ ] step-ca
+
+Selected profile(s): nas
+Privileged: yes (required by the nas profile for kernel NFS)
+#+end_stdout
+#+begin_export hugo
+
+From there it prompts for the usual resources (cores, memory, rootfs
+size), plus the two things specific to this backend:
+
+- **Privileged**: the `nas` profile forces this to `yes` automatically.
+  Kernel `nfsd` does not work in an unprivileged container, so the
+  backend runs it privileged and appends `lxc.apparmor.profile:
+  unconfined` to the container config.
+- **Host ZFS bind mounts**: the wizard introspects the pools and datasets
+  on your PVE node and lets you pick an existing dataset or create a new
+  one. The `nas` profile offers a default `rust/nas:/srv/nas` mount. Each
+  selected dataset gets mounted at `/srv/<leaf>` inside the container.
+
+When it finishes, SSH in:
+
+#+end_export
+#+begin_run
+just ssh mynas
+#+end_run
+#+begin_export hugo
+
+## One dataset, three protocols
+
+Here's the part that makes the `nas` profile more than a thin wrapper
+around `exportfs`. Every dataset bind-mounted under `/srv/<name>` becomes
+**one share named `<name>`, served simultaneously over three protocols**:
+
+- **NFS** - kernel `nfsd`, NFSv4-only (everything over `2049/tcp`).
+- **Samba** - SMB for Windows/macOS/Linux file managers.
+- **copyparty** - a web UI *and* WebDAV server on port 3923.
+
+You don't configure these three times. A boot service (`nas-shares`)
+discovers the `/srv/*` mountpoints at runtime and generates the NFS
+exports, the Samba share stanzas, and the copyparty config from the same
+source of truth. Add another dataset and you automatically get another
+share on all three protocols. The reason it's a boot-time service rather
+than baked into the image: the set of datasets isn't known when the image
+is built (the backend mounts them later), so the image stays generic and
+the container figures out what it's serving on the way up.
+
+## Access control
+
+There are two access-control surfaces because the protocols authenticate
+differently, and both are driven by plain text files in the machine
+config (`machines/proxmox-lxc/<host>/<name>/`). The create wizard seeds
+commented templates for all of them.
+
+**Samba and copyparty** share one user database and one ACL:
+
+`nas_passwd` (mode 0600) lists the users, one `<user> <password>` per
+line:
+
+#+end_export
+#+begin_src text
+# user   password
+alice    s3cret
+bob      hunter2
+#+end_src
+#+begin_export hugo
+
+`nas_acl` (no secrets) grants access, one `<user> <share> <access>` per
+line, where access is `r` (read-only) or `rw`:
+
+#+end_export
+#+begin_src text
+# user   share   access
+alice    *       rw     # alice: read-write on EVERY share
+bob      nas     r      # bob: read-only on share 'nas'
+,*        media   r      # guest (anonymous): read-only on 'media'
+#+end_src
+#+begin_export hugo
+
+The model is **deny-by-default, unconditionally**: a user or guest gets
+*only* what an explicit rule grants. No rule means no access - there is
+no "open when unconfigured" fallback. `r` maps to Samba read-only /
+copyparty `r`; `rw` maps to the Samba write list / copyparty `rwmd`
+(read + write + move + delete). Samba even uses *access-based share
+enumeration*, so users don't even see the names of shares they can't
+reach.
+
+**NFS** is separate, because NFS (`sec=sys`) has no per-user
+authentication - the client just asserts its own uid. So NFS access is
+**host-based** and also deny-by-default, in `nfs_clients`:
+
+#+end_export
+#+begin_src text
+10.13.0.0/16       # a LAN subnet, read-write
+192.168.1.50 ro    # a single host, read-only
+#+end_src
+#+begin_export hugo
+
+With no entries, NFS exports nothing to anyone (Samba and copyparty are
+unaffected). A fresh `nas` ships with an all-commented template, so NFS
+is off until you add a CIDR.
+
+The thing that ties all of this together is a single shared owner. Every
+NFS client uid (via `all_squash`), every Samba user (via `force user`),
+and copyparty all map to one unprivileged `nas` user (uid/gid 1500), and
+the share directories are `nas:nas` mode `2775`. So anyone who's
+authorized can read and write every file regardless of their own uid, and
+file ownership never causes a surprise permission error. It's flat,
+shared, trusted-LAN semantics - which is what most homelab NAS setups
+actually want.
+
+#+end_export
+#+attr_shortcode: :style warning :icon skull-crossbones
+#+begin_notice
+*A note on security.* =nas_passwd= holds /plaintext/ passwords (mode 0600)
+both on your workstation and inside the container. Samba and copyparty
+access is gated per-user, NFS is gated per-host, and everything runs as
+the unprivileged =nas= user. This is fine for a trusted home network. It
+is /not/ a design for untrusted multi-tenant use.
+#+end_notice
+#+begin_export hugo
+
+## Applying changes without recreating
+
+You don't have to rebuild the container to change users, ACLs, or NFS
+clients. Edit the files in `machines/proxmox-lxc/<host>/<name>/` and sync:
+
+#+end_export
+#+begin_run
+just sync-identity mynas
+#+end_run
+#+begin_export hugo
+
+That re-injects the files and reloads the services in place. The same
+goes for the firewall: the `nas` profile seeds its ports into the
+machine's `tcp_ports`/`udp_ports` at create time - SMB `445`, NFSv4
+`2049`, copyparty `3923`, WS-Discovery `5357` (tcp); mDNS `5353`,
+WS-Discovery `3702` (udp). Those files are the single source of truth for
+*both* the in-container NixOS firewall and the Proxmox CT firewall. They
+are written once, visible, and editable, so you can delete any port you
+don't want exposed and `just sync-identity` to apply.
+
+## The web UI and WebDAV
+
+[copyparty](https://github.com/9001/copyparty) gives the NAS a browser
+front end and a WebDAV endpoint on port 3923, using the *same* users and
+permissions as Samba:
+
+#+end_export
+#+begin_src text
+http://<ip>:3923/             # web UI - log in as a nas_passwd user
+http://<ip>:3923/<share>      # a share; this is also its WebDAV URL
+#+end_src
+#+begin_export hugo
+
+Uploads land as the `nas` user like everything else, so a file dropped in
+through the browser is readable over NFS and Samba immediately, with no
+ownership fixups.
+
+## Browsing without an IP
+
+You shouldn't have to memorize the container's DHCP lease. The `nas`
+profile advertises itself two ways:
+
+- **WS-Discovery** (`wsdd`) - shows up under "Network" in Windows
+  Explorer and in modern Linux file managers.
+- **mDNS** (`avahi`) - gives you `<hostname>.local` resolution and shows
+  up in macOS Finder.
+
+Legacy NetBIOS (`nmbd`) is disabled, because modern SMB2/3 clients ignore
+it anyway. Both WSD and mDNS are link-local multicast, so the client has
+to be on the same LAN segment. Test by name:
+
+#+end_export
+#+begin_run
+ping nas.local
+smbclient -L nas.local -N        # list shares by name, no IP
+#+end_run
+#+begin_export hugo
+
+## Stateless: recreate instead of upgrade
+
+There's no `just upgrade` for this backend - it's intentionally disabled.
+The container is disposable, so "upgrading" it means rebuilding it from
+your workstation:
+
+#+end_export
+#+begin_run
+just recreate mynas
+#+end_run
+#+begin_export hugo
+
+That builds a fresh rootfs from your current Nix config and re-injects
+the identity files - effectively a brand new container. It's safe to run
+anytime, because the bind-mounted datasets are **created if missing but
+never destroyed on teardown** - the data lives on the host's ZFS pool,
+not in the container, and outlives any number of recreates. Nothing on
+the NAS itself is precious; the pool is.
+
+That's also why the `just sync-identity` from earlier exists: for the
+config that *isn't* baked into the image (users, ACLs, NFS clients,
+firewall ports) you don't even need to rebuild - sync re-injects those
+files and reloads the services in place.
+
+The rootfs is read-write, so you *can* `ssh` in and run `sudo
+nixos-rebuild switch` against the seeded `/etc/nixos` flake for a quick
+experiment. But treat anything you change by hand that way as scratch: it
+isn't captured on your workstation and won't survive the next `recreate`.
+The source of truth is your config repo, not the running container.
+
+## Putting it together
+
+From zero to a running NAS serving a host ZFS dataset over NFS, Samba, and
+the web:
+
+#+end_export
+#+begin_run
+# One-time setup on your workstation:
+git clone https://github.com/EnigmaCurry/nixos-vm-template ~/nixos-vm-template
+cd ~/nixos-vm-template
+
+cat > .env <<'EOF'
+BACKEND=proxmox-lxc
+PVE_HOST=pve
+PVE_STORAGE=local-zfs
+PVE_BRIDGE=vmbr0
+EOF
+
+just test-connection
+
+# Build the nas rootfs and create the container
+just build nas
+just create mynas
+# wizard: nas profile, accept the rust/nas:/srv/nas mount, privileged (auto)
+
+# Add a user and grant them access, then apply
+$EDITOR machines/proxmox-lxc/pve/mynas/nas_passwd   # alice s3cret
+$EDITOR machines/proxmox-lxc/pve/mynas/nas_acl      # alice * rw
+$EDITOR machines/proxmox-lxc/pve/mynas/nfs_clients  # 10.13.0.0/16
+just sync-identity mynas
+
+# Mount it from a client
+mount <ip>:/srv/nas /mnt          # NFS
+smbclient -L nas.local -N         # SMB
+# or open http://<ip>:3923/ in a browser
+#+end_run
+#+begin_export hugo
+
+A KVM VM could never bind-mount that ZFS dataset; a container can, and the
+`nas` profile turns it into a real NAS - three protocols, one set of
+users, deny-by-default, declared in Nix and reproducible from your git
+repository. The whole thing is the natural payoff of the container
+backend: the one place where giving up the immutable root buys you
+something a VM simply can't do.
 #+end_export
 
 
