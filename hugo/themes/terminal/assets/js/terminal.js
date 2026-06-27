@@ -839,7 +839,7 @@ function copied(btn){
   const pre = box && box.querySelector(".body pre");
   if(pre && fxOn) sweepElement(pre);          // reverse-video select-all sweep
 }
-document.querySelectorAll(".run .copy").forEach(btn=>{
+document.querySelectorAll(".box .copy").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     const pre = btn.closest(".box").querySelector(".body pre");
     doCopy(pre ? pre.textContent : "", ()=> copied(btn));
