@@ -53,9 +53,15 @@
     navigate(new URL(a.href, location.href).href, true);
   });
 
+  // the URL path currently rendered. The code-sheet opens/closes by pushing then
+  // popping a history entry with the SAME url, and in-page hash links don't change
+  // the path either — so a popstate whose path matches what's already rendered is
+  // NOT a navigation. Ignoring those keeps closing the code-sheet (history.back)
+  // from re-rendering the page and jumping to the top.
+  let currentPath = location.pathname;
+
   window.addEventListener("popstate", ()=>{
-    // the code-sheet pushes its own throwaway entry; let terminal.js close it on back
-    if(history.state && history.state.codeSheet) return;
+    if(location.pathname === currentPath) return;   // code-sheet close / hash change
     navigate(location.href, false);
   });
 
@@ -77,6 +83,7 @@
         dst.innerHTML = src ? src.innerHTML : "";   // region missing on target -> clear it
       }
       document.title = doc.title;
+      currentPath = new URL(href, location.href).pathname;
 
       if(push){
         try { history.replaceState(Object.assign({}, history.state, { y: leavingY }), ""); } catch(_){}
