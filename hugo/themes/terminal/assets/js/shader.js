@@ -69,6 +69,14 @@ window.Shader = (function(){
   let intensity = 0, targetIntensity = 0;
   let effect = 0, targetEffect = 0;
 
+  // perf watchdog: a fullscreen per-pixel shader is cheap on a real GPU but brutal
+  // under software WebGL. Measure frame time and respond gracefully — first shed
+  // render resolution, then disable outright if the device still can't keep up.
+  let perfKilled = false;
+  const SCALES = [1, 0.66, 0.4];                  // render-resolution steps under load
+  let scaleIdx = 0;
+  let pfFrames = 0, pfAccum = 0, pfLast = 0, pfWarm = 0;
+
   const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   function hexToRgb(hex){
     if(!hex) return null;
@@ -84,7 +92,16 @@ window.Shader = (function(){
 
   const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fxOff = () => document.body.classList.contains("no-fx");
-  const shouldRun = () => !!gl && !document.hidden && !fxOff() && !reduceMotion();
+  const shouldRun = () => !!gl && !perfKilled && !document.hidden && !fxOff() && !reduceMotion();
+
+  // detect a software/non-accelerated renderer (the classic perf cliff)
+  function isSoftware(){
+    try {
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      const r = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || "") : "";
+      return /swiftshader|llvmpipe|software|basic render|microsoft basic/i.test(r);
+    } catch(e){ return false; }
+  }
 
   // ---- gl helpers -----------------------------------------------------------
   function compile(type, src){
@@ -117,7 +134,7 @@ window.Shader = (function(){
 
   function resize(){
     if(!gl) return;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5) * SCALES[scaleIdx];
     const w = Math.max(1, Math.round(window.innerWidth  * dpr));
     const h = Math.max(1, Math.round(window.innerHeight * dpr));
     if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
@@ -130,10 +147,30 @@ window.Shader = (function(){
     gl.clear(gl.COLOR_BUFFER_BIT);
   }
 
+  // sample frame time; step down resolution under load, disable if still too slow.
+  function perfTick(now){
+    if(pfWarm < 20){ pfWarm++; pfLast = now; return; }   // ignore warmup (shader compile + first layout)
+    if(pfLast){ pfAccum += now - pfLast; pfFrames++; }
+    pfLast = now;
+    if(pfFrames < 45) return;                            // ~0.75s window at 60fps
+    const avg = pfAccum / pfFrames;
+    pfFrames = 0; pfAccum = 0;
+    if(avg <= 28) return;                                // >= ~36fps: fine
+    if(scaleIdx < SCALES.length - 1){ scaleIdx++; resize(); }  // shed pixels first
+    else if(avg > 45) perfDisable();                     // already minimal and still < ~22fps
+  }
+  function perfDisable(){
+    perfKilled = true;
+    try { sessionStorage.setItem("shader-perf", "slow"); } catch(e){}
+    stop();
+  }
+
   function frame(now){
     raf = 0;
     if(!running) return;
     if(!t0) t0 = now;
+    perfTick(now);
+    if(!running) return;                                 // perfTick may have disabled us
     const t = (now - t0) / 1000;
     // ease the intensity/effect toward their targets for smooth ambient<->takeover
     intensity += (targetIntensity - intensity) * 0.05;
@@ -149,8 +186,9 @@ window.Shader = (function(){
   }
 
   function start(){
-    if(running || !gl) return;
+    if(running || !gl || perfKilled) return;
     running = true;
+    pfLast = 0; pfFrames = 0; pfAccum = 0; pfWarm = 0;   // restart timing cleanly after a pause
     if(!raf) raf = requestAnimationFrame(frame);
   }
   function stop(){
@@ -202,6 +240,12 @@ window.Shader = (function(){
     } catch(e){ gl = null; }
     if(!gl || !buildProgram()){ gl = null; return; }   // no WebGL -> stay blank, site unaffected
 
+    // pre-flight: skip entirely on a software renderer, with data-saver on, or if a
+    // prior page in this session already measured the device as too slow.
+    try { if(sessionStorage.getItem("shader-perf") === "slow") perfKilled = true; } catch(e){}
+    if(navigator.connection && navigator.connection.saveData) perfKilled = true;
+    if(isSoftware()) perfKilled = true;
+
     resize();
     readAccent();
 
@@ -223,5 +267,13 @@ window.Shader = (function(){
     sync();
   }
 
-  return { init, configure, scan, sync };
+  // clear an auto-disable (perf kill / software / data-saver) and try again — handy
+  // from the console (Shader.reset()) or a future "force effects" control.
+  function reset(){
+    perfKilled = false; scaleIdx = 0;
+    try { sessionStorage.removeItem("shader-perf"); } catch(e){}
+    resize(); sync();
+  }
+
+  return { init, configure, scan, sync, reset, isKilled: ()=> perfKilled };
 })();
