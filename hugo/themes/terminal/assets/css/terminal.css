@@ -353,6 +353,44 @@ html.wrap-code .box .body pre{ white-space:pre-wrap; overflow:visible; text-over
 .run .copy.copied .check{ display:inline-block; }
 /* terminal reverse-video selection sweep during copy (run pre + inline code) */
 .ch.sel{ background:var(--sel-bg); color:var(--sel-fg); }
+
+/* mobile-only "expand" control: opens the code block in a near-fullscreen sheet
+   (wrapped + selectable raw text). Built + gated to touch by JS, but kept behind
+   a pointer query too so the chrome never shows on a desktop. -------------- */
+@media (pointer: coarse){
+  /* fold the (optional) copy button + the expand button into one top-right cutout */
+  .box .box-ctl{
+    position:absolute; top:0; right:1.4ch; transform:translateY(-55%); z-index:1;
+    display:inline-flex; align-items:center; gap:.2ch;
+    background:var(--bg); padding:0 .3ch;   /* one page-colored gap in the border */
+  }
+  .box .box-ctl .copy{                       /* was absolute; now flows inside the group */
+    position:static; top:auto; right:auto; transform:none; background:none; padding:0 .3ch; }
+  .box .expand{
+    background:none; border:none; cursor:pointer; color:#a5a5a5;
+    line-height:1; display:inline-flex; align-items:center; padding:0 .3ch; }
+  .box .expand:hover{ color:var(--accent); }
+  .box .expand svg{ display:block; }
+}
+/* the sheet itself (only ever opened on touch) */
+.code-sheet{
+  width:100vw; max-width:100vw; height:100dvh; max-height:100dvh;
+  margin:0; padding:0; border:none; background:var(--bg); color:var(--fg); }
+.code-sheet::backdrop{ background:rgba(0,0,0,.6); }
+.code-sheet[open]{ display:flex; flex-direction:column; }
+.code-sheet-head{
+  display:flex; align-items:center; gap:.6ch; flex:none;
+  padding:.7rem .9rem; border-bottom:1px solid var(--rule); }
+.code-sheet-title{
+  flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  color:var(--fg-dim); font-size:.8rem; }
+.code-sheet-copy.copied{ color:var(--accent); border-color:var(--accent); }
+.code-sheet-body{
+  flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
+  margin:0; padding:1rem .9rem 2.5rem; color:var(--fg-bright);
+  white-space:pre-wrap; overflow-wrap:anywhere;       /* the whole point: wrap, don't clip */
+  font-size:1rem; line-height:1.55;
+  user-select:text; -webkit-user-select:text; }
 .content code{ cursor:pointer; }
 .content code:hover{ background:color-mix(in srgb, var(--fg) 26%, var(--bg)); }
 

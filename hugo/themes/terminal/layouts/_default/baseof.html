@@ -54,6 +54,23 @@
   </div>
 </dialog>
 
+{{- /* Mobile code sheet: a near-fullscreen <dialog> the "expand" control on each
+       code box fills with that block's raw text (wrapped + selectable). Shared by
+       every box; populated on open by terminal.js. Touch devices only. */ -}}
+<dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="btn code-sheet-copy" type="button">copy</button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
 {{ $js := resources.Get "js/terminal.js" | fingerprint }}
 <script src="{{ $js.RelPermalink }}"></script>
 {{ if in .Content "class=\"mermaid\"" }}

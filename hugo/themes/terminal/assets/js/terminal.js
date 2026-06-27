@@ -845,6 +845,52 @@ document.querySelectorAll(".run .copy").forEach(btn=>{
     doCopy(pre ? pre.textContent : "", ()=> copied(btn));
   });
 });
+// mobile only: add an "expand" control to each code box that opens a near-fullscreen
+// sheet showing the block's raw text, wrapped + selectable. Desktop DOM is left
+// untouched (the whole block is gated behind a coarse-pointer check).
+(function(){
+  const sheet = document.getElementById("code-sheet");
+  if(!sheet || typeof sheet.showModal !== "function") return;
+  if(!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
+  const body     = sheet.querySelector(".code-sheet-body");
+  const title    = sheet.querySelector(".code-sheet-title");
+  const closeBtn = sheet.querySelector(".code-sheet-close");
+  const copyBtn  = sheet.querySelector(".code-sheet-copy");
+  // expand-arrows glyph (two opposite corners pulling apart)
+  const SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+
+  document.querySelectorAll(".box").forEach(box=>{
+    const pre = box.querySelector(".body pre");
+    if(!pre) return;                          // prose boxes (notice/expand/...) have no code body
+    const ctl = document.createElement("div");
+    ctl.className = "box-ctl";
+    const copy = box.querySelector(".copy");  // fold the existing copy button into the group
+    if(copy) ctl.appendChild(copy);           // moved, not recreated -> its click listener survives
+    const exp = document.createElement("button");
+    exp.type = "button"; exp.className = "expand";
+    exp.setAttribute("aria-label", "Open in full screen");
+    exp.setAttribute("aria-haspopup", "dialog");
+    exp.innerHTML = SVG;
+    ctl.appendChild(exp);
+    box.appendChild(ctl);
+    exp.addEventListener("click", ()=>{
+      const label = box.querySelector(".label");
+      title.textContent = label ? label.textContent.trim() : "";
+      body.textContent = pre.textContent;
+      sheet.showModal();
+    });
+  });
+
+  if(closeBtn) closeBtn.addEventListener("click", ()=> sheet.close());
+  sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
+  if(copyBtn) copyBtn.addEventListener("click", ()=>{
+    doCopy(body.textContent, ()=>{
+      copyBtn.classList.add("copied");
+      clearTimeout(copyBtn._t); copyBtn._t = setTimeout(()=> copyBtn.classList.remove("copied"), 1200);
+    });
+  });
+})();
+
 // inline code pills: click to copy, with the same reverse-video sweep
 document.querySelectorAll(".content code").forEach(code=>{
   if(code.closest("pre")) return;   // block code (fenced) is not an inline copy pill
