@@ -876,8 +876,8 @@ const refreshExpands = [];
     exp.innerHTML = SVG;
     ctl.appendChild(exp);
     host.appendChild(ctl);
+    const label = host.matches(".box") ? host.querySelector(".label") : null;
     exp.addEventListener("click", ()=>{
-      const label = host.querySelector(".label");
       title.textContent = label ? label.textContent.trim() : "";
       body.textContent = pre.textContent;
       copyBtn.hidden = !copy;                 // only run/env carry copy into the sheet
@@ -887,6 +887,15 @@ const refreshExpands = [];
       const of = overflowing(pre);
       exp.hidden = !of;
       ctl.hidden = !of && !copy;              // copy keeps the group alive; otherwise hide the empty cutout
+      // when the full title would collide with the controls on the top line, drop
+      // the controls to a second row just below it (still right-aligned)
+      if(label && !ctl.hidden){
+        const room = ctl.offsetLeft - label.offsetLeft;   // px from the title's left edge to the controls
+        const need = label.scrollWidth + 10;              // full (untruncated) title + a small gap
+        host.classList.toggle("ctl-stacked", need > room);
+      } else {
+        host.classList.remove("ctl-stacked");
+      }
     };
     refresh();
     refreshExpands.push(refresh);
