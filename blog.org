@@ -9615,12 +9615,19 @@ host-native ZFS, which is exactly what the new `proxmox-lxc` backend and
 its `nas` profile are built around.
 
 The tradeoff is that a container shares the host kernel, so this backend
-is **mutable-only**. There's no bootloader and no read-only root - the
-immutable and semi-mutable modes from the earlier posts simply don't
-apply. You change the system from *inside* the container with
-`nixos-rebuild`, the same way you would on the mutable VMs from
-[part 3](/blog/linux/mutable-vms/). In exchange you get host bind mounts,
-which no KVM backend can offer.
+is **mutable-only**: no bootloader and no read-only root, so the
+immutable and semi-mutable modes from the earlier posts don't apply. But
+don't read "mutable" as "manage it from the inside." The container
+carries no durable state of its own - all of its configuration is
+injected from your workstation when it's built, and all of its *data*
+lives on the host ZFS dataset that's bind-mounted in. So the right mental
+model isn't the in-container `nixos-rebuild` workflow from the mutable
+VMs in [part 3](/blog/linux/mutable-vms/); it's *stateless*. To change
+the system you edit your config on the workstation and `just recreate` -
+blow the container away and build a fresh one. The bind-mounted dataset
+isn't part of the container, so your files are untouched. That's the
+payoff for giving up the read-only root: host bind mounts, which no KVM
+backend can offer.
 
 ## How the backend works
 
@@ -9858,23 +9865,35 @@ smbclient -L nas.local -N        # list shares by name, no IP
 #+end_run
 #+begin_export hugo
 
-## Mutable-only: upgrading from inside
+## Stateless: recreate instead of upgrade
 
-There's no `just upgrade` here - it's intentionally disabled and prints a
-message telling you to upgrade from inside. The container owns its own
-system configuration. The `/etc/nixos` flake is seeded at create time, so:
+There's no `just upgrade` for this backend - it's intentionally disabled.
+The container is disposable, so "upgrading" it means rebuilding it from
+your workstation:
 
 #+end_export
 #+begin_run
-just ssh admin@mynas
-sudo nixos-rebuild switch
+just recreate mynas
 #+end_run
 #+begin_export hugo
 
-If you want to reset a container to a fresh image (rebuild the rootfs and
-re-inject identity), that's `just recreate <name>`. And bind-mounted
-datasets are **created if missing but never destroyed on teardown** -
-your data outlives the container, so a recreate is safe.
+That builds a fresh rootfs from your current Nix config and re-injects
+the identity files - effectively a brand new container. It's safe to run
+anytime, because the bind-mounted datasets are **created if missing but
+never destroyed on teardown** - the data lives on the host's ZFS pool,
+not in the container, and outlives any number of recreates. Nothing on
+the NAS itself is precious; the pool is.
+
+That's also why the `just sync-identity` from earlier exists: for the
+config that *isn't* baked into the image (users, ACLs, NFS clients,
+firewall ports) you don't even need to rebuild - sync re-injects those
+files and reloads the services in place.
+
+The rootfs is read-write, so you *can* `ssh` in and run `sudo
+nixos-rebuild switch` against the seeded `/etc/nixos` flake for a quick
+experiment. But treat anything you change by hand that way as scratch: it
+isn't captured on your workstation and won't survive the next `recreate`.
+The source of truth is your config repo, not the running container.
 
 ## Putting it together
 
