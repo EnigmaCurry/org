@@ -123,17 +123,16 @@ window.Shader = (function(){
   }
 
   // ---- one renderer (drives a single canvas) --------------------------------
-  function makeRenderer(canvas, isBg){
+  function makeRenderer(canvas, isBg, controlsEl){
     let gl = null, prog = null, loc = {}, raf = 0, ro = null;
     let phase = 0, lastNow = 0;
     let running = false, ready = false, active = false, paused = false;
     let intensity = 0, targetIntensity = 0, effect = 0, targetEffect = 0;
     let scaleIdx = 0, pfFrames = 0, pfAccum = 0, pfLast = 0, pfWarm = 0;
 
-    // optional control panel (inline windows only)
-    const fig = isBg ? null : canvas.closest(".shader-window");
-    const playBtn  = fig && fig.querySelector(".shader-play");
-    const resetBtn = fig && fig.querySelector(".shader-reset");
+    // control panel: an inline window's figure, or the floating background panel
+    const playBtn  = controlsEl && controlsEl.querySelector(".shader-play");
+    const resetBtn = controlsEl && controlsEl.querySelector(".shader-reset");
 
     try {
       gl = canvas.getContext("webgl", { alpha:true, depth:false, antialias:false, premultipliedAlpha:false })
@@ -227,8 +226,8 @@ window.Shader = (function(){
     // play/pause + reset/clear panel control (inline windows only)
     function setPaused(p){
       paused = !!p;
-      if(fig){
-        fig.classList.toggle("paused", paused);
+      if(controlsEl){
+        controlsEl.classList.toggle("paused", paused);
         if(playBtn)  playBtn.setAttribute("aria-label",  paused ? "Play"  : "Pause");
         if(resetBtn) resetBtn.setAttribute("aria-label", paused ? "Clear" : "Reset");
       }
@@ -237,7 +236,11 @@ window.Shader = (function(){
     // reset while playing = restart from t0; clear while paused = blank the canvas
     function resetOrClear(){ if(paused) clear(); else { phase = 0; lastNow = 0; } }
 
-    function activate(on){ active = !!on; size(); sync(); }
+    function activate(on){
+      active = !!on;
+      if(isBg && controlsEl) controlsEl.classList.toggle("on", active);   // show the floating panel only while a takeover is live
+      size(); sync();
+    }
 
     function dispose(){
       active = false; stop(false);
@@ -267,7 +270,7 @@ window.Shader = (function(){
     if(bg) return bg;
     const c = document.getElementById("fxcanvas");
     if(!c) return null;
-    const r = makeRenderer(c, true);
+    const r = makeRenderer(c, true, document.getElementById("fxctl"));
     bg = r.ok ? r : null;
     return bg;
   }
@@ -279,13 +282,13 @@ window.Shader = (function(){
   function scan(root){
     root = root || document;
     const bgCfg = root.querySelector('.shader-config[data-effect="takeover"]');
-    if(bgCfg){ const r = ensureBg(); if(r){ r.configure(cfgFromEl(bgCfg)); r.activate(true); } }
+    if(bgCfg){ const r = ensureBg(); if(r){ r.configure(cfgFromEl(bgCfg)); r.setPaused(!bgCfg.hasAttribute("data-paused")); r.activate(true); } }
     else if(bg){ bg.activate(false); }
 
     clearInlines();
     root.querySelectorAll(".shader-window .shader-canvas").forEach(cv=>{
       const fig = cv.closest(".shader-window");
-      const r = makeRenderer(cv, false);
+      const r = makeRenderer(cv, false, fig.querySelector(".shader-ctl"));
       if(!r.ok) return;
       r.configure(cfgFromEl(fig));
       r.setPaused(!fig.hasAttribute("data-autoplay"));   // autoplay defaults OFF -> start paused on a preview

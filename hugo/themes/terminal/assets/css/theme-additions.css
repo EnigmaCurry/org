@@ -244,7 +244,9 @@ html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown *
 html.js .shader-window .shader-canvas.fx-ready{ opacity:1; }
 html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
 
-/* shader window controls: play/pause + reset(playing)/clear(paused) */
+/* shader controls: play/pause + reset(playing)/clear(paused). Used by both the
+   inline window (absolute, top-right of the figure) and the floating background
+   panel (#fxctl, fixed bottom-right, shown only while a takeover is live). */
 .shader-ctl{ position:absolute; top:.4rem; right:.4rem; display:flex; gap:.3rem; z-index:1; }
 .shader-ctl button{
   display:inline-flex; align-items:center; justify-content:center;
@@ -254,8 +256,13 @@ html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
 }
 .shader-ctl button:hover{ color:var(--accent); border-color:var(--accent); }
 .shader-ctl svg{ display:block; }
-/* show the icon matching the current state (figure.paused toggled by the engine) */
-.shader-window:not(.paused) .ico-play{ display:none; }
-.shader-window.paused .ico-pause{ display:none; }
-.shader-window:not(.paused) .ico-clear{ display:none; }
-.shader-window.paused .ico-reset{ display:none; }
+/* show the icon matching the current state (.paused toggled by the engine) */
+.shader-ctl:not(.paused) .ico-play{ display:none; }
+.shader-ctl.paused .ico-pause{ display:none; }
+.shader-ctl:not(.paused) .ico-clear{ display:none; }
+.shader-ctl.paused .ico-reset{ display:none; }
+
+/* floating background-shader panel: hidden until a takeover activates it */
+.shader-bgctl{ position:fixed; top:auto; right:.55rem; bottom:.55rem; z-index:60; display:none; }
+.shader-bgctl.on{ display:flex; }
+html:not(.js) .shader-bgctl{ display:none; }
