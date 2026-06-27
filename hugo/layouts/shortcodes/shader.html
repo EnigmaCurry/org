@@ -1,24 +1,40 @@
-{{- /* shader: an inert, hidden config marker the persistent WebGL engine
-       (themes/terminal/assets/js/shader.js) reads on each page view to reconfigure
-       the single tab-lifetime canvas — it does NOT create its own context. Paired
-       with the ox-hugo `shader` special block (see emacs.d/init.el).
+{{- /* shader: embed the built-in WebGL effect. Paired with the ox-hugo `shader`
+       special block (see emacs.d/init.el). Default = a small inline window
+       rendered in the content flow.
 
        Params (via #+attr_shortcode:):
          :effect    ambient | takeover   (default ambient)
-         :fullscreen  presence -> takeover-style foreground intensity
+                    takeover -> drive the full-screen persistent background canvas
+         :hidden    don't draw the inline window (only useful with :effect takeover)
+         :source    also show the block body as a source code box
          :intensity 0..1 override
-         :poster    static image shown ONLY when JS is off (graceful no-JS fallback)
+         :poster    static image shown when JS is off (graceful no-JS fallback)
          :alt       alt text for the poster
 
-       No-JS: the marker is display:none and the canvas is hidden via
-       html:not(.js); the optional <noscript> poster is the only visible fallback,
-       so the page always reads fine. */ -}}
+       No-JS: inline windows are hidden via html:not(.js); the full-screen canvas is
+       hidden too — so the page always reads fine (optionally with a poster). */ -}}
 {{- $effect := .Get "effect" | default "ambient" -}}
-<div class="shader-config" data-effect="{{ $effect }}"
-     {{- with .Get "fullscreen" }} data-fullscreen="{{ . }}"{{ end }}
-     {{- with .Get "intensity" }} data-intensity="{{ . }}"{{ end }} hidden>
-  {{- with .Inner }}{{ if trim . " \n\r\t" }}<script type="x-shader/x-fragment">{{ . }}</script>{{ end }}{{ end -}}
+{{- $takeover := eq $effect "takeover" -}}
+{{- $hidden := or (.Get "hidden") (.Get "hide") -}}
+{{- $source := or (.Get "source") (.Get "code") -}}
+{{- $intensity := .Get "intensity" -}}
+{{- $body := trim .Inner " \n\r\t" -}}
+{{- /* full-screen takeover -> the persistent background canvas reads this marker */ -}}
+{{- if $takeover -}}
+<div class="shader-config" data-effect="takeover"{{ with $intensity }} data-intensity="{{ . }}"{{ end }} hidden></div>
+{{- end -}}
+{{- /* inline window (a live per-page canvas) unless explicitly hidden */ -}}
+{{- if not $hidden -}}
+<figure class="shader-window" data-effect="{{ $effect }}"{{ with $intensity }} data-intensity="{{ . }}"{{ end }}>
+  <canvas class="shader-canvas" aria-hidden="true"></canvas>
+  {{- with .Get "poster" }}<noscript><img src="{{ . }}" alt="{{ $.Get "alt" | default "shader" }}"></noscript>{{ end -}}
+</figure>
+{{- end -}}
+{{- /* optional source listing (reuses the run-box chrome: copy + expand) */ -}}
+{{- if and $source $body -}}
+<div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>{{ printf "%s" $body }}</pre></div>
 </div>
-{{- with .Get "poster" -}}
-<noscript><img class="shader-poster" src="{{ . }}" alt="{{ $.Get "alt" | default "shader visual" }}"></noscript>
 {{- end -}}

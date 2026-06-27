@@ -230,3 +230,16 @@ html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown *
 
 /* the shader-config marker is data only — never rendered */
 .shader-config{ display:none; }
+
+/* inline shader window: a contained live canvas embedded in the content flow */
+.shader-window{
+  display:block; width:100%; height:clamp(180px, 34vh, 340px);
+  margin:1.3rem 0; border:1px solid var(--rule); border-radius:3px;
+  overflow:hidden; position:relative; background:transparent;
+}
+.shader-window .shader-canvas{
+  display:block; width:100%; height:100%;
+  opacity:0; transition:opacity .5s ease;
+}
+html.js .shader-window .shader-canvas.fx-ready{ opacity:1; }
+html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */

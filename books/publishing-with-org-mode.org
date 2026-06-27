@@ -359,36 +359,46 @@ various Hugo related features.
 index
 #+end_index
 
-** Shader background (experimental)
+** Shaders (experimental)
 :PROPERTIES:
 :EXPORT_FILE_NAME: shader-background
 :EXPORT_HUGO_SLUG: shader-background
 :END:
 
-The site has a persistent WebGL background canvas that survives
-navigation: it never restarts as you click between pages, because the
-canvas lives outside the swapped content area and the soft-navigation
-shell only reconfigures it. The background is *opt-in*: ordinary pages
-render nothing (you just see the normal theme background), and a page
-turns the effect on with a =shader= block — =ambient= for a calm field
-or =takeover= for something stronger:
+A =shader= block embeds the built-in WebGL effect. With no attributes it
+renders a small live window inline in the page:
 
-#+begin_src org
-,#+attr_shortcode: :effect takeover
-,#+begin_shader
-,#+end_shader
-#+end_src
-
-With JavaScript disabled the background simply isn't shown and the page
-reads normally — the effect is pure progressive enhancement. This page
-requests the takeover effect:
-
-#+attr_shortcode: :effect takeover
 #+begin_shader
 #+end_shader
 
-Navigate to any other page and watch the effect switch off (the same
-WebGL context stays alive, just idle), then return when you come back.
+The =shader= block takes a few attributes:
+
+- =:effect takeover= — render the effect full-screen behind the *whole*
+  page using a single persistent canvas that survives navigation (it is
+  only reconfigured, never recreated, as you move between pages), rather
+  than as an inline window.
+- =:hidden= — don't draw the inline window. Only useful together with
+  =:effect takeover=, where the full-screen background is the visual.
+- =:source= — also show the block's source below the window.
+
+For example, this block renders a window *and* shows its source:
+
+#+attr_shortcode: :source true
+#+begin_shader
+// A future release will compile custom GLSL from the block body.
+// For now the built-in shader runs.
+#+end_shader
+
+And this one is a hidden full-screen takeover — look at the page
+background rather than this spot, then navigate away to see it switch
+off (the persistent canvas stays alive, just idle):
+
+#+attr_shortcode: :effect takeover :hidden true
+#+begin_shader
+#+end_shader
+
+With JavaScript disabled, shader windows are simply not shown and the
+page reads normally — the effect is pure progressive enhancement.
 
 ** Example Org Blocks
 :PROPERTIES:
