@@ -59,13 +59,23 @@
 /* --- fenced code blocks (Chroma .highlight): scroll long lines instead of
        overflowing, and strip the inline-code pill styling that leaks onto the
        block <code> (its background/padding drew stray edge lines) --- */
-/* a plain src block gets the same single dashed frame as the env box, but no
-   title straddling the top line. Same line color as .notice (var(--accent) 60%
-   over the rule). Boxed highlights (annotate etc.) bring their own frame. */
-.content .highlight{ margin:1.7rem 0; border:2px dashed color-mix(in srgb, var(--accent) 60%, var(--rule)); border-radius:3px; }
-.box .highlight{ margin:0; border:none; }
+/* a plain src block is framed exactly like the env box: a single dashed line in
+   the same color (var(--accent) 60% over the rule), square corners, and the same
+   faint accent wash -- just without the title straddling the top. To match the
+   env/run boxes we also drop Chroma's inline dark panel so the wash shows
+   through (the syntax colors keep their own foreground). Boxed highlights
+   (annotate) bring their own frame, so they opt back out of the border below. */
+.content .highlight{
+  margin:1.7rem 0;
+  border:2px dashed color-mix(in srgb, var(--accent) 60%, var(--rule));
+  background:color-mix(in srgb, var(--accent), transparent 92%);
+}
+.box .highlight{ margin:0; border:none; background:none; }
 /* smaller font so the reading column fits ~80+ monospace columns without scrolling */
-.content .highlight pre{ overflow-x:auto; max-width:100%; border-radius:3px; padding:.9rem .9rem; font-size:.7em; line-height:1.5; }
+.content .highlight pre{
+  overflow-x:auto; max-width:100%; padding:1.1rem 1.1rem; font-size:.7em; line-height:1.5;
+  background:transparent !important;   /* override Chroma's inline background-color */
+}
 .box .highlight pre{ padding:.9rem .25rem; }
 .content pre code{ background:none; padding:0; color:inherit; border-radius:0; cursor:auto; }
 .content pre code:hover{ background:none; }
