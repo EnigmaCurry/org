@@ -359,6 +359,35 @@ various Hugo related features.
 index
 #+end_index
 
+** Shader background (experimental)
+:PROPERTIES:
+:EXPORT_FILE_NAME: shader-background
+:EXPORT_HUGO_SLUG: shader-background
+:END:
+
+The site has a persistent WebGL background that survives navigation: it
+never restarts as you click between pages, because the canvas lives
+outside the swapped content area and the soft-navigation shell only
+reconfigures it. Most pages use a calm =ambient= field; a page can opt
+into a stronger =takeover= effect with a =shader= block:
+
+#+begin_src org
+,#+attr_shortcode: :effect takeover
+,#+begin_shader
+,#+end_shader
+#+end_src
+
+With JavaScript disabled the background simply isn't shown and the page
+reads normally — the effect is pure progressive enhancement. This page
+requests the takeover effect:
+
+#+attr_shortcode: :effect takeover
+#+begin_shader
+#+end_shader
+
+Navigate to any other page and watch it ease back to the ambient field —
+the same WebGL context, reconfigured rather than recreated.
+
 ** Example Org Blocks
 :PROPERTIES:
 :EXPORT_FILE_NAME: org-blocks

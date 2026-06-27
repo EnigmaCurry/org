@@ -203,3 +203,24 @@ ul.children .group-old > ul.children{ margin:.15rem 0; }
 .content table th:first-child{ white-space:nowrap; width:1%; }
 /* inline =code= stays monospace inside cells, like everywhere else */
 .content table code{ font-family:var(--font-mono); }
+
+/* ============================================================
+   PERSISTENT SHADER CANVAS (see themes/terminal/assets/js/shader.js)
+   A body-level full-viewport background that survives soft navigation. Sits above
+   the page --bg (z-index:-1) but behind the translucent content, so text always
+   wins and the opaque topbar (z 10) / pagenav (z 70) cover it. Progressive
+   enhancement: shown only with JS on AND fx on AND motion allowed. It fades in
+   (.fx-ready, added by the engine after its first frame) to avoid a hard pop.
+   ============================================================ */
+.fx-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:-1;
+  opacity:0; transition:opacity .8s ease;
+}
+html.js .fx-canvas.fx-ready{ opacity:1; }
+html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown */
+.no-fx .fx-canvas{ display:none; }                     /* mirrors .no-fx .lambda-rain */
+@media (prefers-reduced-motion: reduce){ .fx-canvas{ display:none; } }
+
+/* the shader-config marker is data only — never rendered */
+.shader-config{ display:none; }

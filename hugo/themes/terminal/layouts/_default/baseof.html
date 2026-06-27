@@ -5,6 +5,11 @@
 </head>
 <body>
 
+<!-- persistent full-viewport shader background. Body-level so the soft-nav shell
+     (spa.js) never tears it down -> the WebGL animation runs unbroken across page
+     navigations. Hidden entirely when JS is off or fx is off (see theme CSS). -->
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
 <!-- single fixed toggle: ○ when the menu is closed, ● when open (glyph set in CSS).
      A hidden checkbox is the open/closed state and the <label> is the visible
      button, so the off-canvas sidebar opens with pure CSS even when JS is off.
@@ -75,12 +80,21 @@
   <pre class="code-sheet-body"></pre>
 </dialog>
 
-{{ $js := resources.Get "js/terminal.js" | fingerprint }}
+{{- /* one served bundle in a single shared script scope: terminal.js (defines the
+       per-page wiring + animations) -> shader.js (the persistent canvas engine) ->
+       spa.js (the soft-nav router that drives them). Order is load-bearing. */ -}}
+{{ $t := resources.Get "js/terminal.js" }}
+{{ $sh := resources.Get "js/shader.js" }}
+{{ $spa := resources.Get "js/spa.js" }}
+{{ $js := slice $t $sh $spa | resources.Concat "js/terminal.bundle.js" | fingerprint }}
 <script src="{{ $js.RelPermalink }}"></script>
+<script>if(window.Shader) Shader.init();</script>
 {{ if in .Content "class=\"mermaid\"" }}
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true });
+  // startOnLoad:false + explicit run -> one render path shared with spa.js soft-nav
+  mermaid.initialize({ startOnLoad: false });
+  mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
 </script>
 {{ end }}
 {{ if in .Content "math-block" }}

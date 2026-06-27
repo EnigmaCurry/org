@@ -1,0 +1,24 @@
+{{- /* shader: an inert, hidden config marker the persistent WebGL engine
+       (themes/terminal/assets/js/shader.js) reads on each page view to reconfigure
+       the single tab-lifetime canvas — it does NOT create its own context. Paired
+       with the ox-hugo `shader` special block (see emacs.d/init.el).
+
+       Params (via #+attr_shortcode:):
+         :effect    ambient | takeover   (default ambient)
+         :fullscreen  presence -> takeover-style foreground intensity
+         :intensity 0..1 override
+         :poster    static image shown ONLY when JS is off (graceful no-JS fallback)
+         :alt       alt text for the poster
+
+       No-JS: the marker is display:none and the canvas is hidden via
+       html:not(.js); the optional <noscript> poster is the only visible fallback,
+       so the page always reads fine. */ -}}
+{{- $effect := .Get "effect" | default "ambient" -}}
+<div class="shader-config" data-effect="{{ $effect }}"
+     {{- with .Get "fullscreen" }} data-fullscreen="{{ . }}"{{ end }}
+     {{- with .Get "intensity" }} data-intensity="{{ . }}"{{ end }} hidden>
+  {{- with .Inner }}{{ if trim . " \n\r\t" }}<script type="x-shader/x-fragment">{{ . }}</script>{{ end }}{{ end -}}
+</div>
+{{- with .Get "poster" -}}
+<noscript><img class="shader-poster" src="{{ . }}" alt="{{ $.Get "alt" | default "shader visual" }}"></noscript>
+{{- end -}}
