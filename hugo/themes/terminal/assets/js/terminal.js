@@ -832,9 +832,10 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
     doCopy(pre ? pre.textContent : "", ()=> copied(btn));
   });
 });
-// mobile only: add an "expand" control to each code box that opens a near-fullscreen
-// sheet showing the block's raw text, wrapped + selectable. Desktop DOM is left
-// untouched (the whole block is gated behind a coarse-pointer check).
+// touch only: add an "expand" control to each code box that opens a near-fullscreen
+// sheet showing the block's raw text, wrapped + selectable. The inline copy button is
+// folded into the same group (kept on wider screens, CSS-hidden on a portrait phone).
+// Desktop DOM is left untouched (the whole block is gated behind a coarse-pointer check).
 (function(){
   const sheet = document.getElementById("code-sheet");
   if(!sheet || typeof sheet.showModal !== "function") return;
@@ -851,8 +852,9 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
     if(!pre) return;                          // prose boxes (notice/expand/...) have no code body
     const ctl = document.createElement("div");
     ctl.className = "box-ctl";
-    const copy = box.querySelector(".copy");  // on touch the inline copy is redundant ->
-    if(copy) copy.remove();                   // drop it; the sheet carries its own copy button
+    const copy = box.querySelector(".copy");  // keep the inline copy and fold it into the
+    if(copy) ctl.appendChild(copy);           // group; CSS hides it on a portrait phone (expand
+                                              // only) but keeps both on wider touch screens
     const exp = document.createElement("button");
     exp.type = "button"; exp.className = "expand";
     exp.setAttribute("aria-label", "Open in full screen");
