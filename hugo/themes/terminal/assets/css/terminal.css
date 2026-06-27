@@ -353,29 +353,30 @@ code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg
 /* terminal reverse-video selection sweep during copy (run pre + inline code) */
 .ch.sel{ background:var(--sel-bg); color:var(--sel-fg); }
 
-/* mobile-only "expand" control: opens the code block in a near-fullscreen sheet
-   (wrapped + selectable raw text). Built + gated to touch by JS, but kept behind
-   a pointer query too so the chrome never shows on a desktop. -------------- */
-@media (pointer: coarse){
-  /* fold the (optional) copy button + the expand button into one top-right cutout */
-  .box .box-ctl{
-    position:absolute; top:0; right:1.4ch; transform:translateY(-55%); z-index:1;
-    display:inline-flex; align-items:center; gap:.9ch;
-    background:var(--bg); padding:0 .3ch;   /* one page-colored gap in the border */
-  }
-  .box .box-ctl .copy{                       /* was absolute; now flows inside the group */
-    position:static; top:auto; right:auto; transform:none; background:none; padding:0 .3ch; }
-  .box .expand{
-    background:none; border:none; cursor:pointer; color:#a5a5a5;
-    line-height:1; display:inline-flex; align-items:center; padding:0 .3ch; }
-  .box .expand:hover{ color:var(--accent); }
-  .box .expand svg{ display:block; width:1.6em; height:1.6em; }   /* match the copy icon's box (was 16px, ~30% smaller) */
+/* "expand" control: opens the block in a near-fullscreen sheet (wrapped +
+   selectable raw text). JS adds it -- on any device -- to any code block whose
+   content actually overflows: the framed boxes (run/env/stdout/edit/annotate)
+   and the standalone src .highlight. It's toggled as the viewport changes, so it
+   only shows while there's clipped content to reveal. The (optional) copy button
+   on run/env is folded into the same top-right border cutout. ------------- */
+.box-ctl{
+  position:absolute; top:0; right:1.4ch; transform:translateY(-55%); z-index:1;
+  display:inline-flex; align-items:center; gap:.9ch;
+  background:var(--bg); padding:0 .3ch;   /* one page-colored gap in the border */
 }
+.box-ctl .copy{                       /* was absolute; now flows inside the group */
+  position:static; top:auto; right:auto; transform:none; background:none; padding:0 .3ch; }
+.expand{
+  background:none; border:none; cursor:pointer; color:#a5a5a5;
+  line-height:1; display:inline-flex; align-items:center; padding:0 .3ch; }
+.expand:hover{ color:var(--accent); }
+.expand svg{ display:block; width:1.6em; height:1.6em; }   /* match the copy icon's box */
+/* [hidden] must beat the flex display set above (and on .iconbtn) */
+.box-ctl[hidden], .expand[hidden], .iconbtn[hidden]{ display:none; }
 /* portrait phone: too narrow to carry both controls -> show expand only (the sheet
-   has its own copy). Anything wider than a portrait phone keeps the inline copy
-   button alongside expand. */
+   has its own copy). */
 @media (pointer: coarse) and (max-width:480px){
-  .box .box-ctl .copy{ display:none; }
+  .box-ctl .copy{ display:none; }
 }
 /* the sheet itself (only ever opened on touch) */
 .code-sheet{

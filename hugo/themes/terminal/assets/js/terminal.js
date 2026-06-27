@@ -832,14 +832,18 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
     doCopy(pre ? pre.textContent : "", ()=> copied(btn));
   });
 });
-// touch only: add an "expand" control to each code box that opens a near-fullscreen
-// sheet showing the block's raw text, wrapped + selectable. The inline copy button is
-// folded into the same group (kept on wider screens, CSS-hidden on a portrait phone).
-// Desktop DOM is left untouched (the whole block is gated behind a coarse-pointer check).
+// "expand" control: opens a near-fullscreen sheet showing a block's raw text
+// (wrapped + selectable). Added -- on any device -- to every code block whose
+// content overflows: the framed boxes (run/env/stdout/edit/annotate) and the
+// standalone src .highlight. The button only shows while the content is actually
+// clipped/scrolled (recomputed by refreshExpands() on resize / font-load). On
+// run/env the existing copy button folds into the same top-right cutout; other
+// blocks get expand alone, and the sheet's own copy button is shown only when the
+// source block carried one (so copy stays limited to run/env).
+const refreshExpands = [];
 (function(){
   const sheet = document.getElementById("code-sheet");
   if(!sheet || typeof sheet.showModal !== "function") return;
-  if(!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
   const body     = sheet.querySelector(".code-sheet-body");
   const title    = sheet.querySelector(".code-sheet-title");
   const closeBtn = sheet.querySelector(".code-sheet-close");
@@ -847,31 +851,49 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
   // expand-arrows glyph (two opposite corners pulling apart)
   const SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 
+  // collect each expandable block + the element that scrolls (its <pre>)
+  const blocks = [];
   document.querySelectorAll(".box").forEach(box=>{
     const pre = box.querySelector(".body pre");
-    if(!pre) return;                          // prose boxes (notice/expand/...) have no code body
+    if(pre) blocks.push({ host:box, pre, copy:box.querySelector(".copy") });   // prose boxes have no pre -> skipped
+  });
+  document.querySelectorAll(".content .highlight").forEach(hl=>{
+    if(hl.closest(".box")) return;            // annotate's code is reached via its box above
+    const pre = hl.querySelector("pre");
+    if(pre) blocks.push({ host:hl, pre, copy:null });
+  });
+
+  const overflowing = pre => pre.scrollWidth > pre.clientWidth + 1 || pre.scrollHeight > pre.clientHeight + 1;
+
+  blocks.forEach(({ host, pre, copy })=>{
     const ctl = document.createElement("div");
     ctl.className = "box-ctl";
-    const copy = box.querySelector(".copy");  // keep the inline copy and fold it into the
-    if(copy) ctl.appendChild(copy);           // group; CSS hides it on a portrait phone (expand
-                                              // only) but keeps both on wider touch screens
+    if(copy) ctl.appendChild(copy);           // fold run/env's copy into the group
     const exp = document.createElement("button");
     exp.type = "button"; exp.className = "expand";
     exp.setAttribute("aria-label", "Open in full screen");
     exp.setAttribute("aria-haspopup", "dialog");
     exp.innerHTML = SVG;
     ctl.appendChild(exp);
-    box.appendChild(ctl);
+    host.appendChild(ctl);
     exp.addEventListener("click", ()=>{
-      const label = box.querySelector(".label");
+      const label = host.querySelector(".label");
       title.textContent = label ? label.textContent.trim() : "";
       body.textContent = pre.textContent;
+      copyBtn.hidden = !copy;                 // only run/env carry copy into the sheet
       openSheet();
     });
+    const refresh = ()=>{
+      const of = overflowing(pre);
+      exp.hidden = !of;
+      ctl.hidden = !of && !copy;              // copy keeps the group alive; otherwise hide the empty cutout
+    };
+    refresh();
+    refreshExpands.push(refresh);
   });
 
-  // tie the sheet to history so the mobile back gesture/button closes it (and keeps
-  // the post) instead of navigating away. Opening pushes a throwaway entry; the back
+  // tie the sheet to history so a back gesture/button closes it (and keeps the
+  // post) instead of navigating away. Opening pushes a throwaway entry; the back
   // gesture pops it -> popstate closes the sheet; an explicit close pops the entry
   // back off so the stack stays balanced. The guard stops the two from double-firing.
   function openSheet(){
@@ -887,6 +909,11 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
     doCopy(body.textContent, ()=> copied(copyBtn));   // same clip->check morph as the box copy button
   });
 })();
+function refreshAllExpands(){ for(const fn of refreshExpands) fn(); }
+let expandRAF;
+window.addEventListener("resize", ()=>{ cancelAnimationFrame(expandRAF); expandRAF = requestAnimationFrame(refreshAllExpands); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(refreshAllExpands);
+window.addEventListener("load", refreshAllExpands);
 
 // inline code pills: click to copy, with the same reverse-video sweep
 document.querySelectorAll(".content code").forEach(code=>{
