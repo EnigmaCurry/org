@@ -290,6 +290,10 @@ window.Shader = (function(){
       size(); sync();
     }
 
+    // theme changed: running renderers pick up `accent` on the next frame, but a
+    // paused/stopped window holds a static frame — repaint it with the new color.
+    function refreshColor(){ if(!running && gl && prog && active && !blocked()) renderStill(); }
+
     function dispose(){
       active = false; stop(false);
       if(ro){ ro.disconnect(); ro = null; }
@@ -307,7 +311,7 @@ window.Shader = (function(){
       if(playBtn) playBtn.addEventListener("click", ()=> setPaused(!paused));
       size();
     }
-    return { configure, activate, setPaused, sync, size, dispose, ok: !!gl };
+    return { configure, activate, setPaused, refreshColor, sync, size, dispose, ok: !!gl };
   }
 
   // ---- manager: one persistent background + N per-page inline windows -------
@@ -345,6 +349,7 @@ window.Shader = (function(){
   }
 
   function syncAll(){ if(bg) bg.sync(); inlines.forEach(r=> r.sync()); }
+  function refreshColors(){ readAccent(); if(bg) bg.refreshColor(); inlines.forEach(r=> r.refreshColor()); }
   function sizeAll(){ if(bg) bg.size(); inlines.forEach(r=> r.size()); }
   function killAll(){
     perfKilled = true;
@@ -356,8 +361,8 @@ window.Shader = (function(){
     window.addEventListener("resize", sizeAll);
     document.addEventListener("visibilitychange", syncAll);
     if(window.MutationObserver){
-      new MutationObserver(syncAll).observe(document.body, { attributes:true, attributeFilter:["class"] });          // fx toggle
-      new MutationObserver(readAccent).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] }); // palette
+      new MutationObserver(syncAll).observe(document.body, { attributes:true, attributeFilter:["class"] });             // fx toggle
+      new MutationObserver(refreshColors).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] }); // palette
     }
     const mm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
     if(mm && mm.addEventListener) mm.addEventListener("change", syncAll);
