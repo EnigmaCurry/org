@@ -864,8 +864,8 @@ document.querySelectorAll(".run .copy").forEach(btn=>{
     if(!pre) return;                          // prose boxes (notice/expand/...) have no code body
     const ctl = document.createElement("div");
     ctl.className = "box-ctl";
-    const copy = box.querySelector(".copy");  // fold the existing copy button into the group
-    if(copy) ctl.appendChild(copy);           // moved, not recreated -> its click listener survives
+    const copy = box.querySelector(".copy");  // on touch the inline copy is redundant ->
+    if(copy) copy.remove();                   // drop it; the sheet carries its own copy button
     const exp = document.createElement("button");
     exp.type = "button"; exp.className = "expand";
     exp.setAttribute("aria-label", "Open in full screen");
