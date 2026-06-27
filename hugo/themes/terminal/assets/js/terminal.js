@@ -636,7 +636,13 @@ function scrollActiveBlogTagIntoView(){
   const activeLink = tree && tree.querySelector(".blog-nav a.active");
   if(!tree || !activeLink || tree.clientHeight === 0) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  activeLink.scrollIntoView({ block:"center", inline:"nearest", behavior: reduce ? "auto" : "smooth" });
+  // scroll the active tag to the middle of the tree *only* — scrollIntoView would
+  // also bubble up and scroll the page/window (yanking the article to the top).
+  const treeRect = tree.getBoundingClientRect();
+  const linkRect = activeLink.getBoundingClientRect();
+  const target = tree.scrollTop + (linkRect.top - treeRect.top) - (tree.clientHeight - linkRect.height) / 2;
+  const top = Math.max(0, Math.min(target, tree.scrollHeight - tree.clientHeight));
+  tree.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
 }
 function queueActiveBlogTagScroll(){
   requestAnimationFrame(()=> requestAnimationFrame(scrollActiveBlogTagIntoView));
