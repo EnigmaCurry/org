@@ -884,13 +884,7 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
   if(closeBtn) closeBtn.addEventListener("click", ()=> sheet.close());
   sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
   if(copyBtn) copyBtn.addEventListener("click", ()=>{
-    doCopy(body.textContent, ()=>{
-      copyBtn.textContent = "copied ✓";
-      copyBtn.classList.remove("flash"); void copyBtn.offsetWidth;   // restart the pulse on repeat taps
-      copyBtn.classList.add("flash");
-      clearTimeout(copyBtn._t);
-      copyBtn._t = setTimeout(()=>{ copyBtn.textContent = "copy"; copyBtn.classList.remove("flash"); }, 1200);
-    });
+    doCopy(body.textContent, ()=> copied(copyBtn));   // same clip->check morph as the box copy button
   });
 })();
 

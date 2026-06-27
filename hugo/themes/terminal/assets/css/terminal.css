@@ -337,18 +337,19 @@ code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg
   color:#a5a5a5; line-height:1; display:inline-flex; align-items:center;
 }
 .box .copy:hover{ color:var(--accent); }
-.box .copy .ico{ display:inline-block; position:relative; }
+/* icon visuals are button-agnostic (shared by the box copy + the code-sheet copy) */
+.copy .ico{ display:inline-block; position:relative; }
 /* two overlapping sheets = the universal "copy" symbol */
-.box .copy .clip{ width:1.5em; height:1.6em; }
-.box .copy .clip::before{ content:""; position:absolute; left:0; top:0;          /* back sheet (peeks out top-left) */
+.copy .clip{ width:1.5em; height:1.6em; }
+.copy .clip::before{ content:""; position:absolute; left:0; top:0;          /* back sheet (peeks out top-left) */
   width:1em; height:1.2em; border:2px solid currentColor; border-radius:2px; }
-.box .copy .clip::after{ content:""; position:absolute; left:.45em; top:.4em;     /* front sheet, shifted down-right */
+.copy .clip::after{ content:""; position:absolute; left:.45em; top:.4em;     /* front sheet, shifted down-right */
   width:1em; height:1.2em; border:2px solid currentColor; border-radius:2px; background:var(--bg); }
-.box .copy .check{ display:none; width:.82em; height:1.5em;
+.copy .check{ display:none; width:.82em; height:1.5em;
   border-right:2.5px solid currentColor; border-bottom:2.5px solid currentColor; transform:rotate(45deg); }
-.box .copy.copied{ color:var(--accent); }
-.box .copy.copied .clip{ display:none; }
-.box .copy.copied .check{ display:inline-block; }
+.copy.copied{ color:var(--accent); }
+.copy.copied .clip{ display:none; }
+.copy.copied .check{ display:inline-block; }
 /* terminal reverse-video selection sweep during copy (run pre + inline code) */
 .ch.sel{ background:var(--sel-bg); color:var(--sel-fg); }
 
@@ -388,16 +389,9 @@ code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg
 .code-sheet-title{
   flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   color:var(--fg-dim); font-size:.8rem; }
-/* match the icon close button's 2.1rem box so both head buttons are the same height */
-.code-sheet-copy{ height:2.1rem; padding:0 .7rem; display:inline-flex; align-items:center;
-  justify-content:center; flex:none; white-space:nowrap;   /* keep "copied ✓" on one line */
-  min-width:9ch; }   /* fixed width so the "copied" swap doesn't reflow */
-/* a one-shot pulse (fill -> fade back to normal): reads as "action done", not a toggle */
-.code-sheet-copy.flash{ animation:copyflash .5s ease-out; }
-@keyframes copyflash{
-  0%{   background:var(--accent); color:var(--bg);      border-color:var(--accent); }
-  100%{ background:transparent;   color:var(--fg-dim);  border-color:var(--rule); }
-}
+/* both head buttons are .iconbtn squares; the copy icon sizes itself in em, so just
+   match the close glyph to it -> one icon family, equal footprint */
+.code-sheet-close svg{ width:1.6em; height:1.6em; }
 .code-sheet-body{
   flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
   margin:0; padding:1rem .9rem 2.5rem; color:var(--fg-bright);
