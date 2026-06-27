@@ -612,6 +612,19 @@ function applyFx(){
 fxBtn.addEventListener("click", ()=>{ fxOn = !fxOn; applyFx(); });
 applyFx();
 
+// wrap-code on/off toggle (persisted, default off): long lines in code/run blocks
+// wrap instead of being clipped with an ellipsis. The class was already applied to
+// <html> by the early head script (no flash); here we just sync state + handle clicks.
+let wrapOn = lsGet("wrap-code") === "on";
+const wrapBtn = document.getElementById("wrap-code");
+function applyWrap(){
+  wrapBtn.textContent = wrapOn ? "on" : "off";
+  document.documentElement.classList.toggle("wrap-code", wrapOn);
+  lsSet("wrap-code", wrapOn ? "on" : "off");
+}
+wrapBtn.addEventListener("click", ()=>{ wrapOn = !wrapOn; applyWrap(); });
+applyWrap();
+
 // settings modal: the gear in the sidebar action row opens a <dialog> holding the
 // theme + fx controls above. Escape closes natively; we add open / close-button /
 // click-on-backdrop handling.
