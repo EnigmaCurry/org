@@ -877,9 +877,20 @@ document.querySelectorAll(".run .copy").forEach(btn=>{
       const label = box.querySelector(".label");
       title.textContent = label ? label.textContent.trim() : "";
       body.textContent = pre.textContent;
-      sheet.showModal();
+      openSheet();
     });
   });
+
+  // tie the sheet to history so the mobile back gesture/button closes it (and keeps
+  // the post) instead of navigating away. Opening pushes a throwaway entry; the back
+  // gesture pops it -> popstate closes the sheet; an explicit close pops the entry
+  // back off so the stack stays balanced. The guard stops the two from double-firing.
+  function openSheet(){
+    history.pushState({ codeSheet:1 }, "");
+    sheet.showModal();
+  }
+  window.addEventListener("popstate", ()=>{ if(sheet.open) sheet.close(); });
+  sheet.addEventListener("close", ()=>{ if(history.state && history.state.codeSheet) history.back(); });
 
   if(closeBtn) closeBtn.addEventListener("click", ()=> sheet.close());
   sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
