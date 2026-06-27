@@ -321,7 +321,12 @@ code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .box .body{ padding:1.2rem 1.1rem .95rem; }
-.box .body pre{ margin:0; white-space:pre; overflow:hidden; text-overflow:ellipsis; }
+/* default (no JS): scroll, so the full text stays readable without an expand
+   button. The head script adds html.js synchronously (before first paint), so JS
+   browsers instead clip to a one-screen preview -- the expand control reveals the
+   rest. No flash, and non-JS readers can still reach every line. */
+.box .body pre{ margin:0; white-space:pre; overflow-x:auto; }
+html.js .box .body pre{ overflow:hidden; text-overflow:ellipsis; }
 
 .run{ --line:color-mix(in srgb, var(--accent) 65%, var(--rule));
   background:color-mix(in srgb, var(--accent), transparent 92%); }   /* same faint wash as notes */
