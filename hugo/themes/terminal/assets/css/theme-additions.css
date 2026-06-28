@@ -203,3 +203,71 @@ ul.children .group-old > ul.children{ margin:.15rem 0; }
 .content table th:first-child{ white-space:nowrap; width:1%; }
 /* inline =code= stays monospace inside cells, like everywhere else */
 .content table code{ font-family:var(--font-mono); }
+
+/* ============================================================
+   PERSISTENT SHADER CANVAS (see themes/terminal/assets/js/shader.js)
+   A body-level full-viewport background that survives soft navigation. Sits above
+   the page --bg (z-index:-1) but behind the translucent content, so text always
+   wins and the opaque topbar (z 10) / pagenav (z 70) cover it. Progressive
+   enhancement: shown only with JS on AND fx on AND motion allowed. It fades in
+   (.fx-ready, added by the engine after its first frame) to avoid a hard pop.
+   ============================================================ */
+.fx-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:-1;
+  opacity:0; transition:opacity .8s ease;
+}
+/* The canvas sits at z-index:-1, which paints above html's background but below
+   body. terminal.css gives BOTH html and body an opaque --bg, so body would paint
+   right over the canvas and hide it. Drop body's background (html keeps the base
+   color) so the canvas shows through. Visually identical when the shader is hidden
+   (fx/JS off), and scoped to html.js so the no-JS page is unchanged. */
+html.js body{ background:transparent; }
+html.js .fx-canvas.fx-ready{ opacity:1; }
+html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown */
+.no-fx .fx-canvas{ display:none; }                     /* mirrors .no-fx .lambda-rain */
+@media (prefers-reduced-motion: reduce){ .fx-canvas{ display:none; } }
+
+/* the shader-config marker is data only — never rendered */
+.shader-config{ display:none; }
+
+/* inline shader window: a contained live canvas embedded in the content flow */
+.shader-window{
+  display:block; width:100%; height:clamp(180px, 34vh, 340px);
+  margin:1.3rem 0; border:1px solid var(--rule); border-radius:3px;
+  overflow:hidden; position:relative; background:var(--bg);   /* opaque canvas sits on it; shows when cleared. matches the theme */
+}
+.shader-window .shader-canvas{
+  display:block; width:100%; height:100%;
+  opacity:0; transition:opacity .5s ease;
+}
+html.js .shader-window .shader-canvas.fx-ready{ opacity:1; }
+html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
+/* compile-error overlay for literate (custom GLSL) shader windows */
+.shader-error{
+  position:absolute; inset:0; margin:0; padding:.6rem .7rem; z-index:2;
+  overflow:auto; white-space:pre-wrap;
+  font:12px/1.45 var(--font-mono); color:#ff9b9b;
+  background:color-mix(in srgb, #200 78%, transparent);
+}
+
+/* shader controls: play/pause + reset(playing)/clear(paused). Used by both the
+   inline window (absolute, top-right of the figure) and the floating background
+   panel (#fxctl, fixed bottom-right, shown only while a takeover is live). */
+.shader-ctl{ position:absolute; top:.4rem; right:.4rem; display:flex; gap:.3rem; z-index:1; }
+.shader-ctl button{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.7rem; height:1.7rem; padding:0; cursor:pointer;
+  color:var(--fg-dim); background:color-mix(in srgb, var(--panel) 72%, transparent);
+  border:1px solid var(--rule); border-radius:3px;
+}
+.shader-ctl button:hover{ color:var(--accent); border-color:var(--accent); }
+.shader-ctl svg{ display:block; }
+/* play/stop toggle: show the icon matching the current state (.paused = stopped) */
+.shader-ctl:not(.paused) .ico-play{ display:none; }   /* playing -> show stop */
+.shader-ctl.paused .ico-stop{ display:none; }         /* stopped -> show play */
+
+/* floating background-shader panel: hidden until a takeover activates it */
+.shader-bgctl{ position:fixed; top:auto; right:.55rem; bottom:.55rem; z-index:60; display:none; }
+.shader-bgctl.on{ display:flex; }
+html:not(.js) .shader-bgctl{ display:none; }

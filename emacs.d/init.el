@@ -69,7 +69,8 @@
           ("mermaid" :raw t)
           ("edit" :raw t)
           ("env" :raw t)
-          ("math" :raw t)))
+          ("math" :raw t)
+          ("shader" :raw t)))
 
   ;; Make `run'/`stdout' blocks robust for arbitrary embedded scripts.
   ;; These render as <pre> via a paired Hugo shortcode, but Org otherwise
@@ -78,7 +79,7 @@
   ;; ("Unable to resolve link"). Rewrite them into verbatim
   ;; `#+begin_export hugo' blocks (which Org never parses for markup)
   ;; emitting the same shortcode, before ox-hugo parses the buffer.
-  (defvar my/verbatim-special-blocks '("run")
+  (defvar my/verbatim-special-blocks '("run" "shader")
     "Special-block types whose bodies must be emitted verbatim.")
 
   (defun my/rawify-verbatim-special-blocks (&rest _)

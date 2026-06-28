@@ -1,13 +1,14 @@
 {{- /* terminal prompt bar: visitor@<site>:~/book/chapter/section
-       Built from the page's ancestors (home excluded) + the page itself. */ -}}
+       Built from the page's ancestors (home excluded) + the page itself. Each
+       path segment is its own link to that subsection; the visitor@host: prefix
+       and the leading ~ both link to the site root. */ -}}
 {{- $cur := . -}}
-{{- $parts := slice -}}
+{{- $crumbs := slice -}}
 {{- range $a := $cur.Ancestors.Reverse -}}
-  {{- if not $a.IsHome }}{{ $parts = $parts | append (partial "pagename.html" $a) }}{{ end -}}
+  {{- if not $a.IsHome }}{{ $crumbs = $crumbs | append (dict "name" (partial "pagename.html" $a) "url" $a.RelPermalink) }}{{ end -}}
 {{- end -}}
-{{- if not $cur.IsHome }}{{ $parts = $parts | append (partial "pagename.html" $cur) }}{{ end -}}
-{{- $path := "~" -}}
-{{- if $parts }}{{ $path = printf "~/%s" (delimit $parts "/") }}{{ end -}}
+{{- if not $cur.IsHome }}{{ $crumbs = $crumbs | append (dict "name" (partial "pagename.html" $cur) "url" $cur.RelPermalink) }}{{ end -}}
+{{- $home := $cur.Site.Home.RelPermalink -}}
 <div class="topbar">
-  <span class="cmd"><a class="seg prefix" href="{{ $cur.Site.Home.RelPermalink }}"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>{{ $cur.Site.Title }}</span>:</a><a class="seg pathseg" href="{{ $cur.RelPermalink }}"><span class="path">{{ $path }}</span></a></span>
+  <span class="cmd"><a class="seg prefix" href="{{ $home }}"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>{{ $cur.Site.Title }}</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="{{ $home }}">~</a>{{ range $i, $c := $crumbs }}<a class="pseg{{ if eq (add $i 1) (len $crumbs) }} pcur{{ end }}" href="{{ $c.url }}">/{{ $c.name }}</a>{{ end }}</span></span></span>
 </div>

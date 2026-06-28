@@ -1,0 +1,59 @@
+{{- /* shader: embed the built-in WebGL effect. Paired with the ox-hugo `shader`
+       special block (see emacs.d/init.el). Default = a small inline window
+       rendered in the content flow.
+
+       The block BODY may contain a custom fragment shader — a Shadertoy-style
+       void mainImage(out vec4 fragColor, in vec2 fragCoord) — which the engine
+       compiles and runs in the window. Inputs: iResolution (vec3), iTime (float),
+       iAccent (vec3). With no body, the built-in shader runs.
+
+       Params (via #+attr_shortcode:):
+         :effect    ambient | takeover   (default ambient; built-in shader only)
+                    takeover -> drive the full-screen persistent background canvas
+         :hidden    don't draw the inline window (only useful with :effect takeover)
+         :autoplay  start animating on load (default OFF -> a static preview + play)
+         :source    show the block body as a code box. Defaults ON when a body is
+                    present (literate); pass :source false to hide it.
+         :intensity 0..1 override (built-in shader)
+         :poster    static image shown when JS is off (graceful no-JS fallback)
+         :alt       alt text for the poster
+
+       No-JS: inline windows are hidden via html:not(.js); the full-screen canvas is
+       hidden too — so the page always reads fine (optionally with a poster). */ -}}
+{{- $effect := .Get "effect" | default "ambient" -}}
+{{- $takeover := eq $effect "takeover" -}}
+{{- $hidden := or (.Get "hidden") (.Get "hide") -}}
+{{- $autoplayRaw := or (.Get "autoplay") (.Get "play") -}}
+{{- $autoplay := and $autoplayRaw (ne (printf "%v" $autoplayRaw) "false") -}}
+{{- $intensity := .Get "intensity" -}}
+{{- $body := trim .Inner " \n\r\t" -}}
+{{- /* show the source by default whenever there's a body (literate); :source false hides it */ -}}
+{{- $showSource := and (ne $body "") (ne (printf "%v" (.Get "source")) "false") -}}
+{{- /* full-screen takeover -> the persistent background canvas reads this marker */ -}}
+{{- if $takeover -}}
+<div class="shader-config" data-effect="takeover"{{ with $intensity }} data-intensity="{{ . }}"{{ end }} hidden></div>
+{{- end -}}
+{{- /* inline window (a live per-page canvas) unless explicitly hidden. Starts with
+       the .paused class unless :autoplay, so the control icons read correctly before
+       JS wires up (the engine keeps the state in sync after). */ -}}
+{{- if not $hidden -}}
+<figure class="shader-window" data-effect="{{ $effect }}"{{ with $intensity }} data-intensity="{{ . }}"{{ end }}{{ if $autoplay }} data-autoplay{{ end }}>
+  <canvas class="shader-canvas" aria-hidden="true"></canvas>
+  {{- if $body }}<script type="x-shader/x-fragment" class="shader-glsl">{{ .Inner }}</script><pre class="shader-error" hidden></pre>{{ end -}}
+  <div class="shader-ctl{{ if not $autoplay }} paused{{ end }}">
+    <button type="button" class="shader-play" aria-label="Play">
+      <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+      <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+    </button>
+  </div>
+  {{- with .Get "poster" }}<noscript><img src="{{ . }}" alt="{{ $.Get "alt" | default "shader" }}"></noscript>{{ end -}}
+</figure>
+{{- end -}}
+{{- /* source listing (reuses the run-box chrome: copy + expand) */ -}}
+{{- if $showSource -}}
+<div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>{{ printf "%s" $body }}</pre></div>
+</div>
+{{- end -}}

@@ -555,6 +555,7 @@ function lambdaRain(){
   }
 
   function frame(now){
+    if(!canvas.isConnected) return;   // canvas was swapped out by a soft-nav -> let this loop die (a fresh one runs for the new canvas)
     if(!document.body.classList.contains("no-fx")){
       ctx.globalCompositeOperation = "destination-out";   // fade the field -> trails
       ctx.fillStyle = "rgba(0,0,0,0.025)";                 // gentle fade: instant-on glyphs ease off, not blink
@@ -635,14 +636,13 @@ function scrollActiveBlogTagIntoView(){
   const tree = sidebarEl && sidebarEl.querySelector(".tree");
   const activeLink = tree && tree.querySelector(".blog-nav a.active");
   if(!tree || !activeLink || tree.clientHeight === 0) return;
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // scroll the active tag to the middle of the tree *only* — scrollIntoView would
+  // position the active tag at the middle of the tree *only* — scrollIntoView would
   // also bubble up and scroll the page/window (yanking the article to the top).
+  // Jump there instantly (no smooth motion): it should just be where it needs to be.
   const treeRect = tree.getBoundingClientRect();
   const linkRect = activeLink.getBoundingClientRect();
   const target = tree.scrollTop + (linkRect.top - treeRect.top) - (tree.clientHeight - linkRect.height) / 2;
-  const top = Math.max(0, Math.min(target, tree.scrollHeight - tree.clientHeight));
-  tree.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+  tree.scrollTop = Math.max(0, Math.min(target, tree.scrollHeight - tree.clientHeight));
 }
 function queueActiveBlogTagScroll(){
   requestAnimationFrame(()=> requestAnimationFrame(scrollActiveBlogTagIntoView));
@@ -662,22 +662,43 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(queueActive
 window.addEventListener("load", queueActiveBlogTagScroll);
 // the backdrop <label> already closes via CSS; closing on tree-link clicks also
 // covers same-page anchor jumps that don't reload (a full navigation resets the
-// checkbox on its own).
-document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("click", ()=>{ if(navToggle) navToggle.checked = false; }));
+// checkbox on its own). The tree is swapped per page on soft-nav, so rebind after
+// each swap (see reinitAfterNav).
+function wireSidebarLinks(){
+  document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("click", ()=>{ if(navToggle) navToggle.checked = false; }));
+}
+wireSidebarLinks();
 
 // page outline: the SECOND index (this page's h2/h3 sections) shown in the
 // header "#" expander. The list and open/close are rendered/handled by the
 // template + a CSS checkbox (see pagenav.html), so the outline works with JS
 // off; here we add smooth scrolling, close-on-pick / outside / Escape, and the
-// scroll-spy highlight.
-(function(){
-  const cb     = document.getElementById("toctoggle");
-  const panel  = document.getElementById("toc");
-  if(!cb || !panel || !content) return;
-  const toggle = document.querySelector(".toc-toggle");
-  const links  = [...panel.querySelectorAll("a[href^='#']")];
-  const close  = () => { cb.checked = false; };
-  panel.addEventListener("click", e=>{
+// scroll-spy highlight. The .topnav (and its #toc panel) is swapped per page on
+// soft-nav, so the per-page refs are rebound by wirePagenav(); the document /
+// window listeners below are wired ONCE and read those mutable refs.
+let tocCb = null, tocPanel = null, tocToggle = null;
+let tocLinks = [], tocHeads = [], tocById = {}, tocTitleLink = null;
+const tocClose = () => { if(tocCb) tocCb.checked = false; };
+// scroll-spy: highlight the section the viewport is currently in — the last
+// heading whose top has scrolled past a line near the top of the viewport.
+// Recomputed on every scroll (never stale); above the first heading it falls
+// back to the title entry.
+function tocSpy(){
+  if(!tocHeads.length) return;
+  let current = null;
+  for(const h of tocHeads){ if(h.getBoundingClientRect().top <= 90) current = h.id; else break; }
+  const want = current ? tocById["#" + current] : tocTitleLink;
+  tocLinks.forEach(a=> a.classList.toggle("active", a === want));
+}
+function wirePagenav(){
+  tocCb     = document.getElementById("toctoggle");
+  tocPanel  = document.getElementById("toc");
+  tocToggle = document.querySelector(".toc-toggle");
+  tocLinks = []; tocHeads = []; tocById = {}; tocTitleLink = null;
+  if(!tocPanel || !content) return;
+  tocLinks = [...tocPanel.querySelectorAll("a[href^='#']")];
+  // bound to the freshly swapped panel each navigation, so no stale handlers leak
+  tocPanel.addEventListener("click", e=>{
     const a = e.target.closest("a"); if(!a) return;
     const href = a.getAttribute("href");
     if(href === "#"){                                 // title -> all the way to the very top
@@ -688,38 +709,23 @@ document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("cl
       if(el){ e.preventDefault(); el.scrollIntoView({ behavior:"smooth", block:"start" }); }
     }
     // any other href (a child-page link on a book/chapter index) navigates normally
-    close();
+    tocClose();
   });
-  // close on a click outside the panel. Ignore the checkbox's own toggle click
-  // (clicking the label synthesizes a click on the input) — otherwise the open
-  // click would be read as an outside click and close it again immediately.
-  document.addEventListener("click", e=>{ if(cb.checked && e.target !== cb && !panel.contains(e.target) && !(toggle && toggle.contains(e.target))) close(); });
-  document.addEventListener("keydown", e=>{ if(e.key === "Escape") close(); });
-  // scroll-spy: highlight the section the viewport is currently in — the last
-  // heading whose top has scrolled past a line near the top of the viewport.
-  // Recomputed on every scroll (not just when a heading enters a band) so it's
-  // never stale: above the first heading it falls back to the title entry.
-  const heads = [...content.querySelectorAll("h2, h3")].filter(h=> h.id);
-  if(heads.length){
-    const byId = {};
-    links.forEach(a=>{ byId[a.getAttribute("href")] = a; });
-    const titleLink = byId["#"];   // the lvl1 page-title entry (jumps to top)
-    const OFFSET = 90;             // px below the viewport top counted as "here"
-    let raf = 0;
-    function spy(){
-      raf = 0;
-      let current = null;
-      for(const h of heads){
-        if(h.getBoundingClientRect().top <= OFFSET) current = h.id; else break;
-      }
-      const want = current ? byId["#" + current] : titleLink;
-      links.forEach(a=> a.classList.toggle("active", a === want));
-    }
-    addEventListener("scroll", ()=>{ if(!raf) raf = requestAnimationFrame(spy); }, { passive:true });
-    addEventListener("resize", ()=>{ if(!raf) raf = requestAnimationFrame(spy); }, { passive:true });
-    spy();
-  }
-})();
+  tocHeads = [...content.querySelectorAll("h2, h3")].filter(h=> h.id);
+  tocLinks.forEach(a=>{ tocById[a.getAttribute("href")] = a; });
+  tocTitleLink = tocById["#"];   // the lvl1 page-title entry (jumps to top)
+  tocSpy();
+}
+// close on a click outside the panel. Ignore the checkbox's own toggle click
+// (clicking the label synthesizes a click on the input) — otherwise the open
+// click would be read as an outside click and close it again immediately.
+document.addEventListener("click", e=>{ if(tocCb && tocCb.checked && e.target !== tocCb && tocPanel && !tocPanel.contains(e.target) && !(tocToggle && tocToggle.contains(e.target))) tocClose(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") tocClose(); });
+let spyRAF = 0;
+const queueSpy = ()=>{ if(!spyRAF) spyRAF = requestAnimationFrame(()=>{ spyRAF = 0; tocSpy(); }); };
+addEventListener("scroll", queueSpy, { passive:true });
+addEventListener("resize", queueSpy, { passive:true });
+wirePagenav();
 
 // left / right arrow keys flip pages, mirroring the top-right nav buttons.
 // (this is the same action as clicking .navprev / .navnext in pagenav.html)
@@ -740,20 +746,23 @@ document.querySelectorAll(".sidebar .tree a").forEach(a=> a.addEventListener("cl
   });
 })();
 
-// clicking the prompt path (after the ":") replays the intro animation (simplest:
-// reload the page); the visitor@host: prefix is a normal link to the site root.
-const cmdLink = document.querySelector(".topbar a.pathseg");
-if(cmdLink) cmdLink.addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
-
-// keep the prompt on ONE line: drop the visitor@host: prefix when the whole line
-// won't fit, then left-truncate the path (…suffix) so the current page stays visible.
-// Monospace => exact character math, no CSS bidi/ellipsis tricks needed.
-(function(){
+// terminal prompt bar. Two jobs, both re-run per page because .topbar .cmd is
+// swapped on soft-nav: (1) each path segment is its own link to that subsection;
+// the visitor@host: prefix and the leading ~ link to the site root, and the
+// current page's own segment replays the intro by reloading.
+// (2) keep the prompt on ONE line: drop the prefix when the whole line won't fit,
+// then left-truncate the path — hide whole leading segments behind a leading …,
+// char-truncating the boundary segment. Monospace => exact character math.
+let fitPrompt = ()=>{};
+function wirePrompt(){
   const cmd = document.querySelector(".topbar .cmd");
   const pathEl = cmd && cmd.querySelector(".path");
-  if(!cmd || !pathEl) return;
+  if(!cmd || !pathEl){ fitPrompt = ()=>{}; return; }
   const prefix = cmd.querySelector(".prefix");
-  const fullPath = pathEl.textContent;
+  const ell = pathEl.querySelector(".pell");
+  const segs = Array.from(pathEl.querySelectorAll(".pseg"));
+  segs.forEach(s=>{ if(s.dataset.full == null) s.dataset.full = s.textContent; });
+  const fullLen = segs.reduce((n,s)=> n + s.dataset.full.length, 0);
   const prefixLen = prefix ? prefix.textContent.length : 0;
   function charW(){
     const r = document.createElement("span");
@@ -762,20 +771,31 @@ if(cmdLink) cmdLink.addEventListener("click", e=>{ e.preventDefault(); location.
     const w = r.getBoundingClientRect().width / 40; r.remove();
     return w || 8;
   }
-  function fitPrompt(){
+  fitPrompt = function(){
     const cols = Math.floor(cmd.clientWidth / charW()) - 1;   // -1 char safety margin
-    const showPrefix = (prefixLen + fullPath.length) <= cols;
+    segs.forEach(s=>{ s.style.display = ""; if(s.textContent !== s.dataset.full) s.textContent = s.dataset.full; });
+    if(ell) ell.hidden = true;
+    const showPrefix = (prefixLen + fullLen) <= cols;
     cmd.classList.toggle("hide-prefix", !showPrefix);
     const room = cols - (showPrefix ? prefixLen : 0);
-    pathEl.textContent = fullPath.length <= room
-      ? fullPath
-      : "…" + fullPath.slice(-Math.max(1, room - 1));     // leading … keeps the suffix
-  }
-  let raf;
-  window.addEventListener("resize", ()=>{ cancelAnimationFrame(raf); raf = requestAnimationFrame(fitPrompt); });
-  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitPrompt);
+    if(fullLen <= room) return;                              // everything fits
+    if(ell) ell.hidden = false;                             // leading … + suffix
+    let budget = Math.max(1, room - 1);
+    for(let i = segs.length - 1; i >= 0; i--){
+      const s = segs[i], t = s.dataset.full;
+      if(t.length <= budget){ budget -= t.length; }          // whole segment fits
+      else if(budget > 0){ s.textContent = t.slice(t.length - budget); budget = 0; }
+      else { s.style.display = "none"; }                     // dropped behind the …
+    }
+  };
+  const curLink = cmd.querySelector("a.pcur");
+  if(curLink) curLink.addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
   fitPrompt();
-})();
+}
+let promptRAF;
+window.addEventListener("resize", ()=>{ cancelAnimationFrame(promptRAF); promptRAF = requestAnimationFrame(()=> fitPrompt()); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=> fitPrompt());
+wirePrompt();
 
 // copy-to-clipboard on run boxes: check morph + re-run the circuit beam for that box
 function fallbackCopy(text){
@@ -832,12 +852,15 @@ function copied(btn){
   const pre = box && box.querySelector(".body pre");
   if(pre && fxOn) sweepElement(pre);          // reverse-video select-all sweep
 }
-document.querySelectorAll(".box .copy").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const pre = btn.closest(".box").querySelector(".body pre");
-    doCopy(pre ? pre.textContent : "", ()=> copied(btn));
+function wireCopyButtons(root){
+  (root || content || document).querySelectorAll(".box .copy").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const pre = btn.closest(".box").querySelector(".body pre");
+      doCopy(pre ? pre.textContent : "", ()=> copied(btn));
+    });
   });
-});
+}
+wireCopyButtons(content);
 // "expand" control: opens a near-fullscreen sheet showing a block's raw text
 // (wrapped + selectable). Added -- on any device -- to every code block whose
 // content overflows: the framed boxes (run/env/stdout/edit/annotate) and the
@@ -847,23 +870,50 @@ document.querySelectorAll(".box .copy").forEach(btn=>{
 // blocks get expand alone, and the sheet's own copy button is shown only when the
 // source block carried one (so copy stays limited to run/env).
 const refreshExpands = [];
+// expand-arrows glyph (two opposite corners pulling apart)
+const EXPAND_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+
+// ONE-TIME wiring of the shared code sheet (a persistent body-level <dialog>):
+// opening pushes a throwaway history entry so a back gesture/button closes it (and
+// keeps the page) instead of navigating away; an explicit close pops the entry back
+// off so the stack stays balanced. The per-page expand buttons (wired by
+// wireExpands) fill + open it. NB: the popstate guard checks history.state.codeSheet,
+// which is also how spa.js's router knows to leave a back-press to the sheet.
+let openSheet = ()=>{};
+let sheetBody = null, sheetTitle = null, sheetCopyBtn = null;
 (function(){
   const sheet = document.getElementById("code-sheet");
   if(!sheet || typeof sheet.showModal !== "function") return;
-  const body     = sheet.querySelector(".code-sheet-body");
-  const title    = sheet.querySelector(".code-sheet-title");
+  sheetBody    = sheet.querySelector(".code-sheet-body");
+  sheetTitle   = sheet.querySelector(".code-sheet-title");
   const closeBtn = sheet.querySelector(".code-sheet-close");
-  const copyBtn  = sheet.querySelector(".code-sheet-copy");
-  // expand-arrows glyph (two opposite corners pulling apart)
-  const SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+  sheetCopyBtn = sheet.querySelector(".code-sheet-copy");
+  openSheet = function(){ history.pushState({ codeSheet:1 }, ""); sheet.showModal(); };
+  window.addEventListener("popstate", ()=>{ if(sheet.open) sheet.close(); });
+  sheet.addEventListener("close", ()=>{ if(history.state && history.state.codeSheet) history.back(); });
+  if(closeBtn) closeBtn.addEventListener("click", ()=> sheet.close());
+  sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
+  if(sheetCopyBtn) sheetCopyBtn.addEventListener("click", ()=>{
+    doCopy(sheetBody.textContent, ()=> copied(sheetCopyBtn));   // same clip->check morph as the box copy button
+  });
+})();
 
-  // collect each expandable block + the element that scrolls (its <pre>)
+// "expand" control: opens the near-fullscreen sheet showing a block's raw text
+// (wrapped + selectable). Added -- on any device -- to every overflowing code block
+// in ROOT: the framed boxes (run/env/stdout/edit/annotate) and standalone src
+// .highlight. Re-callable after a soft-nav swap: refreshExpands is reset first so
+// stale (detached) refreshers don't accumulate, and the old controls were discarded
+// with the old DOM.
+function wireExpands(root){
+  refreshExpands.length = 0;
+  if(!sheetBody) return;                       // no <dialog> support -> blocks just scroll
+  const scope = root || content || document;
   const blocks = [];
-  document.querySelectorAll(".box").forEach(box=>{
+  scope.querySelectorAll(".box").forEach(box=>{
     const pre = box.querySelector(".body pre");
     if(pre) blocks.push({ host:box, pre, copy:box.querySelector(".copy") });   // prose boxes have no pre -> skipped
   });
-  document.querySelectorAll(".content .highlight").forEach(hl=>{
+  scope.querySelectorAll(".highlight").forEach(hl=>{
     if(hl.closest(".box")) return;            // annotate's code is reached via its box above
     const pre = hl.querySelector("pre");
     if(pre) blocks.push({ host:hl, pre, copy:null });
@@ -879,14 +929,14 @@ const refreshExpands = [];
     exp.type = "button"; exp.className = "expand";
     exp.setAttribute("aria-label", "Open in full screen");
     exp.setAttribute("aria-haspopup", "dialog");
-    exp.innerHTML = SVG;
+    exp.innerHTML = EXPAND_SVG;
     ctl.appendChild(exp);
     host.appendChild(ctl);
     const label = host.matches(".box") ? host.querySelector(".label") : null;
     exp.addEventListener("click", ()=>{
-      title.textContent = label ? label.textContent.trim() : "";
-      body.textContent = pre.textContent;
-      copyBtn.hidden = !copy;                 // only run/env carry copy into the sheet
+      sheetTitle.textContent = label ? label.textContent.trim() : "";
+      sheetBody.textContent = pre.textContent;
+      sheetCopyBtn.hidden = !copy;            // only run/env carry copy into the sheet
       openSheet();
     });
     const refresh = ()=>{
@@ -906,24 +956,8 @@ const refreshExpands = [];
     refresh();
     refreshExpands.push(refresh);
   });
-
-  // tie the sheet to history so a back gesture/button closes it (and keeps the
-  // post) instead of navigating away. Opening pushes a throwaway entry; the back
-  // gesture pops it -> popstate closes the sheet; an explicit close pops the entry
-  // back off so the stack stays balanced. The guard stops the two from double-firing.
-  function openSheet(){
-    history.pushState({ codeSheet:1 }, "");
-    sheet.showModal();
-  }
-  window.addEventListener("popstate", ()=>{ if(sheet.open) sheet.close(); });
-  sheet.addEventListener("close", ()=>{ if(history.state && history.state.codeSheet) history.back(); });
-
-  if(closeBtn) closeBtn.addEventListener("click", ()=> sheet.close());
-  sheet.addEventListener("click", e=>{ if(e.target === sheet) sheet.close(); });
-  if(copyBtn) copyBtn.addEventListener("click", ()=>{
-    doCopy(body.textContent, ()=> copied(copyBtn));   // same clip->check morph as the box copy button
-  });
-})();
+}
+wireExpands(content);
 function refreshAllExpands(){ for(const fn of refreshExpands) fn(); }
 let expandRAF;
 window.addEventListener("resize", ()=>{ cancelAnimationFrame(expandRAF); expandRAF = requestAnimationFrame(refreshAllExpands); });
@@ -931,35 +965,47 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(refreshAllE
 window.addEventListener("load", refreshAllExpands);
 
 // inline code pills: click to copy, with the same reverse-video sweep
-document.querySelectorAll(".content code").forEach(code=>{
-  if(code.closest("pre")) return;   // block code (fenced) is not an inline copy pill
-  code.addEventListener("click", ()=>{
-    doCopy(code.textContent, ()=>{ if(fxOn) sweepElement(code); });
+function wireInlineCode(root){
+  (root || content || document).querySelectorAll("code").forEach(code=>{
+    if(code.closest("pre")) return;   // block code (fenced) is not an inline copy pill
+    code.addEventListener("click", ()=>{
+      doCopy(code.textContent, ()=>{ if(fxOn) sweepElement(code); });
+    });
   });
-});
+}
+wireInlineCode(content);
 
 // reveal the page only once the web font is ready (no fallback->webfont reflow),
 // then run the decode. Guarded + timeout so it always reveals even if fonts hang.
 // point each box's draw-on start at its top-right CORNER (angle depends on aspect ratio)
-function setBeamStarts(){
-  document.querySelectorAll(".box").forEach(box=>{
+function setBeamStarts(root){
+  (root || document).querySelectorAll(".box").forEach(box=>{
     const w = box.offsetWidth, h = box.offsetHeight;
     if(w && h) box.style.setProperty("--beam-start", (Math.atan2(w, h) * 180 / Math.PI).toFixed(2) + "deg");
   });
 }
 let beamRAF;
-window.addEventListener("resize", ()=>{ cancelAnimationFrame(beamRAF); beamRAF = requestAnimationFrame(setBeamStarts); });
+window.addEventListener("resize", ()=>{ cancelAnimationFrame(beamRAF); beamRAF = requestAnimationFrame(()=> setBeamStarts()); });
 setBeamStarts();
+
+// per-page reveal: the fx-gated decode that must re-run on every soft-nav swap.
+// (the once-per-tab sidebar rain + the home-page λ field stay in reveal() below.)
+function revealContent(root){
+  if(!fxOn) return;                         // fx off: everything is already static
+  const r = root || content;
+  if(!r) return;
+  setBeamStarts(r);                         // corner angles current after layout
+  document.body.classList.add("go");        // border-beam draws the boxes
+  rain(r, true);                            // headings, code + run boxes decode on the monospace grid
+  decompress(r);                            // proportional reading prose streams in linearly
+}
 
 let revealed=false;
 function reveal(){
   if(revealed) return; revealed=true;
   document.documentElement.classList.remove("wait-fonts");
   if(!fxOn) return;                         // fx off: everything is already static
-  setBeamStarts();                          // corner angles current after font-load layout
-  document.body.classList.add("go");        // border-beam draws the boxes
-  rain(content, true);                      // headings, code + run boxes decode on the monospace grid
-  decompress(content);                      // proportional reading prose streams in linearly
+  revealContent(content);
   // intro logo: let the page resolve first, then bring the glyph-rain field up behind the λ
   setTimeout(lambdaRain, 1800);
   // decode the sidebar only on the first load of this tab; on later in-tab
@@ -972,3 +1018,29 @@ function reveal(){
 if(document.fonts && document.fonts.ready){ document.fonts.ready.then(reveal); }
 window.addEventListener("load", ()=> setTimeout(reveal, 50));  // fallback
 setTimeout(reveal, 1500);                                       // hard safety
+
+/* ===========================================================
+   SOFT-NAV RE-INIT HOOK (called by spa.js)
+   After spa.js swaps #content + the per-page chrome regions (.sidebar .tree,
+   .topnav, .topbar .cmd), it calls reinitAfterNav() to re-bind every per-page
+   wiring on the freshly inserted DOM. The document/window-level listeners
+   (palette, fx, settings, arrow keys, scroll-spy, resize handlers) are wired ONCE
+   above against persistent elements and must NOT be re-run here — re-running them
+   would stack duplicate handlers. This split (one-time chrome vs re-runnable
+   content) is the core correctness boundary of the soft-nav design.
+   =========================================================== */
+function reinitAfterNav(){
+  wireSidebarLinks();        // tree links close the off-canvas menu
+  wirePrompt();              // re-fit the swapped prompt path + rebind reload
+  wirePagenav();             // rebind #toc panel, headings, scroll-spy refs
+  wireCopyButtons(content);  // copy buttons on the new run/env/stdout boxes
+  wireInlineCode(content);   // inline code-pill copy
+  wireExpands(content);      // expand controls on the new code blocks
+  queueActiveBlogTagScroll();// keep the active blog tag centered in the tree
+  revealContent(content);    // re-run the fx-gated decode on the new content
+  // home page: its λ field lives in the swapped #content, so the fresh canvas
+  // needs lambdaRain re-kicked (reveal()'s one-time run only covers the hard load)
+  if(fxOn && document.querySelector(".lambda-logo")) setTimeout(lambdaRain, 400);
+}
+// expose for spa.js (same concat scope, but a namespace keeps the contract explicit)
+window.Terminal = { reinitAfterNav, revealContent, isFxOn: ()=> fxOn };
