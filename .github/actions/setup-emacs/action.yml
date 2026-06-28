@@ -1,0 +1,29 @@
+name: 'Set up Emacs (pinned)'
+description: >
+  In-repo fork of purcell/setup-emacs. Pins purcell/nix-emacs-ci to a fixed commit
+  so installing Emacs no longer resolves github:purcell/nix-emacs-ci#HEAD through the
+  anonymous GitHub commits API, which gets 429-throttled on shared CI runners. Nix is
+  installed via the canonical installer (cachix/install-nix-action), which marks the
+  runner as a trusted user so the access-tokens setting is honoured by the daemon and
+  github.com fetches use the 5000/hr authenticated rate limit.
+inputs:
+  version:
+    description: 'Emacs version, e.g. "29.2".'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - uses: cachix/install-nix-action@v27
+      with:
+        extra_nix_config: |
+          accept-flake-config = true
+          access-tokens = github.com=${{ github.token }}
+    - shell: bash
+      run: |
+        # nix-emacs-ci pinned to a fixed commit (instead of HEAD) -> no commits API call.
+        rev=868482a78575138aebb1b5c16a9266b95c800f2e
+        ver=${{ inputs.version }}
+        echo "::group::Installing Emacs ${ver} from pinned nix-emacs-ci (${rev})"
+        nix profile install --accept-flake-config \
+          "github:purcell/nix-emacs-ci/${rev}#emacs-${ver//./-}"
+        echo "::endgroup::"

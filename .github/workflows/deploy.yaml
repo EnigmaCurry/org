@@ -33,14 +33,12 @@ jobs:
         restore-keys: |
           nix-store-${{ runner.os }}-
 
-    # Install Emacs using Nix (via purcell/setup-emacs).
-    # Authenticate Nix's github.com fetches so resolving nix-emacs-ci@HEAD uses the
-    # 5000/hr authenticated rate limit instead of the 60/hr anonymous one (avoids 429).
-    - uses: purcell/setup-emacs@master
+    # Install Emacs via our in-repo fork of purcell/setup-emacs, which pins
+    # nix-emacs-ci to a fixed commit to avoid the anonymous GitHub commits-API
+    # rate limit (429) that broke the upstream action's HEAD resolution.
+    - uses: ./.github/actions/setup-emacs
       with:
         version: 29.2
-      env:
-        NIX_CONFIG: "access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}"
 
     # Setup Hugo
     - name: Setup Hugo
