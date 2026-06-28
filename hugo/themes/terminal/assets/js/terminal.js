@@ -746,17 +746,22 @@ wirePagenav();
 })();
 
 // terminal prompt bar. Two jobs, both re-run per page because .topbar .cmd is
-// swapped on soft-nav: (1) clicking the prompt path (after the ":") replays the
-// intro by reloading; the visitor@host: prefix is a normal link to the site root.
+// swapped on soft-nav: (1) each path segment is its own link to that subsection;
+// the visitor@host: prefix and the leading ~ link to the site root, and the
+// current page's own segment replays the intro by reloading.
 // (2) keep the prompt on ONE line: drop the prefix when the whole line won't fit,
-// then left-truncate the path (…suffix). Monospace => exact character math.
+// then left-truncate the path — hide whole leading segments behind a leading …,
+// char-truncating the boundary segment. Monospace => exact character math.
 let fitPrompt = ()=>{};
 function wirePrompt(){
   const cmd = document.querySelector(".topbar .cmd");
   const pathEl = cmd && cmd.querySelector(".path");
   if(!cmd || !pathEl){ fitPrompt = ()=>{}; return; }
   const prefix = cmd.querySelector(".prefix");
-  const fullPath = pathEl.textContent;
+  const ell = pathEl.querySelector(".pell");
+  const segs = Array.from(pathEl.querySelectorAll(".pseg"));
+  segs.forEach(s=>{ if(s.dataset.full == null) s.dataset.full = s.textContent; });
+  const fullLen = segs.reduce((n,s)=> n + s.dataset.full.length, 0);
   const prefixLen = prefix ? prefix.textContent.length : 0;
   function charW(){
     const r = document.createElement("span");
@@ -767,15 +772,23 @@ function wirePrompt(){
   }
   fitPrompt = function(){
     const cols = Math.floor(cmd.clientWidth / charW()) - 1;   // -1 char safety margin
-    const showPrefix = (prefixLen + fullPath.length) <= cols;
+    segs.forEach(s=>{ s.style.display = ""; if(s.textContent !== s.dataset.full) s.textContent = s.dataset.full; });
+    if(ell) ell.hidden = true;
+    const showPrefix = (prefixLen + fullLen) <= cols;
     cmd.classList.toggle("hide-prefix", !showPrefix);
     const room = cols - (showPrefix ? prefixLen : 0);
-    pathEl.textContent = fullPath.length <= room
-      ? fullPath
-      : "…" + fullPath.slice(-Math.max(1, room - 1));     // leading … keeps the suffix
+    if(fullLen <= room) return;                              // everything fits
+    if(ell) ell.hidden = false;                             // leading … + suffix
+    let budget = Math.max(1, room - 1);
+    for(let i = segs.length - 1; i >= 0; i--){
+      const s = segs[i], t = s.dataset.full;
+      if(t.length <= budget){ budget -= t.length; }          // whole segment fits
+      else if(budget > 0){ s.textContent = t.slice(t.length - budget); budget = 0; }
+      else { s.style.display = "none"; }                     // dropped behind the …
+    }
   };
-  const cmdLink = cmd.querySelector("a.pathseg");
-  if(cmdLink) cmdLink.addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
+  const curLink = cmd.querySelector("a.pcur");
+  if(curLink) curLink.addEventListener("click", e=>{ e.preventDefault(); location.reload(); });
   fitPrompt();
 }
 let promptRAF;
