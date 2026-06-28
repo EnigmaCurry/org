@@ -555,6 +555,7 @@ function lambdaRain(){
   }
 
   function frame(now){
+    if(!canvas.isConnected) return;   // canvas was swapped out by a soft-nav -> let this loop die (a fresh one runs for the new canvas)
     if(!document.body.classList.contains("no-fx")){
       ctx.globalCompositeOperation = "destination-out";   // fade the field -> trails
       ctx.fillStyle = "rgba(0,0,0,0.025)";                 // gentle fade: instant-on glyphs ease off, not blink
@@ -1037,6 +1038,9 @@ function reinitAfterNav(){
   wireExpands(content);      // expand controls on the new code blocks
   queueActiveBlogTagScroll();// keep the active blog tag centered in the tree
   revealContent(content);    // re-run the fx-gated decode on the new content
+  // home page: its λ field lives in the swapped #content, so the fresh canvas
+  // needs lambdaRain re-kicked (reveal()'s one-time run only covers the hard load)
+  if(fxOn && document.querySelector(".lambda-logo")) setTimeout(lambdaRain, 400);
 }
 // expose for spa.js (same concat scope, but a namespace keeps the contract explicit)
 window.Terminal = { reinitAfterNav, revealContent, isFxOn: ()=> fxOn };
