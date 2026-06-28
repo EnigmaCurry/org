@@ -255,10 +255,10 @@ html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
   background:color-mix(in srgb, #200 78%, transparent);
 }
 
-/* shader controls: play/pause + reset(playing)/clear(paused). Used by both the
-   inline window (absolute, top-right of the figure) and the floating background
-   panel (#fxctl, fixed bottom-right, shown only while a takeover is live). */
-.shader-ctl{ position:absolute; top:.4rem; right:.4rem; display:flex; gap:.3rem; z-index:1; }
+/* shader controls: play/stop. Used by both the inline window (where it sits at the
+   left of the in-figure controls panel) and the floating background panel (#fxctl,
+   fixed bottom-right, shown only while a takeover is live). */
+.shader-ctl{ display:flex; gap:.3rem; z-index:1; }
 .shader-ctl button{
   display:inline-flex; align-items:center; justify-content:center;
   width:1.7rem; height:1.7rem; padding:0; cursor:pointer;
@@ -271,10 +271,80 @@ html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
 .shader-ctl:not(.paused) .ico-play{ display:none; }   /* playing -> show stop */
 .shader-ctl.paused .ico-stop{ display:none; }         /* stopped -> show play */
 
+/* the controls (play/stop + the panel) start invisible and ease in when the pointer
+   moves over the shader; after it rests a moment shader.js drops .ui-on and they
+   fade back out — together with the cursor — video-player style. :focus-within keeps
+   them up while a control has focus or is mid-drag. */
+.shader-window .shader-panel{ opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.shader-window.ui-on .shader-panel,
+.shader-window:focus-within .shader-panel{ opacity:1; pointer-events:auto; }
+.shader-window:hover:not(.ui-on):not(:focus-within){ cursor:none; }   /* idle -> hide the cursor */
+
+/* per-window controls panel: a play/stop button on the far left, then a column of
+   control rows — a speed slider (every shader) plus any @slider/@select inputs a
+   literate shader declares (populated by shader.js). Overlays the window's lower
+   edge and scrolls if it outgrows the box (clipped by .shader-window overflow). */
+.shader-panel{
+  position:absolute; left:.4rem; right:.4rem; bottom:.4rem; z-index:3;
+  display:flex; align-items:stretch; gap:.5rem;   /* play button | control rows */
+  margin:0; padding:.55rem .65rem;
+  max-height:calc(100% - .8rem); overflow:auto;
+  background:color-mix(in srgb, var(--panel) 88%, transparent);
+  border:1px solid var(--rule); border-radius:3px;
+  font:12px/1.35 var(--font-mono); color:var(--fg-dim);
+}
+/* play/stop: far left, a tall bar spanning the panel height (≈ two rows) */
+.shader-panel .shader-ctl{ flex:0 0 auto; align-items:stretch; }
+.shader-panel .shader-play{ width:2.2rem; height:auto; min-height:2.4rem; align-self:stretch; }
+/* the stacked rows fill the rest, wrapping so two selects can share one line */
+.shader-rows{
+  flex:1 1 auto; min-width:0; align-content:center;
+  display:flex; flex-wrap:wrap; gap:.4rem .5rem;   /* row-gap / column-gap */
+}
+/* rows fill the row-column width by default (speed + sliders stay full width);
+   selects shrink to ~half so two label+dropdown pairs pack onto one line */
+.shader-row{ display:flex; align-items:center; gap:.5rem; flex:1 1 100%; min-width:0; }
+.shader-row-half{ flex:1 1 calc(50% - .5rem); }
+.shader-row label{ flex:0 0 auto; min-width:5.5ch; color:var(--fg-dim); }
+.shader-row input[type="range"]{ flex:1 1 auto; min-width:0; accent-color:var(--accent); }
+.shader-row select{
+  flex:1 1 auto; min-width:0; font:inherit; padding:.05rem .3rem;
+  color:var(--fg); background:var(--bg); border:1px solid var(--rule); border-radius:2px;
+}
+.shader-row .shader-val{ flex:0 0 auto; min-width:3.5ch; text-align:right; color:var(--fg); }
+
 /* floating background-shader panel: hidden until a takeover activates it */
 .shader-bgctl{ position:fixed; top:auto; right:.55rem; bottom:.55rem; z-index:60; display:none; }
 .shader-bgctl.on{ display:flex; }
 html:not(.js) .shader-bgctl{ display:none; }
+
+/* floating inline window (`:effect floating`): at wide-enough viewports the inline
+   window pops out of the content flow and pins to the right gutter, under the
+   topbar, so it stays in view while the reader scrolls the prose. shader.js adds
+   .has-floating-shader to <body> for such a page so the reading column hugs the
+   left, freeing that gutter. Below the breakpoint (or with JS off) the window
+   renders as an ordinary inline window and the column stays centered — so the
+   effect is purely additive when there's room for it. The breakpoint clears the
+   sidebar (30ch) + column (74ch) + the panel + gaps; see the .wrap math note. */
+@media (min-width:1700px){
+  body.has-floating-shader .content{ margin-left:0; }   /* hug left; free the right gutter */
+  .shader-window[data-effect="floating"]{
+    /* Size to the room actually left over rather than a fixed cap. The gutter width
+       is the viewport minus the column's right edge and the side gaps; the usable
+       height is the viewport minus the top offset and a bottom gap. A square (the
+       shortcode derives one from --shader-default-h via aspect-ratio) grows to the
+       largest that fits EITHER constraint via min(); clamped so it never drops below
+       the old footprint or balloons on an ultra-wide display. Re-evaluates on resize. */
+    --float-room-w:calc(100vw - 30ch - var(--col) - 4rem);   /* mirrors the left offset + right gap */
+    --float-room-h:calc(100vh - 5rem);                        /* top offset (3.4rem) + bottom gap */
+    --shader-default-h:clamp(200px, min(var(--float-room-w), var(--float-room-h)), 1024px);
+    /* pin to just past the left-hugged column's right edge: sidebar grid track
+       (30ch) + main's left padding (1rem) + the column (var(--col)) + a gap. */
+    position:fixed; top:3.4rem; left:calc(30ch + 1rem + var(--col) + 1.5rem); margin:0; z-index:5;   /* under topbar(10)/topnav(70), over content */
+    width:clamp(220px, var(--float-room-w), 1024px);   /* used only when no explicit size; an inline aspect-ratio/width overrides */
+    box-shadow:0 12px 30px rgba(0,0,0,.45);   /* reads as a detached, floating panel */
+  }
+}
 
 /* --- diffbox: a code box toggling between a unified diff and the full source of
    the evolved block (see layouts/shortcodes/diffbox.html + the ox-hugo `diff'

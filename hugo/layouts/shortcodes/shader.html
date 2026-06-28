@@ -7,8 +7,23 @@
        compiles and runs in the window. Inputs: iResolution (vec3), iTime (float),
        iAccent (vec3). With no body, the built-in shader runs.
 
+       Every window's controls (play/stop + a panel) ease in when the pointer moves
+       over it and fade out — with the cursor — once it rests, video-player style.
+       The panel holds a speed slider that scales iTime for any shader, plus
+       per-shader inputs a literate block declares in its GLSL as line comments,
+       each bound to a matching uniform:
+         // @slider NAME MIN MAX DEFAULT [STEP]      -> a range slider (uniform float)
+         // @select NAME DEFAULT_INDEX OPT0 OPT1 ..  -> a dropdown (uniform int = index)
+       A shader whose iTime is periodic can declare its period, which wraps iTime to
+       [0, DURATION) and adds a video-style transport scrubber to the panel (drag it
+       to pause accrual and seek; release to resume from there):
+         // @loop DURATION                            -> iTime loops over DURATION
+
        Params (via #+attr_shortcode:):
-         :effect    ambient | takeover   (default ambient; built-in shader only)
+         :effect    ambient | floating | takeover   (default ambient)
+                    floating -> at wide-enough viewports, pop the inline window out
+                      to the right gutter (pinned under the header) so it stays in
+                      view while the reader scrolls; renders inline when too narrow.
                     takeover -> drive the full-screen persistent background canvas
          :hidden    don't draw the inline window (only useful with :effect takeover)
          :autoplay  start animating on load (default OFF -> a static preview + play)
@@ -67,11 +82,14 @@
 <figure class="shader-window" data-effect="{{ $effect }}"{{ with $intensity }} data-intensity="{{ . }}"{{ end }}{{ if $autoplay }} data-autoplay{{ end }}{{ with $sizeStyle }} style="{{ . | safeCSS }}"{{ end }}>
   <canvas class="shader-canvas" aria-hidden="true"></canvas>
   {{- if $body }}<script type="x-shader/x-fragment" class="shader-glsl">{{ .Inner }}</script><pre class="shader-error" hidden></pre>{{ end -}}
-  <div class="shader-ctl{{ if not $autoplay }} paused{{ end }}">
-    <button type="button" class="shader-play" aria-label="Play">
-      <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
-      <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
-    </button>
+  <div class="shader-panel">
+    <div class="shader-ctl{{ if not $autoplay }} paused{{ end }}">
+      <button type="button" class="shader-play" aria-label="Play">
+        <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+        <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+      </button>
+    </div>
+    <div class="shader-rows"></div>
   </div>
   {{- with .Get "poster" }}<noscript><img src="{{ . }}" alt="{{ $.Get "alt" | default "shader" }}"></noscript>{{ end -}}
 </figure>

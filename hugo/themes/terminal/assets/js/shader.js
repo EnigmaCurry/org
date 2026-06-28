@@ -16,7 +16,9 @@
 window.Shader = (function(){
   "use strict";
 
-  const EFFECTS = { ambient:0, takeover:1 };
+  // floating shares ambient's visuals (an opaque inline window) — it's a layout
+  // treatment applied in CSS, not a different shader, so it maps to the same value.
+  const EFFECTS = { ambient:0, floating:0, takeover:1 };
 
   const VERT = `
     attribute vec2 a_pos;
@@ -68,7 +70,19 @@ window.Shader = (function(){
   // it with this preamble + main. #line 1 makes compile errors report the user's
   // own line numbers. Available inputs: iResolution (vec3), iTime, iAccent (vec3).
   const CUSTOM_PREAMBLE =
+    // derivatives (fwidth/dFdx/dFdy) are an opt-in extension in WebGL1/GLSL ES 1.00;
+    // `: enable` is a harmless warning where unsupported, so non-derivative shaders
+    // are unaffected. The context must also gl.getExtension() it (see getContext below).
+    "#extension GL_OES_standard_derivatives : enable\n" +
+    // a free-running iTime needs more than mediump: mediump's step size grows with
+    // magnitude (~value*2^-10), so after a while frame-to-frame time deltas round to
+    // zero and the animation stutters. Prefer highp where the hardware has it; the
+    // macro guard falls back to mediump rather than failing to compile.
+    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+    "precision highp float;\n" +
+    "#else\n" +
     "precision mediump float;\n" +
+    "#endif\n" +
     "uniform vec3 iResolution;\n" +
     "uniform float iTime;\n" +
     "uniform vec3 iAccent;\n" +
@@ -150,6 +164,104 @@ window.Shader = (function(){
     } catch(e){}
   }
 
+  // ---- declarative panel inputs ---------------------------------------------
+  // A literate shader can declare panel controls in its GLSL as line comments; the
+  // panel renders each and feeds the chosen value into a matching uniform — a
+  // slider drives a `uniform float`, a select a `uniform int` (the chosen index):
+  //   // @slider NAME MIN MAX DEFAULT [STEP]      -> a range slider (uniform float)
+  //   // @select NAME DEFAULT_INDEX OPT0 OPT1 ..  -> a dropdown (uniform int = index)
+  // and may declare that its iTime is periodic, which makes the panel grow a
+  // video-style transport scrubber and wraps iTime to [0, DURATION):
+  //   // @loop DURATION                            -> iTime loops over DURATION
+  function defaultStep(min, max){ const r = Math.abs(max - min); return r < 5 ? 0.01 : (r < 50 ? 0.1 : 1); }
+  // a shader's iTime period (in iTime units), or 0 when it doesn't loop.
+  function parseLoop(glsl){
+    const m = glsl && /\/\/\s*@loop\s+([0-9.]+)/.exec(glsl);
+    const v = m ? parseFloat(m[1]) : NaN;
+    return isFinite(v) && v > 0 ? v : 0;
+  }
+  function parseInputs(glsl){
+    const out = [];
+    if(!glsl) return out;
+    const re = /\/\/\s*@(slider|select)\s+([^\n]+)/g;
+    let m;
+    while((m = re.exec(glsl))){
+      const parts = m[2].trim().split(/\s+/);
+      const name = parts[0];
+      if(!name) continue;
+      if(m[1] === "slider"){
+        const min = parseFloat(parts[1]), max = parseFloat(parts[2]), def = parseFloat(parts[3]);
+        if([min, max, def].some(isNaN)) continue;
+        const step = parts[4] != null ? parseFloat(parts[4]) : defaultStep(min, max);
+        out.push({ kind:"slider", name, min, max, step, value:def, loc:null });
+      } else {
+        const def = parseInt(parts[1], 10) || 0;
+        const opts = parts.slice(2);
+        if(!opts.length) continue;
+        out.push({ kind:"select", name, opts, value:Math.max(0, Math.min(opts.length - 1, def)), loc:null });
+      }
+    }
+    return out;
+  }
+  function elem(tag, cls, txt){ const e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
+  const fmtVal = v => String(Math.round(v * 100) / 100);
+  const fmtTime = v => (Math.round(v * 10) / 10) + "s";
+  function rangeRow(label, min, max, step, value, onInput){
+    const row = elem("div", "shader-row");
+    row.appendChild(elem("label", null, label));
+    const input = elem("input"); input.type = "range";
+    input.min = min; input.max = max; input.step = step; input.value = value;
+    const out = elem("span", "shader-val", fmtVal(value));
+    input.addEventListener("input", ()=>{ const v = parseFloat(input.value); out.textContent = fmtVal(v); onInput(v); });
+    row.appendChild(input); row.appendChild(out);
+    return row;
+  }
+  // speed gets a dedicated row: a logarithmic track so the useful range is reachable
+  // across two-plus decades — far left is stopped, then 0.1x .. 100x with 1x ~a third
+  // of the way in. The readout shows the actual multiplier.
+  function speedRow(value, onInput){
+    const LO = Math.log(0.1), SPAN = Math.log(100) - LO;
+    const toSpeed = s => s <= 0 ? 0 : Math.exp(LO + s * SPAN);
+    const toPos   = v => v <= 0 ? 0 : (Math.log(v) - LO) / SPAN;
+    const fmt = v => (v <= 0 ? "0" : v < 10 ? String(Math.round(v * 100) / 100) : String(Math.round(v))) + "x";
+    const row = elem("div", "shader-row");
+    row.appendChild(elem("label", null, "speed"));
+    const input = elem("input"); input.type = "range";
+    input.min = 0; input.max = 1; input.step = 0.005; input.value = toPos(value);
+    const out = elem("span", "shader-val", fmt(value));
+    input.addEventListener("input", ()=>{ const v = toSpeed(parseFloat(input.value)); out.textContent = fmt(v); onInput(v); });
+    row.appendChild(input); row.appendChild(out);
+    return row;
+  }
+  // a video-style transport for looped shaders: scrub iTime across one loop. The
+  // caller pauses accrual on onScrubStart, follows `phase` via onScrub while the
+  // user drags (or arrow-keys) the track, and resumes from there on onScrubEnd.
+  function transportRow(dur, value, onScrub, onScrubStart, onScrubEnd){
+    const row = elem("div", "shader-row");
+    row.appendChild(elem("label", null, "time"));
+    const input = elem("input"); input.type = "range";
+    input.min = 0; input.max = dur; input.step = Math.max(0.001, dur / 1000); input.value = value;
+    const out = elem("span", "shader-val", fmtTime(value));
+    input.addEventListener("pointerdown", onScrubStart);
+    input.addEventListener("keydown", onScrubStart);
+    input.addEventListener("pointerup", onScrubEnd);
+    input.addEventListener("pointercancel", onScrubEnd);
+    input.addEventListener("blur", onScrubEnd);
+    input.addEventListener("change", onScrubEnd);
+    input.addEventListener("input", ()=>{ const v = parseFloat(input.value); out.textContent = fmtTime(v); onScrub(v); });
+    row.appendChild(input); row.appendChild(out);
+    return { row, input, out };
+  }
+  function selectRow(label, opts, value, onChange){
+    const row = elem("div", "shader-row shader-row-half");   // selects pack two per line
+    row.appendChild(elem("label", null, label));
+    const sel = elem("select");
+    opts.forEach((o, i)=>{ const op = elem("option", null, o); op.value = String(i); if(i === value) op.selected = true; sel.appendChild(op); });
+    sel.addEventListener("change", ()=> onChange(parseInt(sel.value, 10)));
+    row.appendChild(sel);
+    return row;
+  }
+
   // ---- one renderer (drives a single canvas) --------------------------------
   function makeRenderer(canvas, isBg, controlsEl){
     let gl = null, prog = null, loc = {}, raf = 0, ro = null;
@@ -172,13 +284,27 @@ window.Shader = (function(){
     const userGlsl = glslEl ? glslEl.textContent.trim() : "";
     const fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
 
+    // controls panel: a global time-speed multiplier (every shader) + any custom
+    // uniforms the literate GLSL declared via @slider/@select. The panel lives in
+    // the figure and is revealed on pointer activity (see theme CSS + UI wiring below).
+    const customInputs = parseInputs(userGlsl);
+    const loopDur = parseLoop(userGlsl);                  // >0 -> iTime wraps + transport scrubber
+    const panelEl = figure && figure.querySelector(".shader-panel");
+    let speed = 1;
+    let scrubbing = false;                               // user dragging the transport: pause accrual
+    let transportInput = null, transportOut = null;
+
     function showError(msg){
       if(errEl){ errEl.textContent = msg; errEl.hidden = false; }
       else console.warn("[shader] " + msg);
     }
     function build(){
       const b = buildProgram(gl, fragSrc);
-      if(b.prog){ prog = b.prog; loc = b.loc; if(errEl) errEl.hidden = true; return true; }
+      if(b.prog){
+        prog = b.prog; loc = b.loc; if(errEl) errEl.hidden = true;
+        for(const c of customInputs) c.loc = gl.getUniformLocation(prog, c.name);
+        return true;
+      }
       prog = null; showError(b.err);   // keep the context; draw nothing; show the log
       return false;
     }
@@ -187,7 +313,9 @@ window.Shader = (function(){
       gl = canvas.getContext("webgl", { alpha:true, depth:false, antialias:false, premultipliedAlpha:false })
         || canvas.getContext("experimental-webgl", { alpha:true, depth:false, antialias:false });
     } catch(e){ gl = null; }
-    if(gl){ build(); checkSoftware(gl); }
+    // enable screen-space derivatives so literate shaders can use fwidth/dFdx/dFdy
+    // (paired with the #extension line in CUSTOM_PREAMBLE); harmless null if absent.
+    if(gl){ gl.getExtension("OES_standard_derivatives"); build(); checkSoftware(gl); }
 
     function size(){
       if(!gl) return;
@@ -226,8 +354,17 @@ window.Shader = (function(){
       gl.uniform1f(loc.iTime, phase);
       gl.uniform3f(loc.iAccent, accent[0], accent[1], accent[2]);
       gl.uniform3f(loc.iBg, bgcol[0], bgcol[1], bgcol[2]);
+      // per-shader panel uniforms: a select drives a `uniform int`, a slider a
+      // `uniform float` (null locations — unused/optimized-out — are ignored)
+      for(const c of customInputs){
+        if(!c.loc) continue;
+        if(c.kind === "select") gl.uniform1i(c.loc, c.value | 0);
+        else gl.uniform1f(c.loc, c.value);
+      }
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
+      // keep the transport thumb tracking playback — but not while the user drags it
+      if(transportInput && !scrubbing){ transportInput.value = phase; transportOut.textContent = fmtTime(phase); }
     }
     function frame(now){
       raf = 0;
@@ -236,10 +373,17 @@ window.Shader = (function(){
       if(!running) return;                                 // perfTick may have killed us
       intensity += (targetIntensity - intensity) * 0.05;
       effect    += (targetEffect    - effect)    * 0.05;
-      if(!lastNow) lastNow = now;
-      const dt = Math.min(0.05, (now - lastNow) / 1000);   // clamp big gaps
-      lastNow = now;
-      phase += dt * (0.5 + 0.5 * effect);                  // ambient half speed, takeover full
+      // scrubbing the transport pauses iTime accrual: the slider drives `phase`
+      // directly and we resume from there on release (lastNow=0 avoids a dt jump).
+      if(scrubbing){
+        lastNow = 0;
+      } else {
+        if(!lastNow) lastNow = now;
+        const dt = Math.min(0.05, (now - lastNow) / 1000); // clamp big gaps
+        lastNow = now;
+        phase += dt * (0.5 + 0.5 * effect) * speed;        // ambient half speed, takeover full; panel slider scales it
+        if(loopDur > 0) phase %= loopDur;                  // looped shaders wrap iTime to the loop window
+      }
       paint();
       raf = requestAnimationFrame(frame);
     }
@@ -301,6 +445,32 @@ window.Shader = (function(){
     // paused/stopped window holds a static frame — repaint it with the new color.
     function refreshColor(){ if(!running && gl && prog && active && !blocked()) renderStill(); }
 
+    // fill the panel: a speed slider for every shader, then any declared uniforms.
+    // A paused window repaints on change so the new value shows; speed only matters
+    // while running, so it skips the repaint.
+    function buildPanel(){
+      const rows = panelEl && panelEl.querySelector(".shader-rows");
+      if(!rows) return;
+      const repaint = ()=>{ if(!running && active && !blocked()) renderStill(); };
+      // a looped shader leads with a transport scrubber: drag it and accrual pauses
+      // while iTime follows the slider; release and it resumes from that point.
+      if(loopDur > 0){
+        const t = transportRow(loopDur, phase,
+          v=>{ scrubbing = true; phase = v; repaint(); },   // follow the slider (and show the frame when paused)
+          ()=>{ scrubbing = true; },                        // begin: pause accrual
+          ()=>{ scrubbing = false; lastNow = 0; });         // end: resume from here without a dt jump
+        transportInput = t.input; transportOut = t.out;
+        rows.appendChild(t.row);
+      }
+      rows.appendChild(speedRow(speed, v=>{ speed = v; }));
+      customInputs.forEach(inp=>{
+        if(inp.kind === "slider")
+          rows.appendChild(rangeRow(inp.name, inp.min, inp.max, inp.step, inp.value, v=>{ inp.value = v; repaint(); }));
+        else
+          rows.appendChild(selectRow(inp.name, inp.opts, inp.value, v=>{ inp.value = v; repaint(); }));
+      });
+    }
+
     function dispose(){
       active = false; stop(false);
       if(ro){ ro.disconnect(); ro = null; }
@@ -316,6 +486,20 @@ window.Shader = (function(){
         ro.observe(canvas);
       }
       if(playBtn) playBtn.addEventListener("click", ()=> setPaused(!paused));
+      buildPanel();   // CSS reveals it on pointer activity; no-op when there's no panel
+      // video-player chrome: ease the controls in on pointer activity, then ease
+      // them (and the cursor) out once the pointer holds still for a moment.
+      if(figure){
+        let idle = 0;
+        const wake = ()=>{
+          figure.classList.add("ui-on");
+          clearTimeout(idle);
+          idle = setTimeout(()=> figure.classList.remove("ui-on"), 2000);
+        };
+        figure.addEventListener("pointerenter", wake);
+        figure.addEventListener("pointermove", wake);
+        figure.addEventListener("pointerleave", ()=>{ clearTimeout(idle); figure.classList.remove("ui-on"); });
+      }
       size();
     }
     return { configure, activate, setPaused, refreshColor, sync, size, dispose, ok: !!gl };
@@ -353,6 +537,11 @@ window.Shader = (function(){
       r.activate(true);
       inlines.push(r);
     });
+
+    // a `:effect floating` window pops out to the right gutter at wide viewports;
+    // flag the page so the reading column can hug the left and free that space (CSS).
+    document.body.classList.toggle("has-floating-shader",
+      !!root.querySelector('.shader-window[data-effect="floating"]'));
   }
 
   function syncAll(){ if(bg) bg.sync(); inlines.forEach(r=> r.sync()); }
