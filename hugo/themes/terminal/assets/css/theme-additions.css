@@ -74,7 +74,7 @@
 .box .highlight{ margin:0; border:none; background:none; }
 /* smaller font so the reading column fits ~80+ monospace columns without scrolling */
 .content .highlight pre{
-  overflow-x:auto; max-width:100%; padding:.5rem 1.1rem; font-size:.7em; line-height:1.5;
+  overflow-x:auto; max-width:100%; padding:.5rem 1.1rem; font-size:.7rem; line-height:1.5;
   background:transparent !important;   /* override Chroma's inline background-color */
 }
 /* default (no JS): scroll so the full text is readable. With JS, clip to a
@@ -304,16 +304,24 @@ html.js .diffbox .box-ctl{ display:inline-flex; }
    code; added lines are blocked in green, removed lines in red, with old/new
    line numbers in the gutter. --- */
 .diffbox .src-pane{ overflow-x:auto; }
-.diffbox .diff-unified{ overflow-x:auto; background:#272822; }
+.diffbox .diff-unified{ overflow-x:auto; background:#272822; padding:0 0 .55rem; }
+/* clear the title chip by padding the first row's cells -- so the hunk-header
+   tint (the first row is always a hunk) runs as one color to the very top */
+.diffbox .dt tbody tr:first-child td{ padding-top:.75rem; }
+/* opt the JS-built diff tables out of the prose-table styling (.content table):
+   keep them monospace with no cell borders/margins/hover, like a code block. */
 .diffbox .dt{
-  border-collapse:collapse; width:100%; color:#f8f8f2;
-  font-family:var(--font-mono); font-size:.9em; line-height:1.55; tab-size:4;
+  border-collapse:collapse; width:100%; margin:0; color:#f8f8f2;
+  font-family:var(--font-mono); font-size:.7rem; line-height:1.55; tab-size:4;
 }
-.diffbox .dt td{ padding:0; vertical-align:top; }
-.diffbox .dl-n{                                  /* line-number gutter */
-  width:1%; min-width:2.6em; padding:0 .6em; text-align:right; white-space:nowrap;
-  color:#7f7f7f; background:rgba(0,0,0,.22); user-select:none; -webkit-user-select:none;
+.diffbox .dt td{ padding:0; vertical-align:top; font-family:var(--font-mono); border:none; }
+.diffbox .dt tbody tr:hover{ background:none; }
+.diffbox .dl-n{    /* line-number gutter: match the Chroma source view's numbers --
+                      same #7f7f7f, same left offset, no tinted gutter background */
+  width:1%; padding:0 .8em 0 .4em; text-align:center; white-space:nowrap;
+  color:#7f7f7f; user-select:none; -webkit-user-select:none;
 }
+.diffbox .dt .dl-n:first-child{ padding-left:.9em; }   /* a little room off the box's left edge */
 .diffbox .dl-mark{ width:1ch; padding:0 .3ch; text-align:center; color:#7f7f7f; user-select:none; -webkit-user-select:none; }
 .diffbox .dl-code{ white-space:pre; padding:0 .8em; width:100%; }
 /* tint the whole changed row */
@@ -323,3 +331,7 @@ html.js .diffbox .box-ctl{ display:inline-flex; }
 .diffbox tr.dl-del .dl-mark{ color:#f85149; }
 /* hunk header rows (the @@ ... @@ context) */
 .diffbox .dl-hunk td{ background:rgba(88,166,255,.12); color:#8b949e; padding:.05em .8em; user-select:none; -webkit-user-select:none; }
+/* the copy-flash sweep selects text -> paint it white-on-black reverse video like
+   the run boxes (.ch.sel uses --sel-bg/--sel-fg), not the page's ::selection block */
+.diffbox ::selection{ background:var(--sel-bg); color:var(--sel-fg); }
+.diffbox ::-moz-selection{ background:var(--sel-bg); color:var(--sel-fg); }

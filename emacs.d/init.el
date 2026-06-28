@@ -147,6 +147,10 @@ inside example/src blocks are left untouched."
   ;;   ...the modified source...
   ;;   #+end_diff
   ;;
+  ;; A `#+begin_shader' block can also carry an `#+attr_diff: :from NAME' (see
+  ;; `my/expand-shader-diffs'): the shader runs live AND its source is shown as a
+  ;; diff against NAME -- the GLSL is written once, run and diffed from one block.
+  ;;
   ;; Before ox-hugo parses, the block is replaced with a `diffbox' Hugo shortcode
   ;; carrying both a unified diff (highlighted as `diff') and the full source of
   ;; the `:to' block (highlighted in its own language). The box statically shows
@@ -282,23 +286,79 @@ cannot be found."
                  (diff (my/unified-diff from-name from-body to-name to-body context)))
             (delete-region beg end)
             (goto-char beg)
-            ;; Emit a verbatim shortcode carrying three parts -- the unified diff,
-            ;; the original source, and the evolved source -- separated by an
-            ;; HTML-comment sentinel the shortcode splits on. The shortcode
-            ;; highlights all three so JS can assemble a GitHub-style diff with
-            ;; per-line syntax colors. (Avoid a literal `{{<' inside the diffed
-            ;; code -- it would start a shortcode.)
-            (insert (format (concat "#+begin_export hugo\n"
-                                    "{{< diffbox from=%S to=%S lang=%S view=%S >}}\n"
-                                    "%s<!--diffbox-sep-->\n%s\n<!--diffbox-sep-->\n%s\n"
-                                    "{{< /diffbox >}}\n#+end_export\n")
-                            from-name to-name lang view diff from-body to-body))
+            (insert (my/diffbox-export from-name to-name lang view diff from-body to-body))
             (insert (make-string post-blank ?\n)))))))
+
+  (defun my/diffbox-export (from-name to-name lang view diff from-body to-body)
+    "Return a verbatim `#+begin_export hugo' block emitting a `diffbox' shortcode.
+It carries three parts -- the unified DIFF, the original FROM-BODY, and the
+evolved TO-BODY -- separated by an HTML-comment sentinel the shortcode splits
+on; the shortcode highlights all three so JS can assemble a GitHub-style diff
+with per-line syntax colors. (Avoid a literal `{{<' inside the diffed code -- it
+would start a shortcode.)"
+    (format (concat "#+begin_export hugo\n"
+                    "{{< diffbox from=%S to=%S lang=%S view=%S >}}\n"
+                    "%s<!--diffbox-sep-->\n%s\n<!--diffbox-sep-->\n%s\n"
+                    "{{< /diffbox >}}\n#+end_export\n")
+            from-name to-name lang view diff from-body to-body))
+
+  (defun my/expand-shader-diffs (&rest _)
+    "Render `#+begin_shader' blocks that carry an `#+attr_diff: :from NAME ...'
+as a live shader PLUS a diffbox diffing NAME against the shader's own body, so
+the shader source is written once -- run live, and shown as a changeset. The
+shader's own source box is forced off (the diffbox shows the source instead).
+Also honours :context/:view/:label/:lang on the `#+attr_diff' line."
+    (let ((blocks '()))
+      (org-element-map (org-element-parse-buffer) 'special-block
+        (lambda (sb)
+          (when (and (equal (org-element-property :type sb) "shader")
+                     (org-export-read-attribute :attr_diff sb))
+            (push sb blocks))))
+      ;; edit back-to-front so earlier buffer positions stay valid
+      (dolist (sb blocks)
+        (let* ((beg (org-element-property :begin sb))
+               (end (org-element-property :end sb))
+               (cbeg (org-element-property :contents-begin sb))
+               (cend (org-element-property :contents-end sb))
+               (post-blank (or (org-element-property :post-blank sb) 0))
+               (body (replace-regexp-in-string
+                      "\\`[\n\r]+\\|[ \t\n\r]+\\'" ""
+                      (if (and cbeg cend) (buffer-substring-no-properties cbeg cend) "")))
+               ;; the shader shortcode keeps its own params, but the source box is
+               ;; forced off -- the diffbox is the source/diff display instead.
+               (sc-attr (plist-put (copy-sequence
+                                    (org-export-read-attribute :attr_shortcode sb))
+                                   :source "false"))
+               (sc-args (org-html--make-attribute-string sc-attr))
+               (dattr (org-export-read-attribute :attr_diff sb))
+               (from (plist-get dattr :from))
+               (label (or (plist-get dattr :label) "edited"))
+               (view (if (equal (plist-get dattr :view) "source") "source" "diff"))
+               (lang (or (plist-get dattr :lang) "glsl"))
+               (context (let ((c (plist-get dattr :context)))
+                          (if c (string-to-number (format "%s" c)) 3))))
+          (unless from
+            (error "shader diff: #+attr_diff on a shader needs :from NAME"))
+          (let ((from-blk (my/named-block from)))
+            (unless from-blk
+              (error "shader diff: no block named %S found to diff :from" from))
+            (let* ((from-body (plist-get from-blk :body))
+                   (diff (my/unified-diff from from-body label body context)))
+              (delete-region beg end)
+              (goto-char beg)
+              ;; live canvas (custom GLSL body, source box off)
+              (insert (format "#+begin_export hugo\n{{< shader %s >}}\n%s\n{{< /shader >}}\n#+end_export\n\n"
+                              sc-args body))
+              ;; diffbox: the :from source -> this shader's body
+              (insert (my/diffbox-export from label lang view diff from-body body))
+              (insert (make-string post-blank ?\n))))))))
 
   (defun my/preprocess-org-buffer (&rest _)
     "Buffer rewrites that must run before ox-hugo parses: expand `diff' blocks
-while their referenced named blocks still exist, then rawify verbatim blocks."
+and shader/diff blocks while their referenced named blocks still exist, then
+rawify the remaining verbatim special blocks."
     (my/expand-diff-blocks)
+    (my/expand-shader-diffs)
     (my/rawify-verbatim-special-blocks))
 
   (advice-add 'org-hugo-export-wim-to-md :before #'my/preprocess-org-buffer))

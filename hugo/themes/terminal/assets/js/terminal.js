@@ -885,6 +885,34 @@ function wireDiffBoxes(root){
   };
   const esc = s=> s.replace(/[&<>]/g, ch=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[ch]));
   const cell = html=>{ const v = html != null ? html : ""; return v === "" ? "\u200B" : v; };  // ZWSP keeps blank lines tall
+  // "what got copied" flash matching the run boxes: a reverse-video select-all
+  // that SWEEPS across the text. It grows a native selection char-by-char (so the
+  // Chroma highlighting survives, unlike the run-box char-span sweep); the themed
+  // `.diffbox ::selection' paints it the same white-on-black as `.ch.sel'.
+  const clearSel = ()=>{ try{ window.getSelection().removeAllRanges(); }catch(e){} };
+  const sweepSelect = el=>{
+    if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const sel = window.getSelection();
+    const nodes = []; let total = 0, tn;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    while((tn = walker.nextNode())){ if(tn.nodeValue.length){ nodes.push([tn, total]); total += tn.nodeValue.length; } }
+    if(!total) return;
+    const last = nodes[nodes.length-1][0];
+    const at = idx=>{ for(let i=nodes.length-1;i>=0;i--){ if(idx >= nodes[i][1]) return [nodes[i][0], Math.min(idx-nodes[i][1], nodes[i][0].nodeValue.length)]; } return [nodes[0][0], 0]; };
+    const range = document.createRange(); range.setStart(nodes[0][0], 0);
+    const to = idx=>{ const [nn,oo] = at(idx); try{ range.setEnd(nn, oo); sel.removeAllRanges(); sel.addRange(range); }catch(e){} };
+    const full = ()=>{ try{ range.setEnd(last, last.nodeValue.length); sel.removeAllRanges(); sel.addRange(range); }catch(e){} };
+    const DUR = 300, t0 = performance.now();
+    (function frame(now){
+      const p = Math.min(1, (now - t0) / DUR);
+      to(Math.floor(p * total));
+      if(p < 1){ requestAnimationFrame(frame); return; }
+      full();                                   // ensure the tail is selected, then flash
+      setTimeout(clearSel, 85);
+      setTimeout(full, 140);
+      setTimeout(clearSel, 220);
+    })(performance.now());
+  };
 
   (root || content || document).querySelectorAll(".diffbox").forEach(box=>{
     if(box.dataset.diffWired) return;            // idempotent across load + soft-nav
@@ -955,15 +983,32 @@ function wireDiffBoxes(root){
       });
     }
     if(copy){
+      // copy the evolved source; flash a reverse-video select-all over it to show
+      // what got copied. The diff table can't be swept (it'd shred the table), so
+      // when the diff view is showing we briefly flip to the source view for the
+      // flash, then switch back -- leaving the toggle state untouched.
+      const srcCode = srcPane && srcPane.querySelector('code[class*="language"]');
       copy.addEventListener("click", ()=>{
-        let text = "";
-        if(box.dataset.view === "source"){
-          const code = srcPane && srcPane.querySelector('code[class*="language"]');
-          text = code ? code.textContent : "";
+        const text = srcCode ? srcCode.textContent : (raw ? raw.textContent : "");
+        const morph = ()=>{
+          copy.classList.add("copied");
+          clearTimeout(copy._t);
+          copy._t = setTimeout(()=> copy.classList.remove("copied"), 1200);
+        };
+        if(fxOn && srcCode){
+          const flip = box.dataset.view !== "source";   // currently showing the diff
+          if(flip){ diffPane.hidden = true; srcPane.hidden = false; }
+          doCopy(text, ()=>{
+            morph();
+            sweepSelect(srcCode);
+            setTimeout(()=>{
+              clearSel();
+              if(flip){ srcPane.hidden = true; diffPane.hidden = false; }
+            }, 700);
+          });
         } else {
-          text = raw ? raw.textContent : "";     // the unified diff is a valid patch
+          doCopy(text, morph);
         }
-        doCopy(text, ()=> copied(copy));
       });
     }
   });
