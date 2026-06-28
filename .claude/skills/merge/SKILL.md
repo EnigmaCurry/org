@@ -99,13 +99,26 @@ git push origin ox-hugo
 
 This push to `ox-hugo` is what deploys the site. Confirm the push succeeded.
 
-## 7. Return to `dev`
+## 7. Sync `dev` back up with `ox-hugo` and push
+
+Bring any commits that are on `ox-hugo` but not on `dev` (the new squash commit,
+plus anything ever committed straight to `ox-hugo`) back into `dev` with an
+ordinary **merge commit**:
 
 ```
 git checkout dev
+git merge --no-ff ox-hugo -m "Merge ox-hugo back into dev"
+git push origin dev
 ```
 
-Leave the user back on `dev` where they do their work.
+**Never rewrite `dev`'s history** — no `git rebase`, no `git reset --hard`, no
+force-push. `dev` is cloned in several places, so it must only ever move forward
+by appending commits. A merge commit is correct here; resetting/rebasing is not.
+
+Because the squash commit on `ox-hugo` carries the same tree as the work already
+on `dev`, this merge normally auto-resolves with no real changes. If it *does*
+report conflicts (e.g. something was edited directly on `ox-hugo`), stop and
+report them — do not force a resolution.
 
 ## 8. Report
 
@@ -113,5 +126,7 @@ Tell the user:
 
 - That `ox-hugo` was updated and pushed (deploy triggered).
 - The squash commit message used.
+- That `dev` was merged back up with `ox-hugo` and pushed (history appended, not
+  rewritten).
 - That the live site at https://book.rymcg.tech will update once the GitHub
   Actions deploy finishes.
