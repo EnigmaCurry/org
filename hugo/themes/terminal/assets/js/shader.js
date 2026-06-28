@@ -30,6 +30,7 @@ window.Shader = (function(){
     uniform float u_effect;
     uniform float u_opaque;
     uniform vec3  u_accent;
+    uniform vec3  u_bg;
 
     float wave(vec2 p, float t){
       return sin(p.x*3.0 + t)*0.5
@@ -56,10 +57,10 @@ window.Shader = (function(){
       float a = field * baseA * u_intensity;
 
       vec3 col = u_accent * (0.6 + 0.7 * field);
-      // inline windows render OPAQUE (a solid little screen: accent plasma on a near
-      // black panel); the full-screen background renders translucent so the page
-      // shows through it as an ambient wash.
-      vec3 solid = mix(vec3(0.02, 0.02, 0.03), col, clamp(field, 0.0, 1.0));
+      // inline windows render OPAQUE (a solid little screen: accent plasma over the
+      // theme background, so it suits light and dark palettes); the full-screen
+      // background renders translucent so the page shows through it as a wash.
+      vec3 solid = mix(u_bg, col, clamp(field, 0.0, 1.0));
       gl_FragColor = mix(vec4(col, a), vec4(solid, 1.0), u_opaque);
     }`;
 
@@ -71,6 +72,7 @@ window.Shader = (function(){
     "uniform vec3 iResolution;\n" +
     "uniform float iTime;\n" +
     "uniform vec3 iAccent;\n" +
+    "uniform vec3 iBackground;\n" +
     "#line 1\n";
   const CUSTOM_MAIN =
     "\nvoid main(){ vec4 c = vec4(0.0,0.0,0.0,1.0); mainImage(c, gl_FragCoord.xy); gl_FragColor = c; }\n";
@@ -80,6 +82,7 @@ window.Shader = (function(){
   let perfKilled = false;
   let softwareChecked = false;
   let accent = [0.87, 0.64, 0.17];               // amber fallback (#dfa22c)
+  let bgcol  = [0.04, 0.05, 0.04];               // theme --bg, base for opaque inline windows
 
   try { if(sessionStorage.getItem("shader-perf") === "slow") perfKilled = true; } catch(e){}
   if(navigator.connection && navigator.connection.saveData) perfKilled = true;
@@ -95,6 +98,8 @@ window.Shader = (function(){
   function readAccent(){
     const c = hexToRgb(cssVar("--accent")) || hexToRgb(cssVar("--fg-bright"));
     if(c) accent = c;
+    const b = hexToRgb(cssVar("--bg"));
+    if(b) bgcol = b;
   }
 
   const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -131,8 +136,8 @@ window.Shader = (function(){
     const u = n => gl.getUniformLocation(prog, n);   // null for uniforms a given program omits -> ignored on set
     return { prog, loc: {
       res: u("u_res"), time: u("u_time"), intensity: u("u_intensity"),
-      effect: u("u_effect"), opaque: u("u_opaque"), accent: u("u_accent"),
-      iRes: u("iResolution"), iTime: u("iTime"), iAccent: u("iAccent"),
+      effect: u("u_effect"), opaque: u("u_opaque"), accent: u("u_accent"), bg: u("u_bg"),
+      iRes: u("iResolution"), iTime: u("iTime"), iAccent: u("iAccent"), iBg: u("iBackground"),
     }};
   }
   function checkSoftware(gl){
@@ -215,10 +220,12 @@ window.Shader = (function(){
       gl.uniform1f(loc.effect, effect);
       gl.uniform1f(loc.opaque, opaque);
       gl.uniform3f(loc.accent, accent[0], accent[1], accent[2]);
+      gl.uniform3f(loc.bg, bgcol[0], bgcol[1], bgcol[2]);
       // Shadertoy-style inputs for custom shaders (null locations are ignored)
       gl.uniform3f(loc.iRes, canvas.width, canvas.height, 1.0);
       gl.uniform1f(loc.iTime, phase);
       gl.uniform3f(loc.iAccent, accent[0], accent[1], accent[2]);
+      gl.uniform3f(loc.iBg, bgcol[0], bgcol[1], bgcol[2]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
     }

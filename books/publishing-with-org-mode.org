@@ -411,9 +411,11 @@ page reads normally — the effect is pure progressive enhancement.
 
 For a literate book, write the fragment shader *in the block itself*. The
 body is a Shadertoy-style =mainImage= and the engine compiles and runs it
-in the window. The inputs are =iResolution= (vec3), =iTime= (float), and
-=iAccent= (vec3, the current theme accent). When a block has a body its
-source is shown alongside the window by default:
+in the window. The inputs are =iResolution= (vec3), =iTime= (float),
+=iAccent= (vec3, the current theme accent) and =iBackground= (vec3, the
+theme background — use it as your base color so the shader suits light
+and dark palettes). When a block has a body its source is shown alongside
+the window by default:
 
 #+attr_shortcode: :autoplay true
 #+begin_shader
@@ -422,7 +424,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
   float wave = sin(uv.x * 12.0 + iTime)
              * cos(uv.y * 9.0 - iTime * 0.6);
   float v = 0.5 + 0.5 * wave;
-  vec3 col = mix(vec3(0.03, 0.03, 0.06), iAccent, v);
+  vec3 col = mix(iBackground, iAccent, v);
   fragColor = vec4(col, 1.0);
 }
 #+end_shader
