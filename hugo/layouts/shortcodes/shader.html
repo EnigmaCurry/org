@@ -23,7 +23,8 @@
 {{- $effect := .Get "effect" | default "ambient" -}}
 {{- $takeover := eq $effect "takeover" -}}
 {{- $hidden := or (.Get "hidden") (.Get "hide") -}}
-{{- $autoplay := or (.Get "autoplay") (.Get "play") -}}
+{{- $autoplayRaw := or (.Get "autoplay") (.Get "play") -}}
+{{- $autoplay := and $autoplayRaw (ne (printf "%v" $autoplayRaw) "false") -}}
 {{- $intensity := .Get "intensity" -}}
 {{- $body := trim .Inner " \n\r\t" -}}
 {{- /* show the source by default whenever there's a body (literate); :source false hides it */ -}}
