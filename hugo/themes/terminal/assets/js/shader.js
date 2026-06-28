@@ -333,7 +333,7 @@ window.Shader = (function(){
   function scan(root){
     root = root || document;
     const bgCfg = root.querySelector('.shader-config[data-effect="takeover"]');
-    if(bgCfg){ const r = ensureBg(); if(r){ r.configure(cfgFromEl(bgCfg)); r.setPaused(!bgCfg.hasAttribute("data-paused")); r.activate(true); } }
+    if(bgCfg){ const r = ensureBg(); if(r){ r.configure(cfgFromEl(bgCfg)); r.setPaused(bgCfg.hasAttribute("data-paused")); r.activate(true); } }
     else if(bg){ bg.activate(false); }
 
     clearInlines();
