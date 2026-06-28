@@ -359,10 +359,30 @@ various Hugo related features.
 index
 #+end_index
 
-** Shaders (experimental)
+** Shaders
 :PROPERTIES:
-:EXPORT_FILE_NAME: shader-background
-:EXPORT_HUGO_SLUG: shader-background
+:EXPORT_HUGO_SECTION_FRAG: shaders
+:END:
+
+*** Shaders
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+The experimental =shader= block embeds live WebGL into a page. These
+chapters cover the three ways to use it: inline windows, writing shaders
+literately in the block body, and the full-screen takeover mode.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+*** Inline windows
+:PROPERTIES:
+:EXPORT_FILE_NAME: inline-windows
+:EXPORT_HUGO_SLUG: inline-windows
 :END:
 
 A =shader= block embeds a live WebGL window in the page. Each window has
@@ -372,6 +392,22 @@ runs (stopped on its first frame until you press play):
 
 #+begin_shader
 #+end_shader
+
+Pass =:autoplay= to start it running on load instead of showing a
+stopped preview:
+
+#+attr_shortcode: :autoplay true
+#+begin_shader
+#+end_shader
+
+With JavaScript disabled, shader windows are simply not shown and the
+page reads normally — the effect is pure progressive enhancement.
+
+*** Literate shaders
+:PROPERTIES:
+:EXPORT_FILE_NAME: literate-shaders
+:EXPORT_HUGO_SLUG: literate-shaders
+:END:
 
 For a literate book, write the fragment shader *in the block itself*. The
 body is a Shadertoy-style =mainImage= and the engine compiles and runs it
@@ -392,27 +428,31 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
 #+end_shader
 
 A GLSL compile error is shown right in the window, so you can iterate on
-the shader as you write. The =shader= block also takes a few attributes:
+the shader as you write. Use =:source false= to hide the source box for a
+block that has one.
 
-- =:autoplay= — start animating on load instead of showing a stopped
-  preview.
-- =:source false= — hide the source box for a block that has one.
-- =:effect takeover= — render the built-in effect full-screen behind the
-  *whole* page using a single persistent canvas that survives navigation
-  (only reconfigured, never recreated), rather than as an inline window.
-- =:hidden= — don't draw the inline window. Only useful together with
-  =:effect takeover=, where the full-screen background is the visual.
+Because =iAccent= follows the site theme, a literate shader recolors with
+the palette — try switching themes while one is playing.
 
-And this one is a hidden full-screen takeover — look at the page
-background rather than this spot, then navigate away to see it switch
-off (the persistent canvas stays alive, just idle):
+*** Full-screen takeover
+:PROPERTIES:
+:EXPORT_FILE_NAME: takeover
+:EXPORT_HUGO_SLUG: takeover
+:END:
+
+=:effect takeover= renders the built-in effect full-screen behind the
+*whole* page, using a single persistent canvas that survives navigation
+(only reconfigured, never recreated, as you move between pages) rather
+than an inline window. A small floating play/stop panel appears while a
+takeover is active. Pair it with =:hidden= so only the background shows:
 
 #+attr_shortcode: :effect takeover :hidden true
 #+begin_shader
 #+end_shader
 
-With JavaScript disabled, shader windows are simply not shown and the
-page reads normally — the effect is pure progressive enhancement.
+Look at the page background rather than this spot, then navigate away to
+another chapter to see it switch off (the persistent canvas stays alive,
+just idle), and back to see it return.
 
 ** Example Org Blocks
 :PROPERTIES:

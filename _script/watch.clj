@@ -16,8 +16,16 @@
 ;;                    stale sources, the cause of "reloads but never updates".)
 ;;
 ;; Hugo's own server watches everything under hugo/ and live-reloads the browser;
-;; this script only regenerates hugo/content/ from the .org sources, which Hugo
-;; then picks up on its own.
+;; this script only regenerates the Org -> Markdown, which Hugo then picks up.
+;;
+;; Why two content dirs (content vs content-live):
+;;   ox-hugo re-exports EVERY subtree to its own .md and rewrites them all (even
+;;   unchanged ones) over the multi-second Emacs export. If Hugo watched that dir
+;;   directly it would see the staggered writes as ~10 separate change events and
+;;   live-reload the browser ~10 times per build. So ox-hugo writes to
+;;   hugo/content (unwatched), and after each build we `rsync --checksum` only the
+;;   genuinely-changed files into hugo/content-live (what Hugo serves) in one fast
+;;   burst — Hugo coalesces that into a single reload, or none if nothing changed.
 
 (require '[babashka.fs :as fs]
          '[babashka.process :as p]
@@ -43,20 +51,41 @@
   (into {} (for [f (source-files)]
              [f (fs/file-time->millis (fs/last-modified-time f))])))
 
+;; ox-hugo exports here (unwatched); Hugo serves from `serve-dir`.
+(def content-dir (str (fs/path repo "hugo" "content")))
+(def serve-dir   (str (fs/path repo "hugo" "content-live")))
+
+(defn sync-content!
+  "Mirror only the genuinely-changed files from content-dir into serve-dir.
+`--checksum` ignores ox-hugo's gratuitous mtime bumps and compares by content,
+so unchanged pages are not re-touched; the changed ones land in one fast burst
+that Hugo coalesces into a single live-reload."
+  []
+  (fs/create-dirs serve-dir)
+  (let [{:keys [exit]} @(p/process {:dir repo :err :inherit}
+                                   "rsync" "-r" "--checksum" "--delete"
+                                   (str content-dir "/") (str serve-dir "/"))]
+    (when-not (zero? exit)
+      (println "✗ rsync content -> content-live failed"))))
+
 (defn build-md! []
   (println "↻ re-exporting Markdown ...")
   (let [{:keys [exit]} @(p/process {:dir repo :inherit true} "make" "build-md")]
-    (println (if (zero? exit)
-               "✓ Markdown rebuilt — Hugo will live-reload"
-               "✗ make build-md failed — see output above"))))
+    (if (zero? exit)
+      (do (sync-content!)
+          (println "✓ Markdown rebuilt — Hugo will live-reload"))
+      (println "✗ make build-md failed — see output above"))))
 
 (def hugo-cmd (or (System/getenv "HUGO") "hugo"))
 
 (defn start-hugo []
   (println "▶ starting Hugo server (http://localhost:1313) ...")
+  (sync-content!) ;; seed content-live from the build that ran before this script
   (p/process {:dir repo :inherit true}
              "sh" "-c"
-             (str "cd hugo && " hugo-cmd " server --buildDrafts --disableFastRender")))
+             (str "cd hugo && " hugo-cmd
+                  " server --buildDrafts --disableFastRender"
+                  " --contentDir content-live")))
 
 ;; ---------------------------------------------------------------------------
 ;; autopull mode: poll git, pull when upstream advances, then rebuild.
