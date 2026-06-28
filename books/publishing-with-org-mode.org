@@ -403,6 +403,52 @@ reader press play to start it — pass =:autoplay false=:
 With JavaScript disabled, shader windows are simply not shown and the
 page reads normally — the effect is pure progressive enhancement.
 
+*** Sizing
+:PROPERTIES:
+:EXPORT_FILE_NAME: sizing
+:EXPORT_HUGO_SLUG: sizing
+:END:
+
+By default a window fills the content width at a clamped height. Size an
+individual window with =:width=, =:height=, and/or =:aspect-ratio=. Bare
+numbers are pixels; any CSS length or percentage works too.
+
+Fixed =:width= and =:height= (here 320×200):
+
+#+attr_shortcode: :autoplay true :width 320 :height 200
+#+begin_shader
+#+end_shader
+
+=:width= alone — the height stays the default:
+
+#+attr_shortcode: :autoplay true :width 240
+#+begin_shader
+#+end_shader
+
+=:height= alone — the width stays full-width:
+
+#+attr_shortcode: :autoplay true :height 120
+#+begin_shader
+#+end_shader
+
+=:aspect-ratio= on its own is the "fit the default" case: it keeps the
+default height and derives the width to match the ratio (never wider than
+the content). Here a square:
+
+#+attr_shortcode: :autoplay true :aspect-ratio 1/1
+#+begin_shader
+#+end_shader
+
+Pair =:aspect-ratio= with a single dimension to derive the other — a
+16:9 window 480px wide:
+
+#+attr_shortcode: :autoplay true :width 480 :aspect-ratio 16/9
+#+begin_shader
+#+end_shader
+
+The same works for literate (custom GLSL) windows — the sizing attributes
+are independent of the shader body.
+
 *** Literate shaders
 :PROPERTIES:
 :EXPORT_FILE_NAME: literate-shaders
@@ -530,6 +576,185 @@ With =:exports true= set, code blocks are to be evaluated by hand with
 re-evaluate the results). It would be nice to use =:exports both= and
 have ox-hugo evaluate blocks automatically on export, but I have not
 been able to get this to work correctly.
+#+end_notice
+
+** Diffs
+:PROPERTIES:
+:EXPORT_FILE_NAME: diffs
+:EXPORT_HUGO_SLUG: diffs
+:END:
+
+When one block is an evolution of another, you don't have to paste the
+code twice and hand-maintain a changeset. Give each block a unique
+=#+NAME:= and add a =#+begin_diff= block that references them; on export
+the build replaces it with a box that toggles between a GitHub-style diff
+and the full source of the evolved block. Both views are syntax-highlighted
+and line-numbered; in the diff, added lines are blocked out in green and
+removed lines in red. Any named block works as a reference — =src=,
+=example=, or a special block like =shader= — and the two may live in
+different subtrees of the same file.
+
+#+begin_src org
+,#+NAME: greet-v1
+,#+begin_src sh
+#!/bin/sh
+echo "starting up"
+echo "hello"
+echo "done"
+,#+end_src
+
+,#+NAME: greet-v2
+,#+begin_src sh
+#!/bin/sh
+echo "starting up"
+name="world"
+echo "hello, $name"
+echo "done"
+,#+end_src
+
+,#+attr_diff: :from greet-v1 :to greet-v2
+,#+begin_diff
+,#+end_diff
+#+end_src
+
+=#+attr_diff= takes =:from= and =:to= (the two block names) plus a few
+optional settings:
+
+- =:context N= — unchanged lines of context around each change (default
+  3; use a large value to show the whole block as one changeset).
+- =:view diff|source= — which view renders by default (default =diff=).
+  This is also the static view shown with JavaScript disabled.
+- =:lang LANG= — override the language used to highlight the source view
+  (otherwise inferred from the =:to= block; =shader= blocks use =glsl=).
+
+The header reads =Diff: from → to= or =Source: to= to match the view, and
+a button in the top-right toggles between them (it folds away when
+JavaScript is off, leaving the static =:view=). The build *fails loudly*
+if either name is missing or cannot be resolved, so a typo never silently
+ships an empty diff. The example above renders:
+
+#+NAME: greet-v1
+#+begin_src sh
+#!/bin/sh
+echo "starting up"
+echo "hello"
+echo "done"
+#+end_src
+
+#+NAME: greet-v2
+#+begin_src sh
+#!/bin/sh
+echo "starting up"
+name="world"
+echo "hello, $name"
+echo "done"
+#+end_src
+
+#+attr_diff: :from greet-v1 :to greet-v2
+#+begin_diff
+#+end_diff
+
+The same two blocks can be referenced again — a named block is not
+consumed by a diff. Here is the very same pair with =:view source=, so the
+box opens on the evolved source instead of the changeset:
+
+#+attr_diff: :from greet-v1 :to greet-v2 :view source
+#+begin_diff
+#+end_diff
+
+By default the diff shows only three lines of context around each change,
+so a longer file whose edits are far apart renders as separate *hunks*
+with the unchanged stretch between them collapsed behind a =@@ … @@=
+header. This pair edits a line near the top and another near the bottom:
+
+#+NAME: srv-v1
+#+begin_src sh
+#!/bin/sh
+# greeting service v1
+greeting="hello"
+
+main() {
+  name="$1"
+  echo "$greeting, $name"
+  log "$name"
+}
+
+log() {
+  printf '%s\n' "$1" >> guests.txt
+}
+
+main "$@"
+#+end_src
+
+#+NAME: srv-v2
+#+begin_src sh
+#!/bin/sh
+# greeting service v2
+greeting="hi"
+
+main() {
+  name="$1"
+  echo "$greeting, $name"
+  log "$name"
+}
+
+log() {
+  printf '%s\n' "$1" >> visitors.log
+}
+
+main "$@"
+#+end_src
+
+#+attr_diff: :from srv-v1 :to srv-v2
+#+begin_diff
+#+end_diff
+
+To fill the gap and show the whole file as one changeset, pass a =:context=
+at least as large as the file — exactly what the whirlpool note below does
+with =:context 99=.
+
+You don't always need two named blocks. Reference a *single* block with
+=:from= (or =:to=) and write the change directly in the diff block's body;
+that body becomes the other side of the diff. This is handy for a one-off
+edit you don't want to give its own named block. =:label= names the inline
+side (default =edited=). For example, against =greet-v1= from above:
+
+#+begin_src org
+,#+attr_diff: :from greet-v1 :label timestamped
+,#+begin_diff
+#!/bin/sh
+echo "starting up"
+echo "$(date): hello"
+echo "done"
+,#+end_diff
+#+end_src
+
+which renders:
+
+#+attr_diff: :from greet-v1 :label timestamped
+#+begin_diff
+#!/bin/sh
+echo "starting up"
+echo "$(date): hello"
+echo "done"
+#+end_diff
+
+With =:from= the body is the new (right-hand) side; with =:to= it is the
+original instead. The same =:context=, =:view=, and =:lang= settings apply.
+
+#+attr_shortcode: :style primary :title Info
+#+begin_notice
+The =diff= block is DRY: only the named blocks hold the source, so the
+changeset can never drift from the code it describes. See it used in the
+[[/notes/shader-tests/whirlpool/][whirlpool shader note]], which shows the whole shader as a changeset
+from the step-function shader on the previous page.
+#+end_notice
+
+#+attr_shortcode: :style warning :title Caveat
+#+begin_notice
+The diff and source are handed to the renderer verbatim, so the referenced
+code must not contain a literal Hugo shortcode opener — a ={{= immediately
+followed by =<= (or by =%=). Ordinary ={{= braces on their own are fine.
 #+end_notice
 
 

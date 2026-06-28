@@ -13,3 +13,29 @@ publishDir = "../public"
 
 [outputs]
   home = ["HTML", "RSS"]
+
+# The /notes book is unlisted: reachable only by its deep URL, never linked from
+# the rest of the site, yet its own index page still lists its pages. Two cascade
+# blocks (ox-hugo can't emit the nested [_build] table itself; render = "always"
+# keeps the pages building so the URLs work):
+#
+#  1. The /notes section itself -> list = "never": dropped from the home's sections,
+#     so it never shows in the sidebar, the home Books index, the prev/next flow,
+#     RSS or the sitemap.
+#  2. Everything under /notes -> list = "local": included in /notes's OWN page
+#     collections (so the index on /notes lists them) but excluded from the
+#     site-wide collections, so they stay out of RSS, the sitemap and any other
+#     book's listings.
+[[cascade]]
+  [cascade._build]
+    list = "never"
+    render = "always"
+  [cascade._target]
+    path = "/notes"
+
+[[cascade]]
+  [cascade._build]
+    list = "local"
+    render = "always"
+  [cascade._target]
+    path = "/notes/**"

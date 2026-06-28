@@ -853,7 +853,9 @@ function copied(btn){
   if(pre && fxOn) sweepElement(pre);          // reverse-video select-all sweep
 }
 function wireCopyButtons(root){
-  (root || content || document).querySelectorAll(".box .copy").forEach(btn=>{
+  // .diffbox owns its copy button (wireDiffBoxes) so it can copy the *visible*
+  // pane rather than the first .body pre -> exclude it here.
+  (root || content || document).querySelectorAll(".box:not(.diffbox) .copy").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const pre = btn.closest(".box").querySelector(".body pre");
       doCopy(pre ? pre.textContent : "", ()=> copied(btn));
@@ -861,6 +863,112 @@ function wireCopyButtons(root){
   });
 }
 wireCopyButtons(content);
+// diffbox: a code box that toggles between a GitHub-style diff and the full
+// source of the evolved block. Server-side we ship three Chroma-highlighted
+// blocks (the diff lexer = no-JS fallback + structure; the :to source = the
+// Source view; the hidden :from source). Here we parse the diff and rebuild it
+// as a line-numbered unified table with per-line syntax colors and green/red
+// blocked lines. The chosen view (diff/source) is baked in so it reads without
+// JS; html.js reveals the toggle + copy controls.
+function wireDiffBoxes(root){
+  // pull per-line highlighted HTML out of a Chroma block (noClasses): each code
+  // line is a top-level <span style="display:flex"> inside code[class*=language]
+  // (the line-number column's <code> carries no language class, so it's skipped).
+  const linesOf = block=>{
+    if(!block) return [];
+    const code = block.querySelector('code[class*="language"]') || block.querySelector("code");
+    if(!code) return [];
+    return Array.from(code.children).map(span=>{
+      const inner = span.firstElementChild || span;
+      return (inner.innerHTML || "").replace(/\n$/, "");
+    });
+  };
+  const esc = s=> s.replace(/[&<>]/g, ch=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[ch]));
+  const cell = html=>{ const v = html != null ? html : ""; return v === "" ? "\u200B" : v; };  // ZWSP keeps blank lines tall
+
+  (root || content || document).querySelectorAll(".diffbox").forEach(box=>{
+    if(box.dataset.diffWired) return;            // idempotent across load + soft-nav
+    box.dataset.diffWired = "1";
+    const lt = box.querySelector(".label .lt");
+    const diffPane = box.querySelector(".diff-pane");
+    const srcPane = box.querySelector(".src-pane");
+    const raw = box.querySelector(".diff-raw");
+    const fromLines = linesOf(box.querySelector(".diff-from"));
+    const toLines = linesOf(srcPane);            // the :to source IS the Source view
+    const toggle = box.querySelector(".diff-toggle");
+    const copy = box.querySelector(".copy");
+
+    // parse the rendered unified diff (diff lexer block) into typed rows, mapping
+    // each row to its highlighted line in the from/to source via line numbers.
+    const rows = [];
+    const rawCode = raw && (raw.querySelector('code[class*="language"]') || raw.querySelector("code"));
+    if(rawCode){
+      let o = 0, n = 0, started = false;
+      for(const span of rawCode.children){
+        const line = (span.textContent || "").replace(/\n$/, "");
+        const hm = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+        if(hm){ o = +hm[1]; n = +hm[2]; started = true; rows.push({ type:"hunk", text:line }); continue; }
+        if(!started) continue;                   // skip the --- / +++ file header
+        const c = line[0];
+        if(c === "+"){ rows.push({ type:"add", newNum:n, html:toLines[n-1] }); n++; }
+        else if(c === "-"){ rows.push({ type:"del", oldNum:o, html:fromLines[o-1] }); o++; }
+        else if(c === "\\"){ /* "\ No newline at end of file" */ }
+        else { rows.push({ type:"ctx", oldNum:o, newNum:n, html:toLines[n-1] }); o++; n++; }
+      }
+    }
+
+    const buildUnified = ()=>{
+      const t = document.createElement("table"); t.className = "dt dt-unified";
+      const tb = document.createElement("tbody");
+      for(const r of rows){
+        const tr = document.createElement("tr");
+        if(r.type === "hunk"){
+          tr.className = "dl-hunk";
+          tr.innerHTML = '<td class="dl-n"></td><td class="dl-n"></td><td class="dl-mark"></td><td class="dl-code">'+esc(r.text)+"</td>";
+        } else {
+          tr.className = "dl-"+r.type;
+          const sign = r.type === "add" ? "+" : r.type === "del" ? "-" : "";
+          tr.innerHTML =
+            '<td class="dl-n">'+(r.oldNum||"")+'</td><td class="dl-n">'+(r.newNum||"")+
+            '</td><td class="dl-mark">'+sign+'</td><td class="dl-code">'+cell(r.html)+"</td>";
+        }
+        tb.appendChild(tr);
+      }
+      t.appendChild(tb); return t;
+    };
+
+    if(diffPane && rows.length){
+      const u = document.createElement("div"); u.className = "diff-unified"; u.appendChild(buildUnified());
+      if(raw) raw.hidden = true;                 // JS replaces the no-JS fallback
+      diffPane.appendChild(u);
+    }
+
+    if(toggle && lt && diffPane && srcPane){
+      toggle.addEventListener("click", ()=>{
+        const toSource = box.dataset.view !== "source";
+        box.dataset.view = toSource ? "source" : "diff";
+        diffPane.hidden = toSource;
+        srcPane.hidden = !toSource;
+        lt.textContent = toSource ? lt.dataset.titleSource : lt.dataset.titleDiff;
+        lt.title = lt.textContent;
+        toggle.textContent = toSource ? "Diff" : "Source";   // label = the view it switches TO
+      });
+    }
+    if(copy){
+      copy.addEventListener("click", ()=>{
+        let text = "";
+        if(box.dataset.view === "source"){
+          const code = srcPane && srcPane.querySelector('code[class*="language"]');
+          text = code ? code.textContent : "";
+        } else {
+          text = raw ? raw.textContent : "";     // the unified diff is a valid patch
+        }
+        doCopy(text, ()=> copied(copy));
+      });
+    }
+  });
+}
+wireDiffBoxes(content);
 // "expand" control: opens a near-fullscreen sheet showing a block's raw text
 // (wrapped + selectable). Added -- on any device -- to every code block whose
 // content overflows: the framed boxes (run/env/stdout/edit/annotate) and the
@@ -910,6 +1018,7 @@ function wireExpands(root){
   const scope = root || content || document;
   const blocks = [];
   scope.querySelectorAll(".box").forEach(box=>{
+    if(box.classList.contains("diffbox")) return;   // diffbox has two panes + its own controls
     const pre = box.querySelector(".body pre");
     if(pre) blocks.push({ host:box, pre, copy:box.querySelector(".copy") });   // prose boxes have no pre -> skipped
   });
@@ -1034,6 +1143,7 @@ function reinitAfterNav(){
   wirePrompt();              // re-fit the swapped prompt path + rebind reload
   wirePagenav();             // rebind #toc panel, headings, scroll-spy refs
   wireCopyButtons(content);  // copy buttons on the new run/env/stdout boxes
+  wireDiffBoxes(content);    // toggle + scoped copy on the new diffboxes
   wireInlineCode(content);   // inline code-pill copy
   wireExpands(content);      // expand controls on the new code blocks
   queueActiveBlogTagScroll();// keep the active blog tag centered in the tree

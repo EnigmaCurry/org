@@ -67,6 +67,14 @@
       </li>
     {{- end -}}
     {{- if $oldOpen -}}</ul></li>{{- end -}}
+    {{- /* Plain link to the unlisted /notes apex. It is deliberately NOT one of
+           .Site.Home.Sections (excluded via the hugo.toml cascade), so it never
+           joins the prev/next flow or expands its chapters here — it's just a
+           way in. Highlighted (open) while anywhere under /notes. */ -}}
+    {{- $notesOpen := hasPrefix $cur.RelPermalink "/notes/" -}}
+    <li class="book{{ if $notesOpen }} open{{ end }}">
+      <a href="/notes/">notes</a>
+    </li>
   </ul>
   {{- /* action row: external links + the settings gear. Sits above the build date. */ -}}
   <div class="sidebar-actions">

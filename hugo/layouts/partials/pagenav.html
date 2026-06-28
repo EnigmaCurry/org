@@ -4,7 +4,15 @@
        from this page's headings (see terminal.js). */ -}}
 {{- $cur := . -}}
 {{- $flat := slice -}}
-{{- if and (eq $cur.Section "blog") (not $cur.IsSection) -}}
+{{- if hasPrefix $cur.RelPermalink "/notes/" -}}
+  {{- /* the /notes book is unlisted (hugo.toml cascade keeps it out of the
+         site-wide flow). It still navigates WITHIN ITSELF: walk only the notes
+         book, depth-first, so prev/next stay inside /notes and never cross out
+         to the rest of the site or back to the home page. */ -}}
+  {{- $notes := $.Site.GetPage "/notes" -}}
+  {{- $flat = slice $notes -}}
+  {{- $flat = partial "walk.html" (dict "page" $notes "acc" $flat) -}}
+{{- else if and (eq $cur.Section "blog") (not $cur.IsSection) -}}
   {{- $flat = sort (where $.Site.RegularPages "Section" "blog") "Date" "desc" -}}
 {{- else -}}
   {{- /* global reading order: the home page (intro) first, then every book in

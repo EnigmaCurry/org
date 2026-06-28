@@ -1,0 +1,47 @@
+{{- /* diffbox: a code box that toggles between a GitHub-style diff and the full
+       source of the evolved block. Paired with the ox-hugo `diff' block (see
+       emacs.d/init.el), which computes the diff and supplies three parts in
+       `.Inner', separated by an HTML-comment sentinel: the unified diff, the
+       :from source, and the :to source.
+
+       Params (set by the emitter from #+attr_diff):
+         from  name of the original block (diff "from" side)
+         to    name of the evolved block  (diff "to" side; also the Source view)
+         lang  language used to syntax-highlight the code (e.g. glsl, sh, rust)
+         view  which view renders statically: "diff" (default) or "source"
+
+       Rendering split:
+         - Server-side we Chroma-highlight all three parts. The diff (diff lexer)
+           is the static, no-JS fallback; the :to source (with line numbers) is
+           the Source view; the :from source is hidden, read only by JS.
+         - terminal.js (wireDiffBoxes) parses the diff and rebuilds it as a
+           GitHub-style table -- line numbers + green/red blocked lines, in the
+           reader's preferred unified/split layout (the global diff-view setting).
+         The chosen view is baked in (data-view + [hidden]) so it reads with NO
+         JavaScript; html.js reveals the toggle + copy controls. */ -}}
+{{- $from := .Get "from" -}}
+{{- $to := .Get "to" -}}
+{{- $lang := .Get "lang" | default "text" -}}
+{{- $view := cond (eq (.Get "view") "source") "source" "diff" -}}
+{{- $parts := split (trim .Inner "\n\r") "<!--diffbox-sep-->" -}}
+{{- $diffCode := trim (index $parts 0) "\n\r" -}}
+{{- $fromCode := trim (index $parts 1) "\n\r" -}}
+{{- $toCode := trim (index $parts 2) "\n\r" -}}
+{{- $diffTitle := printf "Diff: %s → %s" $from $to -}}
+{{- $srcTitle := printf "Source: %s" $to -}}
+{{- $isSource := eq $view "source" -}}
+{{- $title := cond $isSource $srcTitle $diffTitle -}}
+<div class="box diffbox" data-view="{{ $view }}" data-from="{{ $from }}" data-to="{{ $to }}">
+  <div class="label"><span class="lt" title="{{ $title }}" data-title-diff="{{ $diffTitle }}" data-title-source="{{ $srcTitle }}">{{ $title }}</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">{{ cond $isSource "Diff" "Source" }}</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane"{{ if $isSource }} hidden{{ end }}>
+      <div class="diff-raw">{{ highlight $diffCode "diff" "noClasses=true" }}</div>
+    </div>
+    <div class="src-pane"{{ if not $isSource }} hidden{{ end }}>{{ highlight $toCode $lang "lineNos=table,lineNumbersInTable=true,noClasses=true" }}</div>
+    <div class="diff-from" hidden>{{ highlight $fromCode $lang "noClasses=true" }}</div>
+  </div>
+</div>

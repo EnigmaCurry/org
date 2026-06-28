@@ -15,6 +15,12 @@
          :source    show the block body as a code box. Defaults ON when a body is
                     present (literate); pass :source false to hide it.
          :intensity 0..1 override (built-in shader)
+         :width     inline window width  (bare number -> px; or any CSS length/%)
+         :height    inline window height (bare number -> px; or any CSS length/%)
+         :aspect-ratio  CSS aspect-ratio (e.g. 16/9 or 1.78). An alternative to
+                    giving both width and height: paired with one of them it
+                    derives the other; given ALONE it keeps the default footprint
+                    (height) and derives the width to fit. (aliases: aspect, ratio)
          :poster    static image shown when JS is off (graceful no-JS fallback)
          :alt       alt text for the poster
 
@@ -26,6 +32,27 @@
 {{- $autoplayRaw := or (.Get "autoplay") (.Get "play") -}}
 {{- $autoplay := and $autoplayRaw (ne (printf "%v" $autoplayRaw) "false") -}}
 {{- $intensity := .Get "intensity" -}}
+{{- /* optional canvas sizing. Bare numbers become px; any CSS length/% passes through.
+       width/height override the default footprint; aspect-ratio can stand in for one
+       (or, alone, fits the default box by keeping its height and deriving the width). */ -}}
+{{- $w := .Get "width" -}}
+{{- $h := .Get "height" -}}
+{{- $ar := or (.Get "aspect-ratio") (.Get "aspect") (.Get "ratio") -}}
+{{- if and $w (findRE "^[0-9.]+$" (printf "%v" $w)) }}{{ $w = printf "%spx" $w }}{{ end -}}
+{{- if and $h (findRE "^[0-9.]+$" (printf "%v" $h)) }}{{ $h = printf "%spx" $h }}{{ end -}}
+{{- $sizeStyle := "" -}}
+{{- if and $w $h -}}
+  {{- $sizeStyle = printf "width:%s;height:%s;" $w $h -}}
+{{- else if $w -}}
+  {{- if $ar -}}{{ $sizeStyle = printf "width:%s;height:auto;aspect-ratio:%s;" $w $ar }}{{- else -}}{{ $sizeStyle = printf "width:%s;" $w }}{{- end -}}
+{{- else if $h -}}
+  {{- /* fit-content (not auto) so a definite height + ratio shrinks to the derived width
+         instead of a block box stretching to fill the row */ -}}
+  {{- if $ar -}}{{ $sizeStyle = printf "height:%s;width:fit-content;max-width:100%%;aspect-ratio:%s;" $h $ar }}{{- else -}}{{ $sizeStyle = printf "height:%s;" $h }}{{- end -}}
+{{- else if $ar -}}
+  {{- /* aspect-ratio only: keep the default height, derive width, never overflow */ -}}
+  {{- $sizeStyle = printf "height:var(--shader-default-h);width:fit-content;max-width:100%%;aspect-ratio:%s;" $ar -}}
+{{- end -}}
 {{- $body := trim .Inner " \n\r\t" -}}
 {{- /* show the source by default whenever there's a body (literate); :source false hides it */ -}}
 {{- $showSource := and (ne $body "") (ne (printf "%v" (.Get "source")) "false") -}}
@@ -37,7 +64,7 @@
        the .paused class unless :autoplay, so the control icons read correctly before
        JS wires up (the engine keeps the state in sync after). */ -}}
 {{- if not $hidden -}}
-<figure class="shader-window" data-effect="{{ $effect }}"{{ with $intensity }} data-intensity="{{ . }}"{{ end }}{{ if $autoplay }} data-autoplay{{ end }}>
+<figure class="shader-window" data-effect="{{ $effect }}"{{ with $intensity }} data-intensity="{{ . }}"{{ end }}{{ if $autoplay }} data-autoplay{{ end }}{{ with $sizeStyle }} style="{{ . | safeCSS }}"{{ end }}>
   <canvas class="shader-canvas" aria-hidden="true"></canvas>
   {{- if $body }}<script type="x-shader/x-fragment" class="shader-glsl">{{ .Inner }}</script><pre class="shader-error" hidden></pre>{{ end -}}
   <div class="shader-ctl{{ if not $autoplay }} paused{{ end }}">

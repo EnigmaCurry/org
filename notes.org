@@ -1,0 +1,130 @@
+#+hugo_base_dir: ./hugo
+#+hugo_section: /notes
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice %annotate badge button %children %index run stdout edit math mermaid openapi
+#+STARTUP: align
+
+# This book is intentionally UNLISTED. It is reachable only at /notes (and its
+# deeper URLs); nothing on the site links to it, and it is excluded from the
+# sidebar, the prev/next reading flow, the home page Books index, the RSS feed
+# and the sitemap. That exclusion is configured in hugo/hugo.toml via a
+# [[cascade]] block targeting the /notes path — not here.
+#
+# Structure note: each `*` heading is a top-level node mapped into the /notes
+# section by the file-level #+hugo_section above. `* Notes` (EXPORT_FILE_NAME
+# _index) is the book's own index page. Sub-sections are SIBLING `*` headings
+# carrying EXPORT_HUGO_SECTION_FRAG (which puts them in a subdirectory) — NOT
+# children of `* Notes`, because a child without its own page would have its
+# body folded into the /notes index.
+
+* Notes
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+A loose collection of working notes. Unlike the books, this is not part of
+the site's reading flow — it's a scratch space reachable only by direct link.
+
+# depth 1: list only the top-level sections here (just their links), not the
+# pages nested inside them — each section lists its own contents on its index.
+#+attr_shortcode: :depth 1
+#+begin_index
+index
+#+end_index
+
+# `* Shader tests` is a structural wrapper only (EXPORT_HUGO_SECTION_FRAG, no
+# EXPORT_FILE_NAME): it creates the /notes/shader-tests/ subdirectory but emits
+# no page. Its `**` children are SIBLINGS of each other — the `** Shader tests`
+# _index and the per-test pages. They MUST be siblings, not parent/child: a page
+# nested *under* an _index heading gets its body folded into that _index, whereas
+# a sibling page is carved out into its own file. (This is why the wrapper and the
+# _index can't be the same heading.)
+* Shader tests
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: shader-tests
+:END:
+
+** Shader tests
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:END:
+
+Individual literate-shader experiments. Each page embeds its GLSL source and
+runs it live in the page.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Step function
+:PROPERTIES:
+:EXPORT_FILE_NAME: step-function
+:EXPORT_HUGO_SLUG: step-function
+:END:
+
+A first literate shader test: =step(0.5, uv)= across the x and y of the
+normalized coordinates, painting the four quadrants black / red / green /
+yellow.
+
+#+attr_shortcode: :aspect-ratio 1 :autoplay true
+#+NAME: step-function-shader
+#+begin_shader
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec3 col = vec3(0); // start with black
+
+  col = vec3(step(0.5, uv), 0); // perform step function across the x-component and y-component of uv
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool
+:PROPERTIES:
+:EXPORT_FILE_NAME: whirlpool
+:EXPORT_HUGO_SLUG: whirlpool
+:END:
+
+An evolution of the [[/notes/shader-tests/step-function/][step function]]: instead of
+sampling the quadrants from a fixed grid, we swirl the coordinate plane around
+its center before applying =step=. Each point is rotated by an angle that grows
+toward the middle, dragging the four colored quadrants into a whirlpool. A slow
+=iTime= term keeps the vortex turning.
+
+#+attr_shortcode: :aspect-ratio 1 :autoplay true :source false
+#+NAME: whirlpool-shader
+#+begin_shader
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center, and let it flow slowly over time
+  a += 6.0 * exp(-3.0 * r) + iTime * 0.3;
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec3 col = vec3(0); // start with black
+  col = vec3(step(0.5, sw), 0); // same quadrant step, now on the whirlpool
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+The whole shader, as a changeset from the [[/notes/shader-tests/step-function/][step
+function]] — toggle the box to read the full source instead:
+
+#+attr_diff: :from step-function-shader :to whirlpool-shader :context 99
+#+begin_diff
+#+end_diff

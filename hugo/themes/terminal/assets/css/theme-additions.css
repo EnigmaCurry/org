@@ -66,7 +66,7 @@
    through (the syntax colors keep their own foreground). Boxed highlights
    (annotate) bring their own frame, so they opt back out of the border below. */
 .content .highlight{
-  margin:1.7rem 0;
+  margin:1rem 0;
   position:relative;   /* anchor the JS-added .box-ctl expand control */
   border:2px dashed color-mix(in srgb, var(--accent) 60%, var(--rule));
   background:color-mix(in srgb, var(--accent), transparent 92%);
@@ -74,7 +74,7 @@
 .box .highlight{ margin:0; border:none; background:none; }
 /* smaller font so the reading column fits ~80+ monospace columns without scrolling */
 .content .highlight pre{
-  overflow-x:auto; max-width:100%; padding:1.1rem 1.1rem; font-size:.7em; line-height:1.5;
+  overflow-x:auto; max-width:100%; padding:.5rem 1.1rem; font-size:.7em; line-height:1.5;
   background:transparent !important;   /* override Chroma's inline background-color */
 }
 /* default (no JS): scroll so the full text is readable. With JS, clip to a
@@ -233,7 +233,11 @@ html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown *
 
 /* inline shader window: a contained live canvas embedded in the content flow */
 .shader-window{
-  display:block; width:100%; height:clamp(180px, 34vh, 340px);
+  /* default footprint: full content width, a clamped height. The shortcode may
+     override width/height/aspect-ratio via an inline style (see shader.html);
+     the aspect-ratio-only case reuses --shader-default-h to fit this box. */
+  --shader-default-h:clamp(180px, 34vh, 340px);
+  display:block; width:100%; height:var(--shader-default-h);
   margin:1.3rem 0; border:1px solid var(--rule); border-radius:3px;
   overflow:hidden; position:relative; background:var(--bg);   /* opaque canvas sits on it; shows when cleared. matches the theme */
 }
@@ -271,3 +275,51 @@ html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
 .shader-bgctl{ position:fixed; top:auto; right:.55rem; bottom:.55rem; z-index:60; display:none; }
 .shader-bgctl.on{ display:flex; }
 html:not(.js) .shader-bgctl{ display:none; }
+
+/* --- diffbox: a code box toggling between a unified diff and the full source of
+   the evolved block (see layouts/shortcodes/diffbox.html + the ox-hugo `diff'
+   block in emacs.d/init.el). The default view is baked in server-side so it
+   reads with NO JS; html.js reveals the toggle + copy controls. --- */
+.diffbox{ --line:color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+.diffbox .label{ color:var(--accent); max-width:calc(100% - 16ch); }   /* leave room for the controls */
+.diffbox .body{ padding:0; }
+.diffbox .body .highlight{ margin:0; }
+.diffbox .body .highlight pre{ margin:0; }
+/* no expand control here -> let each pane scroll so nothing is silently clipped */
+html.js .diffbox .body pre{ overflow:auto; text-overflow:clip; }
+/* controls share the run/env top-right cutout, but are JS-only on a diffbox
+   (toggle + copy both need scripting), so hide the whole group without JS */
+.diffbox .box-ctl{ display:none; }
+html.js .diffbox .box-ctl{ display:inline-flex; }
+.diffbox .box-ctl[hidden]{ display:none; }
+.diff-toggle{
+  background:none; cursor:pointer; color:#a5a5a5; font:inherit; font-size:.8em;
+  line-height:1.5; padding:0 .7ch;
+  border:1px solid color-mix(in srgb, var(--accent), transparent 50%); border-radius:3px;
+}
+.diff-toggle:hover{ color:var(--accent); border-color:var(--accent); }
+
+/* --- GitHub-style unified diff table (built by wireDiffBoxes from the Chroma
+   blocks). Code sits on the same dark Chroma surface as the rest of the site's
+   code; added lines are blocked in green, removed lines in red, with old/new
+   line numbers in the gutter. --- */
+.diffbox .src-pane{ overflow-x:auto; }
+.diffbox .diff-unified{ overflow-x:auto; background:#272822; }
+.diffbox .dt{
+  border-collapse:collapse; width:100%; color:#f8f8f2;
+  font-family:var(--font-mono); font-size:.9em; line-height:1.55; tab-size:4;
+}
+.diffbox .dt td{ padding:0; vertical-align:top; }
+.diffbox .dl-n{                                  /* line-number gutter */
+  width:1%; min-width:2.6em; padding:0 .6em; text-align:right; white-space:nowrap;
+  color:#7f7f7f; background:rgba(0,0,0,.22); user-select:none; -webkit-user-select:none;
+}
+.diffbox .dl-mark{ width:1ch; padding:0 .3ch; text-align:center; color:#7f7f7f; user-select:none; -webkit-user-select:none; }
+.diffbox .dl-code{ white-space:pre; padding:0 .8em; width:100%; }
+/* tint the whole changed row */
+.diffbox tr.dl-add td{ background:rgba(63,185,80,.16); }
+.diffbox tr.dl-del td{ background:rgba(248,81,73,.16); }
+.diffbox tr.dl-add .dl-mark{ color:#3fb950; }
+.diffbox tr.dl-del .dl-mark{ color:#f85149; }
+/* hunk header rows (the @@ ... @@ context) */
+.diffbox .dl-hunk td{ background:rgba(88,166,255,.12); color:#8b949e; padding:.05em .8em; user-select:none; -webkit-user-select:none; }
