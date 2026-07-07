@@ -217,13 +217,48 @@ ul.children .group-old > ul.children{ margin:.15rem 0; }
   pointer-events:none; z-index:-1;
   opacity:0; transition:opacity .8s ease;
 }
+/* The persistent canvas's horizontal placement is driven by shader.js at
+   runtime — it measures <main> and the .sidebar overlay (positionBg in
+   shader.js) and sets inline left/width on the canvas so a takeover shader
+   centers on the reading column across every breakpoint (wide, narrow with
+   sidebar closed, narrow with sidebar overlay open). The base rule above is
+   the pre-JS fallback; the canvas is display:none without JS anyway. */
+
+/* Takeover pages: give the shader an unobstructed "cinema" at the top of the
+   reading column, then reveal the prose as the reader scrolls into it. The
+   70vh padding pushes .content below the fold; shader.js sets an inline
+   opacity on .content (0 at scrollY=0, ramping to 1 by scrollY=50vh) so the
+   text fades in symmetrically as the reader scrolls down or back up. Body
+   class toggled by the shader manager (see scan() in shader.js).
+   A ::before pseudo-element on main renders a small "scroll ↓" hint in the
+   cinema; shader.js sets --scroll-hint-opacity inversely to the content fade
+   so the hint fades out as the reader scrolls in. */
+body.has-takeover main{ padding-top:70vh; }
+body.has-takeover main::before{
+  content:"scroll \2193";                                 /* ↓ */
+  /* Center on the reading column, not the viewport — shader.js publishes
+     --reading-left / --reading-width from the same box that positions the
+     canvas, so the hint stays aligned as sidebar state changes. Fallback to
+     viewport-center for the split second before JS sets the vars. */
+  position:fixed; bottom:1.4rem;
+  left:calc(var(--reading-left, 0px) + var(--reading-width, 100vw) / 2);
+  transform:translateX(-50%);
+  padding:.35rem .8rem; border:1px solid var(--rule); border-radius:3px;
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
+  color:var(--fg-dim); font:.82rem/1.35 var(--font-mono); letter-spacing:.25ch; white-space:nowrap;
+  opacity:var(--scroll-hint-opacity, 1); pointer-events:none; z-index:5;
+}
 /* The canvas sits at z-index:-1, which paints above html's background but below
    body. terminal.css gives BOTH html and body an opaque --bg, so body would paint
    right over the canvas and hide it. Drop body's background (html keeps the base
    color) so the canvas shows through. Visually identical when the shader is hidden
    (fx/JS off), and scoped to html.js so the no-JS page is unchanged. */
 html.js body{ background:transparent; }
-html.js .fx-canvas.fx-ready{ opacity:1; }
+/* --fx-opacity defaults to 1 (unchanged behaviour on ambient/floating pages);
+   on takeover pages shader.js ramps it down to ~0.25 as the reader scrolls
+   into the text, so the shader recedes to a hint behind the prose. */
+html.js .fx-canvas.fx-ready{ opacity:var(--fx-opacity, 1); }
+body.has-takeover .fx-canvas{ transition:opacity .15s linear; }   /* snappier than the .8s fade-in for scroll response */
 html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown */
 .no-fx .fx-canvas{ display:none; }                     /* mirrors .no-fx .lambda-rain */
 @media (prefers-reduced-motion: reduce){ .fx-canvas{ display:none; } }

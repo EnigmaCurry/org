@@ -278,17 +278,19 @@ window.Shader = (function(){
     // literate shaders: an inline window may carry its own GLSL (a Shadertoy-style
     // mainImage) in a <script class="shader-glsl">. If present, compile that instead
     // of the built-in shader; compile errors surface in the .shader-error overlay.
+    // The background renderer starts empty and is fed a shader via setUserGlsl()
+    // by the manager when a page's takeover marker carries custom GLSL.
     const figure = isBg ? null : canvas.closest(".shader-window");
     const glslEl = figure && figure.querySelector(".shader-glsl");
     const errEl  = figure && figure.querySelector(".shader-error");
-    const userGlsl = glslEl ? glslEl.textContent.trim() : "";
-    const fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
+    let userGlsl = glslEl ? glslEl.textContent.trim() : "";
+    let fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
 
     // controls panel: a global time-speed multiplier (every shader) + any custom
     // uniforms the literate GLSL declared via @slider/@select. The panel lives in
     // the figure and is revealed on pointer activity (see theme CSS + UI wiring below).
-    const customInputs = parseInputs(userGlsl);
-    const loopDur = parseLoop(userGlsl);                  // >0 -> iTime wraps + transport scrubber
+    let customInputs = parseInputs(userGlsl);
+    let loopDur = parseLoop(userGlsl);                    // >0 -> iTime wraps + transport scrubber
     const panelEl = figure && figure.querySelector(".shader-panel");
     let speed = 1;
     let scrubbing = false;                               // user dragging the transport: pause accrual
@@ -301,12 +303,32 @@ window.Shader = (function(){
     function build(){
       const b = buildProgram(gl, fragSrc);
       if(b.prog){
+        if(prog) gl.deleteProgram(prog);        // release the previous one on a rebuild (setUserGlsl path)
         prog = b.prog; loc = b.loc; if(errEl) errEl.hidden = true;
         for(const c of customInputs) c.loc = gl.getUniformLocation(prog, c.name);
         return true;
       }
-      prog = null; showError(b.err);   // keep the context; draw nothing; show the log
+      if(prog){ gl.deleteProgram(prog); prog = null; }
+      showError(b.err);                          // keep the context; draw nothing; show the log
       return false;
+    }
+
+    // Swap the shader body and recompile in place. Called by the manager on the
+    // persistent takeover canvas when a new page's takeover marker carries a
+    // different custom GLSL body (or none -> revert to the built-in wave). No-op
+    // when the source hasn't changed. Returns true on a successful compile.
+    function setUserGlsl(next){
+      next = (next || "").trim();
+      if(next === userGlsl && prog) return true;
+      userGlsl = next;
+      fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
+      customInputs = parseInputs(userGlsl);
+      loopDur = parseLoop(userGlsl);
+      stop(false);                               // release current frame; caller re-activates
+      if(!gl) return false;
+      const ok = build();
+      if(ok) size();
+      return ok;
     }
 
     try {
@@ -317,11 +339,56 @@ window.Shader = (function(){
     // (paired with the #extension line in CUSTOM_PREAMBLE); harmless null if absent.
     if(gl){ gl.getExtension("OES_standard_derivatives"); build(); checkSoftware(gl); }
 
+    // Align the persistent background canvas with the reading column (<main>)
+    // so a takeover shader centers on the prose rather than the whole viewport.
+    // Measured from live layout — safer than a CSS media query, and it lets us
+    // also detect the narrow-screen sidebar overlay (fixed panel whose right
+    // edge extends past main's left when open) and shift past that too.
+    // Called from size() before the buffer is (re)dimensioned.
+    function positionBg(){
+      const main = document.querySelector("main");
+      if(!main) return null;
+      const r = main.getBoundingClientRect();
+      let left = r.left, width = r.width;
+      const sb = document.querySelector(".sidebar");
+      if(sb){
+        const s = sb.getBoundingClientRect();
+        if(s.width > 0 && s.right > left){
+          const shift = Math.min(s.right - left, width);
+          left += shift; width -= shift;
+        }
+      }
+      const w = Math.max(1, width);
+      canvas.style.left = left + "px";
+      canvas.style.width = w + "px";
+      // Publish the reading column's box as CSS variables so pseudo-elements
+      // and other UI (the takeover scroll hint) can center on the same axis
+      // as the shader — independent of the sidebar's presence or overlay.
+      document.body.style.setProperty("--reading-left", left + "px");
+      document.body.style.setProperty("--reading-width", w + "px");
+      // The canvas covers 100vh via the base CSS (inset:0), so use the
+      // viewport height for the buffer — not main's height, which is the
+      // whole scrolled page and would get squished into the viewport-tall
+      // CSS box (pancake). Width follows main's box (aligned above).
+      return { width: w, height: window.innerHeight };
+    }
+
     function size(){
       if(!gl) return;
       const cap = Math.min(window.devicePixelRatio || 1, 1.5) * SCALES[scaleIdx];
-      const cw = isBg ? window.innerWidth  : (canvas.clientWidth  || 1);
-      const ch = isBg ? window.innerHeight : (canvas.clientHeight || 1);
+      // Match the drawing buffer to the canvas's actual CSS box so the shader
+      // renders 1:1. For the persistent background canvas we first align it
+      // with <main> (positionBg), then read those dimensions back; inline
+      // windows just use their own layout box.
+      let cw, ch;
+      if(isBg){
+        const p = positionBg();
+        cw = p ? p.width  : window.innerWidth;
+        ch = p ? p.height : window.innerHeight;
+      } else {
+        cw = canvas.clientWidth  || 1;
+        ch = canvas.clientHeight || 1;
+      }
       const w = Math.max(1, Math.round(cw * cap));
       const h = Math.max(1, Math.round(ch * cap));
       if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
@@ -502,7 +569,35 @@ window.Shader = (function(){
       }
       size();
     }
-    return { configure, activate, setPaused, refreshColor, sync, size, dispose, ok: !!gl };
+    return { configure, activate, setPaused, refreshColor, sync, size, dispose, setUserGlsl, ok: !!gl };
+  }
+
+  // ---- takeover cinema: fade the reading content in on scroll ---------------
+  // A takeover page opens with a 70vh empty "cinema" above .content (via a
+  // body.has-takeover CSS rule); as the reader scrolls down, .content's opacity
+  // ramps from 0 to 1 over the first 50vh of scroll (and back to 0 on scroll
+  // up — the effect is a direct function of scrollY, so it's symmetric). Only
+  // touches .content when the has-takeover class is set; other pages are
+  // unaffected. Clears the inline style when the class is removed so pages
+  // that had it stripped by nav don't stay dim.
+  function updateTakeoverFade(){
+    const content = document.getElementById("content");
+    if(!content) return;
+    if(!document.body.classList.contains("has-takeover")){
+      if(content.style.opacity) content.style.opacity = "";
+      document.body.style.removeProperty("--scroll-hint-opacity");
+      document.body.style.removeProperty("--fx-opacity");
+      return;
+    }
+    const range = window.innerHeight * 0.5;
+    const t = range > 0 ? Math.max(0, Math.min(1, window.scrollY / range)) : 1;
+    content.style.opacity = String(t);
+    // The "scroll ↓" hint (a ::before on main, styled in theme-additions.css)
+    // fades out inversely as the reader scrolls in.
+    document.body.style.setProperty("--scroll-hint-opacity", String(1 - t));
+    // Dim the shader canvas as the text fades in so the shader recedes to a
+    // hint behind the prose (1 at the top, 0.25 once fully scrolled in).
+    document.body.style.setProperty("--fx-opacity", String(1 - t * 0.75));
   }
 
   // ---- manager: one persistent background + N per-page inline windows -------
@@ -524,7 +619,23 @@ window.Shader = (function(){
   function scan(root){
     root = root || document;
     const bgCfg = root.querySelector('.shader-config[data-effect="takeover"]');
-    if(bgCfg){ const r = ensureBg(); if(r){ r.configure(cfgFromEl(bgCfg)); r.setPaused(bgCfg.hasAttribute("data-paused")); r.activate(true); } }
+    // Flag the page for CSS (cinema padding on main) + the fade-on-scroll
+    // updater below; both keyed off body.has-takeover.
+    document.body.classList.toggle("has-takeover", !!bgCfg);
+    updateTakeoverFade();
+    if(bgCfg){
+      const r = ensureBg();
+      if(r){
+        // Takeover markers may carry a Shadertoy-style mainImage in a nested
+        // <script class="shader-glsl">. Swap the persistent canvas to it (or
+        // back to the built-in wave when the marker has no body).
+        const gEl = bgCfg.querySelector(".shader-glsl");
+        r.setUserGlsl(gEl ? gEl.textContent : "");
+        r.configure(cfgFromEl(bgCfg));
+        r.setPaused(bgCfg.hasAttribute("data-paused"));
+        r.activate(true);
+      }
+    }
     else if(bg){ bg.activate(false); }
 
     clearInlines();
@@ -555,6 +666,14 @@ window.Shader = (function(){
 
   function init(){
     window.addEventListener("resize", sizeAll);
+    // Fade .content in/out as the reader scrolls into the takeover cinema.
+    // Bound once (survives soft-nav); the updater no-ops off takeover pages.
+    window.addEventListener("scroll", updateTakeoverFade, { passive: true });
+    // On narrow viewports the sidebar-overlay checkbox shifts the persistent
+    // canvas via a :has(#navtoggle:checked) CSS rule (see theme-additions.css);
+    // re-run size so the drawing buffer follows the new CSS box.
+    const navToggle = document.getElementById("navtoggle");
+    if(navToggle) navToggle.addEventListener("change", sizeAll);
     document.addEventListener("visibilitychange", syncAll);
     if(window.MutationObserver){
       new MutationObserver(syncAll).observe(document.body, { attributes:true, attributeFilter:["class"] });             // fx toggle

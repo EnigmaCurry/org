@@ -488,19 +488,384 @@ the palette — try switching themes while one is playing.
 :EXPORT_HUGO_SLUG: takeover
 :END:
 
-=:effect takeover= renders the built-in effect full-screen behind the
-*whole* page, using a single persistent canvas that survives navigation
-(only reconfigured, never recreated, as you move between pages) rather
-than an inline window. A small floating play/stop panel appears while a
-takeover is active. Pair it with =:hidden= so only the background shows:
+=:effect takeover= renders full-screen behind the *whole* page, using a
+single persistent canvas that survives navigation (only reconfigured,
+never recreated, as you move between pages) rather than an inline
+window. A small floating play/stop panel appears while a takeover is
+active. Pair it with =:hidden= so only the background shows.
+
+An empty takeover block runs the built-in ambient wave. Put a
+Shadertoy-style =mainImage= in the block body and *that* shader becomes
+the background instead — the engine swaps GLSL programs on navigation,
+so different chapters can each drive the same persistent canvas with
+their own shader.
+
+This page's background is the Platonic solids demo below: five
+[[https://en.wikipedia.org/wiki/Platonic_solid][Platonic solids]] as overlapping projected wireframes, each cycling
+through its own set of symmetric orientations at a different period.
+Look past the page, not at this spot; then navigate away to another
+chapter to see it switch off (the persistent canvas stays alive, just
+idle), and back to see it return. The shader also uses two literate
+engine features:
+
+- =iAccent= — a live =vec3= uniform carrying the site's current accent
+  colour; the tetrahedron uses it so the render tracks the theme.
+- =// @slider NAME MIN MAX DEFAULT [STEP]= — a comment-directive the
+  engine turns into a =uniform float= plus a slider in the corner
+  controls panel (here: =tempo=, drag it to speed the tumble up or
+  slow it down).
 
 #+attr_shortcode: :effect takeover :hidden true
+#+NAME: platonic-solids-shader
 #+begin_shader
-#+end_shader
+// Five Platonic solids as overlapping projected wireframes; each cycles
+// through its own set of symmetric orientations at a different period.
 
-Look at the page background rather than this spot, then navigate away to
-another chapter to see it switch off (the persistent canvas stays alive,
-just idle), and back to see it return.
+const float PI  = 3.14159265359;
+const float PHI = 1.618033988749895;
+
+// --- Rotation matrices (right-handed, active) -------------------------------
+mat3 rotX(float a){ float c=cos(a), s=sin(a);
+  return mat3(1.0,0.0,0.0,  0.0,c,-s,  0.0,s,c); }
+mat3 rotY(float a){ float c=cos(a), s=sin(a);
+  return mat3(c,0.0,s,  0.0,1.0,0.0,  -s,0.0,c); }
+mat3 rotZ(float a){ float c=cos(a), s=sin(a);
+  return mat3(c,-s,0.0,  s,c,0.0,  0.0,0.0,1.0); }
+
+// --- Distance from point to line segment ------------------------------------
+float segDist(vec2 p, vec2 a, vec2 b){
+  vec2 pa = p - a, ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba * h);
+}
+
+// --- Keyframe table (33 poses in one flat index space) ----------------------
+// GLSL ES 1.00 has no `vec3[N](...)` array constructor, so the table is a
+// cascade of returns instead of a const array. Each solid owns a contiguous
+// slice; symRotation() supplies the slice's offset.
+vec3 keyframe(int i){
+  // Tetrahedron (7 keyframes, offset 0)
+  if(i ==  0) return vec3(0.0,      0.0,       0.0);
+  if(i ==  1) return vec3(0.31*PI,  0.0,       0.75*PI);
+  if(i ==  2) return vec3(0.31*PI,  0.0,       0.25*PI);
+  if(i ==  3) return vec3(0.25*PI,  0.0,       0.25*PI);
+  if(i ==  4) return vec3(0.0,     -0.25*PI,   0.0);
+  if(i ==  5) return vec3(0.0,      0.25*PI,   0.0);
+  if(i ==  6) return vec3(0.0,      0.0,       0.25*PI);
+  // Cube (5 keyframes, offset 7)
+  if(i ==  7) return vec3(0.0,      0.0,       0.0);
+  if(i ==  8) return vec3(0.0,      0.3*PI,    0.25*PI);
+  if(i ==  9) return vec3(0.0,      0.24*PI,   0.25*PI);
+  if(i == 10) return vec3(0.0,      0.125*PI,  0.25*PI);
+  if(i == 11) return vec3(0.0,      0.25*PI,   0.0);
+  // Octahedron (9 keyframes, offset 12)
+  if(i == 12) return vec3(0.0,      0.0,       0.0);
+  if(i == 13) return vec3(0.0,      0.5,       0.0);
+  if(i == 14) return vec3(0.12,     PI,        0.0);
+  if(i == 15) return vec3(0.0,      0.25*PI,   0.25*PI);
+  if(i == 16) return vec3(0.0,      0.25*PI,   0.0);
+  if(i == 17) return vec3(0.35*PI,  0.25*PI,   0.0);
+  if(i == 18) return vec3(0.25*PI,  0.25*PI,   0.0);
+  if(i == 19) return vec3(0.5*PI,   0.25*PI,   0.0);
+  if(i == 20) return vec3(0.25*PI,  0.0,       0.0);
+  // Icosahedron (7 keyframes, offset 21)
+  if(i == 21) return vec3(0.0,      0.0,       0.0);
+  if(i == 22) return vec3(0.125*PI, 0.0,       0.0);
+  if(i == 23) return vec3(0.0,      0.125*PI,  0.0);
+  if(i == 24) return vec3(0.0,      0.125*PI,  0.5*PI);
+  if(i == 25) return vec3(0.0,      0.25*PI,   0.5*PI);
+  if(i == 26) return vec3(0.25*PI,  0.0,       0.0);
+  if(i == 27) return vec3(0.5*PI,   0.0,       0.0);
+  // Dodecahedron (5 keyframes, offset 28)
+  if(i == 28) return vec3(0.0,      0.0,       0.0);
+  if(i == 29) return vec3(0.0,      0.12*PI,   0.0);
+  if(i == 30) return vec3(0.25*PI,  0.0,       0.0);
+  if(i == 31) return vec3(0.5*PI,   PI,        0.24);
+  return         vec3(0.5*PI,   0.0,       0.0); // 32
+}
+
+// --- Cycle through a solid's keyframes with dwell + smooth transition -------
+mat3 symRotation(float t, float period, int offset, int count){
+  float phase = t / period;
+  int idx = int(mod(floor(phase), float(count)));
+  int nxt = int(mod(float(idx + 1), float(count)));
+  float f = fract(phase);
+  // hold ~12% at each end, ease through the middle
+  float e = smoothstep(0.0, 1.0, smoothstep(0.12, 0.88, f));
+  vec3 a = mix(keyframe(offset + idx), keyframe(offset + nxt), e);
+  return rotX(a.x) * rotY(a.y) * rotZ(a.z);
+}
+
+// --- Wireframe glow: sharp core + inner glow + outer bloom + vertex dots ----
+vec3 wireRender(float eDist, float vDist, vec3 color){
+  float line  = smoothstep(0.006, 0.001, eDist);
+  float glow  = exp(-eDist * 160.0) * 0.5;
+  float bloom = exp(-eDist * 40.0)  * 0.12;
+  float vert  = smoothstep(0.018, 0.006, vDist);
+  float vHalo = exp(-vDist * 80.0)  * 0.25;
+  return color * (line * 0.7 + glow + bloom) + color * (vert + vHalo);
+}
+
+// ============================================================================
+// TETRAHEDRON  (4 vertices, 6 edges)
+void tetrahedronSolid(vec2 p, mat3 rot, out float eDist, out float vDist){
+  const float S = 0.5773502692; // 1/sqrt(3)
+  vec2 v0 = (rot * vec3( S,  S,  S)).xy;
+  vec2 v1 = (rot * vec3( S, -S, -S)).xy;
+  vec2 v2 = (rot * vec3(-S,  S, -S)).xy;
+  vec2 v3 = (rot * vec3(-S, -S,  S)).xy;
+  eDist =        segDist(p, v0, v1);
+  eDist = min(eDist, segDist(p, v0, v2));
+  eDist = min(eDist, segDist(p, v0, v3));
+  eDist = min(eDist, segDist(p, v1, v2));
+  eDist = min(eDist, segDist(p, v1, v3));
+  eDist = min(eDist, segDist(p, v2, v3));
+  vDist = min(min(length(p - v0), length(p - v1)),
+              min(length(p - v2), length(p - v3)));
+}
+
+// CUBE  (8 vertices, 12 edges)
+void cubeSolid(vec2 p, mat3 rot, out float eDist, out float vDist){
+  const float S = 0.5773502692;
+  vec2 v[8];
+  v[0] = (rot * vec3( S,  S,  S)).xy;
+  v[1] = (rot * vec3( S,  S, -S)).xy;
+  v[2] = (rot * vec3( S, -S,  S)).xy;
+  v[3] = (rot * vec3( S, -S, -S)).xy;
+  v[4] = (rot * vec3(-S,  S,  S)).xy;
+  v[5] = (rot * vec3(-S,  S, -S)).xy;
+  v[6] = (rot * vec3(-S, -S,  S)).xy;
+  v[7] = (rot * vec3(-S, -S, -S)).xy;
+  eDist =        segDist(p, v[0], v[1]);
+  eDist = min(eDist, segDist(p, v[0], v[2]));
+  eDist = min(eDist, segDist(p, v[0], v[4]));
+  eDist = min(eDist, segDist(p, v[1], v[3]));
+  eDist = min(eDist, segDist(p, v[1], v[5]));
+  eDist = min(eDist, segDist(p, v[2], v[3]));
+  eDist = min(eDist, segDist(p, v[2], v[6]));
+  eDist = min(eDist, segDist(p, v[3], v[7]));
+  eDist = min(eDist, segDist(p, v[4], v[5]));
+  eDist = min(eDist, segDist(p, v[4], v[6]));
+  eDist = min(eDist, segDist(p, v[5], v[7]));
+  eDist = min(eDist, segDist(p, v[6], v[7]));
+  vDist = length(p - v[0]);
+  for(int i = 1; i < 8; i++) vDist = min(vDist, length(p - v[i]));
+}
+
+// OCTAHEDRON  (6 vertices, 12 edges)
+void octahedronSolid(vec2 p, mat3 rot, out float eDist, out float vDist){
+  vec2 v[6];
+  v[0] = (rot * vec3( 1.0, 0.0, 0.0)).xy;
+  v[1] = (rot * vec3(-1.0, 0.0, 0.0)).xy;
+  v[2] = (rot * vec3( 0.0, 1.0, 0.0)).xy;
+  v[3] = (rot * vec3( 0.0,-1.0, 0.0)).xy;
+  v[4] = (rot * vec3( 0.0, 0.0, 1.0)).xy;
+  v[5] = (rot * vec3( 0.0, 0.0,-1.0)).xy;
+  // every pair except the three antipodal ones (0-1, 2-3, 4-5)
+  eDist =        segDist(p, v[0], v[2]);
+  eDist = min(eDist, segDist(p, v[0], v[3]));
+  eDist = min(eDist, segDist(p, v[0], v[4]));
+  eDist = min(eDist, segDist(p, v[0], v[5]));
+  eDist = min(eDist, segDist(p, v[1], v[2]));
+  eDist = min(eDist, segDist(p, v[1], v[3]));
+  eDist = min(eDist, segDist(p, v[1], v[4]));
+  eDist = min(eDist, segDist(p, v[1], v[5]));
+  eDist = min(eDist, segDist(p, v[2], v[4]));
+  eDist = min(eDist, segDist(p, v[2], v[5]));
+  eDist = min(eDist, segDist(p, v[3], v[4]));
+  eDist = min(eDist, segDist(p, v[3], v[5]));
+  vDist = length(p - v[0]);
+  for(int i = 1; i < 6; i++) vDist = min(vDist, length(p - v[i]));
+}
+
+// ICOSAHEDRON  (12 vertices, 30 edges)
+void icosahedronSolid(vec2 p, mat3 rot, out float eDist, out float vDist){
+  // Normalized to unit sphere: N = 1/sqrt(1+PHI^2), M = PHI*N
+  const float N = 0.5257311121;
+  const float M = 0.8506508084;
+  vec2 v[12];
+  v[0]  = (rot * vec3( 0.0,  N,  M)).xy;
+  v[1]  = (rot * vec3( 0.0,  N, -M)).xy;
+  v[2]  = (rot * vec3( 0.0, -N,  M)).xy;
+  v[3]  = (rot * vec3( 0.0, -N, -M)).xy;
+  v[4]  = (rot * vec3(  N,  M, 0.0)).xy;
+  v[5]  = (rot * vec3(  N, -M, 0.0)).xy;
+  v[6]  = (rot * vec3( -N,  M, 0.0)).xy;
+  v[7]  = (rot * vec3( -N, -M, 0.0)).xy;
+  v[8]  = (rot * vec3(  M, 0.0,  N)).xy;
+  v[9]  = (rot * vec3(  M, 0.0, -N)).xy;
+  v[10] = (rot * vec3( -M, 0.0,  N)).xy;
+  v[11] = (rot * vec3( -M, 0.0, -N)).xy;
+  // v0 neighbors: 2, 4, 6, 8, 10
+  eDist =        segDist(p, v[0], v[2]);
+  eDist = min(eDist, segDist(p, v[0], v[4]));
+  eDist = min(eDist, segDist(p, v[0], v[6]));
+  eDist = min(eDist, segDist(p, v[0], v[8]));
+  eDist = min(eDist, segDist(p, v[0], v[10]));
+  // v1 neighbors: 3, 4, 6, 9, 11
+  eDist = min(eDist, segDist(p, v[1], v[3]));
+  eDist = min(eDist, segDist(p, v[1], v[4]));
+  eDist = min(eDist, segDist(p, v[1], v[6]));
+  eDist = min(eDist, segDist(p, v[1], v[9]));
+  eDist = min(eDist, segDist(p, v[1], v[11]));
+  // v2 neighbors (new): 5, 7, 8, 10
+  eDist = min(eDist, segDist(p, v[2], v[5]));
+  eDist = min(eDist, segDist(p, v[2], v[7]));
+  eDist = min(eDist, segDist(p, v[2], v[8]));
+  eDist = min(eDist, segDist(p, v[2], v[10]));
+  // v3 neighbors (new): 5, 7, 9, 11
+  eDist = min(eDist, segDist(p, v[3], v[5]));
+  eDist = min(eDist, segDist(p, v[3], v[7]));
+  eDist = min(eDist, segDist(p, v[3], v[9]));
+  eDist = min(eDist, segDist(p, v[3], v[11]));
+  // v4 neighbors (new): 6, 8, 9
+  eDist = min(eDist, segDist(p, v[4], v[6]));
+  eDist = min(eDist, segDist(p, v[4], v[8]));
+  eDist = min(eDist, segDist(p, v[4], v[9]));
+  // v5 neighbors (new): 7, 8, 9
+  eDist = min(eDist, segDist(p, v[5], v[7]));
+  eDist = min(eDist, segDist(p, v[5], v[8]));
+  eDist = min(eDist, segDist(p, v[5], v[9]));
+  // v6 neighbors (new): 10, 11
+  eDist = min(eDist, segDist(p, v[6], v[10]));
+  eDist = min(eDist, segDist(p, v[6], v[11]));
+  // v7 neighbors (new): 10, 11
+  eDist = min(eDist, segDist(p, v[7], v[10]));
+  eDist = min(eDist, segDist(p, v[7], v[11]));
+  // remaining: 8-9, 10-11
+  eDist = min(eDist, segDist(p, v[8],  v[9]));
+  eDist = min(eDist, segDist(p, v[10], v[11]));
+  vDist = length(p - v[0]);
+  for(int i = 1; i < 12; i++) vDist = min(vDist, length(p - v[i]));
+}
+
+// DODECAHEDRON  (20 vertices, 30 edges)
+void dodecahedronSolid(vec2 p, mat3 rot, out float eDist, out float vDist){
+  // all vertices at distance sqrt(3); normalize by 1/sqrt(3)
+  const float S = 0.5773502692; // 1/sqrt(3)
+  const float A = 0.3568220898; // (1/PHI)/sqrt(3)
+  const float B = 0.9341723590; //   PHI /sqrt(3)
+  vec2 v[20];
+  // Cube-type (+-1, +-1, +-1)/sqrt(3)
+  v[0]  = (rot * vec3( S,  S,  S)).xy;
+  v[1]  = (rot * vec3( S,  S, -S)).xy;
+  v[2]  = (rot * vec3( S, -S,  S)).xy;
+  v[3]  = (rot * vec3( S, -S, -S)).xy;
+  v[4]  = (rot * vec3(-S,  S,  S)).xy;
+  v[5]  = (rot * vec3(-S,  S, -S)).xy;
+  v[6]  = (rot * vec3(-S, -S,  S)).xy;
+  v[7]  = (rot * vec3(-S, -S, -S)).xy;
+  // (0, +-PHI, +-1/PHI)/sqrt(3)
+  v[8]  = (rot * vec3( 0.0,  B,  A)).xy;
+  v[9]  = (rot * vec3( 0.0,  B, -A)).xy;
+  v[10] = (rot * vec3( 0.0, -B,  A)).xy;
+  v[11] = (rot * vec3( 0.0, -B, -A)).xy;
+  // (+-1/PHI, 0, +-PHI)/sqrt(3)
+  v[12] = (rot * vec3(  A, 0.0,  B)).xy;
+  v[13] = (rot * vec3(  A, 0.0, -B)).xy;
+  v[14] = (rot * vec3( -A, 0.0,  B)).xy;
+  v[15] = (rot * vec3( -A, 0.0, -B)).xy;
+  // (+-PHI, +-1/PHI, 0)/sqrt(3)
+  v[16] = (rot * vec3(  B,  A, 0.0)).xy;
+  v[17] = (rot * vec3(  B, -A, 0.0)).xy;
+  v[18] = (rot * vec3( -B,  A, 0.0)).xy;
+  v[19] = (rot * vec3( -B, -A, 0.0)).xy;
+  // 24 cube-to-rectangle edges
+  eDist =        segDist(p, v[0], v[8]);
+  eDist = min(eDist, segDist(p, v[0], v[12]));
+  eDist = min(eDist, segDist(p, v[0], v[16]));
+  eDist = min(eDist, segDist(p, v[1], v[9]));
+  eDist = min(eDist, segDist(p, v[1], v[13]));
+  eDist = min(eDist, segDist(p, v[1], v[16]));
+  eDist = min(eDist, segDist(p, v[2], v[10]));
+  eDist = min(eDist, segDist(p, v[2], v[12]));
+  eDist = min(eDist, segDist(p, v[2], v[17]));
+  eDist = min(eDist, segDist(p, v[3], v[11]));
+  eDist = min(eDist, segDist(p, v[3], v[13]));
+  eDist = min(eDist, segDist(p, v[3], v[17]));
+  eDist = min(eDist, segDist(p, v[4], v[8]));
+  eDist = min(eDist, segDist(p, v[4], v[14]));
+  eDist = min(eDist, segDist(p, v[4], v[18]));
+  eDist = min(eDist, segDist(p, v[5], v[9]));
+  eDist = min(eDist, segDist(p, v[5], v[15]));
+  eDist = min(eDist, segDist(p, v[5], v[18]));
+  eDist = min(eDist, segDist(p, v[6], v[10]));
+  eDist = min(eDist, segDist(p, v[6], v[14]));
+  eDist = min(eDist, segDist(p, v[6], v[19]));
+  eDist = min(eDist, segDist(p, v[7], v[11]));
+  eDist = min(eDist, segDist(p, v[7], v[15]));
+  eDist = min(eDist, segDist(p, v[7], v[19]));
+  // 6 rectangle-to-rectangle edges
+  eDist = min(eDist, segDist(p, v[8],  v[9]));
+  eDist = min(eDist, segDist(p, v[10], v[11]));
+  eDist = min(eDist, segDist(p, v[12], v[14]));
+  eDist = min(eDist, segDist(p, v[13], v[15]));
+  eDist = min(eDist, segDist(p, v[16], v[17]));
+  eDist = min(eDist, segDist(p, v[18], v[19]));
+  vDist = length(p - v[0]);
+  for(int i = 1; i < 20; i++) vDist = min(vDist, length(p - v[i]));
+}
+
+// controls-panel slider scales iTime — drag slower to watch a single tumble,
+// faster to hear the five periods beat against each other
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // Recenter and normalize to short-edge units so the layout is aspect-ratio
+  // invariant: (0,0) is the middle of the canvas, +/-0.5 is a unit sphere edge.
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
+
+  float t = iTime * 0.5 * tempo;
+
+  // Unit-sphere solids at ~40% of screen height (0.38 leaves a small margin).
+  vec2 p = uv / 0.38;
+
+  // Each solid cycles through its own set of pleasing symmetric orientations
+  // at a different period, so the overlapping contours keep shifting.
+  mat3 rTetra = symRotation(t, 3.5,  0, 7); // tetrahedron: 7 keyframes
+  mat3 rCube  = symRotation(t, 4.0,  7, 5); // cube:        5 keyframes
+  mat3 rOcta  = symRotation(t, 2.8, 12, 9); // octahedron:  9 keyframes
+  mat3 rIcosa = symRotation(t, 3.2, 21, 7); // icosahedron: 7 keyframes
+  mat3 rDodec = symRotation(t, 5.0, 28, 5); // dodecahedron:5 keyframes
+
+  // Edge + vertex distances per pixel, for each solid.
+  float eT, vT, eC, vC, eO, vO, eI, vI, eD, vD;
+  tetrahedronSolid (p, rTetra, eT, vT);
+  cubeSolid        (p, rCube,  eC, vC);
+  octahedronSolid  (p, rOcta,  eO, vO);
+  icosahedronSolid (p, rIcosa, eI, vI);
+  dodecahedronSolid(p, rDodec, eD, vD);
+
+  // Wire colors: iAccent tracks the site's palette; two fixed complementary
+  // hues fill the rest so all five solids stay distinguishable on any theme.
+  vec3 cTetra = iAccent;
+  vec3 cCube  = vec3(0.35, 0.75, 1.00); // cool blue
+  vec3 cOcta  = vec3(1.00, 0.35, 0.55); // warm magenta
+  vec3 cIcosa = mix(iAccent, cOcta, 0.5);
+  vec3 cDodec = mix(cCube,   cOcta, 0.5);
+
+  // Composite wireframes (additive). The two most complex solids are dimmed
+  // slightly so their 30 edges don't wash out the tetrahedron and cube.
+  vec3 col = vec3(0.0);
+  col += wireRender(eT, vT, cTetra);
+  col += wireRender(eC, vC, cCube);
+  col += wireRender(eO, vO, cOcta);
+  col += wireRender(eI, vI, cIcosa) * 0.7;
+  col += wireRender(eD, vD, cDodec) * 0.7;
+
+  // Subtle vignette so the corners fall off toward the frame.
+  float vig = 1.0 - dot(uv, uv) * 0.5;
+  col *= max(vig, 0.0);
+
+  // Scanlines — same trick the built-in ambient shader uses.
+  float scan = 0.92 + 0.08 * sin(fragCoord.y * 2.5);
+  col *= scan;
+
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
 
 ** Example Org Blocks
 :PROPERTIES:

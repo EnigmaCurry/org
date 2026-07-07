@@ -24,8 +24,13 @@
                     floating -> at wide-enough viewports, pop the inline window out
                       to the right gutter (pinned under the header) so it stays in
                       view while the reader scrolls; renders inline when too narrow.
-                    takeover -> drive the full-screen persistent background canvas
-         :hidden    don't draw the inline window (only useful with :effect takeover)
+                    takeover -> drive the full-screen persistent background canvas.
+                      With a body, that background *is* this shader (Shadertoy-style
+                      mainImage); with no body, the built-in wave runs. The engine
+                      swaps programs across page navigations, so different chapters
+                      can each drive the background with their own shader.
+         :hidden    don't draw the inline window (typical with :effect takeover, so
+                    only the full-screen background renders + the source box)
          :autoplay  start animating on load (default OFF -> a static preview + play)
          :source    show the block body as a code box. Defaults ON when a body is
                     present (literate); pass :source false to hide it.
@@ -71,9 +76,14 @@
 {{- $body := trim .Inner " \n\r\t" -}}
 {{- /* show the source by default whenever there's a body (literate); :source false hides it */ -}}
 {{- $showSource := and (ne $body "") (ne (printf "%v" (.Get "source")) "false") -}}
-{{- /* full-screen takeover -> the persistent background canvas reads this marker */ -}}
+{{- /* full-screen takeover -> the persistent background canvas reads this marker.
+       If the block carries a body (a Shadertoy-style mainImage), embed it inside
+       the marker so the takeover engine can run it as the page background
+       instead of the built-in wave; without a body it falls back to built-in. */ -}}
 {{- if $takeover -}}
-<div class="shader-config" data-effect="takeover"{{ with $intensity }} data-intensity="{{ . }}"{{ end }} hidden></div>
+<div class="shader-config" data-effect="takeover"{{ with $intensity }} data-intensity="{{ . }}"{{ end }} hidden>
+{{- if $body }}<script type="x-shader/x-fragment" class="shader-glsl">{{ .Inner }}</script>{{ end -}}
+</div>
 {{- end -}}
 {{- /* inline window (a live per-page canvas) unless explicitly hidden. Starts with
        the .paused class unless :autoplay, so the control icons read correctly before
