@@ -1,0 +1,2896 @@
+#+hugo_base_dir: ../hugo
+#+hugo_section: /shaders
+#+hugo_weight: auto
+#+hugo_paired_shortcodes: %notice %annotate badge button %children %index run stdout edit math mermaid openapi
+#+STARTUP: align
+
+* Shaders
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 1000
+:END:
+
+Literate-shader experiments, presented as an evolution: within each section
+every shader builds on the one before it — shown as a changeset — and runs live
+in the page.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+* Step function
+:PROPERTIES:
+:EXPORT_FILE_NAME: step-function
+:EXPORT_HUGO_SLUG: step-function
+:EXPORT_HUGO_WEIGHT: 1010
+:END:
+
+The simplest shader in the series, and the baseline the later pages build on.
+
+A fragment shader runs once per pixel: =mainImage= gets that pixel's location in
+=fragCoord= and returns its color. Dividing =fragCoord= by =iResolution= turns the
+raw pixel coordinate into =uv=, a point in =<0,1>= that is the same at any window
+size — =(0,0)= bottom-left, =(1,1)= top-right.
+
+=step(edge, x)= returns =0= below the edge and =1= at or above it. Applied to =uv=
+at =0.5= it tests two things per pixel — right half? top half? — splitting the
+square into four quadrants. =vec3(step(0.5, uv), 0)= maps the x test to red and the
+y test to green with blue off, so the quadrants land on black =(0,0)=, red =(1,0)=,
+green =(0,1)=, and yellow =(1,1)=. The [[/shaders/whirlpool/palettes/][palettes]] page later revisits where
+those colors come from.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: step-function-shader
+#+begin_shader
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec3 col = vec3(0); // start with black
+
+  // perform step function across the x-component and y-component of uv
+  col = vec3(step(0.5, uv), 0);
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+* Whirlpool
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: whirlpool
+:END:
+
+** Whirlpool
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 1020
+:END:
+
+One swirl effect, evolved step by step: each page below builds on the one before
+it — from the first naive version, through fixing its precision decay, to live
+palettes, an automatic palette sweep, and finally a seamless looping transport.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** First Whirlpool
+:PROPERTIES:
+:EXPORT_FILE_NAME: first-whirlpool
+:EXPORT_HUGO_SLUG: first-whirlpool
+:END:
+
+An evolution of the [[/shaders/step-function/][step function]]: instead of
+sampling the quadrants from a fixed grid, we swirl the coordinate plane around
+its center before applying =step=. Each point is rotated by an angle that grows
+toward the middle, dragging the four colored quadrants into a whirlpool. A slow
+=iTime= term keeps the vortex turning.
+
+A single =shader= block runs it live and, via =#+attr_diff=, shows its source
+as a changeset from the [[/shaders/step-function/][step function]] — toggle the box to read the full
+source instead:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from step-function-shader :label whirlpool-shader :context 99
+#+NAME: whirlpool-shader
+#+begin_shader
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center, and let it flow slowly over time
+  a += 6.0 * exp(-3.0 * r) + iTime * 0.3;
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec3 col = vec3(0); // start with black
+  col = vec3(step(0.5, sw), 0); // same quadrant step, now on the whirlpool
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (precision-stable)
+:PROPERTIES:
+:EXPORT_FILE_NAME: precision-stable
+:EXPORT_HUGO_SLUG: precision-stable
+:END:
+
+Left to run, the [[/shaders/whirlpool/first-whirlpool/][whirlpool]] slowly turns grainy and chunky,
+worst near the center. That isn't in the design — the =iTime= term adds a
+*uniform* angular offset, so the vortex should spin rigidly without ever
+changing detail. The decay is a numerical artifact:
+
+- =iTime * 0.3= grows without bound, so =cos=/=sin= lose precision in their
+  fractional argument as the magnitude climbs.
+- =step(0.5, sw)= is a hard, un-antialiased edge, so any coordinate error gets
+  thresholded into a full pixel flip — and the quadrant boundaries pack tightest
+  near the center, where the speckle shows first.
+
+Two changes fix it, shown here via =#+attr_diff= as a changeset from the
+[[/shaders/whirlpool/first-whirlpool/][whirlpool]] — wrap the time angle so =cos=/=sin= never see a large argument,
+and swap =step= for an =fwidth=-scaled =smoothstep= so precision noise no longer
+flips whole pixels:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-shader :label whirlpool-stable-shader :context 99
+#+NAME: whirlpool-stable-shader
+#+begin_shader
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center; wrap the time term to one full turn so
+  // cos/sin never see a large argument (one revolution looks identical)
+  a += 6.0 * exp(-3.0 * r) + mod(iTime * 0.3, 6.2831853);
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec3 col = vec3(0); // start with black
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+  col = vec3(e, 0); // same quadrants, now without the speckle
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (palettes)
+:PROPERTIES:
+:EXPORT_FILE_NAME: palettes
+:EXPORT_HUGO_SLUG: palettes
+:END:
+
+The four quadrant colors of the [[/shaders/whirlpool/precision-stable/][precision-stable whirlpool]] — black /
+red / green / yellow — weren't chosen; they fell out of =vec3(e, 0)=, the
+=x=-bit wired to red and the =y=-bit to green with blue pinned off. That puts
+them on the four corners of one face of the RGB cube: a *square*, with edge
+distance 1 and diagonal √2 — so they are not mutually equidistant.
+
+Other four-color palettes are equally intrinsic to the same two-bit quadrant, and
+each is just a different map from the antialiased quadrant =q= (=q.x= = =x=-bit,
+=q.y= = =y=-bit) to a color:
+
+- =square= — the original black/red/green/yellow (one cube face).
+- =tetra= — drive blue with the *parity* =q.x XOR q.y= (smooth form
+  =q.x + q.y - 2 q.x q.y=). Black/magenta/cyan/yellow: a regular tetrahedron in
+  the cube, every pair exactly √2 apart — the *only* mutually-equidistant set.
+- =rgbw= — the complementary parity, giving the other tetrahedron:
+  red/green/blue/white.
+- =gray= — read the two bits as the integer =2 q.x + q.y= over 3: a four-step
+  gray ramp, equidistant in 1D.
+- =cmy= — the opposite cube face: white/cyan/magenta/yellow.
+
+Shown via =#+attr_diff= as a changeset from the [[/shaders/whirlpool/precision-stable/][precision-stable whirlpool]].
+All five live inline in one =palette(int i, vec2 q)= dispatcher — GLSL ES has no
+function pointers, so the runtime index is a plain branch — wired to a =@select=
+input, a generic-uniform directive the engine turns into a =uniform int= plus a
+dropdown in the shader's hover-revealed *controls* panel, so you can switch
+palettes live. It starts on =tetra=, the equidistant one:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-stable-shader :label whirlpool-palettes-shader :context 99
+#+NAME: whirlpool-palettes-shader
+#+begin_shader
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+// a controls-panel dropdown picks the palette by index (default 1 = tetra)
+// @select iPalette 1 square tetra rgbw gray cmy
+uniform int iPalette;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center; wrap the time term to one full turn so
+  // cos/sin never see a large argument (one revolution looks identical)
+  a += 6.0 * exp(-3.0 * r) + mod(iTime * 0.3, 6.2831853);
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec3 col = vec3(0); // start with black
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+  col = palette(iPalette, e); // palette chosen live from the Settings panel
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (palette sweep)
+:PROPERTIES:
+:EXPORT_FILE_NAME: palette-sweep
+:EXPORT_HUGO_SLUG: palette-sweep
+:END:
+
+Rather than hard-code one of the [[/shaders/whirlpool/palettes/][palettes]], cycle through all five and
+wipe between them with a sweep transition. Three pieces, shown via =#+attr_diff=
+as a changeset from the [[/shaders/whirlpool/palettes/][palettes]] shader:
+
+- The [[/shaders/whirlpool/palettes/][palettes]] page's =palette(int i, vec2 q)= dispatcher is already in place;
+  here the index comes from =iTime= rather than the =@select= selector, so the
+  palette advances on its own instead of waiting for a pick.
+- =iTime / HOLD= is split by =floor= / =fract= into a *current* palette index and
+  how far we are through its slot. The next index is just =current + 1= (mod 5),
+  so the cycle wraps seamlessly: the palette a slot ends on is the one the next
+  slot begins with.
+- =fract= holds still for the first part of each slot, then a =smoothstep= ramps a
+  moving boundary across a sweep coordinate =swp=, mixing the next palette in
+  behind an =fwidth=-antialiased edge. Here =swp= is a diagonal wipe; swap it for
+  =uv.x= (vertical) or an angle for a rotating, radar-style wipe.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-palettes-shader :label whirlpool-palette-sweep-shader :context 99
+#+NAME: whirlpool-palette-sweep-shader
+#+begin_shader
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center; wrap the time term to one full turn so
+  // cos/sin never see a large argument (one revolution looks identical)
+  a += 6.0 * exp(-3.0 * r) + mod(iTime * 0.3, 6.2831853);
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+
+  // cycle the 5 palettes, one sweep wipe per slot
+  const float HOLD = 2.5; // seconds per palette (hold + wipe)
+  float T = iTime / HOLD;
+  int i0 = int(mod(floor(T), 5.0)); // current palette
+  int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+  float sweep = smoothstep(0.6, 1.0, fract(T)); // hold, then wipe the last 40%
+
+  // diagonal wipe coord — try uv.x, or atan(p.y,p.x)/6.2831853+0.5
+  float swp = (uv.x + uv.y) * 0.5;
+  float band = fwidth(swp) * 1.5; // antialias the wipe edge
+  // 1 once the sweep has passed this pixel
+  float toNew = smoothstep(swp - band, swp + band, sweep);
+
+  vec3 col = mix(palette(i0, e), palette(i1, e), toNew);
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (looping transport)
+:PROPERTIES:
+:EXPORT_FILE_NAME: looping-transport
+:EXPORT_HUGO_SLUG: looping-transport
+:END:
+
+The [[/shaders/whirlpool/palette-sweep/][palette sweep]] already repeats — the five palettes cycle every =5 *
+HOLD= units of =iTime= — but the engine doesn't know that, so it just lets
+=iTime= run forever. Tell it the period with a =@loop= directive and two things
+change: =iTime= wraps to =[0, DURATION)=, and the controls panel grows a
+*transport scrubber* across the top. Drag it (or focus it and arrow-key) to
+seek anywhere in the loop — accrual pauses while you scrub and resumes from
+wherever you let go, video-player style.
+
+For the loop to be *seamless* the whole frame must be periodic, so this changeset
+(shown via =#+attr_diff= from the [[/shaders/whirlpool/palette-sweep/][palette sweep]]) also pins the swirl to exactly
+one revolution per loop — its old =iTime * 0.3= drift never closed the circle.
+The period is then just the palette cycle, =LOOP = 5 * HOLD = 12.5=:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-palette-sweep-shader :label whirlpool-loop-shader :context 99
+#+NAME: whirlpool-loop-shader
+#+begin_shader
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+// iTime is periodic: wrap it and show a transport scrubber in the panel.
+// 12.5 = 5 palettes * HOLD (2.5) — one full palette cycle.
+// @loop 12.5
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  const float HOLD = 2.5;        // seconds per palette (hold + wipe)
+  const float LOOP = 5.0 * HOLD; // one full cycle of all five palettes
+
+  // twist harder near the center; spin exactly one full turn per loop so the
+  // rotation closes seamlessly (the old iTime*0.3 never landed on a whole turn)
+  a += 6.0 * exp(-3.0 * r) + mod(iTime * (6.2831853 / LOOP), 6.2831853);
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+
+  // cycle the 5 palettes, one sweep wipe per slot
+  float T = iTime / HOLD;
+  int i0 = int(mod(floor(T), 5.0)); // current palette
+  int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+  float sweep = smoothstep(0.6, 1.0, fract(T)); // hold, then wipe the last 40%
+
+  // diagonal wipe coord — try uv.x, or atan(p.y,p.x)/6.2831853+0.5
+  float swp = (uv.x + uv.y) * 0.5;
+  float band = fwidth(swp) * 1.5; // antialias the wipe edge
+  // 1 once the sweep has passed this pixel
+  float toNew = smoothstep(swp - band, swp + band, sweep);
+
+  vec3 col = mix(palette(i0, e), palette(i1, e), toNew);
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (spiral & tunnel)
+:PROPERTIES:
+:EXPORT_FILE_NAME: spiral-tunnel
+:EXPORT_HUGO_SLUG: spiral-tunnel
+:END:
+
+Every whirlpool so far has used the same polar move: convert the pixel to
+=(r, a)=, nudge the angle, rebuild cartesian coords. The nudge has always been
+=a += 6 * exp(-3 r)= — a twist that dies off away from the center. Swap that one
+term and the geometry changes completely. This page adds a =@select= to flip
+between two classic polar remaps live (shown via =#+attr_diff= as a changeset
+from the [[/shaders/whirlpool/looping-transport/][looping transport]]):
+
+- =spiral= — replace the =exp(-3 r)= twist with =3 log(r)=. =log= is
+  scale-invariant, so the quadrant edges become true logarithmic spirals — the
+  same arm shape repeats at every radius, the way galaxy arms do.
+- =tunnel= — stop rebuilding cartesian coords at all. Feed =(a, 1/r)= straight
+  into the quadrant lookup: the angle wraps around the wall, =1/r= recedes to a
+  vanishing point at the center, and =fract= tiles the quadrant down the bore.
+
+The palette cycling, sweep wipe, and =@loop= transport all carry over
+untouched. Rotating a log spiral is the same as scaling it, so spinning the
+=spiral= makes its arms drain inward like a whirlpool — it turns five whole
+revolutions per loop while the =tunnel= marches one; either way *whole* turns
+keep the seam seamless and the [[/shaders/whirlpool/looping-transport/][period]] is still =LOOP = 12.5=. It starts on
+=spiral=:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-loop-shader :label whirlpool-spiral-tunnel-shader :context 99
+#+NAME: whirlpool-spiral-tunnel-shader
+#+begin_shader
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+// iTime is periodic: wrap it and show a transport scrubber in the panel.
+// 12.5 = 5 palettes * HOLD (2.5) — one full palette cycle.
+// @loop 12.5
+
+// a controls-panel dropdown picks the polar remap (default 0 = spiral arms)
+// @select GEOMETRY 0 spiral tunnel
+uniform int GEOMETRY;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the figure pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  const float HOLD = 2.5;        // seconds per palette (hold + wipe)
+  const float LOOP = 5.0 * HOLD; // one full cycle of all five palettes
+  const float TAU  = 6.2831853;
+
+  // one turn per loop, the seamless base both geometries share
+  float spin = mod(iTime * (TAU / LOOP), TAU);
+
+  vec2 sw; // coords (in <0,1>) handed to the quadrant/palette lookup
+  if (GEOMETRY == 0) {
+    // SPIRAL ARMS: twist the angle by log(r) instead of the whirlpool's
+    // exp(-r). log is scale-invariant, so the quadrant edges become true
+    // logarithmic spirals — the same arm shape repeats at every radius.
+    // Rotating a log spiral == scaling it, so spinning it makes the arms
+    // drain inward like a whirlpool; 5 whole turns/loop reads fast yet seamless.
+    a += 3.0 * log(r) + spin * 5.0;
+    sw = vec2(cos(a), sin(a)) * r + 0.5; // rebuild swirled coords in <0,1>
+  } else {
+    // TUNNEL: drop the cartesian rebuild. Read (angle, 1/r) as the texture
+    // coords — angle wraps the wall, 1/r recedes to a vanishing point at the
+    // center, +spin marches the wall toward you; fract tiles the quadrant.
+    sw = fract(vec2(a / TAU + spin / TAU, 0.35 / r + spin / TAU));
+  }
+
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+
+  // cycle the 5 palettes, one sweep wipe per slot
+  float T = iTime / HOLD;
+  int i0 = int(mod(floor(T), 5.0)); // current palette
+  int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+  float sweep = smoothstep(0.6, 1.0, fract(T)); // hold, then wipe the last 40%
+
+  // diagonal wipe coord — try uv.x, or atan(p.y,p.x)/6.2831853+0.5
+  float swp = (uv.x + uv.y) * 0.5;
+  float band = fwidth(swp) * 1.5; // antialias the wipe edge
+  // 1 once the sweep has passed this pixel
+  float toNew = smoothstep(swp - band, swp + band, sweep);
+
+  vec3 col = mix(palette(i0, e), palette(i1, e), toNew);
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+** Whirlpool (living drain)
+:PROPERTIES:
+:EXPORT_FILE_NAME: living-drain
+:EXPORT_HUGO_SLUG: living-drain
+:END:
+
+The [[/shaders/whirlpool/spiral-tunnel/][spiral]] drains, but mechanically: a fixed eye, a constant pull, a metronome
+spin. A real drain sloshes — the vortex wanders, surges, and breathes. This
+changeset (from the [[/shaders/whirlpool/spiral-tunnel/][spiral & tunnel]]) adds that life with three time-varying
+wobbles, then keeps the =@loop= seamless with one trick: *every wobble is a sine
+at a whole multiple of the loop frequency* =w = TAU / LOOP=, so each returns to
+its start at =iTime = LOOP=.
+
+- *meander* — offset the center along a Lissajous path (=w= against its 2nd and
+  3rd harmonics) so the eye wanders instead of sitting dead center.
+- *volume* — a =breathe= factor swells and ebbs the pull, so the funnel
+  tightens and loosens like the water level is changing.
+- *surge* — an extra sine on the angle makes the rotation speed up and stall,
+  so the spin never feels like clockwork.
+
+The tunnel was a detour; this page drops the =@select= and its branch to commit
+to the flat spiral drain, and gives that spiral all three wobbles. The base
+rotation is still five whole turns per loop, so =LOOP = 25= holds:
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from whirlpool-spiral-tunnel-shader :label whirlpool-living-drain-shader :context 99
+#+NAME: whirlpool-living-drain-shader
+#+begin_shader
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+// swirl a centered position into its antialiased 2-bit quadrant (q.x = x-bit,
+// q.y = y-bit) — the texture the palettes color. factored out so the peeling
+// layer can sample the same swirl from a pulled-away position.
+vec2 quad(vec2 pp, float twist, float turn){
+  float rr = length(pp);
+  float ang = atan(pp.y, pp.x) + twist * log(rr) + turn;
+  vec2 s = vec2(cos(ang), sin(ang)) * rr + 0.5;
+  vec2 fw = fwidth(s); // pixel footprint of the swirled coords
+  return smoothstep(0.5 - fw, 0.5 + fw, s); // antialiased quadrant edge
+}
+
+// iTime is periodic: wrap it and show a transport scrubber in the panel.
+// 25 = 5 palettes * HOLD (5.0) — one full palette cycle.
+// @loop 25
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  const float HOLD = 5.0;        // seconds per palette (slow, viscous transfer)
+  const float LOOP = 5.0 * HOLD; // one full cycle of all five palettes
+  const float TAU  = 6.2831853;
+  float w = TAU / LOOP;          // loop fundamental: one cycle over the loop
+
+  // every wobble below is a sine at a WHOLE multiple of w, so it lands back on
+  // its start at iTime = LOOP and the loop stays seamless.
+
+  // the eye wanders on a Lissajous path instead of sitting dead center, so
+  // the drain meanders as if the water were sloshing
+  vec2 wander = 0.06 * vec2(sin(w*iTime) + 0.5*sin(2.0*w*iTime + 1.3),
+                            cos(w*iTime) + 0.5*cos(3.0*w*iTime + 0.7));
+
+  vec2 p = uv - 0.5 - wander; // recenter on the wandering eye
+
+  // the drain breathes: its pull swells and ebbs over the loop (volume)
+  float breathe = 1.0 + 0.6 * sin(2.0*w*iTime);
+
+  // one turn per loop, the seamless base of the spin
+  float spin = mod(iTime * w, TAU);
+
+  // SPIRAL ARMS: twist by log(r); rotating a log spiral == scaling it, so
+  // spinning it drains the arms inward like a whirlpool. breathe varies how
+  // hard it twists (volume); the extra sin makes the spin surge and stall.
+  float twist = 3.0 * breathe; // how hard it winds (volume)
+  float turn  = spin * 5.0 + 0.6 * sin(3.0 * w * iTime); // 5 turns/loop + surge
+
+  vec2 e = quad(p, twist, turn); // the new layer, lying flat on the surface
+
+  // cycle the 5 palettes, one sweep wipe per slot
+  float T = iTime / HOLD;
+  int i0 = int(mod(floor(T), 5.0)); // current palette
+  int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+  // viscous descent: the wipe eases across most of the slot, slow at the rim
+  // and creeping as it nears the eye, so the palette oozes down the drain
+  float sweep = smoothstep(0.1, 1.0, fract(T));
+
+  // drain-in wipe: the new palette floods in from the rim and collapses
+  // toward the eye last, so the transition itself drains. p tracks the
+  // wandering center, so the drain point meanders with the vortex.
+  // liquid wobble: ripple the wipe's radius with two drifting lobe sets so the
+  // front is a wavy edge, not a clean circle (whole lobes + harmonics keep it
+  // seamless). ea is the raw angle, taken before the spiral twisted a.
+  float ea = atan(p.y, p.x);
+  // the wave amplitude swells and ebbs as the front descends (sweep) and
+  // flows over time, so the wobble breathes on the way down
+  float amp = 0.09 + 0.08 * sin(sweep * 12.566 - 4.0 * w * iTime);
+  float wob = 1.0 + amp * sin(ea * 5.0 + 3.0 * w * iTime)
+                  + amp * 0.6 * sin(ea * 8.0 - 2.0 * w * iTime);
+  float swp = 1.0 - length(p) / (0.8 * wob); // wavy front: ~1 eye, ~0 rim
+  float band = fwidth(swp) * 1.5; // antialias the wipe edge
+  // 1 once the sweep has passed this pixel
+  float toNew = smoothstep(swp - band, swp + band, sweep);
+
+  // PEEL: the old layer lifts off the surface and is pulled down the drain,
+  // revealing the new one underneath. lift leads the fade, so the old sheet
+  // visibly slides toward the eye (and swirls in) before it dissolves.
+  float lift = smoothstep(swp - 0.45, swp + band, sweep); // 0 ahead, 1 peeled
+  vec2 pe = p * (1.0 - 0.6 * lift); // drag old layer toward the eye
+  vec3 oldCol = palette(i0, quad(pe, twist, turn + lift * 3.0)); // sliding away
+  vec3 col = mix(oldCol, palette(i1, e), toNew);
+
+  // bright crystallized edge: a sharp ridge of light rides the wipe front
+  // (where swp ~ sweep), faceted by high-frequency angular glints so it
+  // sparkles like ice (whole-number glint frequencies/drift -> seamless)
+  float ridge = 1.0 - smoothstep(0.0, band * 3.0, abs(sweep - swp));
+  ridge *= smoothstep(0.0, 0.03, sweep); // only while a wipe is travelling
+  float glint = sin(ea * 40.0 + 6.0 * w * iTime)
+              * sin(ea * 23.0 - 4.0 * w * iTime);
+  glint = pow(0.5 + 0.5 * glint, 6.0); // sharpen the bands into sparkles
+  col += ridge * (0.25 + 0.75 * glint); // additive white-hot crystal rim
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+#+end_shader
+
+* Plasma
+:PROPERTIES:
+:EXPORT_FILE_NAME: plasma
+:EXPORT_HUGO_SLUG: plasma
+:EXPORT_HUGO_WEIGHT: 1030
+:END:
+
+A classic sum-of-sines =plasma=: three overlapping sines fed into a
+four-color loop. The =tempo= slider (hover the panel in the corner)
+scales =iTime=. The palette is =iAccent= plus three fixed complementary
+hues, so the plate tracks the site theme.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: plasma-shader
+#+begin_shader
+// Sum-of-sines plasma cycled through four colors: the site accent
+// plus three fixed complementary hues.
+// controls-panel slider scales iTime — drag slower for a lava lamp,
+// faster for a strobe.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float t = iTime * 0.5 * tempo;
+
+  // three overlapping sine plates: value lands in [-3, 3]
+  float v = 0.0;
+  v += sin( uv.x * 10.0 + t );
+  v += sin((uv.y * 10.0 + t) / 2.0);
+  v += sin((uv.x * 10.0 + uv.y * 10.0 + t) / 2.0);
+
+  // remap [-3, 3] to [0, 1], then walk a four-color loop
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  float n = (v + 3.0) / 6.0;
+  float idx = n * 4.0;
+  vec3 col;
+  if(idx < 1.0)      col = mix(c1, c2, idx);
+  else if(idx < 2.0) col = mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) col = mix(c3, c4, idx - 2.0);
+  else               col = mix(c4, c1, idx - 3.0);
+
+  fragColor = vec4(col * 0.4, 1.0);
+}
+#+end_shader
+
+* Tunnel
+:PROPERTIES:
+:EXPORT_FILE_NAME: tunnel
+:EXPORT_HUGO_SLUG: tunnel
+:EXPORT_HUGO_WEIGHT: 1040
+:END:
+
+An eight-sided wireframe wormhole where the tunnel's center wanders on
+a sum of sines, warping the perspective as if the tube itself were a
+snake. Behind the wireframe: a starfield glimpsed through the gaps,
+expanding gravity-wave rings, and 28 =tachyon= particles emitted from
+the eye and stretched into cubic-eased trails.
+
+The trick that makes the wireframe read as a tunnel is the map from
+screen-radius to depth: =z = 0.8 / (r + eps)= — pixels near the middle
+of the screen are far away, edges are near. Sliding =z + iTime * 3=
+scrolls the whole thing toward you. The winding uses screen radius as
+its interpolant so distant slices swing further than near ones, giving
+the tube its serpentine bend.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: tunnel-shader
+#+begin_shader
+// Eight-sided wireframe wormhole. Winds via nested sines on the tunnel
+// center; palette-cycled rings and side edges; starfield through the
+// gaps; gravity-wave ripples and tachyon particles from the eye.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+vec3 palette(float idx){
+  idx = fract(idx) * 4.0;
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  if(idx < 1.0)      return mix(c1, c2, idx);
+  else if(idx < 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
+  float t = iTime * 0.8 * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  // radius -> depth (edge = near, center = far), scroll toward the camera
+  float radius = length(uv);
+  float z = 0.8 / (radius + 0.001);
+  float zWorld = z + t * 3.0;
+
+  // tunnel center snakes through space: three sines each axis at
+  // irrational-ish frequencies so the loop never repeats cleanly
+  float windX = sin(zWorld * 0.15)         * 0.4
+              + sin(zWorld * 0.08 + 1.7)   * 0.25
+              + sin(zWorld * 0.23 + 3.1)   * 0.1;
+  float windY = cos(zWorld * 0.12 + 0.5)   * 0.35
+              + cos(zWorld * 0.07 + 2.3)   * 0.2
+              + sin(zWorld * 0.19 + 4.0)   * 0.1;
+
+  // offset by wind scaled by screen radius: far slices swing further
+  vec2 tunnelUV = uv - vec2(windX, windY) * radius;
+  float tunnelR = length(tunnelUV);
+  float angle  = atan(tunnelUV.y, tunnelUV.x);
+  float zCurved = 0.8 / (tunnelR + 0.001);
+  float zFinal  = zCurved + t * 3.0;
+
+  // octagonal cross section, twisted along depth
+  float sides = 8.0;
+  float sectorAngle = 2.0 * PI / sides;
+  float twist = zFinal * 0.3;
+  float twistedAngle = angle + twist;
+  float sector = mod(twistedAngle + PI, sectorAngle);
+  float sectorEdge = abs(sector - sectorAngle * 0.5);
+
+  // depth rings + side edges = the wireframe
+  float ringFreq = 2.0;
+  float rings = abs(fract(zFinal * ringFreq) - 0.5);
+  float ringLine = smoothstep(0.02, 0.0, rings);
+  float edgeWidth = 0.06 * tunnelR;
+  float sideLine = smoothstep(edgeWidth + 0.01, edgeWidth, sectorEdge);
+  float wire = max(ringLine, sideLine);
+
+  // palette rotation with ring depth, with side lines picking a different index
+  float ringIdx = mod(floor(zFinal * ringFreq), 4.0);
+  vec3 wireCol;
+  if(ringIdx < 1.0)      wireCol = c1;
+  else if(ringIdx < 2.0) wireCol = c2;
+  else if(ringIdx < 3.0) wireCol = c3;
+  else                   wireCol = c4;
+
+  float sideIdx = mod(floor((twistedAngle + PI) / sectorAngle), 4.0);
+  vec3 sideCol;
+  if(sideIdx < 1.0)      sideCol = c1;
+  else if(sideIdx < 2.0) sideCol = c2;
+  else if(sideIdx < 3.0) sideCol = c3;
+  else                   sideCol = c4;
+
+  vec3 col = mix(sideCol, wireCol, step(ringLine, sideLine)) * wire;
+
+  // neon halo along both edge families
+  float glowRing = exp(-rings * 40.0) * 0.3;
+  float glowSide = exp(-sectorEdge / max(edgeWidth, 0.001) * 2.0) * 0.2 * step(0.01, tunnelR);
+  col += wireCol * glowRing + sideCol * glowSide;
+
+  // fade near the eye so the mouth of the tube stays dark
+  float depthFade = smoothstep(0.0, 0.5, tunnelR);
+  col *= depthFade;
+
+  // wormhole eye glow: shifts hue as it travels
+  float centerGlow = exp(-tunnelR * 8.0) * 0.35;
+  vec3 portalColor = mix(c1, c3, sin(t * 0.7) * 0.5 + 0.5);
+  portalColor      = mix(portalColor, c2, sin(t * 0.4 + 2.0) * 0.5 + 0.5);
+  col += portalColor * centerGlow;
+
+  // starfield visible through the gaps in the wireframe
+  if(wire < 0.1){
+    vec2 starUV = tunnelUV * 5.0 + vec2(windX, windY) * 0.5;
+    vec2 starCell = floor(starUV * 30.0);
+    float starHash = fract(sin(dot(starCell, vec2(127.1, 311.7))) * 43758.5453);
+    if(starHash > 0.97){
+      float twinkle = sin(t * 4.0 + starHash * 6.28) * 0.5 + 0.5;
+      float starBright = (0.4 + 0.6 * twinkle) * depthFade * 0.3;
+      col += vec3(starBright);
+    }
+  }
+
+  // gentle pulse tied to loop phase
+  float beatPulse = exp(-fract(t) * 4.0) * 0.15;
+  col += wireCol * beatPulse * wire;
+
+  // gravity waves — five concentric rings expanding outward, ea rippled
+  for(int w = 0; w < 5; w++){
+    float wavePhase = fract(t * 0.22 + float(w) * 0.2);
+    float waveRadius = wavePhase * wavePhase * 0.45;
+    float waveFade  = pow(1.0 - wavePhase, 1.5);
+    float waveWidth = 0.004 + wavePhase * 0.018;
+    float wave = exp(-pow(tunnelR - waveRadius, 2.0) / (waveWidth * waveWidth)) * waveFade;
+    wave *= 0.8 + 0.2 * sin(angle * 8.0 + float(w) * 2.1 + t * 0.6);
+    vec3 waveCol = palette(float(w) * 0.2 + t * 0.06);
+    col += waveCol * wave * 0.55;
+  }
+
+  // tachyon particles — cubic acceleration turns them into stretched streaks
+  for(int i = 0; i < 28; i++){
+    float id = float(i);
+    float lifespan = 2.0 + hash1(id * 17.3) * 2.5;
+    float life = mod(t + hash1(id * 13.7) * lifespan, lifespan);
+    float progress = life / lifespan;
+    float pAngle = hash1(id * 7.3 + 0.5) * 2.0 * PI + t * 0.1 * (hash1(id * 3.1) - 0.5);
+    float speed = progress * progress * progress;
+    float pDist = speed * 0.5;
+    vec2 pPos = vec2(cos(pAngle), sin(pAngle)) * pDist;
+    vec2 toPixel = tunnelUV - pPos;
+    float d = length(toPixel);
+    // stretched motion trail behind the head
+    vec2 radDir = vec2(cos(pAngle), sin(pAngle));
+    float along = dot(toPixel, radDir);
+    float perp  = length(toPixel - radDir * along);
+    float trailLen = 0.01 + speed * 0.12;
+    float inTrail = smoothstep(0.0, -trailLen, along) * step(along, 0.003);
+    float trailWidth = 0.003 * (1.0 - progress * 0.5);
+    float trail = exp(-perp / trailWidth) * inTrail * (1.0 - progress);
+    // bright particle head
+    float fade = 1.0 - progress * 0.4;
+    float brightness = fade * 0.0012 / (d * d + 0.00012);
+    brightness = min(brightness, 5.0);
+    vec3 pCol = palette(id / 28.0 + t * 0.04);
+    vec3 particleCol = pCol * (1.0 + smoothstep(1.0, 3.0, brightness) * 0.5);
+    col += particleCol * brightness * 0.35 + pCol * trail * 1.0;
+  }
+
+  // central emission point pulses
+  float tachyonCenterGlow = 0.002 / (tunnelR * tunnelR + 0.004);
+  float tachyonPulse = 0.7 + 0.3 * sin(t * 3.5);
+  col += palette(t * 0.12) * tachyonCenterGlow * 0.15 * tachyonPulse;
+
+  // scanlines + vignette
+  float scanline = 0.9 + 0.1 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  float vig = 1.0 - dot(uv, uv) * 0.3;
+  col *= vig;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+#+end_shader
+
+* Matrix
+:PROPERTIES:
+:EXPORT_FILE_NAME: matrix
+:EXPORT_HUGO_SLUG: matrix
+:EXPORT_HUGO_WEIGHT: 1050
+:END:
+
+Seven parallax layers of falling-glyph streams over a slowly drifting
+camera. Each layer runs its own column grid, its own scroll speed, and
+its own palette offset; depth-fog dims the far ones. The glyphs are a
+32-symbol procedural font built out of signed distance fields — bars,
+crosses, arcs, dots, a smiley, a dog, a heart, a music note, and a
+couple of random-grid patterns for filler.
+
+Every stream is periodic: each column carries a =(streamLen, gapLen)=
+pair, and the y-position is =mod(cell.y + speed * time, period)= — a
+seamless tile, so the "infinite" scroll never seams.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: matrix-shader
+#+begin_shader
+// Multi-layer falling-glyph rain over a drifting camera. Seven parallax
+// depths, each with its own column grid and palette offset.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// smooth stroke — 1 inside a signed distance w, fading to 0 outside
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w + 0.03, d);
+}
+
+// procedural glyph: cellUV in [0,1], seed picks one of 32 shapes
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+
+  int tt = int(floor(fract(seed * 7.31) * 32.0));
+  float s = 0.0;
+
+  if(tt == 0){                                       // vertical bar
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){                                // horizontal bar
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){                                // plus
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){                                // X cross
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071, w);
+  } else if(tt == 4){                                // circle
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){                                // filled dot
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){                                // square outline
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){                                // three horizontal bars
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y + 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){                                // double vertical bars
+    s = strokeLine(min(abs(p.x - 0.14), abs(p.x + 0.14)), w);
+  } else if(tt == 9){                                // diamond outline
+    float dd = abs(p.x) + abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 10){                               // asterisk (plus + X)
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 11){                               // equals
+    float d = min(abs(p.y - 0.12), abs(p.y + 0.12));
+    s = strokeLine(d, w);
+  } else if(tt == 12){                               // top arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 13){                               // L (bottom-left corner)
+    float vert  = strokeLine(abs(p.x + 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 14){                               // reverse-L
+    float vert  = strokeLine(abs(p.x - 0.15), w) * step(p.y, 0.0);
+    float horiz = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    s = max(vert, horiz);
+  } else if(tt == 15){                               // smiley
+    float head  = strokeLine(abs(length(p) - 0.35), w * 0.7);
+    float eyeL  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2(-0.12, 0.1)));
+    float eyeR  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2( 0.12, 0.1)));
+    float smile = strokeLine(abs(length(p - vec2(0.0, 0.04)) - 0.16), w * 0.5)
+                * step(p.y, 0.04);
+    s = max(head, max(max(eyeL, eyeR), smile));
+  } else if(tt == 16){                               // dog face
+    float head = strokeLine(abs(length(p * vec2(1.0, 1.1)) - 0.24), w * 0.7);
+    float earL = 1.0 - smoothstep(0.06, 0.09, length(p - vec2(-0.2, 0.25)));
+    float earR = 1.0 - smoothstep(0.06, 0.09, length(p - vec2( 0.2, 0.25)));
+    float eyeL = 1.0 - smoothstep(0.02, 0.04, length(p - vec2(-0.09, 0.06)));
+    float eyeR = 1.0 - smoothstep(0.02, 0.04, length(p - vec2( 0.09, 0.06)));
+    float nose = 1.0 - smoothstep(0.03, 0.05, length(p - vec2( 0.0,  -0.06)));
+    float tongue = strokeLine(abs(p.x), w * 0.4) * step(-0.22, p.y) * step(p.y, -0.13);
+    s = max(head, max(max(earL, earR), max(max(eyeL, eyeR), max(nose, tongue))));
+  } else if(tt == 17){                               // heart (filled)
+    vec2 hp = (p + vec2(0.0, 0.35)) * 1.5;
+    hp.x = abs(hp.x);
+    float hd;
+    if(hp.y + hp.x > 1.0){
+      hd = length(hp - vec2(0.25, 0.75)) - 0.3536;
+    } else {
+      float a = length(hp - vec2(0.0, 1.0));
+      float b = length(hp - vec2(0.5 * max(hp.x + hp.y, 0.0)));
+      hd = min(a, b) * sign(hp.x - hp.y);
+    }
+    s = 1.0 - smoothstep(-0.02, 0.08, hd);
+  } else if(tt == 18){                               // triangle up outline
+    vec2 tp = vec2(abs(p.x), p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 19){                               // triangle down outline
+    vec2 tp = vec2(abs(p.x), -p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 20){                               // arrow up
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) + p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 21){                               // arrow right
+    float stem = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    float chevron = strokeLine(abs(abs(p.y) + p.x - 0.35) * 0.707, w)
+                  * step(0.12, p.x) * step(p.x, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 22){                               // music note
+    float nh = 1.0 - smoothstep(0.08, 0.12, length((p - vec2(-0.05, -0.2)) * vec2(1.0, 1.5)));
+    float stem = strokeLine(abs(p.x - 0.07), w * 0.6) * step(-0.2, p.y) * step(p.y, 0.3);
+    float flag = strokeLine(abs(length(p - vec2(0.18, 0.2)) - 0.14), w * 0.5)
+               * step(0.07, p.x) * step(0.12, p.y);
+    s = max(nh, max(stem, flag));
+  } else if(tt == 23){                               // crescent moon
+    float outer = length(p) - 0.3;
+    float inner = length(p - vec2(0.13, 0.0)) - 0.26;
+    s = 1.0 - smoothstep(-0.02, 0.04, max(outer, -inner));
+  } else if(tt == 24){                               // circle with plus
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 25){                               // square with cross
+    float bx = max(abs(p.x), abs(p.y));
+    float sq = strokeLine(abs(bx - 0.3), w * 0.7);
+    float cr = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5) * step(bx, 0.33);
+    s = max(sq, cr);
+  } else if(tt == 26){                               // T
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 27){                               // Z
+    float topBar = strokeLine(abs(p.y - 0.25), w);
+    float botBar = strokeLine(abs(p.y + 0.25), w);
+    float diag   = strokeLine(abs(p.x + p.y) * 0.707, w) * step(abs(p.y), 0.28);
+    s = max(max(topBar, botBar), diag);
+  } else if(tt == 28){                               // sine wave
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 29){                               // bottom arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else if(tt == 30){                               // dense 4×6 hash grid
+    vec2 g = floor(cellUV * vec2(4.0, 6.0));
+    float on = step(0.4, hash(g + seed * 23.7));
+    vec2 f = fract(cellUV * vec2(4.0, 6.0));
+    float mask = smoothstep(0.0, 0.18, f.x) * smoothstep(1.0, 0.82, f.x)
+               * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.82, f.y);
+    s = on * mask;
+  } else {                                           // 3×5 katakana-ish
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g + seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  // margin so glyphs never touch cell walls
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  float syncTime = iTime * tempo;
+  float beatPulse = exp(-fract(syncTime) * 4.0);
+
+  // cinematic camera drift + tiny rotation
+  float camX = syncTime * 15.0 + sin(syncTime * 0.2) * 60.0;
+  float camY = sin(syncTime * 0.15) * 30.0 + cos(syncTime * 0.1) * 20.0;
+  float angle = sin(syncTime * 0.09) * 0.04;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  vec3 totalColor = vec3(0.0);
+
+  for(int i = 0; i < 7; i++){
+    float fi = float(i);
+    float depth    = 0.4 + fi * 0.45;
+    float invDepth = 1.0 / depth;
+    float fog      = 1.0 / (1.0 + fi * 0.5);
+
+    // more columns (smaller glyphs) at farther depths
+    float cols  = 14.0 + fi * 4.0;
+    float cellW = iResolution.x / cols;
+    float cellH = cellW * 1.6;
+
+    // parallax offset + per-layer rotation about screen center
+    vec2 offset = vec2(camX, camY) * invDepth;
+    float a = angle * invDepth;
+    vec2 centered = fragCoord - iResolution.xy * 0.5;
+    vec2 rotated = vec2(
+      centered.x * cos(a) - centered.y * sin(a),
+      centered.x * sin(a) + centered.y * cos(a));
+    vec2 fragPos = rotated + iResolution.xy * 0.5 + offset;
+
+    vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+    vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+    // per-column stream: length, gap, speed, phase — all hash-derived
+    float colSeed = hash(vec2(cell.x, fi * 73.13));
+    float speed = (1.5 + colSeed * 2.5) * tempo;
+    float phase = colSeed * 100.0;
+    float streamLen = 4.0 + colSeed * 8.0;
+    float gapLen   = 14.0 + colSeed * 20.0;
+    float period   = streamLen + gapLen;
+    // seamless tile: y-position wraps every (streamLen + gapLen)
+    float cyclePos = mod(cell.y + syncTime * speed + phase, period);
+
+    if(cyclePos >= streamLen) continue;
+    float dist = cyclePos;
+
+    // glyph flickers on a hashed clock
+    float charSeed = hash(cell + vec2(fi * 37.0, floor(syncTime * (2.0 + colSeed * 3.0) * tempo)));
+    float g = glyph(cellUV, charSeed);
+
+    // head white-hot, tail fades quadratically
+    float brightness;
+    if(dist < 1.0){
+      brightness = 1.0;
+    } else {
+      brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+      brightness *= brightness;
+    }
+
+    // palette per column, offset per layer
+    int colorIdx = int(mod(cell.x + fi, 4.0));
+    vec3 baseColor;
+    if(colorIdx == 0)      baseColor = c1;
+    else if(colorIdx == 1) baseColor = c2;
+    else if(colorIdx == 2) baseColor = c3;
+    else                   baseColor = c4;
+
+    vec3 neon = baseColor * 1.5;
+    vec3 col = dist < 1.0 ? mix(neon, vec3(1.0), 0.7) : neon * brightness;
+    totalColor += col * g * fog;
+  }
+
+  // beat-ish brightness + filmic tone map
+  totalColor *= 1.0 + beatPulse * 0.15;
+  totalColor = 1.0 - exp(-totalColor * 1.5);
+  fragColor = vec4(totalColor, 1.0);
+}
+#+end_shader
+
+* Noise
+:PROPERTIES:
+:EXPORT_FILE_NAME: noise
+:EXPORT_HUGO_SLUG: noise
+:EXPORT_HUGO_WEIGHT: 1060
+:END:
+
+Three octaves of value noise (each half the amplitude, twice the
+frequency, drifting in a different direction) summed into one continuous
+field, then colored the same way [[/shaders/plasma/][plasma]] is — =iAccent= plus three fixed
+hues.
+
+Value noise is a smoothed hash grid: pick a random value at every integer
+lattice point, then bilinearly interpolate between them with a
+Hermite-eased fractional. Stacking octaves adds detail without breaking
+the smoothness — the classic recipe for organic-looking texture.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: noise-shader
+#+begin_shader
+// Three-octave value-noise field cycled through a four-color palette.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// bilinearly-interpolated hash grid, Hermite-smoothed
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash(i),                  hash(i + vec2(1.0, 0.0)), f.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+    f.y);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float t = iTime * 0.2 * tempo;
+
+  // three octaves: each half amplitude, twice frequency, drifting different way
+  float n = valueNoise(uv *  5.0 + t)         * 0.5;
+  n     += valueNoise(uv * 10.0 - t * 0.5)    * 0.25;
+  n     += valueNoise(uv * 20.0 + t * 0.3)    * 0.125;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  float idx = n * 4.0;
+  vec3 col;
+  if(idx < 1.0)      col = mix(c1, c2, idx);
+  else if(idx < 2.0) col = mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) col = mix(c3, c4, idx - 2.0);
+  else               col = mix(c4, c1, idx - 3.0);
+
+  fragColor = vec4(col * 0.4, 1.0);
+}
+#+end_shader
+
+* Retrogrid
+:PROPERTIES:
+:EXPORT_FILE_NAME: retrogrid
+:EXPORT_HUGO_SLUG: retrogrid
+:EXPORT_HUGO_WEIGHT: 1070
+:END:
+
+Three layers stack on top of each other:
+
+- a perspective ground plane raymarched from a =rayDir= vector — the
+  classic outrun grid, colored per cell from the four-color palette;
+- a slowly-drifting *epicycle* system — nine nested rotating circles
+  whose combined tip traces a Spirograph curve, painted with a heavy
+  phosphor bloom;
+- an *Oort cloud* — three concentric rings of 24 tiny particles at
+  slightly different radii, each twinkling on its own hashed clock,
+  meant to read as a distant shell of icy bodies.
+
+The panel exposes =pitch=, =zoom=, and =fisheye= as sliders. =pitch=
+tilts the camera about the horizon (0 = looking straight ahead, 90 =
+straight down). =fisheye= blends between a perspective projection
+(=atan(r, 1)=) and a barrel-distorted one (=r * PI * 0.8=), so at =1=
+the ground plane bulges into a hemisphere.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: retrogrid-shader
+#+begin_shader
+// Perspective grid + phosphor epicycle + Oort cloud shell.
+// @slider tempo   0.1  3.0  1.0  0.05
+// @slider pitch   0.0 90.0 65.0  1.0
+// @slider zoom    0.5  2.0  1.0  0.05
+// @slider fisheye 0.0  1.0  0.5  0.05
+uniform float tempo;
+uniform float pitch;
+uniform float zoom;
+uniform float fisheye;
+
+#define PI  3.14159265
+#define TAU 6.28318530
+
+float hash(float p){
+  p = fract(p * 0.1031);
+  p *= p + 33.33;
+  p *= p + p;
+  return fract(p);
+}
+
+// nine nested rotating circles: sum of orbits at hash-derived periods
+vec2 epicyclePos(float t, float seed){
+  vec2 pos = vec2(0.0);
+  for(int i = 0; i < 9; i++){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 + fi * 0.55);
+    float period = 1.0 + floor(hash(seed + fi * 7.13) * 7.0);
+    float phase  = hash(seed + fi * 3.71 + 10.0) * TAU;
+    float dir    = hash(seed + fi * 5.37 + 20.0) > 0.5 ? 1.0 : -1.0;
+    pos += vec2(cos(dir * t * period + phase),
+                sin(dir * t * period + phase)) * radius;
+  }
+  return pos;
+}
+
+// phosphor bloom: hot white core + colored inner glow + wide halo
+vec3 phosphor(float d, vec3 color){
+  float core  = smoothstep(0.005, 0.001, d);
+  float inner = exp(-d * 220.0);
+  float outer = exp(-d *  60.0);
+  return vec3(1.0) * core * 1.5 + color * inner * 1.8 + color * outer * 0.5;
+}
+
+// draw one epicycle system with a phosphor-persistence trail
+vec3 drawEpicycle(vec2 uv, float time, vec2 center, float seed, vec3 color){
+  vec2 local = uv - center;
+  vec3 result = vec3(0.0);
+  float speed = 0.06 + hash(seed + 50.0) * 0.04;
+  float t0 = time * speed;
+
+  // orbit ring visualisation: node at every pivot, ring around every orbit
+  vec2 pivot = vec2(0.0);
+  for(int i = 0; i < 9; i++){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 + fi * 0.55);
+    float period = 1.0 + floor(hash(seed + fi * 7.13) * 7.0);
+    float phase  = hash(seed + fi * 3.71 + 10.0) * TAU;
+    float dir    = hash(seed + fi * 5.37 + 20.0) > 0.5 ? 1.0 : -1.0;
+    float angle  = dir * t0 * period + phase;
+
+    float nodeDist = length(local - pivot);
+    float dimmer   = 1.0 / (1.0 + fi * 0.3);
+    result += phosphor(nodeDist, color) * 0.3 * dimmer;
+
+    float ringDist  = abs(length(local - pivot) - radius);
+    float ringLine  = smoothstep(0.003, 0.0005, ringDist);
+    float ringBloom = exp(-ringDist * 120.0);
+    result += color * ringLine * 0.2 * dimmer + color * ringBloom * 0.06 * dimmer;
+
+    pivot += vec2(cos(angle), sin(angle)) * radius;
+  }
+
+  // phosphor-persistence trail: 100 backwards steps of exponentially decayed glow
+  float trailSpan = TAU * 4.0;
+  for(int i = 0; i < 100; i++){
+    float fi = float(i);
+    float tt = t0 - fi / 100.0 * trailSpan;
+    vec2 pos = epicyclePos(tt, seed);
+    float d = length(local - pos);
+    float fade = exp(-fi * 0.025);
+    float core = smoothstep(0.004, 0.0008, d);
+    float glow = exp(-d * 180.0);
+    result += color * (core * 0.6 + glow * 0.3) * fade;
+  }
+
+  // tip: full phosphor bloom
+  vec2 tipPos = epicyclePos(t0, seed);
+  float d = length(local - tipPos);
+  result += phosphor(d, color);
+  return result;
+}
+
+// three concentric rings of icy specks with orbital drift + twinkle
+vec3 drawOortCloud(vec2 uv, float time){
+  vec3 result = vec3(0.0);
+  for(int layer = 0; layer < 3; layer++){
+    float fl = float(layer);
+    float ringRadius = 0.33 + fl * 0.055;
+    for(int i = 0; i < 24; i++){
+      float fi = float(i);
+      float seed = fi + fl * 100.0;
+      float baseAngle  = fi / 24.0 * TAU + hash(seed) * 0.4;
+      float orbitSpeed = 0.012 + hash(seed + 1.0) * 0.02;
+      float dir = hash(seed + 2.0) > 0.5 ? 1.0 : -1.0;
+      float a = baseAngle + time * orbitSpeed * dir;
+      float r = ringRadius + (hash(seed + 3.0) - 0.5) * 0.045;
+      vec2 pos = vec2(cos(a), sin(a)) * r;
+      float d = length(uv - pos);
+      float size    = 0.0008 + hash(seed + 4.0) * 0.0014;
+      float twinkle = 0.35 + 0.65 * sin(time * (0.3 + hash(seed + 5.0) * 1.5)
+                                        + hash(seed + 6.0) * TAU);
+      vec3 iceColor = vec3(0.55, 0.72, 0.92) + vec3(
+        (hash(seed + 7.0) - 0.5) * 0.12,
+        (hash(seed + 8.0) - 0.5) * 0.08,
+         hash(seed + 9.0) * 0.08);
+      float core  = smoothstep(size * 3.0, size * 0.2, d) * twinkle;
+      float halo  = exp(-d * 300.0) * twinkle;
+      float bloom = exp(-d *  80.0) * twinkle;
+      result += iceColor * core * 0.9 + iceColor * halo * 0.4 + iceColor * bloom * 0.12;
+    }
+  }
+  // diffuse haze at the shell distance
+  float dist = length(uv);
+  float haze = exp(-pow((dist - 0.36) / 0.09, 2.0)) * 0.06;
+  result += vec3(0.4, 0.55, 0.8) * haze;
+  return result;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  vec2 centered = uv - 0.5;
+  float aspect = iResolution.x / iResolution.y;
+  centered.x *= aspect;
+  centered *= zoom;
+
+  float r = length(centered);
+  float maxR = 0.8 * zoom;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  vec3 baseColor = vec3(0.0);
+
+  if(r < maxR){
+    // blend perspective and fisheye projections
+    float phi_fisheye = r * PI * 0.8;
+    float phi_persp   = atan(r, 1.0);
+    float phi = mix(phi_persp, phi_fisheye, fisheye);
+    float theta = atan(centered.y, centered.x);
+
+    // rayDir points into the scene. At the projection origin (r=0) it
+    // looks straight up; larger r tilts it toward horizontal. The z sign
+    // is negated so screen +y (top of screen) maps to -z (behind camera
+    // after pitch), which puts the ground plane in the LOWER half of
+    // the screen — the standard outrun-grid look.
+    vec3 rayDir;
+    rayDir.x =  sin(phi) * cos(theta);
+    rayDir.y =  cos(phi);
+    rayDir.z = -sin(phi) * sin(theta);
+
+    // pitch the camera by the slider (0 = looking straight up,
+    // 90 = looking horizontally forward)
+    float pitchAngle = pitch * PI / 180.0;
+    float cy = cos(pitchAngle);
+    float sy = sin(pitchAngle);
+    vec3 tilted = vec3(
+      rayDir.x,
+      rayDir.y * cy - rayDir.z * sy,
+      rayDir.y * sy + rayDir.z * cy);
+
+    // hit-test against the ground plane (y = 0)
+    if(tilted.y < -0.001){
+      float tParam = -1.0 / tilted.y;
+      float x = tilted.x * tParam;
+      float z = tilted.z * tParam;
+
+      float movement = iTime * tempo * 5.0;
+      z += movement;
+
+      float gridSize  = 1.0;
+      float lineWidth = 0.03;
+      float xGrid = mod(x, gridSize);
+      float zGrid = mod(z, gridSize);
+      float xAA = fwidth(x) * 1.5;
+      float zAA = fwidth(z) * 1.5;
+      float hLine = smoothstep(lineWidth + zAA, lineWidth, zGrid)
+                  + smoothstep(gridSize - lineWidth - zAA, gridSize - lineWidth, zGrid);
+      float vLine = smoothstep(lineWidth + xAA, lineWidth, xGrid)
+                  + smoothstep(gridSize - lineWidth - xAA, gridSize - lineWidth, xGrid);
+
+      float cellX = floor(x);
+      float cellZ = floor(z);
+      int colorIdx = int(mod(cellX + cellZ, 4.0));
+      vec3 lineColor;
+      if(colorIdx == 0)      lineColor = c1;
+      else if(colorIdx == 1) lineColor = c2;
+      else if(colorIdx == 2) lineColor = c3;
+      else                   lineColor = c4;
+
+      float grid = min(1.0, hLine + vLine);
+      float dist = length(vec2(x, z - movement));
+      float fade = 1.0 - smoothstep(5.0, 30.0, dist);
+      grid *= fade;
+      baseColor = lineColor * grid * 0.3;
+    }
+  }
+
+  // overlays in screen space, aspect-corrected and zoom-independent
+  vec2 overlayUV = (uv - 0.5) * vec2(aspect, 1.0);
+  float dt = iTime * 0.04;
+  vec2 epiCenter = vec2(sin(dt * 0.7) * 0.05, cos(dt * 0.5) * 0.04);
+  vec3 epicycles = drawEpicycle(overlayUV, iTime, epiCenter, 1.0, c1);
+  vec3 oort = drawOortCloud(overlayUV, iTime);
+
+  fragColor = vec4(baseColor + epicycles + oort, 1.0);
+}
+#+end_shader
+
+* Synthwave Trip
+:PROPERTIES:
+:EXPORT_FILE_NAME: synthwave-trip
+:EXPORT_HUGO_SLUG: synthwave-trip
+:EXPORT_HUGO_WEIGHT: 1080
+:END:
+
+A full sunset scene — gradient sky, a striped sun sitting on the
+horizon, a perspective ground grid receding to it, and a central dashed
+road. On top of that, the whole image is squeezed through a *slowly
+morphing lens*: fisheye strength, asymmetric squeeze, swirl, and a wave
+distortion all vary on sums of irrational-ratio sines so the picture
+never repeats the same distortion twice.
+
+The scene also runs *UFO encounters*: every 55 shader-seconds a
+deterministic random-check either skips the encounter or picks one of
+three set-pieces —
+
+- a *solo saucer* streaking across the horizon dragging a tractor beam;
+- a *triangle formation* that warps in to the sun, jump-cuts through
+  seven poses in a Lissajous around it, then warps out;
+- a *cylindrical craft* that descends to a hover, spins on its long
+  axis, and sweeps a searchlight cone across the road.
+
+The saucer body is drawn from an SDF: an ellipse and a smaller ellipse
+sum to a saucer + dome; a per-rim ring of exp-decayed dots plus a
+bottom-glow blob complete it.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: synthwave-trip-shader
+#+begin_shader
+// Synthwave sunset with a slowly-morphing fisheye lens and periodic
+// UFO encounters. Palette = iAccent + three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+vec3 rgb2hsv(vec3 c){
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c){
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// SDF-shaded saucer + dome + rim lights, blended into col
+void drawSaucer(vec2 d, float sW, float sH, float time,
+                vec3 ca, vec3 cb, vec3 cc, vec3 cd,
+                float glowStr, float colorSeed,
+                inout vec3 col, float vis){
+  float sDist = length(d / vec2(sW, sH));
+  float saucer = smoothstep(1.1, 0.85, sDist);
+  float dOffy = sH * 1.125;
+  float dDist = length((d - vec2(0.0, dOffy)) / vec2(sW * 0.4, sH * 2.0));
+  float dome = smoothstep(1.1, 0.85, dDist) * smoothstep(0.0, sH * 0.5, d.y);
+  float rimSum = 0.0;
+  for(int i = 0; i < 6; i++){
+    float a = float(i) * 1.0472 + time * 1.5;
+    vec2 lp = vec2(cos(a) * sW * 0.88, sin(a) * sH * 0.88);
+    rimSum += exp(-length(d - lp) * min(11.0 / sW, 400.0));
+  }
+  float botGlow = exp(-length(d / vec2(sW * 0.6, sH * 1.25) + vec2(0.0, 1.2)) * 2.0);
+  botGlow *= glowStr;
+  float body = max(saucer, dome);
+  vec3 uCol = cc * 0.12;
+  uCol = mix(uCol, mix(cb, vec3(0.7), 0.25) * 0.5, dome / max(body, 0.001));
+  uCol += mix(ca, cb, 0.5) * botGlow * 0.7;
+  uCol += mix(ca, cd, fract(time * 0.2 + colorSeed)) * rimSum;
+  col = mix(col, uCol, body * vis);
+  col += mix(ca, cb, 0.5) * exp(-length(d) * min(1.3 / sW, 50.0)) * 0.1 * vis;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 rawUV = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t = iTime * 0.3 * tempo;
+  float rawTime = iTime;
+
+  // fisheye envelope: breathes in and out on a sum of irrational-ratio sines
+  float mt = rawTime * 0.02;
+  float fishW = 0.5 + 0.5 * (
+    sin(mt * 1.6180339)       * 0.5 +
+    sin(mt * 1.4142135 + 2.1) * 0.3 +
+    sin(mt * 1.7320508 + 4.7) * 0.2);
+  fishW = smoothstep(0.15, 0.85, fishW);
+
+  float slowT = rawTime * 0.031;
+
+  // slow hue drift on the whole palette so the sky doesn't sit still
+  float hueShift = (
+    sin(slowT * 0.87)       * 0.5 +
+    sin(slowT * 1.31 + 1.9) * 0.3 +
+    sin(slowT * 0.53 + 4.1) * 0.2) * 0.06;
+  vec3 c1 = hsv2rgb(rgb2hsv(iAccent)                   + vec3(hueShift, 0.0, 0.0));
+  vec3 c2 = hsv2rgb(rgb2hsv(vec3(1.00, 0.35, 0.55))    + vec3(hueShift, 0.0, 0.0));
+  vec3 c3 = hsv2rgb(rgb2hsv(vec3(0.35, 0.75, 1.00))    + vec3(hueShift, 0.0, 0.0));
+  vec3 c4 = hsv2rgb(rgb2hsv(vec3(0.55, 0.25, 0.85))    + vec3(hueShift, 0.0, 0.0));
+
+  // fisheye center wanders
+  vec2 fishCenter = vec2(
+    sin(slowT * 1.6180339) * 0.07 + sin(slowT * 0.73 + 3.7) * 0.06,
+    sin(slowT * 1.4142135) * 0.05 + sin(slowT * 0.91 + 1.3) * 0.05);
+
+  float fishStrength = 1.0 + (
+    sin(slowT * 1.7320508)       * 0.5 +
+    sin(slowT * 0.67 + 2.1)      * 0.3 +
+    sin(slowT * 1.13 + 4.5)      * 0.2) * 1.5;
+
+  float sqX = 1.0 + sin(slowT * 2.2360679) * 0.25;
+  float sqY = 1.0 + sin(slowT * 1.8392867) * 0.20;
+
+  float swirlAmt =
+    sin(slowT * 0.618)       * 0.20 +
+    sin(slowT * 1.17 + 3.3)  * 0.15 +
+    sin(slowT * 0.41 + 1.7)  * 0.10;
+
+  float waveAmt = sin(slowT * 0.53 + 2.9) * 0.5 + 0.5;
+  waveAmt *= waveAmt;
+  float waveAngle = slowT * 0.31;
+
+  vec2 delta = (rawUV - 0.5 - fishCenter) * vec2(aspect * sqX, sqY);
+  float r2 = dot(delta, delta);
+  float ang = swirlAmt * r2;
+  float cs = cos(ang), sn = sin(ang);
+  delta = vec2(cs * delta.x - sn * delta.y, sn * delta.x + cs * delta.y);
+  vec2 distortedUV = delta * (1.0 + fishStrength * r2);
+
+  vec2 waveDir = vec2(cos(waveAngle), sin(waveAngle));
+  float waveDot = dot(delta, waveDir);
+  distortedUV += waveDir * sin(waveDot * 12.0) * 0.03 * waveAmt;
+  distortedUV /= vec2(aspect * sqX, sqY);
+
+  vec2 uv = mix(rawUV, distortedUV + 0.5 + fishCenter, fishW);
+
+  // drifting camera pitch and flight height
+  float camPitch =
+    sin(slowT * 0.61)       * 0.5 +
+    sin(slowT * 0.89 + 3.1) * 0.3 +
+    sin(slowT * 0.37 + 1.4) * 0.2;
+  float horizon = 0.40 + camPitch * 0.12;
+  float camH =
+    sin(slowT * 0.47)       * 0.5 +
+    sin(slowT * 0.79 + 2.7) * 0.3 +
+    sin(slowT * 0.31 + 5.3) * 0.2;
+  float heightOffset = 0.01 + (camH * 0.5 + 0.5) * 0.0012;
+
+  // sun position (computed here so mirage haze can trace its circumference)
+  float sunPhase =
+    sin(slowT * 0.73)       * 0.5 +
+    sin(slowT * 1.07 + 2.3) * 0.3 +
+    sin(slowT * 0.41 + 5.1) * 0.2;
+  float sunY = horizon + 0.10 + sunPhase * 0.30;
+  float sunProximity = 1.0 - smoothstep(0.0, 0.25, sunY - horizon);
+  vec2 sunCenter = vec2(0.5, sunY);
+  float sunRadius = 0.15 + sunProximity * 0.12;
+
+  // heat mirage along the horizon + sun rim
+  float mirageIntensity = 0.5 + 0.5 * (
+    sin(slowT * 0.87)       * 0.5 +
+    sin(slowT * 1.31 + 1.9) * 0.3 +
+    sin(slowT * 0.53 + 4.1) * 0.2);
+  mirageIntensity = mirageIntensity * mirageIntensity;
+  float mirageSpeed = 1.0 + mirageIntensity * 2.0;
+  float horizDist = abs(uv.y - horizon);
+  float mirageSpread = 0.05 + mirageIntensity * 0.10;
+  float horizHaze = smoothstep(mirageSpread, 0.0, horizDist);
+  vec2 toSun = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+  float distToSun = length(toSun);
+  float sunEdgeDist = abs(distToSun - sunRadius);
+  float sunHaze = smoothstep(0.06, 0.0, sunEdgeDist);
+  float mirageMask = max(horizHaze, sunHaze);
+  float mirageAmt = mirageMask * mirageIntensity;
+  uv.y += mirageAmt * (
+    sin(uv.x * 40.0 * aspect + rawTime * 1.3 * mirageSpeed)       * 0.005 +
+    sin(uv.x * 25.0 * aspect + rawTime * 0.9 * mirageSpeed + 1.7) * 0.004 +
+    sin(uv.x * 60.0 * aspect + rawTime * 2.1 * mirageSpeed + 3.2) * 0.003);
+  uv.x += sunHaze * mirageIntensity * (
+    sin(uv.y * 50.0 + rawTime * 1.7 * mirageSpeed)       * 0.003 +
+    sin(uv.y * 35.0 + rawTime * 1.1 * mirageSpeed + 2.9) * 0.002);
+
+  vec3 col = vec3(0.0);
+
+  // sky gradient + striped sun + stars
+  if(uv.y > horizon){
+    float skyT = clamp((uv.y - horizon) / (1.0 - horizon), 0.0, 1.0);
+    vec3 skyTop = c3 * 0.1;
+    vec3 skyBot = mix(c1, c2, 0.3) * 0.6;
+    col = mix(skyBot, skyTop, skyT);
+
+    vec2 sunUV = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+    float sunDist = length(sunUV);
+
+    if(sunDist < sunRadius){
+      float stripeFreq = 40.0;
+      float stripe = step(0.5, fract(uv.y * stripeFreq));
+      float gapGrow = smoothstep(sunCenter.y, sunCenter.y - sunRadius, uv.y);
+      float stripeWidth = mix(0.0, 0.7, gapGrow);
+      float sunMask = 1.0 - step(1.0 - stripeWidth, stripe) * step(0.3, gapGrow);
+      vec3 sunTop = c2;
+      vec3 sunBot = c1;
+      float sunGrad = (uv.y - (sunCenter.y - sunRadius)) / (2.0 * sunRadius);
+      vec3 sunCol = mix(sunBot, sunTop, clamp(sunGrad, 0.0, 1.0));
+      col = mix(col, sunCol * 1.5, sunMask * smoothstep(sunRadius, sunRadius - 0.005, sunDist));
+    }
+    float glow = exp(-sunDist * 4.0) * 0.4;
+    col += mix(c1, c2, 0.5) * glow;
+
+    // stars: hidden by sun + sun glow
+    float starMask = smoothstep(sunRadius, sunRadius + 0.08, sunDist);
+    if(skyT > 0.3){
+      vec2 starUV = floor(uv * vec2(80.0 * aspect, 80.0));
+      float starHash = fract(sin(dot(starUV, vec2(127.1, 311.7))) * 43758.5453);
+      float twinkle = sin(t * 3.0 + starHash * 6.28) * 0.5 + 0.5;
+      if(starHash > 0.985){
+        col += vec3(0.6 + 0.4 * twinkle) * (skyT - 0.3) * 2.0 * starMask;
+      }
+    }
+  }
+
+  // ground: perspective grid + central road
+  if(uv.y <= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    float z = 1.0 / (groundT + heightOffset);
+    float x = (uv.x - 0.5) * aspect * z;
+    z += t * 8.0;
+
+    float gridSpaceX = x * 0.5;
+    float gridSpaceZ = z * 0.2;
+    float gridX = abs(fract(gridSpaceX) - 0.5);
+    float gridZ = abs(fract(gridSpaceZ) - 0.5);
+    float aaX = fwidth(gridSpaceX) * 1.5;
+    float aaZ = fwidth(gridSpaceZ) * 1.5;
+    float lineWidth = 0.03;
+    float lineX = smoothstep(lineWidth + aaX, lineWidth, gridX);
+    float lineZ = smoothstep(lineWidth + aaZ, lineWidth, gridZ);
+    float grid = max(lineX, lineZ);
+    float fade = 1.0 - smoothstep(0.0, 0.8, groundT);
+    grid *= (0.3 + 0.7 * fade);
+
+    float cellX = floor(x * 0.5);
+    float cellZ = floor(z * 0.2);
+    int ci = int(mod(abs(cellX) + abs(cellZ), 4.0));
+    vec3 gridCol;
+    if(ci == 0)      gridCol = c1;
+    else if(ci == 1) gridCol = c2;
+    else if(ci == 2) gridCol = c3;
+    else             gridCol = c4;
+
+    vec3 groundBase = c3 * 0.02;
+    vec3 gridResult = groundBase + gridCol * grid;
+
+    // central road, edge + dashed centerline markings
+    float roadHalf = 3.0;
+    float roadAA   = fwidth(x) * 2.0;
+    float roadBlend = smoothstep(roadHalf + roadAA, roadHalf - roadAA, abs(x));
+    vec3 roadSurface = c4 * 0.12;
+    float markW = 0.12;
+    float markAA = fwidth(x) * 1.5;
+    float edgeLine   = smoothstep(markW + markAA, markW, abs(abs(x) - roadHalf));
+    float dashZ      = step(0.5, fract(z * 0.05));
+    float centerLine = smoothstep(markW + markAA, markW, abs(x)) * dashZ;
+    float marks = max(edgeLine, centerLine) * (0.3 + 0.7 * fade);
+    vec3 roadCol = mix(roadSurface, c2, marks);
+    col = mix(gridResult, roadCol, roadBlend);
+
+    float horizGlow = exp(-groundT * 6.0) * 0.3;
+    col += c1 * horizGlow;
+  }
+
+  // deterministic UFO encounters, 55 shader-seconds per slot
+  {
+    float ufoEpoch = 55.0;
+    float ufoSlot = floor(rawTime / ufoEpoch);
+    float ufoRng = fract(sin(ufoSlot * 127.31 + 91.7) * 43758.5453);
+
+    if(ufoRng > 0.45){
+      float lt = fract(rawTime / ufoEpoch);
+      float typeRng = fract(ufoRng * 3.71);
+
+      if(typeRng < 0.34){
+        // solo saucer + tractor beam
+        float ufoVis = smoothstep(0.05, 0.14, lt) * smoothstep(0.95, 0.86, lt);
+        if(ufoVis > 0.001){
+          float dir = step(0.5, fract(ufoRng * 7.31)) * 2.0 - 1.0;
+          float ft = lt * lt * (3.0 - 2.0 * lt);
+          ft = ft * ft * (3.0 - 2.0 * ft);
+          float ufoX = 0.5 + dir * (0.7 - 1.4 * ft);
+          float ufoY = horizon + 0.20 + sin(ft * 3.14159) * 0.05
+                       + sin(rawTime * 1.7) * 0.003;
+          vec2 dU = vec2((uv.x - ufoX) * aspect, uv.y - ufoY);
+          float beamStr = smoothstep(0.15, 0.05, abs(ufoX - 0.5));
+
+          if(beamStr > 0.01 && uv.y < ufoY - 0.005){
+            float bTop = ufoY - 0.005;
+            float bBot = horizon - 0.25;
+            float bT = clamp((bTop - uv.y) / (bTop - bBot), 0.0, 1.0);
+            float hw = mix(0.012, 0.11, bT * bT) / aspect;
+            float be = smoothstep(1.0, 0.4, abs(uv.x - ufoX) / hw);
+            be *= beamStr * ufoVis * (1.0 - bT * 0.35);
+            be *= 0.55 + 0.45 * sin(uv.y * 80.0 - rawTime * 4.0);
+            float spark = sin(uv.y * 140.0 + rawTime * 2.5)
+                        * sin(uv.x * 100.0 * aspect - rawTime * 0.8);
+            be += max(spark, 0.0) * 0.15 * be;
+            col += mix(c1, c2, 0.3) * be * 0.3;
+          }
+
+          drawSaucer(dU, 0.05, 0.008, rawTime, c1, c2, c3, c4,
+                     0.4 + 0.6 * beamStr, 0.0, col, ufoVis);
+        }
+      } else if(typeRng < 0.67){
+        // triangle formation: warp in to sun, Lissajous around it, warp out
+        float ufoVis = smoothstep(0.06, 0.14, lt) * smoothstep(0.88, 0.78, lt);
+        if(ufoVis > 0.001){
+          float dir = step(0.5, fract(ufoRng * 5.13)) * 2.0 - 1.0;
+          float warpEnd    = 0.20;
+          float danceStart = 0.22;
+          float danceEnd   = 0.72;
+          float danceLt = clamp(lt, danceStart, danceEnd);
+          float dp = (danceLt - danceStart) / (danceEnd - danceStart);
+          float jumpT = dp * 7.0;
+          float jumpIdx = floor(jumpT);
+          float snap = smoothstep(0.0, 0.04, fract(jumpT));
+          float ja1 = jumpIdx * 1.618 * 6.2832;
+          float ja2 = (jumpIdx + 1.0) * 1.618 * 6.2832;
+          float jr1 = 0.09 + sin(jumpIdx * 2.3) * 0.03;
+          float jr2 = 0.09 + sin((jumpIdx + 1.0) * 2.3) * 0.03;
+          vec2 fp1 = sunCenter + vec2(cos(ja1) * jr1, sin(ja1) * jr1 * 0.5);
+          vec2 fp2 = sunCenter + vec2(cos(ja2) * jr2, sin(ja2) * jr2 * 0.5);
+          vec2 formCenter = mix(fp1, fp2, snap);
+          float formRot = rawTime * 2.5 + snap * 0.8;
+          float formSize = 0.045 + sin(jumpIdx * 1.7) * 0.008;
+
+          if(lt < warpEnd){
+            float wt = clamp((lt - 0.06) / (warpEnd - 0.06), 0.0, 1.0);
+            vec2 startP = vec2(0.5 + dir * 0.9, horizon + 0.32);
+            formCenter = mix(startP, sunCenter + vec2(0.0, 0.06), wt);
+            formRot = rawTime * 2.0;
+            formSize = 0.05;
+          } else if(lt > danceEnd){
+            float exitT = clamp((lt - danceEnd) / (0.82 - danceEnd), 0.0, 1.0);
+            float exitD = smoothstep(0.0, 0.12, exitT);
+            formCenter += vec2(dir * 0.2, 0.7) * exitD;
+            formSize *= max(1.0 - exitT * 1.5, 0.0);
+          }
+
+          // three saucer positions — kept in scalars, not an array, because
+          // WebGL1 forbids indexing arrays with anything but constants or
+          // loop counters, and the connection step below needs sPos[(i+1)%3]
+          vec2 sP0 = formCenter + vec2(cos(formRot)              * formSize,
+                                       sin(formRot)              * formSize * 0.6);
+          vec2 sP1 = formCenter + vec2(cos(formRot + 2.0944)     * formSize,
+                                       sin(formRot + 2.0944)     * formSize * 0.6);
+          vec2 sP2 = formCenter + vec2(cos(formRot + 2.0 * 2.0944) * formSize,
+                                       sin(formRot + 2.0 * 2.0944) * formSize * 0.6);
+
+          // energy connections 0->1, 1->2, 2->0
+          for(int e = 0; e < 3; e++){
+            vec2 pa, ba;
+            if(e == 0){
+              pa = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+              ba = vec2((sP1.x - sP0.x) * aspect, sP1.y - sP0.y);
+            } else if(e == 1){
+              pa = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+              ba = vec2((sP2.x - sP1.x) * aspect, sP2.y - sP1.y);
+            } else {
+              pa = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+              ba = vec2((sP0.x - sP2.x) * aspect, sP0.y - sP2.y);
+            }
+            float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+            float ld = length(pa - ba * h);
+            float line = exp(-ld * 250.0) * 0.15;
+            line *= 0.6 + 0.4 * sin(h * 12.0 - rawTime * 3.0);
+            col += mix(c1, c4, 0.5) * line * ufoVis;
+          }
+
+          vec2 sd0 = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+          drawSaucer(sd0, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.00, col, ufoVis);
+          vec2 sd1 = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+          drawSaucer(sd1, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.33, col, ufoVis);
+          vec2 sd2 = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+          drawSaucer(sd2, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.66, col, ufoVis);
+        }
+      } else {
+        // cylindrical craft: descent → hover with axial spin + searchlight → ascent
+        float ufoVis = smoothstep(0.06, 0.16, lt) * smoothstep(0.93, 0.82, lt);
+        if(ufoVis > 0.001){
+          float hoverY = horizon + 0.22;
+          float cylY;
+          if(lt < 0.20){
+            float dsc = clamp((lt - 0.06) / 0.14, 0.0, 1.0);
+            cylY = mix(1.1, hoverY, dsc * dsc * (3.0 - 2.0 * dsc));
+          } else if(lt < 0.75){
+            cylY = hoverY + sin(rawTime * 0.7) * 0.008;
+          } else {
+            float asc = clamp((lt - 0.75) / 0.18, 0.0, 1.0);
+            cylY = mix(hoverY, 1.1, asc * asc);
+          }
+          float cylX = 0.5 + sin(rawTime * 0.13) * 0.03;
+          vec2 dC = vec2((uv.x - cylX) * aspect, uv.y - cylY);
+
+          // capsule SDF: rounded-rectangle
+          float cW = 0.07, cH = 0.016, cR = 0.016;
+          vec2 q = abs(dC) - vec2(cW - cR, max(cH - cR, 0.001));
+          float cylSDF = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cR;
+          float cylMask = smoothstep(0.003, 0.0, cylSDF);
+
+          float sa = asin(clamp(dC.y / (cH * 0.95), -1.0, 1.0));
+          float rot = rawTime * 1.8;
+          float band1 = sin((sa + rot) *  5.0)       * 0.5 + 0.5;
+          float band2 = sin((sa + rot) * 11.0 + 1.7) * 0.5 + 0.5;
+          float lightPhase = fract(dC.x / (cW * 2.0) * 8.0 + rawTime * 0.4);
+          float lightBelt = smoothstep(0.5, 0.2, abs(sa) / 1.5708);
+          float lights = smoothstep(0.15, 0.08, abs(lightPhase - 0.5))
+                       * lightBelt * cylMask;
+
+          vec3 cylCol = c3 * 0.08 + c4 * 0.05;
+          cylCol += c2 * band1 * 0.1;
+          cylCol += c1 * band2 * 0.05;
+          cylCol += mix(c1, c2, fract(lightPhase * 3.0 + rawTime * 0.2))
+                   * lights * 1.5;
+          float edgeH = smoothstep(0.0, 0.004, -cylSDF)
+                      * smoothstep(0.012, 0.003, -cylSDF);
+          cylCol += mix(c1, c2, 0.5) * edgeH * 0.3;
+          col = mix(col, cylCol, cylMask * ufoVis);
+          col += mix(c1, c2, 0.5) * exp(-abs(cylSDF) * 50.0) * 0.12 * ufoVis;
+
+          // searchlight cone + ground spot
+          float searchA = rawTime * 0.6;
+          float searchX = cylX + sin(searchA) * 0.12 / aspect;
+          float coneTopY = cylY - 0.01;
+          float groundSearchY = horizon - 0.08;
+          if(uv.y < coneTopY && uv.y > groundSearchY - 0.05){
+            float ct = clamp((coneTopY - uv.y) / (coneTopY - groundSearchY), 0.0, 1.0);
+            float coneHW = mix(0.008, 0.045, ct) / aspect;
+            float coneX = mix(cylX, searchX, ct);
+            float coneDist = abs(uv.x - coneX) / coneHW;
+            float cone = smoothstep(1.0, 0.5, coneDist) * 0.12 * ct;
+            col += mix(c1, c2, 0.3) * cone * ufoVis;
+          }
+          if(uv.y <= horizon){
+            vec2 searchD = vec2((uv.x - searchX) * aspect,
+                                (uv.y - groundSearchY) * 2.5);
+            float searchLight = exp(-dot(searchD, searchD) * 50.0) * 0.2;
+            col += mix(c1, c2, 0.3) * searchLight * ufoVis;
+          }
+        }
+      }
+    }
+  }
+
+  // scanlines + vignette (against rawUV so vignette stays stable through the lens warp)
+  float scanline = 0.92 + 0.08 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = rawUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.5;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+#+end_shader
+
+* Giza
+:PROPERTIES:
+:EXPORT_FILE_NAME: giza
+:EXPORT_HUGO_SLUG: giza
+:EXPORT_HUGO_WEIGHT: 1090
+:END:
+
+Three pyramids on a desert horizon, running a 90-second day/night cycle
+with a deterministic weather system on top. Every cycle rolls a hashed
+die to pick clear, *lightning storm*, or *dust storm* weather — the same
+cycle index always produces the same weather, so the scene is
+reproducible.
+
+The dawn/day/dusk/night phases are explicit tent-functions of the cycle
+=fract=, not a sine wrap, so the plateau of full daylight and the long
+slow sunset have hand-set durations. Golden-hour lighting peaks during
+the transitions and drives the sunset gradient, cloud color, horizon
+haze, and pyramid edge highlights.
+
+The [[/shaders/matrix/][matrix]] rain reappears here as a *ghost* layer in the sky — dim at
+midday, prominent at night, and reversing flow direction from
+falling-at-day to rising-at-night. Lightning strikes are their own
+timeline: each 3-second window either rolls a strike (bolt + flash) or
+doesn't; dust storms boost the FBM sand layers, tint the sky sandy, and
+apply a whole-screen haze.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: giza-shader
+#+begin_shader
+// Three pyramids on a desert horizon with 90s day/night cycle and
+// deterministic weather (clear / lightning / dust). Ghost matrix rain
+// in the sky. Palette = iAccent + three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i),                  hash(i + vec2(1.0, 0.0)), f.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  vec2 shift = vec2(100.0);
+  for(int i = 0; i < 5; i++){
+    v += a * valueNoise(p);
+    p = p * 2.0 + shift;
+    a *= 0.5;
+  }
+  return v;
+}
+
+// signed distance to a triangular pyramid silhouette (2D)
+float pyramidShape(vec2 uv, vec2 base, float halfWidth, float height){
+  vec2 p = uv - base;
+  p.x = abs(p.x);
+  if(p.y < 0.0) return 1.0;
+  if(p.y > height) return 1.0;
+  float edge = halfWidth * (1.0 - p.y / height);
+  return p.x - edge;
+}
+
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w + 0.03, d);
+}
+
+// smaller (20-shape) subset of the matrix procedural font
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+  int tt = int(floor(fract(seed * 7.31) * 20.0));
+  float s = 0.0;
+
+  if(tt == 0){
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071, w);
+  } else if(tt == 4){
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y + 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){
+    float dd = abs(p.x) + abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 9){
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 10){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 11){
+    float vert  = strokeLine(abs(p.x + 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 12){
+    vec2 tp = vec2(abs(p.x), p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 13){
+    vec2 tp = vec2(abs(p.x), -p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 14){
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) + p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 15){
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 16){
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 17){
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 18){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else {
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g + seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t        = iTime * 0.15 * tempo;
+  float rawTime  = iTime;
+  float syncTime = iTime * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  float horizon = 0.32;
+
+  // 90-second day/night cycle with hand-set phase boundaries
+  float cyclePeriod = 90.0;
+  float cycle = fract(rawTime / cyclePeriod);
+  float dawnEnd   = 0.18;
+  float duskStart = 0.50;
+  float duskEnd   = 0.78;
+
+  float arcLight;
+  if(cycle < dawnEnd)        arcLight = smoothstep(0.0, dawnEnd, cycle);
+  else if(cycle < duskStart) arcLight = 1.0;
+  else if(cycle < duskEnd)   arcLight = smoothstep(duskEnd, duskStart, cycle);
+  else                       arcLight = 0.0;
+
+  float daylight = arcLight;
+  // golden hour peaks during dawn and dusk transitions
+  float goldenHour = smoothstep(0.0, 0.4, arcLight) * smoothstep(0.85, 0.4, arcLight);
+  float nightAmount = 1.0 - daylight;
+
+  // deterministic weather per cycle: clear / lightning / dust
+  float cycleIdx = floor(rawTime / cyclePeriod);
+  float weatherSeed = hash(vec2(cycleIdx, 42.17));
+  float isLightning = step(0.33, weatherSeed) * (1.0 - step(0.66, weatherSeed));
+  float isDustStorm = step(0.66, weatherSeed);
+  float weatherStr = smoothstep(0.0, 0.3, daylight);
+
+  vec3 col = vec3(0.0);
+
+  // sky
+  if(uv.y > horizon){
+    float skyT = (uv.y - horizon) / (1.0 - horizon);
+
+    vec3 nightBot = c4 * 0.2;
+    vec3 nightTop = c4 * 0.08;
+    vec3 nightSky = mix(nightBot, nightTop, skyT);
+
+    vec3 sunsetBottom = mix(c1, c2, 0.3) * 0.9;
+    vec3 sunsetMid    = mix(c2, c3, 0.5) * 0.5;
+    vec3 sunsetTop    = c4 * 0.4;
+    vec3 sunsetSky;
+    if(skyT < 0.3) sunsetSky = mix(sunsetBottom, sunsetMid, skyT / 0.3);
+    else           sunsetSky = mix(sunsetMid, sunsetTop, (skyT - 0.3) / 0.7);
+
+    vec3 dayBottom = mix(c1, c2, 0.5) * 1.1;
+    vec3 dayTop    = mix(c3, c4, 0.3) * 0.55;
+    vec3 daySky    = mix(dayBottom, dayTop, skyT);
+
+    vec3 sky = nightSky;
+    sky = mix(sky, sunsetSky, goldenHour + daylight * 0.2);
+    sky = mix(sky, daySky,    daylight * (1.0 - goldenHour * 0.5));
+    col = sky;
+
+    col = mix(col, mix(c1, c2, 0.3) * 0.35, isDustStorm * weatherStr * 0.45 * (1.0 - skyT * 0.4));
+    col *= 1.0 - isLightning * weatherStr * 0.3;
+
+    // FBM cloud layer
+    vec2 cloudUV = vec2(uv.x * aspect * 1.5 + t * 0.08, skyT * 2.0 + t * 0.02);
+    float cloud1 = fbm(cloudUV * 2.0 + vec2(0.0, 7.3));
+    float cloud2 = fbm(cloudUV * 3.0 + vec2(13.0, 0.0) - t * 0.03);
+    cloud1 = smoothstep(0.40, 0.70, cloud1);
+    cloud2 = smoothstep(0.45, 0.72, cloud2);
+    float cloudBand = smoothstep(0.0, 0.08, skyT) * smoothstep(0.5, 0.2, skyT);
+    float cloudAlpha = (cloud1 * 0.6 + cloud2 * 0.4) * cloudBand;
+    vec3 cloudLitSunset = mix(c1, c2, cloud2) * 0.5;
+    vec3 cloudLitDay    = mix(c1, c3, 0.3) * 0.3;
+    vec3 cloudLit  = mix(cloudLitSunset, cloudLitDay, daylight * (1.0 - goldenHour));
+    vec3 cloudDark = c4 * 0.1;
+    float cloudVis = max(goldenHour, daylight * 0.5);
+    cloudAlpha *= 1.0 + isLightning * weatherStr * 2.5;
+    cloudVis = max(cloudVis, isLightning * weatherStr);
+    col = mix(col, mix(cloudDark, cloudLit, cloud1), cloudAlpha * 0.35 * cloudVis);
+
+    // horizon haze glow
+    float horizGlow = exp(-(skyT * skyT) * 15.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.3));
+    col += c1 * horizGlow;
+
+    // ghost matrix rain, dim at day / prominent at night, flow reverses
+    float matrixIntensity = mix(0.08, 0.5, nightAmount);
+    vec3 matrixCol = vec3(0.0);
+    for(int layer = 0; layer < 4; layer++){
+      float fi = float(layer);
+      float cols = 16.0 + fi * 5.0;
+      float cellW = iResolution.x / cols;
+      float cellH = cellW * 1.6;
+
+      vec2 fragPos = fragCoord;
+      vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+      vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+      float colSeed = hash(vec2(cell.x, fi * 73.13));
+      float speed = (0.25 + colSeed * 0.5) * tempo;
+      float phase = colSeed * 100.0;
+      float streamLen = 3.0 + colSeed * 6.0;
+      float gapLen   = 16.0 + colSeed * 24.0;
+      float period = streamLen + gapLen;
+      float rainDir = mix(-1.0, 1.0, daylight);
+      float cyclePos = mod(cell.y + rainDir * syncTime * speed + phase, period);
+
+      if(cyclePos < streamLen){
+        float dist = cyclePos;
+        float charSeed = hash(cell + vec2(fi * 37.0, floor(syncTime * (0.375 + colSeed * 0.5) * tempo)));
+        float g = glyph(cellUV, charSeed);
+        float brightness;
+        if(dist < 1.0){
+          brightness = 1.0;
+        } else {
+          brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+          brightness *= brightness;
+        }
+        float fog = 1.0 / (1.0 + fi * 0.6);
+        int colorIdx = int(mod(cell.x + fi, 4.0));
+        vec3 baseColor;
+        if(colorIdx == 0)      baseColor = c1;
+        else if(colorIdx == 1) baseColor = c2;
+        else if(colorIdx == 2) baseColor = c3;
+        else                   baseColor = c4;
+
+        vec3 glyphCol;
+        if(dist < 1.0) glyphCol = mix(baseColor * 1.5, vec3(1.0), 0.6);
+        else           glyphCol = baseColor * 1.5 * brightness;
+        matrixCol += glyphCol * g * fog;
+      }
+    }
+    float matrixFade = smoothstep(0.0, 0.15, skyT);
+    col += matrixCol * matrixIntensity * matrixFade;
+
+    // stars
+    if(nightAmount > 0.05 && skyT > 0.15){
+      vec2 starUV = floor(uv * vec2(90.0 * aspect, 90.0));
+      float starHash = hash(starUV);
+      float twinkle = sin(t * 4.0 + starHash * 6.28) * 0.5 + 0.5;
+      if(starHash > 0.986){
+        float starBright = (0.5 + 0.5 * twinkle) * nightAmount;
+        starBright *= smoothstep(0.15, 0.4, skyT);
+        col += vec3(starBright);
+      }
+    }
+  }
+
+  // desert ground
+  if(uv.y <= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    vec3 sandNearDay = mix(c1, c3, 0.4) * 0.45;
+    vec3 sandFarDay  = mix(c1, c2, 0.3) * 0.55;
+    vec3 sandNearNight = c4 * 0.12;
+    vec3 sandFarNight  = c4 * 0.08;
+    vec3 sandNear = mix(sandNearNight, sandNearDay, max(daylight, goldenHour * 0.7));
+    vec3 sandFar  = mix(sandFarNight,  sandFarDay,  max(daylight, goldenHour * 0.7));
+    vec3 sandCol = mix(sandFar, sandNear, groundT);
+
+    float sandNoise = fbm(vec2(uv.x * 20.0 * aspect, uv.y * 30.0 + t * 0.5)) * 0.08;
+    sandCol += sandNoise * c1 * 0.3 * max(daylight, goldenHour * 0.5);
+    col = sandCol;
+
+    float sandHorizGlow = exp(-groundT * 8.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.4));
+    col += mix(c1, c2, 0.3) * sandHorizGlow;
+  }
+
+  // three pyramids
+  float p1 = pyramidShape(uv, vec2(0.55, horizon - 0.005), 0.11, 0.16);
+  float p2 = pyramidShape(uv, vec2(0.35, horizon - 0.003), 0.09, 0.14);
+  float p3 = pyramidShape(uv, vec2(0.20, horizon - 0.002), 0.055, 0.08);
+
+  float pyramidMask = 1.0;
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p1));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p2));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p3));
+
+  vec3 pyramidCol = c4 * mix(0.06, 0.15, max(daylight, goldenHour * 0.5));
+  float lightStr = max(daylight, goldenHour * 0.8);
+  float edgeHighlight1 = smoothstep(0.006, 0.0, p1) * smoothstep(-0.006, 0.0, p1);
+  float heightFactor1  = smoothstep(horizon, horizon + 0.14, uv.y);
+  pyramidCol += c1 * edgeHighlight1 * heightFactor1 * 0.25 * lightStr;
+  float edgeHighlight2 = smoothstep(0.005, 0.0, p2) * smoothstep(-0.005, 0.0, p2);
+  float heightFactor2  = smoothstep(horizon, horizon + 0.12, uv.y);
+  pyramidCol += c1 * edgeHighlight2 * heightFactor2 * 0.2 * lightStr;
+  col = mix(pyramidCol, col, pyramidMask);
+
+  // two-layer FBM dust bank blowing across the base of the pyramids
+  {
+    float speed1 = 0.08;
+    float yBase1 = horizon - 0.03;
+    float ySpread1 = 0.14;
+    vec2 dustUV1 = vec2(uv.x * aspect * 2.0 - rawTime * speed1,
+                        (uv.y - yBase1) * 5.0);
+    float dust1 = fbm(dustUV1 + vec2(0.0, 3.7));
+    dust1 = smoothstep(0.30, 0.62, dust1);
+    float yDist1 = (uv.y - yBase1) / ySpread1;
+    float vertFade1 = exp(-yDist1 * yDist1 * 2.0);
+    float dustAlpha1 = dust1 * vertFade1 * 0.28;
+
+    float speed2 = 0.22;
+    float yBase2 = horizon - 0.06;
+    float ySpread2 = 0.10;
+    vec2 dustUV2 = vec2(uv.x * aspect * 3.5 - rawTime * speed2,
+                        (uv.y - yBase2) * 8.0 + 17.0);
+    float dust2 = fbm(dustUV2 + vec2(41.0, 0.0));
+    dust2 = smoothstep(0.35, 0.65, dust2);
+    float yDist2 = (uv.y - yBase2) / ySpread2;
+    float vertFade2 = exp(-yDist2 * yDist2 * 2.5);
+    float dustAlpha2 = dust2 * vertFade2 * 0.22;
+
+    float dustBoost = 1.0 + isDustStorm * weatherStr * 4.0;
+    dustAlpha1 *= dustBoost;
+    dustAlpha2 *= dustBoost;
+    float glowStr = mix(0.7, 1.0, max(nightAmount * 0.6, max(daylight, goldenHour * 0.8)));
+    vec3 dustColDay   = mix(c1, c3, 0.3) * 0.6;
+    vec3 dustColNight = mix(c1, c2, 0.45) * 0.5;
+    vec3 dustCol = mix(dustColNight, dustColDay, daylight);
+    col += dustCol * dustAlpha1 * glowStr;
+    col += dustCol * dustAlpha2 * glowStr;
+  }
+
+  // dust halo pulse around the horizon
+  float dustPulse = 0.7 + 0.3 * sin(rawTime * 0.4) * sin(rawTime * 0.27 + 1.3);
+  float dustBand = exp(-pow(abs(uv.y - horizon) / 0.12, 2.0)) * dustPulse;
+  float dustBandNoise = fbm(vec2(uv.x * aspect * 3.0 - rawTime * 0.1, rawTime * 0.05 + 7.0));
+  dustBand *= 0.6 + 0.4 * dustBandNoise;
+  dustBand *= 1.0 + isDustStorm * weatherStr * 2.5;
+  vec3 dustGlowDay   = mix(c1, c2, 0.3) * 0.2;
+  vec3 dustGlowNight = mix(c1, c2, 0.5) * 0.15;
+  col += mix(dustGlowNight, dustGlowDay, daylight) * dustBand;
+
+  // horizon haze band
+  float hazeStrength = smoothstep(0.18, 0.0, abs(uv.y - horizon));
+  hazeStrength *= 1.0 + isDustStorm * weatherStr * 3.0;
+  vec3 hazeColDay   = mix(c1, c2, 0.3) * 0.18;
+  vec3 hazeColNight = mix(c1, c2, 0.5) * 0.10;
+  col += mix(hazeColNight, hazeColDay, daylight) * hazeStrength;
+
+  // lightning: 3s strike windows with 45% chance while daylight is up
+  if(isLightning > 0.5 && weatherStr > 0.05){
+    float strikeWindow = 3.0;
+    float strikeIdx = floor(rawTime / strikeWindow);
+    float strikeSeed = hash(vec2(strikeIdx, cycleIdx * 7.3));
+    float strikeT = fract(rawTime / strikeWindow) * strikeWindow;
+    float hasStrike = step(0.55, strikeSeed) * weatherStr;
+    float flash = hasStrike * exp(-strikeT * 10.0);
+    col += flash * mix(c3, vec3(1.0), 0.6) * 0.5;
+
+    if(hasStrike > 0.5 && strikeT < 0.5 && uv.y > horizon){
+      float boltStartX = 0.15 + hash(vec2(strikeIdx * 3.1, cycleIdx)) * 0.7;
+      float boltCurX = boltStartX;
+      float boltD = 1e10;
+      vec2 prev = vec2(boltCurX, 0.95);
+      for(int seg = 0; seg < 12; seg++){
+        float fi = float(seg);
+        float segSeed = hash(vec2(fi + strikeIdx * 13.0, strikeSeed * 91.0 + cycleIdx));
+        boltCurX += (segSeed - 0.5) * 0.05;
+        float ny = 0.95 - (fi + 1.0) / 12.0 * (0.95 - horizon);
+        vec2 next = vec2(boltCurX, ny);
+        vec2 uvA = vec2(uv.x * aspect, uv.y);
+        vec2 prevA = vec2(prev.x * aspect, prev.y);
+        vec2 nextA = vec2(next.x * aspect, next.y);
+        vec2 pa = uvA - prevA;
+        vec2 ba = nextA - prevA;
+        float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+        float segD = length(pa - ba * h);
+        boltD = min(boltD, segD);
+        prev = next;
+      }
+      float boltCore = exp(-boltD * boltD * 50000.0) * exp(-strikeT * 8.0);
+      float boltGlow = exp(-boltD * boltD *  4000.0) * exp(-strikeT * 5.0);
+      col += boltCore * vec3(1.0) * 0.9;
+      col += boltGlow * mix(c1, c3, 0.5) * 0.4;
+    }
+  }
+
+  // whole-screen dust-storm haze
+  if(isDustStorm > 0.5 && weatherStr > 0.05){
+    vec3 stormHaze = mix(c1, c2, 0.2) * 0.3;
+    float stormNoise = fbm(vec2(uv.x * aspect * 1.5 - rawTime * 0.15, uv.y * 2.0 + rawTime * 0.05));
+    col = mix(col, stormHaze, isDustStorm * weatherStr * 0.3 * (0.5 + 0.5 * stormNoise));
+  }
+
+  float scanline = 0.93 + 0.07 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = uv - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.6;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+#+end_shader
+
+* VHS
+:PROPERTIES:
+:EXPORT_FILE_NAME: vhs
+:EXPORT_HUGO_SLUG: vhs
+:EXPORT_HUGO_WEIGHT: 1100
+:END:
+
+Two layers stacked:
+
+- a *VHS/CRT treatment* — CRT barrel distortion, vertical hold drift,
+  tracking wobble, glitch tearing, chromatic aberration, composite
+  color bleed, RF interference, snow, head-switch bar at the top,
+  rolling brightness bar, static bursts, and posterization;
+- an *oscilloscope beam* that traces a parametric shape, morphing
+  continuously between nine of them — mushroom, star, heart, butterfly,
+  spirograph, atom, clock, smiley, mushroom-man. Each shape is its own
+  =vec2 f(s, t)= parameterised by =s ∈ [0,1]= (along the trace) and
+  =t= (time), and each has its own internal animation: the heart beats,
+  the butterfly flaps, the smiley blinks, the clock's hands sweep, the
+  mushroom-man walks.
+
+The scope is drawn by, per pixel, sampling 200 points along the current
+morphed shape and taking the minimum distance — a naive but effective
+=argmin=-of-samples SDF. That's the dominant cost of the shader.
+
+Because the phosphor is stacked *on top* of a heavy CRT pass, the beam
+sits behind the aberration, scanlines, and snow, and reads as though
+some other machine were driving the tube's electron gun.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: vhs-shader
+#+begin_shader
+// Full VHS/CRT treatment layered under an oscilloscope beam that
+// morphs continuously through nine parametric shapes.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+#define SCOPE_SAMPLES 200
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash2v(i);
+  float b = hash2v(i + vec2(1.0, 0.0));
+  float c = hash2v(i + vec2(0.0, 1.0));
+  float d = hash2v(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+  for(int i = 0; i < 4; i++){
+    v += a * valueNoise(p);
+    p = rot * p * 2.0;
+    a *= 0.5;
+  }
+  return v;
+}
+
+vec3 palette(float idx){
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  idx = fract(idx) * 4.0;
+  if(idx < 1.0)      return mix(c1, c2, idx);
+  else if(idx < 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+// --- Parametric oscilloscope shapes ---
+
+vec2 mushroom(float s, float t){
+  float breath = 1.0 + 0.08 * sin(t * 1.5);
+  float sway = sin(t * 0.8) * 0.03;
+  if(s < 0.4){
+    float a = PI - s / 0.4 * PI;
+    float ripple = 0.015 * sin(a * 6.0 + t * 4.0);
+    return vec2(cos(a) * 0.3 * breath + sway, sin(a) * 0.12 + 0.05 + ripple);
+  } else if(s < 0.44){
+    float f = (s - 0.4) / 0.04;
+    return mix(vec2(0.3 * breath + sway, 0.05), vec2(0.22 * breath + sway, -0.02), f);
+  } else if(s < 0.52){
+    float f = (s - 0.44) / 0.08;
+    return mix(vec2(0.22 * breath + sway, -0.02), vec2(0.08 + sway, -0.06), f);
+  } else if(s < 0.62){
+    float f = (s - 0.52) / 0.1;
+    float stemSway = sway + sin(f * PI + t * 1.2) * 0.015;
+    return mix(vec2(0.08 + stemSway, -0.06), vec2(0.1 + stemSway, -0.32), f);
+  } else if(s < 0.7){
+    float f = (s - 0.62) / 0.08;
+    return mix(vec2(0.1 + sway, -0.32), vec2(-0.1 + sway, -0.32), f);
+  } else if(s < 0.8){
+    float f = (s - 0.7) / 0.1;
+    float stemSway = sway + sin((1.0 - f) * PI + t * 1.2) * 0.015;
+    return mix(vec2(-0.1 + stemSway, -0.32), vec2(-0.08 + stemSway, -0.06), f);
+  } else if(s < 0.88){
+    float f = (s - 0.8) / 0.08;
+    return mix(vec2(-0.08 + sway, -0.06), vec2(-0.22 * breath + sway, -0.02), f);
+  } else {
+    float f = (s - 0.88) / 0.12;
+    return mix(vec2(-0.22 * breath + sway, -0.02), vec2(-0.3 * breath + sway, 0.05), f);
+  }
+}
+
+vec2 starShape(float s, float t){
+  float a = s * PI * 2.0 + t * 0.4;
+  float points = 5.0 + sin(t * 0.13) * 1.5;
+  float outerPulse = 0.17 + 0.04 * sin(t * 1.8);
+  float innerPulse = 0.15 + 0.03 * sin(t * 2.3 + 1.0);
+  float r = innerPulse + outerPulse * pow(abs(cos(a * points * 0.5)), 0.7);
+  float tipWobble = sin(a * points + t * 3.0) * 0.012;
+  return vec2(cos(a), sin(a)) * (r + tipWobble);
+}
+
+vec2 heart(float s, float t){
+  float a = s * PI * 2.0 + t * 0.15;
+  float beat = 1.0 + 0.12 * pow(abs(sin(t * 2.0)), 8.0);
+  float x = 0.28 * sin(a) * sin(a) * sin(a);
+  float y = 0.22 * cos(a) - 0.08 * cos(2.0 * a) - 0.04 * cos(3.0 * a) - 0.015 * cos(4.0 * a);
+  vec2 p = vec2(x, y * 0.9 + 0.02) * beat;
+  p += vec2(sin(a * 3.0 + t * 2.5), cos(a * 3.0 + t * 2.0)) * 0.01;
+  return p;
+}
+
+vec2 butterfly(float s, float t){
+  float a = s * PI * 2.0;
+  float r = exp(sin(a)) - 2.0 * cos(4.0 * a) + pow(sin((2.0 * a - PI) / 24.0), 5.0);
+  vec2 p = vec2(sin(a), cos(a)) * r * 0.08;
+  float flap = 0.5 + 0.5 * sin(t * 2.5);
+  p.x *= 0.4 + flap * 0.6;
+  p.y += flap * 0.02;
+  p += vec2(sin(a * 8.0 + t * 3.0), cos(a * 6.0 - t * 2.0)) * 0.008;
+  p.x += sin(t * 0.6) * 0.03;
+  p.y += sin(t * 1.2) * 0.015;
+  return p;
+}
+
+vec2 spirograph(float s, float t){
+  float a = s * PI * 2.0 * 3.0;
+  float fx = 3.0 + sin(t * 0.05);
+  float fy = 2.0 + cos(t * 0.07);
+  return vec2(sin(a * fx + t * 0.2), cos(a * fy)) * 0.25;
+}
+
+vec2 atom(float s, float t){
+  float plane = floor(s * 3.0);
+  float localS = fract(s * 3.0);
+  float localA = localS * PI * 2.0;
+  float tilt = plane * PI / 3.0 + t * 0.1;
+  float rx = 0.25;
+  float ry = 0.08;
+  vec2 p = vec2(cos(localA + t * (1.5 + plane * 0.4)) * rx,
+                sin(localA + t * (1.5 + plane * 0.4)) * ry);
+  float ct = cos(tilt), st = sin(tilt);
+  p = vec2(p.x * ct - p.y * st, p.x * st + p.y * ct);
+  if(s < 0.04){
+    float na = s / 0.04 * PI * 2.0;
+    p = vec2(cos(na + t * 5.0), sin(na + t * 5.0)) * 0.02;
+  }
+  return p;
+}
+
+vec2 clockShape(float s, float t){
+  if(s < 0.5){
+    float a = s / 0.5 * PI * 2.0;
+    float baseR = 0.25;
+    float tickAngle = mod(a, PI / 6.0) - PI / 12.0;
+    float tick = smoothstep(0.06, 0.0, abs(tickAngle)) * 0.02;
+    float r = baseR + tick;
+    r *= 1.0 + 0.015 * sin(t * 1.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s < 0.75){
+    float f = (s - 0.5) / 0.25;
+    float minuteAngle = PI * 0.5 - t * 0.2;
+    vec2 tip = vec2(cos(minuteAngle), sin(minuteAngle)) * 0.2;
+    tip += vec2(sin(t * 3.0), cos(t * 2.7)) * 0.003;
+    return mix(vec2(0.0), tip, f);
+  } else {
+    float f = (s - 0.75) / 0.25;
+    float hourAngle = PI * 0.5 - t * 0.017;
+    vec2 tip = vec2(cos(hourAngle), sin(hourAngle)) * 0.14;
+    tip += vec2(sin(t * 2.5 + 1.0), cos(t * 2.0 + 1.0)) * 0.002;
+    return mix(vec2(0.0), tip, f);
+  }
+}
+
+vec2 smiley(float s, float t){
+  float blinkCycle = mod(t, 4.0);
+  float blink = 1.0 - 0.9 * pow(max(1.0 - abs(blinkCycle - 0.15) * 10.0, 0.0), 2.0);
+  float grinWidth = 0.14 + 0.04 * sin(t * 0.7);
+  float grinCurve = 0.08 + 0.06 * sin(t * 0.5);
+
+  if(s < 0.4){
+    float a = s / 0.4 * PI * 2.0;
+    float r = 0.25 + 0.008 * sin(a * 5.0 + t * 2.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s < 0.52){
+    float a = (s - 0.4) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(-0.09 + cos(a) * ex, 0.06 + sin(a) * ey);
+    p += vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else if(s < 0.64){
+    float a = (s - 0.52) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(0.09 + cos(a) * ex, 0.06 + sin(a) * ey);
+    p += vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else {
+    float f = (s - 0.64) / 0.36;
+    float a = PI + f * PI;
+    float mx = cos(a) * grinWidth;
+    float my = sin(a) * grinCurve - 0.08;
+    float corner = sin(t * 0.3) * 0.02 * (1.0 - abs(f - 0.5) * 2.0);
+    return vec2(mx, my + corner);
+  }
+}
+
+vec2 mushroomMan(float s, float t){
+  float walk = sin(t * 2.0);
+  float bob  = abs(sin(t * 2.0)) * 0.01;
+
+  if(s < 0.08){
+    float a = s / 0.08 * PI * 2.0;
+    return vec2(-0.12 + cos(a) * 0.04, 0.02 + sin(a) * 0.04 + bob);
+  } else if(s < 0.16){
+    float f = (s - 0.08) / 0.08;
+    return mix(vec2(-0.12, -0.02 + bob), vec2(-0.12, -0.18 + bob), f);
+  } else if(s < 0.22){
+    float f = (s - 0.16) / 0.06;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.12, -0.18 + bob), vec2(-0.16 - swing, -0.32 + bob), f);
+  } else if(s < 0.24){
+    float f = (s - 0.22) / 0.02;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.16 - swing, -0.32 + bob), vec2(-0.12, -0.18 + bob), f);
+  } else if(s < 0.30){
+    float f = (s - 0.24) / 0.06;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.12, -0.18 + bob), vec2(-0.08 - swing, -0.32 + bob), f);
+  } else if(s < 0.32){
+    float f = (s - 0.30) / 0.02;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.08 - swing, -0.32 + bob), vec2(-0.12, -0.06 + bob), f);
+  } else if(s < 0.38){
+    float f = (s - 0.32) / 0.06;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.12, -0.06 + bob), vec2(-0.2 + swing, -0.14 + bob), f);
+  } else if(s < 0.40){
+    float f = (s - 0.38) / 0.02;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.2 + swing, -0.14 + bob), vec2(-0.12, -0.06 + bob), f);
+  } else if(s < 0.46){
+    float f = (s - 0.40) / 0.06;
+    float reach = sin(t * 1.5) * 0.01;
+    return mix(vec2(-0.12, -0.06 + bob), vec2(-0.02 + reach, 0.06 + bob), f);
+  } else if(s < 0.48){
+    float f = (s - 0.46) / 0.02;
+    return mix(vec2(-0.02, 0.06 + bob), vec2(0.18, 0.12 + bob), f);
+  } else if(s < 0.72){
+    float a = PI - (s - 0.48) / 0.24 * PI;
+    float breath = 1.0 + 0.05 * sin(t * 1.8);
+    float ripple = 0.01 * sin(a * 5.0 + t * 3.0);
+    return vec2(cos(a) * 0.2 * breath + 0.1, sin(a) * 0.1 + 0.12 + bob + ripple);
+  } else if(s < 0.78){
+    float f = (s - 0.72) / 0.06;
+    return mix(vec2(0.3, 0.12 + bob), vec2(0.22, 0.06 + bob), f);
+  } else if(s < 0.84){
+    float f = (s - 0.78) / 0.06;
+    return mix(vec2(0.22, 0.06 + bob), vec2(0.15, -0.12 + bob), f);
+  } else if(s < 0.90){
+    float f = (s - 0.84) / 0.06;
+    return mix(vec2(0.15, -0.12 + bob), vec2(0.05, -0.12 + bob), f);
+  } else if(s < 0.96){
+    float f = (s - 0.90) / 0.06;
+    return mix(vec2(0.05, -0.12 + bob), vec2(-0.02, 0.06 + bob), f);
+  } else {
+    float f = (s - 0.96) / 0.04;
+    return mix(vec2(-0.02, 0.06 + bob), vec2(-0.1, 0.12 + bob), f);
+  }
+}
+
+vec2 getShape(int idx, float s, float t){
+  if(idx == 0)      return mushroom(s, t);
+  else if(idx == 1) return starShape(s, t);
+  else if(idx == 2) return heart(s, t);
+  else if(idx == 3) return butterfly(s, t);
+  else if(idx == 4) return spirograph(s, t);
+  else if(idx == 5) return atom(s, t);
+  else if(idx == 6) return clockShape(s, t);
+  else if(idx == 7) return smiley(s, t);
+  else              return mushroomMan(s, t);
+}
+
+// morph between shapes, hang time weighted so each shape gets a beat to breathe
+vec2 morphShape(float s, float t){
+  float rawPhase = t * 0.04;
+  float f = fract(rawPhase);
+  float eased = f * f * (3.0 - 2.0 * f);
+  eased = eased * eased * (3.0 - 2.0 * eased);
+  float base = floor(rawPhase);
+  int shapeIdx = int(mod(base, 9.0));
+  int nextIdx  = int(mod(base + 1.0, 9.0));
+  return mix(getShape(shapeIdx, s, t), getShape(nextIdx, s, t), eased);
+}
+
+// per-pixel scope glow: min-distance to 200 samples along the current shape
+float scopeGlow(vec2 p, float t){
+  float aspect = iResolution.x / iResolution.y;
+  vec2 centered = (p - 0.5) * vec2(aspect, 1.0);
+  float minDist = 1.0;
+  for(int i = 0; i < SCOPE_SAMPLES; i++){
+    float s = float(i) / float(SCOPE_SAMPLES);
+    vec2 shapeP = morphShape(s, t);
+    // analog wobble on the beam
+    shapeP += vec2(sin(s * 40.0 + t * 3.0), cos(s * 35.0 + t * 2.5)) * 0.003;
+    float d = length(centered - shapeP);
+    minDist = min(minDist, d);
+  }
+  float core = 0.0015 / (minDist * minDist + 0.0015);
+  float halo = 0.008  / (minDist + 0.02);
+  return min(core + halo, 5.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float t = iTime * tempo;
+
+  // CRT barrel distortion
+  vec2 crtUV = uv * 2.0 - 1.0;
+  float barrel = 0.12;
+  float r2 = dot(crtUV, crtUV);
+  crtUV *= 1.0 + barrel * r2;
+  vec2 curvedUV = crtUV * 0.5 + 0.5;
+  float offScreen = step(0.0, curvedUV.x) * step(curvedUV.x, 1.0)
+                  * step(0.0, curvedUV.y) * step(curvedUV.y, 1.0);
+
+  // three overlapping glitch triggers with different rates and thresholds
+  float glitch1 = step(0.90, hash1(floor(t * 2.0)));
+  float glitch2 = step(0.95, hash1(floor(t * 3.0 + 7.0)));
+  float glitch3 = step(0.97, hash1(floor(t * 1.5 + 13.0)));
+
+  // vertical hold drifting slowly
+  float holdPhase = t * 0.04;
+  float holdDrift = fract(sin(holdPhase * 0.7) * 0.5 + holdPhase * 0.02);
+  float vHold = holdDrift * 0.06 * sin(t * 0.3);
+  vHold += glitch3 * (hash1(floor(t * 2.0 + 5.0)) - 0.5) * 0.15;
+
+  // tracking wobble: normal drift bands + three burst bands during glitches
+  float trackingPhase = t * 0.7;
+  float trackBand1 = 1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - fract(trackingPhase)));
+  float trackBand2 = 1.0 - smoothstep(0.0, 0.04, abs(curvedUV.y - fract(trackingPhase * 1.3 + 0.33)));
+  float glitchY1 = hash1(floor(t * 4.0));
+  float glitchY2 = hash1(floor(t * 6.0 + 3.0));
+  float glitchY3 = hash1(floor(t * 2.5 + 9.0));
+  float glitchBand1 = (1.0 - smoothstep(0.0, 0.03, abs(curvedUV.y - glitchY1)))
+                    * smoothstep(0.0, 0.08, abs(curvedUV.y - glitchY1 - 0.05));
+  float glitchBand2 = (1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - glitchY2)))
+                    * smoothstep(0.0, 0.12, abs(curvedUV.y - glitchY2 - 0.08));
+  float glitchBand3 = (1.0 - smoothstep(0.0, 0.02, abs(curvedUV.y - glitchY3)))
+                    * smoothstep(0.0, 0.15, abs(curvedUV.y - glitchY3 - 0.1));
+  float wobble = trackBand1 * 0.008 + trackBand2 * 0.006
+               + glitchBand1 * glitch1 * 0.04
+               + glitchBand2 * glitch2 * 0.07
+               + glitchBand3 * glitch3 * 0.12;
+
+  // horizontal tearing band during heavy glitches
+  float tearOffset = 0.0;
+  if(glitch3 > 0.0){
+    float tearY = hash1(floor(t * 2.0 + 5.0));
+    float tearBand = step(tearY, curvedUV.y) * step(curvedUV.y, tearY + 0.08);
+    tearOffset = tearBand * (hash1(floor(t * 8.0)) - 0.5) * 0.2;
+  }
+
+  vec2 distUV = curvedUV;
+  distUV.y = fract(distUV.y + vHold);
+  distUV.x += wobble * sin(curvedUV.y * 100.0 + t * 10.0) + tearOffset;
+
+  // wandering drift direction so the pattern never repeats
+  float driftAngle = sin(t * 0.011)         * 2.5
+                   + sin(t * 0.0047 + 1.0)  * 1.8
+                   + sin(t * 0.0023 + 4.0)  * 1.0;
+  float driftSpeed = 0.35 + 0.15 * sin(t * 0.007 + 2.0);
+  vec2 drift = vec2(cos(driftAngle), sin(driftAngle)) * driftSpeed * t;
+
+  // composite video color bleed
+  float bleedAmt = 0.008 + glitch1 * 0.015;
+  vec2 bleedUV1 = distUV + vec2(bleedAmt, 0.0);
+  vec2 bleedUV2 = distUV - vec2(bleedAmt, 0.0);
+
+  float aberr = 0.003 + glitch1 * 0.008 + glitch2 * 0.015 + glitch3 * 0.03;
+  float lumC = fbm(distUV  * 4.0 + drift * 1.2);
+  float lumL = fbm(bleedUV2 * 4.0 + drift * 1.2);
+  float lumR = fbm(bleedUV1 * 4.0 + drift * 1.2);
+
+  float n = fbm(distUV * 3.0 + drift);
+  vec3 baseCol = palette(n);
+  vec3 bleedColL = palette(n - aberr * 8.0);
+  vec3 bleedColR = palette(n + aberr * 8.0);
+  vec3 col = mix(baseCol, bleedColL, 0.15) * (0.4 + lumL * 0.4)
+           + mix(baseCol, baseCol,   0.7)  * (0.4 + lumC * 0.4)
+           + mix(baseCol, bleedColR, 0.15) * (0.4 + lumR * 0.4);
+  col /= 1.8;
+
+  // posterization
+  float posterLevels = 12.0 - glitch2 * 6.0;
+  col = floor(col * posterLevels + 0.5) / posterLevels;
+
+  if(glitch2 > 0.0){
+    float dropChoice = hash1(floor(t * 5.0 + 2.0));
+    vec3 shiftColor = palette(dropChoice);
+    float aberrLum = (lumL + lumC + lumR) / 3.0;
+    col = mix(col, shiftColor * (0.5 + aberrLum * 0.5), 0.6);
+  }
+
+  // soft scanlines
+  float scanline = 0.90 + 0.10 * sin(curvedUV.y * iResolution.y * 0.5);
+  col *= scanline;
+
+  // RF interference cross-hatched sines
+  float rf = sin((curvedUV.x + curvedUV.y) * 20.0 + t * 5.0) * 0.5 + 0.5;
+  rf *= sin((curvedUV.x - curvedUV.y * 0.5) * 30.0 - t * 3.0) * 0.5 + 0.5;
+  col += palette(curvedUV.y + t * 0.1) * rf * 0.03;
+
+  // static bursts during glitches
+  if(glitch1 > 0.0){
+    float burstY = hash1(floor(t * 3.0 + 11.0));
+    float burstBand = smoothstep(burstY - 0.01, burstY, curvedUV.y)
+                    * smoothstep(burstY + 0.05, burstY + 0.04, curvedUV.y);
+    float burstNoise = hash2v(vec2(fragCoord.x * 0.3, floor(t * 25.0)));
+    vec3 burstTint = palette(hash1(floor(t * 3.0 + 17.0)));
+    col = mix(col, burstTint * burstNoise, burstBand * 0.8);
+  }
+  if(glitch2 > 0.0){
+    float burst2Y = hash1(floor(t * 2.0 + 19.0));
+    float burst2Band = smoothstep(burst2Y - 0.01, burst2Y, curvedUV.y)
+                     * smoothstep(burst2Y + 0.07, burst2Y + 0.06, curvedUV.y);
+    float burst2Noise = hash2v(vec2(fragCoord.x * 0.2, floor(t * 20.0) + 5.0));
+    vec3 burst2Tint = palette(hash1(floor(t * 2.0 + 23.0)));
+    col = mix(col, burst2Tint * burst2Noise, burst2Band * 0.7);
+  }
+
+  // snow + horizontal noise bars
+  float snow = hash2v(fragCoord * 0.1 + floor(t * 60.0) * 7.0);
+  float snowAmt = 0.03 + glitch3 * 0.25;
+  col = mix(col, palette(snow) * snow, snowAmt);
+  float staticBar  = valueNoise(vec2(0.0, curvedUV.y *  80.0 + t * 20.0));
+  float staticBar2 = valueNoise(vec2(3.0, curvedUV.y * 120.0 - t * 15.0));
+  col += baseCol * (staticBar * 0.03 + staticBar2 * 0.02);
+
+  // VHS head-switch bar along the top edge
+  float headSwitch = smoothstep(0.0, 0.02, curvedUV.y) * smoothstep(0.06, 0.03, curvedUV.y);
+  float headNoise  = hash1(floor(t * 30.0) + curvedUV.x * 10.0);
+  col = mix(col, baseCol * headNoise, headSwitch * 0.8);
+
+  // rolling brightness bar
+  float roll = sin(curvedUV.y * 6.28 - t * 1.5) * 0.5 + 0.5;
+  col *= 0.85 + 0.15 * roll;
+
+  // CRT bloom in bright regions
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  float bloom = smoothstep(0.35, 0.7, lum);
+  col += baseCol * bloom * 0.12;
+
+  // frame jitter during heavy glitch
+  if(glitch3 > 0.0){
+    float jitter = (hash1(floor(t * 10.0)) - 0.5) * 0.03;
+    col *= 0.85 + 0.3 * valueNoise(curvedUV * 50.0 + jitter);
+  }
+
+  // ghost / lag
+  float ghostN = fbm((distUV - vec2(0.02, 0.005)) * 3.0 + t * 0.3);
+  vec3 ghostCol = palette(ghostN) * 0.08;
+  col += ghostCol;
+
+  // oscilloscope beam over everything
+  float glow = scopeGlow(curvedUV, t);
+  vec3 scopeColor = palette(t * 0.02);
+  vec3 scopeBeam = mix(scopeColor * 2.0, vec3(1.0), smoothstep(1.0, 4.0, glow));
+  col += scopeBeam * glow * 0.7;
+
+  vec2 vig = curvedUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 1.2;
+  col *= offScreen;
+
+  fragColor = vec4(col * 0.45, 1.0);
+}
+#+end_shader
