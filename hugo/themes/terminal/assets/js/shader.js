@@ -341,36 +341,19 @@ window.Shader = (function(){
 
     // Align the persistent background canvas with the reading column (<main>)
     // so a takeover shader centers on the prose rather than the whole viewport.
-    // Measured from live layout — safer than a CSS media query, and it lets us
-    // also detect the narrow-screen sidebar overlay (fixed panel whose right
-    // edge extends past main's left when open) and shift past that too.
-    // Called from size() before the buffer is (re)dimensioned.
+    // The measurement + CSS-var publication lives in Takeover.measureReadingColumn
+    // (shared with the intro λ-logo, which also opts into the takeover chrome);
+    // we just read the result back and apply it to the canvas.
     function positionBg(){
-      const main = document.querySelector("main");
-      if(!main) return null;
-      const r = main.getBoundingClientRect();
-      let left = r.left, width = r.width;
-      const sb = document.querySelector(".sidebar");
-      if(sb){
-        const s = sb.getBoundingClientRect();
-        if(s.width > 0 && s.right > left){
-          const shift = Math.min(s.right - left, width);
-          left += shift; width -= shift;
-        }
-      }
-      const w = Math.max(1, width);
-      canvas.style.left = left + "px";
-      canvas.style.width = w + "px";
-      // Publish the reading column's box as CSS variables so pseudo-elements
-      // and other UI (the takeover scroll hint) can center on the same axis
-      // as the shader — independent of the sidebar's presence or overlay.
-      document.body.style.setProperty("--reading-left", left + "px");
-      document.body.style.setProperty("--reading-width", w + "px");
+      const m = window.Takeover && Takeover.measureReadingColumn();
+      if(!m) return null;
+      canvas.style.left = m.left + "px";
+      canvas.style.width = m.width + "px";
       // The canvas covers 100vh via the base CSS (inset:0), so use the
       // viewport height for the buffer — not main's height, which is the
       // whole scrolled page and would get squished into the viewport-tall
       // CSS box (pancake). Width follows main's box (aligned above).
-      return { width: w, height: window.innerHeight };
+      return { width: m.width, height: window.innerHeight };
     }
 
     function size(){
@@ -572,33 +555,12 @@ window.Shader = (function(){
     return { configure, activate, setPaused, refreshColor, sync, size, dispose, setUserGlsl, ok: !!gl };
   }
 
-  // ---- takeover cinema: fade the reading content in on scroll ---------------
-  // A takeover page opens with a 70vh empty "cinema" above .content (via a
-  // body.has-takeover CSS rule); as the reader scrolls down, .content's opacity
-  // ramps from 0 to 1 over the first 50vh of scroll (and back to 0 on scroll
-  // up — the effect is a direct function of scrollY, so it's symmetric). Only
-  // touches .content when the has-takeover class is set; other pages are
-  // unaffected. Clears the inline style when the class is removed so pages
-  // that had it stripped by nav don't stay dim.
-  function updateTakeoverFade(){
-    const content = document.getElementById("content");
-    if(!content) return;
-    if(!document.body.classList.contains("has-takeover")){
-      if(content.style.opacity) content.style.opacity = "";
-      document.body.style.removeProperty("--scroll-hint-opacity");
-      document.body.style.removeProperty("--fx-opacity");
-      return;
-    }
-    const range = window.innerHeight * 0.5;
-    const t = range > 0 ? Math.max(0, Math.min(1, window.scrollY / range)) : 1;
-    content.style.opacity = String(t);
-    // The "scroll ↓" hint (a ::before on main, styled in theme-additions.css)
-    // fades out inversely as the reader scrolls in.
-    document.body.style.setProperty("--scroll-hint-opacity", String(1 - t));
-    // Dim the shader canvas as the text fades in so the shader recedes to a
-    // hint behind the prose (1 at the top, 0.25 once fully scrolled in).
-    document.body.style.setProperty("--fx-opacity", String(1 - t * 0.75));
-  }
+  // The takeover cinema chrome (body.has-takeover class, --fx-opacity fade,
+  // --scroll-hint-opacity, .content opacity ramp, reading-column CSS vars) is
+  // shared with the intro λ-logo and lives in Takeover (see takeover.js). This
+  // file only claims/releases the "shader-bg" slot when scan() sees a takeover
+  // marker on the page.
+  const TAKEOVER_ID = "shader-bg";
 
   // ---- manager: one persistent background + N per-page inline windows -------
   let bg = null, inlines = [];
@@ -620,9 +582,11 @@ window.Shader = (function(){
     root = root || document;
     const bgCfg = root.querySelector('.shader-config[data-effect="takeover"]');
     // Flag the page for CSS (cinema padding on main) + the fade-on-scroll
-    // updater below; both keyed off body.has-takeover.
-    document.body.classList.toggle("has-takeover", !!bgCfg);
-    updateTakeoverFade();
+    // updater; the shared Takeover module owns the body class and its chrome.
+    if(window.Takeover){
+      if(bgCfg) Takeover.claim(TAKEOVER_ID);
+      else Takeover.release(TAKEOVER_ID);
+    }
     if(bgCfg){
       const r = ensureBg();
       if(r){
@@ -666,12 +630,10 @@ window.Shader = (function(){
 
   function init(){
     window.addEventListener("resize", sizeAll);
-    // Fade .content in/out as the reader scrolls into the takeover cinema.
-    // Bound once (survives soft-nav); the updater no-ops off takeover pages.
-    window.addEventListener("scroll", updateTakeoverFade, { passive: true });
-    // On narrow viewports the sidebar-overlay checkbox shifts the persistent
-    // canvas via a :has(#navtoggle:checked) CSS rule (see theme-additions.css);
-    // re-run size so the drawing buffer follows the new CSS box.
+    // Reading-column measurement + scroll fade + sidebar-overlay tracking all
+    // live in Takeover (shared with the λ-logo). The sidebar-toggle listener
+    // there rewrites --reading-left/-width; we still need to resize the canvas
+    // buffer to follow the new width when it changes.
     const navToggle = document.getElementById("navtoggle");
     if(navToggle) navToggle.addEventListener("change", sizeAll);
     document.addEventListener("visibilitychange", syncAll);

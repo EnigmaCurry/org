@@ -121,17 +121,27 @@ ul.children .group-old::before{ content:none; }
 ul.children .group-old > .gname{ color:var(--fg-dim); }
 ul.children .group-old > ul.children{ margin:.15rem 0; }
 
-/* --- intro λ logo (home page only): an oversized lambda centered like an
-       image, with a matrix-style glyph-rain canvas fading in behind it.
-       The canvas is wired up + animated in terminal.js (lambdaRain). --- */
+/* --- intro λ logo (home page only): an oversized lambda centered like a
+       poster, with a matrix-style glyph-rain canvas fading in behind it.
+       Lives at body level (see #page-fx in baseof.html) and takes over the
+       viewport just like a WebGL takeover shader — position:fixed, aligned to
+       the reading column via the same --reading-left / --reading-width vars
+       the shader canvas uses (published by takeover.js). Its opacity follows
+       --fx-opacity so it dims as the reader scrolls the content in, matching
+       the behavior of body.has-takeover .fx-canvas below. --- */
 .lambda-logo{
-  position:relative;
+  position:fixed; top:0;
+  left:var(--reading-left, 0px);
+  width:var(--reading-width, 100vw);
+  height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  height:clamp(360px, 64vh, 680px);
-  margin:1.4rem auto 2.6rem;
+  z-index:-1;
   overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .8s ease;
 }
 .lambda-logo .lambda-rain{
   position:absolute; inset:0;
@@ -150,8 +160,24 @@ ul.children .group-old > ul.children{ margin:.15rem 0; }
   text-shadow:0 0 24px color-mix(in srgb, var(--accent), transparent 55%);
   user-select:none;
 }
-/* fx off: no animated field, just the static glyph */
+/* Reveal-on-first-frame: terminal.js adds .rain-on once the canvas has drawn a
+   frame; that class doubles as the "fade the whole poster in" trigger, so we
+   don't flash a giant static λ during boot. Once revealed, --fx-opacity from
+   Takeover drives the dim-on-scroll. */
+html:not(.js) .lambda-logo{ display:none; }                          /* no JS: hidden */
+/* Reveal-on-first-frame path (fx on, motion allowed): lambdaRain adds .rain-on
+   once the canvas has drawn a frame, and the transition eases the whole poster
+   in. Fx off or reduced-motion path: the glyph-rain canvas is suppressed and
+   the giant λ shows as a static poster right away. In every visible case,
+   --fx-opacity (from Takeover) drives the dim-on-scroll. */
+html.js .lambda-logo.rain-on,
+.no-fx .lambda-logo{ opacity:var(--fx-opacity, 1); }
 .no-fx .lambda-logo .lambda-rain{ display:none; }
+body.has-takeover .lambda-logo{ transition:opacity .15s linear; }   /* snappier while scrolling */
+@media (prefers-reduced-motion: reduce){
+  .lambda-logo{ opacity:var(--fx-opacity, 1); }
+  .lambda-logo .lambda-rain{ display:none; }
+}
 
 /* lite (light) palette: the page is pale, so back the scene with a translucent
    gray panel — the dark phosphor trails read much better against it than on white */

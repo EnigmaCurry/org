@@ -1,13 +1,9 @@
 {{ define "main" }}
 <h1><a class="heading-anchor" href="#">{{ .Title }}</a></h1>
-{{ if .IsHome }}
-{{/* oversized λ logo, centered like an image; a glyph-rain canvas comes up
-     behind it a beat after the page decodes (wired in terminal.js) */}}
-<div class="lambda-logo no-rain" aria-hidden="true">
-  <canvas class="lambda-rain"></canvas>
-  <span class="lambda-glyph">&#955;</span>
-</div>
-{{ end }}
+{{/* On the home page, the oversized λ logo + glyph-rain field lives at body
+     level in baseof.html (inside #page-fx), so it can float across the whole
+     viewport as a full-screen takeover — driven by terminal.js's lambdaRain +
+     Takeover.claim() rather than a normal-flow element inside .content. */}}
 {{ partial "book-notice.html" . }}
 {{ .Content }}
 {{ end }}

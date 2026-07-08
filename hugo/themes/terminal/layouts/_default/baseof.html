@@ -9,6 +9,22 @@
      (spa.js) never tears it down -> the WebGL animation runs unbroken across page
      navigations. Hidden entirely when JS is off or fx is off (see theme CSS). -->
 <canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+<!-- per-page decorative overlays that must live OUTSIDE #content, because the
+     takeover fade drops #content's opacity and everything nested under it. spa.js
+     swaps this slot's inner HTML on nav (see SWAP in spa.js), so pages populate
+     it via their layout templates. The home page fills it with the intro λ-logo. -->
+<div id="page-fx" class="page-fx">
+  {{- if .IsHome -}}
+  {{/* intro λ-logo — an oversized lambda centered like a poster, with a matrix-style
+       glyph-rain canvas fading in behind it. terminal.js drives the canvas
+       (lambdaRain) and calls Takeover.claim() so the takeover chrome (scroll hint,
+       cinema padding, --fx-opacity fade) runs the same as a WebGL takeover page. */}}
+  <div class="lambda-logo no-rain" aria-hidden="true">
+    <canvas class="lambda-rain"></canvas>
+    <span class="lambda-glyph">&#955;</span>
+  </div>
+  {{- end -}}
+</div>
 <!-- floating controls for the full-screen takeover shader; shown (via .on, added by
      shader.js) only while a takeover is active. play/pause + reset(playing)/clear(paused). -->
 <div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
@@ -88,15 +104,18 @@
   <pre class="code-sheet-body"></pre>
 </dialog>
 
-{{- /* one served bundle in a single shared script scope: terminal.js (defines the
-       per-page wiring + animations) -> shader.js (the persistent canvas engine) ->
+{{- /* one served bundle in a single shared script scope: takeover.js (the shared
+       has-takeover chrome; must precede its callers) -> terminal.js (per-page
+       wiring + animations, uses Takeover for the λ-logo) -> shader.js (the
+       persistent canvas engine, uses Takeover for the WebGL background) ->
        spa.js (the soft-nav router that drives them). Order is load-bearing. */ -}}
+{{ $tk := resources.Get "js/takeover.js" }}
 {{ $t := resources.Get "js/terminal.js" }}
 {{ $sh := resources.Get "js/shader.js" }}
 {{ $spa := resources.Get "js/spa.js" }}
-{{ $js := slice $t $sh $spa | resources.Concat "js/terminal.bundle.js" | fingerprint }}
+{{ $js := slice $tk $t $sh $spa | resources.Concat "js/terminal.bundle.js" | fingerprint }}
 <script src="{{ $js.RelPermalink }}"></script>
-<script>if(window.Shader) Shader.init();</script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
 {{ if in .Content "class=\"mermaid\"" }}
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';

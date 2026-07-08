@@ -17,7 +17,10 @@
   if(!(window.history && history.pushState && window.fetch && window.DOMParser)) return;
 
   // #content first (required); the rest are per-page chrome regions, swapped if present.
-  const SWAP = ["#content", ".sidebar .tree", ".topnav", ".topbar .cmd"];
+  // #page-fx is a body-level decor slot (see baseof.html) that carries per-page
+  // overlays which need to sit OUTSIDE #content — e.g. the home page's λ-logo
+  // takeover — so they aren't dragged along by the content opacity fade.
+  const SWAP = ["#content", ".sidebar .tree", ".topnav", ".topbar .cmd", "#page-fx"];
   const contentEl = () => document.getElementById("content");
   let ctrl = null;
 

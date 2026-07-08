@@ -395,7 +395,13 @@ function lambdaRain(){
 
   resize();
   let rraf;
-  window.addEventListener("resize", ()=>{ cancelAnimationFrame(rraf); rraf = requestAnimationFrame(()=>{ refreshColors(); resize(); }); });
+  const scheduleResize = ()=>{ cancelAnimationFrame(rraf); rraf = requestAnimationFrame(()=>{ refreshColors(); resize(); }); };
+  window.addEventListener("resize", scheduleResize);
+  // .lambda-logo is fixed to the reading column via --reading-left/-width vars
+  // that Takeover republishes when the sidebar overlay opens/closes on narrow
+  // viewports; the CSS box then changes size without a window resize firing.
+  // ResizeObserver catches those layout changes so the canvas buffer stays 1:1.
+  if(window.ResizeObserver) new ResizeObserver(scheduleResize).observe(box);
   // adopt the palette live when the theme toggle flips data-theme on <html>
   if(window.MutationObserver) new MutationObserver(refreshColors).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
 
@@ -1193,9 +1199,24 @@ function reinitAfterNav(){
   wireExpands(content);      // expand controls on the new code blocks
   queueActiveBlogTagScroll();// keep the active blog tag centered in the tree
   revealContent(content);    // re-run the fx-gated decode on the new content
-  // home page: its λ field lives in the swapped #content, so the fresh canvas
-  // needs lambdaRain re-kicked (reveal()'s one-time run only covers the hard load)
+  // λ-logo lives in the #page-fx slot which spa.js swaps on nav; claim/release
+  // the takeover chrome to match the new page (present on home, gone elsewhere).
+  syncLambdaTakeover();
+  // home page: the freshly-swapped canvas needs lambdaRain re-kicked (reveal()'s
+  // one-time run only covers the hard load).
   if(fxOn && document.querySelector(".lambda-logo")) setTimeout(lambdaRain, 400);
 }
+// The intro λ-logo opts into the shared takeover chrome (see takeover.js) just
+// like a WebGL takeover shader: cinema padding on <main>, "scroll ↓" hint,
+// content opacity fade, --fx-opacity dimming. The class stays on while a
+// .lambda-logo is anywhere in the DOM; nav to a non-home page releases it.
+const LAMBDA_TAKEOVER_ID = "lambda-logo";
+function syncLambdaTakeover(){
+  if(!window.Takeover) return;
+  if(document.querySelector(".lambda-logo")) Takeover.claim(LAMBDA_TAKEOVER_ID);
+  else Takeover.release(LAMBDA_TAKEOVER_ID);
+}
+syncLambdaTakeover();
+
 // expose for spa.js (same concat scope, but a namespace keeps the contract explicit)
 window.Terminal = { reinitAfterNav, revealContent, isFxOn: ()=> fxOn };
