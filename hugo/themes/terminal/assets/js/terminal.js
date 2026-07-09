@@ -988,12 +988,28 @@ function wireDiffBoxes(root){
         toggle.textContent = toSource ? "Diff" : "Source";   // label = the view it switches TO
       });
     }
+    const srcCode = srcPane && srcPane.querySelector('code[class*="language"]');
+    const expand = box.querySelector(".expand");
+    if(expand){
+      // sheet content follows the visible pane: source view -> the evolved source,
+      // diff view -> the raw unified diff (the same text ox-hugo shipped).
+      const rawCode = raw && (raw.querySelector('code[class*="language"]') || raw.querySelector("code"));
+      expand.addEventListener("click", ()=>{
+        const inSource = box.dataset.view === "source";
+        const text = inSource
+          ? (srcCode ? srcCode.textContent : "")
+          : (rawCode ? rawCode.textContent : (raw ? raw.textContent : ""));
+        sheetTitle.textContent = lt ? lt.textContent.trim() : "";
+        sheetBody.textContent = text;
+        sheetCopyBtn.hidden = false;
+        openSheet();
+      });
+    }
     if(copy){
       // copy the evolved source; flash a reverse-video select-all over it to show
       // what got copied. The diff table can't be swept (it'd shred the table), so
       // when the diff view is showing we briefly flip to the source view for the
       // flash, then switch back -- leaving the toggle state untouched.
-      const srcCode = srcPane && srcPane.querySelector('code[class*="language"]');
       copy.addEventListener("click", ()=>{
         const text = srcCode ? srcCode.textContent : (raw ? raw.textContent : "");
         const morph = ()=>{
@@ -1021,13 +1037,12 @@ function wireDiffBoxes(root){
 }
 wireDiffBoxes(content);
 // "expand" control: opens a near-fullscreen sheet showing a block's raw text
-// (wrapped + selectable). Added -- on any device -- to every code block whose
-// content overflows: the framed boxes (run/env/stdout/edit/annotate) and the
-// standalone src .highlight. The button only shows while the content is actually
-// clipped/scrolled (recomputed by refreshExpands() on resize / font-load). On
-// run/env the existing copy button folds into the same top-right cutout; other
-// blocks get expand alone, and the sheet's own copy button is shown only when the
-// source block carried one (so copy stays limited to run/env).
+// (wrapped + selectable). Added -- on any device -- to every code block: the
+// framed boxes (run/env/stdout/edit/annotate) and the standalone src .highlight.
+// Always visible. On run/env the existing copy button folds into the same
+// top-right cutout; other blocks get expand alone, and the sheet's own copy
+// button is shown only when the source block carried one (so copy stays limited
+// to run/env).
 const refreshExpands = [];
 // expand-arrows glyph (two opposite corners pulling apart)
 const EXPAND_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
@@ -1058,10 +1073,10 @@ let sheetBody = null, sheetTitle = null, sheetCopyBtn = null;
 })();
 
 // "expand" control: opens the near-fullscreen sheet showing a block's raw text
-// (wrapped + selectable). Added -- on any device -- to every overflowing code block
-// in ROOT: the framed boxes (run/env/stdout/edit/annotate) and standalone src
-// .highlight. Re-callable after a soft-nav swap: refreshExpands is reset first so
-// stale (detached) refreshers don't accumulate, and the old controls were discarded
+// (wrapped + selectable). Added -- on any device -- to every code block in ROOT:
+// the framed boxes (run/env/stdout/edit/annotate) and standalone src .highlight.
+// Re-callable after a soft-nav swap: refreshExpands is reset first so stale
+// (detached) refreshers don't accumulate, and the old controls were discarded
 // with the old DOM.
 function wireExpands(root){
   refreshExpands.length = 0;
@@ -1078,8 +1093,6 @@ function wireExpands(root){
     const pre = hl.querySelector("pre");
     if(pre) blocks.push({ host:hl, pre, copy:null });
   });
-
-  const overflowing = pre => pre.scrollWidth > pre.clientWidth + 1 || pre.scrollHeight > pre.clientHeight + 1;
 
   blocks.forEach(({ host, pre, copy })=>{
     const ctl = document.createElement("div");
@@ -1099,18 +1112,13 @@ function wireExpands(root){
       sheetCopyBtn.hidden = !copy;            // only run/env carry copy into the sheet
       openSheet();
     });
+    // when the full title would collide with the controls on the top line, drop
+    // the controls to a second row just below it (still right-aligned)
     const refresh = ()=>{
-      const of = overflowing(pre);
-      exp.hidden = !of;
-      ctl.hidden = !of && !copy;              // copy keeps the group alive; otherwise hide the empty cutout
-      // when the full title would collide with the controls on the top line, drop
-      // the controls to a second row just below it (still right-aligned)
-      if(label && !ctl.hidden){
+      if(label){
         const room = ctl.offsetLeft - label.offsetLeft;   // px from the title's left edge to the controls
         const need = label.scrollWidth + 10;              // full (untruncated) title + a small gap
         host.classList.toggle("ctl-stacked", need > room);
-      } else {
-        host.classList.remove("ctl-stacked");
       }
     };
     refresh();
