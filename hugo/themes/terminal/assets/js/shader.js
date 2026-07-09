@@ -173,6 +173,27 @@ window.Shader = (function(){
   // and may declare that its iTime is periodic, which makes the panel grow a
   // video-style transport scrubber and wraps iTime to [0, DURATION):
   //   // @loop DURATION                            -> iTime loops over DURATION
+  // Or bind a webfont glyph rendered offline to a `uniform sampler2D` — the
+  // engine renders CHAR into an offscreen canvas at high resolution using the
+  // site's monospace webfont (Inconsolata) and uploads it as an RGBA texture.
+  // Three flavors, distinguished by the texture's alpha semantics and layout:
+  //   // @glyph   NAME "TEXT"                      -> raster coverage mask
+  //   // @sdf     NAME "TEXT" [SPREAD]             -> signed distance field
+  //   // @tileset NAME "CHARS" [SPREAD]            -> SDF, one cell per char
+  // The raster mask carries Canvas2D's 1-pixel-wide antialiased edge — cheap
+  // but softens under magnification. The SDF post-processes the raster with a
+  // 2D Felzenszwalb distance transform so every texel holds the (clipped)
+  // signed distance to the nearest edge in pixels, packed into the alpha
+  // channel over ±SPREAD (default 24) pixels. Alpha semantics match the mask
+  // (0.5 at the edge, higher inside) so the shader math is identical — but
+  // the boundary now ramps over 2·SPREAD texels, so `fwidth`-scaled AA keeps
+  // the edge one-output-pixel crisp at any zoom. The tileset variant lays
+  // each character into its own cell of an 8×8 grid, giving the shader a
+  // lookup table indexed by character number — pick a slot and sample.
+  // Companion uniforms the engine auto-sets when the shader declares them:
+  //   uniform float <NAME>Aspect  = atlas W/H
+  //   uniform vec2  <NAME>Grid    = (cols, rows)     [tileset]
+  //   uniform float <NAME>Count   = filled cell count [tileset]
   function defaultStep(min, max){ const r = Math.abs(max - min); return r < 5 ? 0.01 : (r < 50 ? 0.1 : 1); }
   // a shader's iTime period (in iTime units), or 0 when it doesn't loop.
   function parseLoop(glsl){
@@ -202,6 +223,229 @@ window.Shader = (function(){
       }
     }
     return out;
+  }
+  // parse `@glyph NAME "TEXT"` and `@sdf NAME "TEXT" [SPREAD]` declarations.
+  // TEXT is a character or string — quoted or a single bare token — that will
+  // be rendered into an offscreen canvas and uploaded as a sampler2D. Single
+  // characters get a square atlas; multi-character strings get a rectangular
+  // one wide enough to fit the whole string, and the engine also sets a
+  // companion `<NAME>Aspect` uniform (float, W/H) if the shader declares one.
+  // SPREAD (SDF only) is the half-width of the distance-field ramp in pixels;
+  // defaults to 24, which resolves cleanly on both the 2048² single-glyph
+  // atlas and the 512-tall string atlas.
+  function parseGlyphs(glsl){
+    const out = [];
+    if(!glsl) return out;
+    const re = /\/\/\s*@(glyph|sdf|tileset)\s+(\S+)\s+(?:"([^"]*)"|(\S+))(?:\s+(\d+))?/g;
+    let m;
+    while((m = re.exec(glsl))){
+      const kind = m[1];
+      const name = m[2];
+      const raw  = (m[3] != null ? m[3] : m[4]) || "";
+      const text = raw || "?";
+      const spread = (kind === "sdf" || kind === "tileset")
+        ? (parseInt(m[5], 10) || 24) : 0;
+      out.push({ name, text, kind, spread, tex: null, loc: null,
+                 aspectLoc: null, aspect: 1.0,
+                 gridLoc: null, countLoc: null, grid: [1, 1], count: 1,
+                 unit: 0, ready: false });
+    }
+    return out;
+  }
+  // Felzenszwalb & Huttenlocher 2004: one-dimensional distance transform of a
+  // sampled function in O(N). Overwrites f[q] with min_r (f0[r] + (q-r)²).
+  // Scratch buffers `v` (parabola sources) and `z` (their boundaries) are
+  // passed in so the 2D driver can reuse them across all rows and columns.
+  function dt1d(f, n, v, z){
+    // capture the original values so we can rewrite f in place
+    const src = new Float64Array(n);
+    for(let i = 0; i < n; i++) src[i] = f[i];
+    let k = 0;
+    v[0] = 0;
+    z[0] = -Infinity;
+    z[1] =  Infinity;
+    for(let q = 1; q < n; q++){
+      // intersection of the parabola from q with the current envelope
+      let s = ((src[q] + q*q) - (src[v[k]] + v[k]*v[k])) / (2*(q - v[k]));
+      while(s <= z[k]){
+        k--;
+        s = ((src[q] + q*q) - (src[v[k]] + v[k]*v[k])) / (2*(q - v[k]));
+      }
+      k++;
+      v[k] = q;
+      z[k] = s;
+      z[k+1] = Infinity;
+    }
+    k = 0;
+    for(let q = 0; q < n; q++){
+      while(z[k+1] < q) k++;
+      const dx = q - v[k];
+      f[q] = dx*dx + src[v[k]];
+    }
+  }
+  // 2D squared-Euclidean distance transform: rewrites f[i] with the squared
+  // distance from pixel i to the nearest pixel where the input was 0.
+  // Achieved as two sweeps of the 1D transform — down columns, then rows.
+  function dt2d(f, w, h){
+    const N = Math.max(w, h);
+    const v = new Int32Array(N);
+    const z = new Float64Array(N + 1);
+    const col = new Float64Array(h);
+    for(let x = 0; x < w; x++){
+      for(let y = 0; y < h; y++) col[y] = f[y*w + x];
+      dt1d(col, h, v, z);
+      for(let y = 0; y < h; y++) f[y*w + x] = col[y];
+    }
+    const row = new Float64Array(w);
+    for(let y = 0; y < h; y++){
+      for(let x = 0; x < w; x++) row[x] = f[y*w + x];
+      dt1d(row, w, v, z);
+      for(let x = 0; x < w; x++) f[y*w + x] = row[x];
+    }
+  }
+  // Build a signed-distance-field ImageData from a rasterized glyph. Reads the
+  // canvas's alpha as the input mask (alpha > 127 = inside the glyph), runs a
+  // squared-distance transform on both the mask and its inverse, subtracts to
+  // get a signed distance in pixels (positive outside, negative inside), and
+  // packs `alpha = clamp(0.5 - s/(2·spread), 0, 1)` — same convention as the
+  // raster mask (high alpha inside, 0.5 at the edge), just with a ramp that
+  // now spans 2·spread texels instead of 1.
+  function canvasToSDF(canvas, spread){
+    const w = canvas.width, h = canvas.height, N = w * h;
+    const ctx = canvas.getContext("2d");
+    const src = ctx.getImageData(0, 0, w, h).data;
+    // finite "infinity" larger than any real squared distance so downstream
+    // Felzenszwalb arithmetic stays defined (real max ≈ w² + h²)
+    // must exceed w²+h² (the largest real squared distance on a w×h canvas);
+    // the ×2 keeps intermediates safe for wide non-square string atlases too
+    const INF = (w*w + h*h + 1) * 2;
+    const fIn  = new Float64Array(N);   // 0 at glyph pixels — → dist to inside
+    const fOut = new Float64Array(N);   // 0 at background   — → dist to outside
+    for(let i = 0; i < N; i++){
+      const inside = src[i*4 + 3] > 127;
+      fIn[i]  = inside ? 0 : INF;
+      fOut[i] = inside ? INF : 0;
+    }
+    dt2d(fIn,  w, h);
+    dt2d(fOut, w, h);
+    const out = new Uint8ClampedArray(N * 4);
+    const denom = 2 * spread;
+    for(let i = 0; i < N; i++){
+      // signed distance in pixels: positive outside, negative inside
+      const s = Math.sqrt(fIn[i]) - Math.sqrt(fOut[i]);
+      let a = 0.5 - s / denom;
+      if(a < 0) a = 0; else if(a > 1) a = 1;
+      const j = i * 4;
+      out[j] = 255; out[j+1] = 255; out[j+2] = 255;
+      out[j+3] = Math.round(a * 255);
+    }
+    // Return the SDF as a canvas rather than raw ImageData. Some WebGL
+    // implementations (notably ANGLE/SwiftShader) don't apply LINEAR
+    // texture filtering correctly when texImage2D is fed an ImageData
+    // object — they render as if NEAREST — so we always upload the
+    // baked canvas, which drives the standard DOM-source upload path.
+    const dst = document.createElement("canvas");
+    dst.width = w; dst.height = h;
+    dst.getContext("2d").putImageData(new ImageData(out, w, h), 0, 0);
+    return dst;
+  }
+  // Render `text` into an offscreen canvas using the site's monospace webfont.
+  // Single character -> square canvas at `size × size`; multi-character string
+  // -> shorter, wider canvas whose width is measured from the text (so the
+  // string SDF stays a manageable size regardless of length). The font is
+  // loaded on demand via the Font Loading API; the returned promise resolves
+  // to the canvas once the rasterizer has drawn the glyphs.
+  const GLYPH_TEX_SIZE = 2048;      // single-character atlas dimension
+  const GLYPH_STRING_H = 512;       // string-atlas height (per-glyph resolution)
+  const GLYPH_FONT = "Inconsolata";
+  async function renderGlyphCanvas(text, size){
+    const isMulti = Array.from(text).length > 1;
+    const height = isMulti ? GLYPH_STRING_H : size;
+    const fontPx = Math.round(height * 0.9);
+    const font = '700 ' + fontPx + 'px "' + GLYPH_FONT + '", monospace';
+    // wait for the webfont before drawing so we don't rasterize the fallback
+    if(document.fonts && document.fonts.load){
+      try { await document.fonts.load(font); } catch(e){}
+    }
+    let width;
+    if(isMulti){
+      // measure the text so the canvas is exactly wide enough to fit it plus
+      // a small horizontal margin for the SDF ramp to breathe past the edges
+      const meas = document.createElement("canvas").getContext("2d");
+      meas.font = font;
+      const measured = Math.ceil(meas.measureText(text).width);
+      const marginX = Math.round(height * 0.1);
+      width = Math.max(height, measured + 2 * marginX);
+    } else {
+      width = height;
+    }
+    const cv = document.createElement("canvas");
+    cv.width = width; cv.height = height;
+    const ctx = cv.getContext("2d");
+    if(!ctx) return cv;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // Inconsolata's optical bounds sit slightly above the em center; nudge
+    // the baseline down so uppercase letters land visually centered.
+    ctx.font = font;
+    ctx.fillText(text, width * 0.5, height * 0.53);
+    return cv;
+  }
+  // Render each character of `chars` into its own cell of a `size × size`
+  // canvas laid out as an 8×8 grid. Every cell is drawn at 90% of the cell
+  // height (same as single-glyph rendering) so glyphs pack tightly on screen
+  // — that still leaves a horizontal margin ~2× SPREAD around every character
+  // (monospace glyph width ≈ 60% of font size), and a vertical margin
+  // comfortably wider than SPREAD, so the whole-canvas distance transform
+  // saturates fully between neighboring characters and cell A's SDF never
+  // bleeds into cell B. Font is centered per-cell.
+  const GLYPH_TILESET_COLS = 8;
+  async function renderTilesetCanvas(chars, size){
+    const arr = Array.from(chars);
+    const cols = GLYPH_TILESET_COLS;
+    const rows = cols;                             // square POT atlas
+    const cellW = size / cols;
+    const cellH = size / rows;
+    const fontPx = Math.round(cellH * 0.9);
+    const font = '700 ' + fontPx + 'px "' + GLYPH_FONT + '", monospace';
+    if(document.fonts && document.fonts.load){
+      try { await document.fonts.load(font); } catch(e){}
+    }
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = size;
+    const ctx = cv.getContext("2d");
+    if(!ctx) return { cv, grid: [cols, rows], count: 0 };
+    ctx.clearRect(0, 0, size, size);
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = font;
+    const count = Math.min(arr.length, cols * rows);
+    for(let i = 0; i < count; i++){
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = (col + 0.5) * cellW;
+      // Inconsolata's optical bounds sit slightly above the em center — same
+      // 0.53 nudge as single-glyph rendering keeps uppercase visually centered
+      const y = (row + 0.5) * cellH + cellH * 0.03;
+      ctx.fillText(arr[i], x, y);
+    }
+    return { cv, grid: [cols, rows], count };
+  }
+  // Create a texture pre-populated with a 1×1 transparent pixel so shaders
+  // that sample the sampler before the real glyph has uploaded see 0 alpha
+  // (nothing) rather than an undefined sampler read.
+  function createPlaceholderTexture(gl){
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return tex;
   }
   function elem(tag, cls, txt){ const e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
   const fmtVal = v => String(Math.round(v * 100) / 100);
@@ -290,6 +534,7 @@ window.Shader = (function(){
     // uniforms the literate GLSL declared via @slider/@select. The panel lives in
     // the figure and is revealed on pointer activity (see theme CSS + UI wiring below).
     let customInputs = parseInputs(userGlsl);
+    let glyphInputs = parseGlyphs(userGlsl);              // @glyph -> sampler2D uniforms fed from an offscreen canvas
     let loopDur = parseLoop(userGlsl);                    // >0 -> iTime wraps + transport scrubber
     const panelEl = figure && figure.querySelector(".shader-panel");
     let speed = 1;
@@ -300,12 +545,53 @@ window.Shader = (function(){
       if(errEl){ errEl.textContent = msg; errEl.hidden = false; }
       else console.warn("[shader] " + msg);
     }
+    function disposeGlyphTextures(){
+      if(!gl) return;
+      for(const g of glyphInputs){ if(g.tex){ gl.deleteTexture(g.tex); g.tex = null; } }
+    }
     function build(){
       const b = buildProgram(gl, fragSrc);
       if(b.prog){
         if(prog) gl.deleteProgram(prog);        // release the previous one on a rebuild (setUserGlsl path)
         prog = b.prog; loc = b.loc; if(errEl) errEl.hidden = true;
         for(const c of customInputs) c.loc = gl.getUniformLocation(prog, c.name);
+        // (re)create glyph textures on every build. Each glyph gets its own
+        // texture unit; the placeholder makes the sampler safe to read while
+        // the font-based rasterization completes asynchronously.
+        disposeGlyphTextures();
+        glyphInputs.forEach((g, i)=>{
+          g.loc = gl.getUniformLocation(prog, g.name);
+          // Optional companion uniforms the engine sets when the shader
+          // declares them: aspect for any atlas, grid+count for tilesets.
+          g.aspectLoc = gl.getUniformLocation(prog, g.name + "Aspect");
+          g.gridLoc   = gl.getUniformLocation(prog, g.name + "Grid");
+          g.countLoc  = gl.getUniformLocation(prog, g.name + "Count");
+          g.unit = i;
+          g.tex = createPlaceholderTexture(gl);
+          g.ready = false;
+          g.aspect = 1.0;
+          g.grid = [1, 1];
+          g.count = 1;
+          const renderPromise = g.kind === "tileset"
+            ? renderTilesetCanvas(g.text, GLYPH_TEX_SIZE)
+            : renderGlyphCanvas(g.text, GLYPH_TEX_SIZE).then(cv => ({ cv }));
+          renderPromise.then(result=>{
+            if(!gl || !g.tex) return;           // context lost or shader swapped away
+            const cv = result.cv;
+            // SDF and tileset variants both run the whole-canvas distance
+            // transform before upload; @glyph uploads the raw canvas.
+            const payload = (g.kind === "sdf" || g.kind === "tileset")
+              ? canvasToSDF(cv, g.spread) : cv;
+            gl.bindTexture(gl.TEXTURE_2D, g.tex);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, payload);
+            g.aspect = cv.width / cv.height;
+            if(result.grid){ g.grid = result.grid; g.count = result.count; }
+            g.ready = true;
+            if(!running && active && !blocked()) renderStill();   // paused: repaint once the glyph lands
+          }).catch(()=>{});
+        });
         return true;
       }
       if(prog){ gl.deleteProgram(prog); prog = null; }
@@ -320,9 +606,11 @@ window.Shader = (function(){
     function setUserGlsl(next){
       next = (next || "").trim();
       if(next === userGlsl && prog) return true;
+      disposeGlyphTextures();                    // drop old textures before parseGlyphs overwrites the list
       userGlsl = next;
       fragSrc = userGlsl ? (CUSTOM_PREAMBLE + userGlsl + CUSTOM_MAIN) : FRAG;
       customInputs = parseInputs(userGlsl);
+      glyphInputs = parseGlyphs(userGlsl);
       loopDur = parseLoop(userGlsl);
       stop(false);                               // release current frame; caller re-activates
       if(!gl) return false;
@@ -410,6 +698,19 @@ window.Shader = (function(){
         if(!c.loc) continue;
         if(c.kind === "select") gl.uniform1i(c.loc, c.value | 0);
         else gl.uniform1f(c.loc, c.value);
+      }
+      // per-shader glyph textures: bind each to its assigned unit and point
+      // its sampler2D uniform at that unit (unused samplers ignored); also
+      // publish the atlas's W/H to the companion `<name>Aspect` uniform when
+      // the shader has declared it
+      for(const g of glyphInputs){
+        if(!g.loc || !g.tex) continue;
+        gl.activeTexture(gl.TEXTURE0 + g.unit);
+        gl.bindTexture(gl.TEXTURE_2D, g.tex);
+        gl.uniform1i(g.loc, g.unit);
+        if(g.aspectLoc) gl.uniform1f(g.aspectLoc, g.aspect);
+        if(g.gridLoc)   gl.uniform2f(g.gridLoc, g.grid[0], g.grid[1]);
+        if(g.countLoc)  gl.uniform1f(g.countLoc, g.count);
       }
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if(!ready){ ready = true; canvas.classList.add("fx-ready"); }
@@ -523,6 +824,7 @@ window.Shader = (function(){
 
     function dispose(){
       active = false; stop(false);
+      disposeGlyphTextures();
       if(ro){ ro.disconnect(); ro = null; }
       try { const ext = gl && gl.getExtension("WEBGL_lose_context"); if(ext) ext.loseContext(); } catch(e){}
       gl = null;

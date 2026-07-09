@@ -2894,3 +2894,326 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
   fragColor = vec4(col * 0.45, 1.0);
 }
 #+end_shader
+
+* Letters
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: letters
+:END:
+
+** Letters
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 1110
+:END:
+
+An evolving series on drawing type with a fragment shader. Each page starts
+from the one before it — beginning with a single glyph sampled from a real
+webfont and building up.
+
+#+attr_shortcode: :depth 999
+#+begin_index
+index
+#+end_index
+
+** Letter A
+:PROPERTIES:
+:EXPORT_FILE_NAME: letter-a
+:EXPORT_HUGO_SLUG: letter-a
+:END:
+
+The most minimal way to put a real letterform on the screen from GLSL: read it
+from a font. A shader can't call =fillText=, but the *host page* can. The
+literate directive =// @glyph iGlyph "A"= tells the shader engine to render the
+character into an offscreen =1024×1024= canvas using the site's monospace
+webfont — [[https://fonts.google.com/specimen/Inconsolata][Inconsolata]] — and upload the result as a =sampler2D= uniform. What the
+shader receives is an RGBA texture whose alpha channel is =1.0= inside the glyph
+and =0.0= outside, with Canvas2D's own antialiased ramp along the boundary.
+
+The shader remaps its aspect-corrected pixel coordinates into the texture's
+=[0,1]²= domain, samples the alpha with linear filtering, and thresholds at
+=0.5= with an =fwidth=-scaled =smoothstep=. That re-antialiases the edge at
+*output* resolution rather than trusting the fixed 1024-pixel source ramp — so
+the letter stays crisp even as the takeover canvas grows. It still softens
+under heavy magnification because the source is just a raster; the next
+[[/shaders/letters/][letter]] page will fix that by building a true SDF from the same texture at
+load time. As before, the fill color comes from =iAccent= so the glyph tracks
+the site theme.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+NAME: letter-a-shader
+#+begin_shader
+// @glyph iGlyph "A"
+uniform sampler2D iGlyph;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+
+  // fit the square glyph texture into a 0.9-wide box centered on the screen
+  vec2 gUV = uv / 0.9 + 0.5;
+
+  // read the glyph alpha; outside the texture there is no letter
+  float mask = 0.0;
+  if(gUV.x >= 0.0 && gUV.x <= 1.0 && gUV.y >= 0.0 && gUV.y <= 1.0){
+    mask = texture2D(iGlyph, gUV).a;
+  }
+
+  // re-antialias at output resolution: threshold the coverage ramp with a
+  // pixel-footprint-scaled smoothstep so the edge stays crisp at any zoom
+  float aa = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
+
+** Letter A (SDF)
+:PROPERTIES:
+:EXPORT_FILE_NAME: letter-a-sdf
+:EXPORT_HUGO_SLUG: letter-a-sdf
+:END:
+
+The [[/shaders/letters/letter-a/][previous letter A]] renders sharply at a fit-to-screen zoom but softens the
+moment you look closer: Canvas2D's rasterizer produces a coverage ramp only
+*one texel* wide along the boundary, and once the texture is magnified past
+1:1 that ramp spreads across many output pixels — a blur that no
+=fwidth=-scaled threshold can rescue.
+
+The fix is to change what the texture stores. Instead of coverage, put a
+[[https://en.wikipedia.org/wiki/Signed_distance_function][signed distance field]] there: every texel holds the (clipped) signed distance
+in pixels to the nearest glyph edge — negative inside the letter, positive
+outside, zero on the outline. Because *distance* is a smooth linear function
+of position — not a sharp step — linear texture filtering gives back a
+faithful in-between value at any sample point, and =fwidth= reports a
+derivative that scales cleanly with zoom. Threshold at zero (which we still
+encode as alpha =0.5=, matching the raster mask's semantics), and the edge
+lands on the same one-output-pixel-wide AA band regardless of magnification.
+
+The distance field is baked once per glyph, on the CPU, at the moment the
+texture is uploaded — a new =@sdf= literate directive that the engine
+recognizes alongside =@glyph=. The engine rasterizes the character exactly as
+before, then post-processes with a *2D Felzenszwalb–Huttenlocher* distance
+transform: two O(N) sweeps of the 1D transform (down columns, then across
+rows) give exact squared Euclidean distance. Do it twice — on the mask and on
+its inverse — subtract, and you have a signed field. Pack it into 8-bit alpha
+with a spread of =±24= pixels around the boundary, so the interesting
+near-edge transition is well-resolved and anything beyond it saturates.
+
+Shown here via =#+attr_diff= as a changeset from the [[/shaders/letters/letter-a/][previous letter A]] —
+the shader's *thresholding* line is unchanged; only the source changes from
+=@glyph= to =@sdf=, and a cinematic zoom-and-pan tour is added on top so the
+edge crispness is visible under heavy magnification. =@loop= wraps =iTime= to
+the tour's period so the animation repeats seamlessly.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from letter-a-shader :label letter-a-sdf-shader :context 99
+#+NAME: letter-a-sdf-shader
+#+begin_shader
+// @sdf iGlyph "A"
+// @loop 12.0
+uniform sampler2D iGlyph;
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+
+  // one 12-second loop: an eased ping-pong zoom from a wide shot (0.6×) to
+  // a close inspection (7×) and back, panned on a Lissajous 1:2 so the
+  // camera visits the apex, both legs, and the crossbar over one cycle.
+  // Pan is scaled by 1/zoom so a fixed sweep tracks the same visible
+  // fraction of the texture regardless of magnification.
+  float t    = iTime * 6.2831853 / 12.0;
+  float zoom = mix(0.6, 7.0, 0.5 - 0.5 * cos(t));
+  vec2  pan  = vec2(sin(t) * 0.35, sin(t * 2.0) * 0.20) / zoom;
+
+  // apply zoom + pan, then map into the glyph's [0,1] atlas domain — dividing
+  // by zoom shrinks the visible slice, so higher zoom = tighter close-up
+  vec2 gUV = uv / (0.9 * zoom) + 0.5 + pan;
+
+  // read the SDF alpha; outside the texture there is no letter
+  float mask = 0.0;
+  if(gUV.x >= 0.0 && gUV.x <= 1.0 && gUV.y >= 0.0 && gUV.y <= 1.0){
+    mask = texture2D(iGlyph, gUV).a;
+  }
+
+  // same fwidth-scaled threshold as before — but the texture now stores a
+  // distance field, so `fwidth(mask)` scales with zoom and the smoothstep
+  // window collapses back to one output pixel regardless of magnification
+  float aa = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
+
+** Hello, world!
+:PROPERTIES:
+:EXPORT_FILE_NAME: hello-world
+:EXPORT_HUGO_SLUG: hello-world
+:END:
+
+Everything the [[/shaders/letters/letter-a-sdf/][previous page]] does works on a whole string with almost no
+new code — the rasterizer already has =fillText=, and the distance transform
+is pixel-agnostic. So =@sdf= is generalised: whatever sits between the quotes
+becomes the atlas.
+
+For a multi-character quoted argument, the engine measures the string, sizes
+the offscreen canvas to fit (a *fixed* 512-pixel height, natural width from
+Canvas2D's =measureText=), rasterises the whole string, and runs the same
+2D Felzenszwalb distance transform on the rectangle. The atlas is no longer
+square, so the shader needs to know its aspect ratio; the engine auto-sets a
+companion =uniform float <NAME>Aspect= (declared as =iGlyphAspect= here,
+matching the sampler's name) to =canvas.width / canvas.height=.
+
+With aspect in hand, the display math is a standard *fit-contain*: shrink
+the atlas rectangle uniformly to the largest size that fits inside the
+viewport with a 10% margin. For a long string, that's a fit-to-width, and
+the result is a slim horizontal band centered vertically — a title bar.
+
+Shown here via =#+attr_diff= as a changeset from the [[/shaders/letters/letter-a-sdf/][previous letter A (SDF)]]
+— the cinematic zoom loop is gone (this page is a static display of text),
+replaced by the aspect-fit sampling.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from letter-a-sdf-shader :label hello-world-shader :context 99
+#+NAME: hello-world-shader
+#+begin_shader
+// @sdf iGlyph "Hello, world!"
+uniform sampler2D iGlyph;
+uniform float iGlyphAspect;   // atlas width / height, auto-set by the engine
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+
+  // fit-contain the atlas rectangle inside the screen with a 10% margin.
+  // For "Hello, world!" the atlas is much wider than the screen, so this
+  // resolves as fit-to-width — the string spans 90% of the reading column
+  // and sits as a slim horizontal band centered vertically.
+  float scrAspect = iResolution.x / iResolution.y;
+  vec2 fit = iGlyphAspect > scrAspect
+    ? vec2(0.9 * scrAspect,  0.9 * scrAspect / iGlyphAspect)
+    : vec2(0.9 * iGlyphAspect, 0.9);
+  vec2 gUV = uv / fit + 0.5;
+
+  // read the SDF alpha; outside the texture there is no letter
+  float mask = 0.0;
+  if(gUV.x >= 0.0 && gUV.x <= 1.0 && gUV.y >= 0.0 && gUV.y <= 1.0){
+    mask = texture2D(iGlyph, gUV).a;
+  }
+
+  // same fwidth-scaled threshold as before — no zoom, but any future scaling
+  // or panning of this shader will keep the edge one output pixel wide
+  float aa = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
+
+** Tileset
+:PROPERTIES:
+:EXPORT_FILE_NAME: tileset
+:EXPORT_HUGO_SLUG: tileset
+:END:
+
+The [[/shaders/letters/hello-world/][previous page]] bakes a whole string into one atlas laid out for reading.
+Change the layout to a *grid* instead — one character per cell — and the
+atlas becomes a *lookup table*: pass an integer index, get a glyph. That
+turns a fragment shader into a tile-based renderer, with everything the term
+suggests: partition the screen into cells, decide independently what each
+cell shows, and let the *choice function* itself become a visual layer.
+
+A new =@tileset NAME "CHARS"= directive builds it. The engine measures
+=CHARS=, allocates a 2048² atlas divided into 8×8 cells of 256 pixels each,
+draws each character at 90% cell height (matching single-glyph rendering, so
+neighboring glyphs pack tightly on screen), then runs the same 2D
+Felzenszwalb distance transform over the whole canvas. Monospace glyph
+widths are ~60% of font size, so even at 90% cell height every character
+sits inside a margin comfortably wider than =SPREAD= — each field saturates
+at 0 well before hitting a neighbor, so cell A and cell B stay independent
+even though they share one texture.
+
+Two more companion uniforms come with it: =<NAME>Grid= (a =vec2= of grid
+dimensions) and =<NAME>Count= (the number of filled cells), auto-set by the
+engine when the shader declares them. The shader uses them to decode an
+integer character index into an =(atlasCol, atlasRow)= pair and then samples
+the atlas at cell-local UV, so the same LINEAR-filter + fwidth-threshold
+math keeps every glyph sharp regardless of screen cell density.
+
+The tileset is the *shape* layer. What character sits where — the *choice
+function* — is a second layer we can layer any pattern onto:
+
+- a hash of =(cell, floor(iTime * rate))= gives a shuffled flicker;
+- with a *per-cell* random rate (below), each cell ticks on its own clock —
+  some flip several times a second, others hold for seconds at a time — and
+  the grid reads as living text rather than a single global shuffle;
+- a hash of =(cell + iTime * drift)= gives a smooth character-space drift;
+- =floor(length(cell − center) − iTime * speed)= indexed into the set gives
+  radiating rings;
+- =floor((cell.y + iTime * fallSpeed[cell.x]) mod length)= gives the [[/shaders/matrix/][Matrix]]
+  rain (with real glyphs now, not procedural SDFs).
+
+A third layer — brightness, color, hue — can then modulate on top: this page
+adds a slow diagonal sine wave that lights the grid unevenly, so the choice
+of character AND the choice of highlight are two independent textures over
+the same lookup.
+
+Shown here via =#+attr_diff= as a changeset from the [[/shaders/letters/hello-world/][previous Hello, world!]]
+page. The fit-contain math is gone; grid indexing and a hash-based character
+choice per cell are in.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from hello-world-shader :label letters-tileset-shader :context 99
+#+NAME: letters-tileset-shader
+#+begin_shader
+// @tileset iTiles "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!,@#$%^&*()-+="
+uniform sampler2D iTiles;
+uniform vec2  iTilesGrid;    // (cols, rows) laid out in the atlas
+uniform float iTilesCount;   // number of cells actually filled
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // Partition the screen into fixed 40-pixel square cells. Row and column
+  // indices come from the integer part of fragCoord/CELL_PX; the local UV
+  // inside the cell is the fractional part.
+  const float CELL_PX = 40.0;
+  vec2 cell     = floor(fragCoord / CELL_PX);
+  vec2 uvInCell = fract(fragCoord / CELL_PX);
+
+  // Choice function: pick a character index per cell, on a *per-cell* random
+  // period so each cell ticks on its own clock — some flip several times a
+  // second, others hold for seconds at a time. Swap the hash for any
+  // (cell, time) function to get radiating rings, falling scrolls, waves…
+  float period = 0.15 + hash(cell + vec2(1.7)) * 2.5;
+  float phase  = hash(cell + vec2(4.3)) * period;
+  float stepT  = floor((iTime + phase) / period);
+  float idx    = floor(hash(cell + vec2(stepT * 0.317)) * iTilesCount);
+
+  // Decode idx → atlas (col, row), sample the atlas at cell-local UV.
+  // LINEAR filtering + SDF threshold keeps each glyph one-pixel sharp.
+  vec2 atlasCell = vec2(mod(idx, iTilesGrid.x), floor(idx / iTilesGrid.x));
+  vec2 atlasUV   = (atlasCell + uvInCell) / iTilesGrid;
+  float mask = texture2D(iTiles, atlasUV).a;
+  float aa    = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  // Highlight layer: a slow diagonal sine over the grid modulates the fill
+  // brightness. Independent of the choice function, composable on top.
+  float wave = 0.5 + 0.5 * sin(cell.x * 0.15 + cell.y * 0.08 - iTime * 1.5);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph) * (0.3 + 0.7 * wave);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
