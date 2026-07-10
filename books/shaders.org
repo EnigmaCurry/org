@@ -3217,3 +3217,90 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
   fragColor = vec4(col, 1.0);
 }
 #+end_shader
+
+** Marquee
+:PROPERTIES:
+:EXPORT_FILE_NAME: marquee
+:EXPORT_HUGO_SLUG: marquee
+:END:
+
+The [[/shaders/letters/tileset/][previous page]] treats a tileset as a lookup: partition the screen into
+cells, and let a hash of =(cell, time)= pick a character for each. The
+*choice function* is the whole show.
+
+Flip the axes. Instead of many tiny cells with per-cell choices, sample from
+a single *virtual cell that fills the frame* and drive the character choice
+from a scrolling *world x* — a linear coordinate that advances one integer
+per glyph. Now the whole screen shows one giant glyph, and the next slides
+in from the right as the coordinate crosses the next integer. A classic
+marquee, over the same atlas.
+
+The scan is a two-line change: =worldX = uv.x / FIT + pan=, =idx =
+floor(worldX) mod count=, cell-local UV = =(fract(worldX), y)=. Feed
+=@tileset= the marquee's own text ("Hello, World!") so the atlas *is* the
+string, one cell per character — including the space at position 6, whose
+empty cell reads on screen exactly as it should: a gap.
+
+For a seamless loop use the [[/shaders/whirlpool/looping-transport/][=@loop= directive]]. Over =LOOP = 13.0=
+seconds the pan advances =iTilesCount= character-widths — one full pass of
+the string — so the visible content at =t = LOOP= matches =t = 0= exactly,
+and the =mod= wrap closes the seam. The transport scrubber comes with it,
+so you can drop the camera anywhere in the sentence.
+
+Shown here via =#+attr_diff= as a changeset from the [[/shaders/letters/tileset/][previous Tileset]].
+The grid partition, per-cell periods, and hash-based choice function are
+gone; a single pan and a character-unit world x are in.
+
+#+attr_shortcode: :effect takeover :hidden true
+#+attr_diff: :from letters-tileset-shader :label letters-marquee-shader :context 99
+#+NAME: letters-marquee-shader
+#+begin_shader
+// @tileset iTiles "Hello, World!"
+// @loop 13.0
+uniform sampler2D iTiles;
+uniform vec2  iTilesGrid;    // (cols, rows) laid out in the atlas
+uniform float iTilesCount;   // number of cells actually filled
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+
+  // Character-unit world x: one integer per glyph. FIT sizes a single cell
+  // to 90% of the screen height, matching the single-glyph pages, so one
+  // giant character fills the frame and a slice of the next slides in from
+  // the right. Over one LOOP the pan advances iTilesCount character-widths
+  // — a full pass of the string — and `mod(idx, count)` closes the seam
+  // exactly, so t=0 and t=LOOP show identical frames.
+  const float FIT = 0.9;
+  float pan    = iTime / 13.0 * iTilesCount;
+  float worldX = uv.x / FIT + pan;
+
+  // Choice function: which character sits under this fragment. Wrap so the
+  // string tiles infinitely as the camera pans right — the '!' end butts
+  // straight up against the 'H' start, one continuous marquee ribbon.
+  float idx = mod(floor(worldX), iTilesCount);
+
+  // Cell-local UV inside the glyph's atlas cell — fract wraps the horizontal
+  // scan, aspect-corrected y maps directly with the same 90% fit
+  vec2 cellUV = vec2(fract(worldX), uv.y / FIT + 0.5);
+
+  // Decode idx → atlas (col, row), sample the atlas at cell-local UV. The
+  // atlas is uploaded with UNPACK_FLIP_Y_WEBGL=true so canvas row 0 (where
+  // 'H' was drawn) lives at the *top* of texture v, not the bottom — invert
+  // the row so ordered indices actually hit their glyphs. LINEAR filtering
+  // + SDF threshold keeps each glyph one-pixel sharp.
+  vec2 atlasCell = vec2(mod(idx, iTilesGrid.x),
+                        (iTilesGrid.y - 1.0) - floor(idx / iTilesGrid.x));
+  vec2 atlasUV   = (atlasCell + cellUV) / iTilesGrid;
+  float mask = 0.0;
+  if(cellUV.y >= 0.0 && cellUV.y <= 1.0){
+    mask = texture2D(iTiles, atlasUV).a;
+  }
+  float aa    = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+  fragColor = vec4(col, 1.0);
+}
+#+end_shader
