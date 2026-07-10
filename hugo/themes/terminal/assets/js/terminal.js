@@ -992,16 +992,25 @@ function wireDiffBoxes(root){
     const expand = box.querySelector(".expand");
     if(expand){
       // sheet content follows the visible pane: source view -> the evolved source,
-      // diff view -> the raw unified diff (the same text ox-hugo shipped).
+      // diff view -> the raw unified diff (the same text ox-hugo shipped). Inside
+      // the sheet, .code-sheet-toggle swaps the same two views; we route through
+      // the box's own toggle so the underlying diffbox state stays in lock-step.
       const rawCode = raw && (raw.querySelector('code[class*="language"]') || raw.querySelector("code"));
-      expand.addEventListener("click", ()=>{
+      const applySheet = ()=>{
         const inSource = box.dataset.view === "source";
-        const text = inSource
+        sheetBody.textContent = inSource
           ? (srcCode ? srcCode.textContent : "")
           : (rawCode ? rawCode.textContent : (raw ? raw.textContent : ""));
         sheetTitle.textContent = lt ? lt.textContent.trim() : "";
-        sheetBody.textContent = text;
+        if(sheetToggleBtn) sheetToggleBtn.textContent = inSource ? "Diff" : "Source";
+      };
+      expand.addEventListener("click", ()=>{
+        applySheet();
         sheetCopyBtn.hidden = false;
+        if(sheetToggleBtn){
+          sheetToggleBtn.hidden = !toggle;
+          sheetToggleBtn.onclick = toggle ? ()=>{ toggle.click(); applySheet(); } : null;
+        }
         openSheet();
       });
     }
@@ -1054,14 +1063,15 @@ const EXPAND_SVG = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" 
 // wireExpands) fill + open it. NB: the popstate guard checks history.state.codeSheet,
 // which is also how spa.js's router knows to leave a back-press to the sheet.
 let openSheet = ()=>{};
-let sheetBody = null, sheetTitle = null, sheetCopyBtn = null;
+let sheetBody = null, sheetTitle = null, sheetCopyBtn = null, sheetToggleBtn = null;
 (function(){
   const sheet = document.getElementById("code-sheet");
   if(!sheet || typeof sheet.showModal !== "function") return;
-  sheetBody    = sheet.querySelector(".code-sheet-body");
-  sheetTitle   = sheet.querySelector(".code-sheet-title");
+  sheetBody      = sheet.querySelector(".code-sheet-body");
+  sheetTitle     = sheet.querySelector(".code-sheet-title");
   const closeBtn = sheet.querySelector(".code-sheet-close");
-  sheetCopyBtn = sheet.querySelector(".code-sheet-copy");
+  sheetCopyBtn   = sheet.querySelector(".code-sheet-copy");
+  sheetToggleBtn = sheet.querySelector(".code-sheet-toggle");
   openSheet = function(){ history.pushState({ codeSheet:1 }, ""); sheet.showModal(); };
   window.addEventListener("popstate", ()=>{ if(sheet.open) sheet.close(); });
   sheet.addEventListener("close", ()=>{ if(history.state && history.state.codeSheet) history.back(); });
@@ -1110,6 +1120,7 @@ function wireExpands(root){
       sheetTitle.textContent = label ? label.textContent.trim() : "";
       sheetBody.textContent = pre.textContent;
       sheetCopyBtn.hidden = !copy;            // only run/env carry copy into the sheet
+      if(sheetToggleBtn){ sheetToggleBtn.hidden = true; sheetToggleBtn.onclick = null; }
       openSheet();
     });
     // when the full title would collide with the controls on the top line, drop
