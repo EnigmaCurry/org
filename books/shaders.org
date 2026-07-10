@@ -3241,6 +3241,13 @@ floor(worldX) mod count=, cell-local UV = =(fract(worldX), y)=. Feed
 string, one cell per character — including the space at position 6, whose
 empty cell reads on screen exactly as it should: a gap.
 
+Inconsolata's monospace side-bearings leave each glyph filling only the
+middle ~45% of its atlas cell, so at =STRIDE = 1.0= adjacent letters sit
+55% of a cell apart — too airy. Compress =STRIDE= to =0.5875= and crop
+the same amount off each atlas edge; because atlas-per-worldX stays 1:1,
+each glyph keeps its on-screen size — only the whitespace between letters
+shrinks, from 0.55 cells down to ~0.14.
+
 For a seamless loop use the [[/shaders/whirlpool/looping-transport/][=@loop= directive]]. Over =LOOP = 13.0=
 seconds the pan advances =iTilesCount= character-widths — one full pass of
 the string — so the visible content at =t = LOOP= matches =t = 0= exactly,
@@ -3266,24 +3273,39 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
   // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
   vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
 
-  // Character-unit world x: one integer per glyph. FIT sizes a single cell
+  // Character-unit world x: one STRIDE per glyph. FIT sizes a single cell
   // to 90% of the screen height, matching the single-glyph pages, so one
   // giant character fills the frame and a slice of the next slides in from
-  // the right. Over one LOOP the pan advances iTilesCount character-widths
-  // — a full pass of the string — and `mod(idx, count)` closes the seam
-  // exactly, so t=0 and t=LOOP show identical frames.
-  const float FIT = 0.9;
-  float pan    = iTime / 13.0 * iTilesCount;
+  // the right. Inconsolata monospace strokes only fill the middle ~45% of
+  // each atlas cell; the rest is side-bearing whitespace. Compress the
+  // cell period to STRIDE (< 1) and crop the same amount off each atlas
+  // edge — the on-screen glyph size is preserved (atlas-per-worldX stays
+  // 1:1) but the visible gap between adjacent letters shrinks by the same
+  // ratio. STRIDE=0.5875 tightens the original 0.55-unit gap to ~0.14.
+  const float FIT    = 0.9;
+  const float STRIDE = 0.5875;
+  const float CROP   = (1.0 - STRIDE) * 0.5;
+
+  // Pan advances STRIDE*iTilesCount world-x per LOOP so cellF = worldX/STRIDE
+  // advances iTilesCount — one full pass — and `mod(idx, count)` closes the
+  // seam exactly, so t=0 and t=LOOP show identical frames. The extra
+  // aspect-aware offset positions cellF=0 (the H's left cell boundary) at
+  // the *right edge* of the viewport at t=0, so the loop visibly begins
+  // with the H sliding in from the right — rather than mid-cross.
+  float aspect = iResolution.x / iResolution.y;
+  float pan    = iTime / 13.0 * iTilesCount * STRIDE - aspect * 0.5 / FIT;
   float worldX = uv.x / FIT + pan;
+  float cellF  = worldX / STRIDE;
 
   // Choice function: which character sits under this fragment. Wrap so the
   // string tiles infinitely as the camera pans right — the '!' end butts
   // straight up against the 'H' start, one continuous marquee ribbon.
-  float idx = mod(floor(worldX), iTilesCount);
+  float idx = mod(floor(cellF), iTilesCount);
 
-  // Cell-local UV inside the glyph's atlas cell — fract wraps the horizontal
-  // scan, aspect-corrected y maps directly with the same 90% fit
-  vec2 cellUV = vec2(fract(worldX), uv.y / FIT + 0.5);
+  // Cell-local UV inside the glyph's atlas cell. Horizontal fract remaps
+  // into [CROP, 1-CROP] so the whitespace side-bearings are skipped;
+  // aspect-corrected y maps directly with the same 90% fit.
+  vec2 cellUV = vec2(fract(cellF) * STRIDE + CROP, uv.y / FIT + 0.5);
 
   // Decode idx → atlas (col, row), sample the atlas at cell-local UV. The
   // atlas is uploaded with UNPACK_FLIP_Y_WEBGL=true so canvas row 0 (where
