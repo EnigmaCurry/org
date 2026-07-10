@@ -747,7 +747,7 @@ wirePagenav();
     const a = document.querySelector(".topnav " + sel);
     if(a && a.getAttribute("href") && a.getAttribute("aria-disabled") !== "true"){
       e.preventDefault();
-      location.href = a.href;
+      a.click();   // route through the SPA click handler so navigation is soft
     }
   });
 })();
