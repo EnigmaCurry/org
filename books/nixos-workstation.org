@@ -272,22 +272,29 @@ nix shell --extra-experimental-features "nix-command flakes" \
 It prompts for the hostname, your username, time zone, and the
 profiles to enable; seeds any SSH keys already authorized for you into
 =config.nix=; then writes =~/nixos= and runs =git init= plus =nix
-flake lock=. When it finishes it prints the exact apply command for
-your hostname.
+flake lock=. When it finishes it prints the exact =nixos-rebuild
+switch= command for your hostname -- run it as-is for this first
+apply. The =admin= helper isn't on =PATH= yet (it comes from the
+sway-home profile), so the initial bootstrap has to go through
+=nixos-rebuild= directly.
 
 Review =~/nixos/config.nix= first (add an SSH key if none was found,
-flip any profile toggles), then apply with =admin upgrade= -- this is
-the step that *replaces* the stock configuration:
+flip any profile toggles), then run the command the installer printed.
+It will look something like:
 
 #+begin_run
-admin upgrade
+sudo nixos-rebuild switch --flake ~/nixos#YOUR_HOSTNAME
 #+end_run
+
+That switch is the step that *replaces* the stock configuration. After
+it completes, =admin upgrade= becomes available and is what you'll use
+for every subsequent change.
 
 Your data is left alone -- partitions and home directories are
 untouched. From here your machine is a full sway-home host and the
 rest of this book applies unchanged: skip the [[/nixos-workstation/build-iso][Build a custom installer
 ISO]] section (that whole flow is specific to the custom ISO) and
-continue at [[/nixos-workstation/making-changes][Making changes going forward]].
+continue at [[/nixos-workstation/first-login][First login to sway-home]].
 
 *** Caveats specific to skipping the custom ISO
 
@@ -828,6 +835,37 @@ When it finishes, reboot. The machine comes up fully configured, and your
 config repo is already on disk at =~/nixos=, owned by your user.
 #+end_annotate
 
+* First login to sway-home
+:PROPERTIES:
+:EXPORT_FILE_NAME: first-login
+:EXPORT_HUGO_SLUG: first-login
+:EXPORT_HUGO_WEIGHT: 2500
+:END:
+
+Once sway-home is installed -- either via the custom ISO's =setup
+install= or via the =setup-host= adopt flow on a stock install --
+reboot the machine (or at minimum start a fresh login shell) so the
+sway-home shell environment loads. Then log in as the user you
+created.
+
+The first interactive shell under sway-home runs a one-time
+first-run prompt that sets up your git identity. It asks for:
+
+- =user.name= -- the name that will appear on your commits
+- =user.email= -- the email address for your commits
+- =init.defaultBranch= -- your preferred default branch name (e.g.
+  =main= or =master=)
+
+It shows the values back to you and asks for confirmation before
+writing them to =~/.config/git/config.local=. That file is
+gitignored by the sway-home shared config, so your identity stays
+local to this machine and never gets committed to the =~/nixos=
+repo.
+
+After you answer the prompt once it won't ask again on subsequent
+logins. If you need to change any of these later, edit
+=~/.config/git/config.local= directly.
+
 * Making changes going forward
 :PROPERTIES:
 :EXPORT_FILE_NAME: making-changes
@@ -835,9 +873,9 @@ config repo is already on disk at =~/nixos=, owned by your user.
 :EXPORT_HUGO_WEIGHT: 3000
 :END:
 
-Once the machine reboots, log in as your user. The installation is
-complete, but the more important habit starts now: your machine's
-entire configuration lives in its own git repo in your home directory.
+With the first-login prompt out of the way, the more important habit
+starts now: your machine's entire configuration lives in its own git
+repo in your home directory.
 
 #+begin_run
 cd ~/nixos
