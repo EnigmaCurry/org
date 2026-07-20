@@ -185,26 +185,146 @@ point. I review what goes in, the decisions and the setup described are
 genuinely mine and what I run, and the goal is simply that you can follow
 it and end up with a working machine.
 
-* Build a custom installer ISO
+* Decide how you want to install NixOS
 :PROPERTIES:
-:EXPORT_FILE_NAME: build-iso
-:EXPORT_HUGO_SLUG: build-iso
+:EXPORT_HUGO_SECTION_FRAG: install-choice
 :END:
 
-This book will take a slightly unconventional approach to installing
-NixOS. Instead of using the [[https://nixos.org/download/][official NixOS graphical installer ISO]], we
-will build our own custom ISO. While this will take a bit longer the
-first time you do it, it will greatly enhance your ability to
-reproduce your environment on any new hardware in the future.
+** Decide how you want to install NixOS
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 500
+:END:
 
+There are two supported paths to install NixOS documented in this
+book. Both end at the same place: a per-host =~/nixos= flake repo that
+depends on sway-home, which you can edit and then apply with =admin
+upgrade= from then on. Pick whichever installation method suits your
+hardware and taste.
+
+*** Use the official NixOS installer
+
+Install stock NixOS from the [[https://nixos.org/download/][official graphical installer ISO]], then
+run =setup-host --adopt= to build the =~/nixos= repo on top of the
+existing install. This is the easiest option when you already have a
+monitor and keyboard (or an IP KVM) attached to the target machine,
+and you do not need to build anything on another machine first. The
+graphical installer partitions the disk for you; the resulting layout
+is reused as-is, so there is no declarative =disko.nix= for the disks.
 #+begin_notice
-If you *do* want to use the official NixOS graphical installer instead,
-follow the [[https://github.com/EnigmaCurry/sway-home/blob/master/NIXOS.md][NIXOS.md guide]] from the [[https://github.com/EnigmaCurry/sway-home][sway-home]] repository,
-specifically the section titled /Option B/. You still end up with the
-same per-host =~/nixos= repo: after the graphical install you run the
-same =setup-host= tool (straight from GitHub) with its =--adopt= flag,
-which reuses the installer's existing partitioning instead of disko.
+The graphical installer only offers basic single-disk layouts. If you
+want anything more elaborate -- a btrfs RAID across multiple disks,
+LUKS on top of mdraid, LVM, or any other multi-device or nested setup
+-- use the custom installer ISO below, which lays the disk out with
+[[https://github.com/nix-community/disko][disko]] and drops the resulting =disko.nix= into your host repo where
+you can edit it to express those layouts declaratively.
 #+end_notice
+
+*** Build a custom installer ISO
+
+Build a *headless*, SSH-ready installer ISO with your public keys
+(and optionally your WiFi credentials) baked in, then boot the target
+machine from it and drive the whole install over SSH. The disk is
+partitioned declaratively with [[https://github.com/nix-community/disko][disko]], so the layout is captured
+in your host repo. This is the best option for headless machines, and
+for installing several boxes on the same network. It does require an
+existing machine with [[https://nixos.org/download/][Nix]] installed to build the ISO first (it
+does not have to be NixOS).
+
+** Use the official NixOS installer
+:PROPERTIES:
+:EXPORT_FILE_NAME: official-installer
+:EXPORT_HUGO_SLUG: official-installer
+:END:
+
+If you already have a monitor and keyboard (or an IP KVM) attached to
+the target machine, you can install stock NixOS with the upstream
+graphical installer and then convert the machine into a sway-home host
+after the fact. You do *not* need to build a custom ISO first.
+
+*** Install stock NixOS
+
+Follow the [[https://nixos.org/manual/nixos/stable/][official NixOS manual]] to install NixOS from the
+[[https://nixos.org/download/][official graphical installer ISO]]. During the install, select =No
+desktop= -- that setting is overridden by sway-home anyway.
+
+Reboot into the freshly installed system and log in as the user you
+created during the install.
+
+*** Convert the install into a sway-home host
+
+The [[https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/setup-host.bb][=setup-host= generator]] that the custom ISO uses can also be run
+straight from GitHub, on top of a stock install. With its =--adopt=
+flag it reuses the installer's existing partitioning and
+=/etc/nixos/hardware-configuration.nix= instead of generating a
+=disko.nix=.
+
+Run it as your *normal user* (not root):
+
+#+begin_run
+nix shell --extra-experimental-features "nix-command flakes" \
+  nixpkgs#babashka nixpkgs#git github:EnigmaCurry/script-wizard --command \
+  bb -e '(load-string (slurp "https://raw.githubusercontent.com/EnigmaCurry/sway-home/master/bin/setup-host.bb"))' \
+  -- --adopt
+#+end_run
+
+It prompts for the hostname, your username, time zone, and the
+profiles to enable; seeds any SSH keys already authorized for you into
+=config.nix=; then writes =~/nixos= and runs =git init= plus =nix
+flake lock=. When it finishes it prints the exact apply command for
+your hostname.
+
+Review =~/nixos/config.nix= first (add an SSH key if none was found,
+flip any profile toggles), then apply with =admin upgrade= -- this is
+the step that *replaces* the stock configuration:
+
+#+begin_run
+admin upgrade
+#+end_run
+
+Your data is left alone -- partitions and home directories are
+untouched. From here your machine is a full sway-home host and the
+rest of this book applies unchanged: skip the [[/nixos-workstation/build-iso][Build a custom installer
+ISO]] section (that whole flow is specific to the custom ISO) and
+continue at [[/nixos-workstation/making-changes][Making changes going forward]].
+
+*** Caveats specific to skipping the custom ISO
+
+- *UEFI + systemd-boot is assumed.* sway-home hard-codes
+  =boot.loader.systemd-boot.enable=, which matches the graphical
+  installer's default on UEFI machines. On a legacy BIOS / GRUB
+  machine the switch will fail -- add a =boot.loader.grub= block in
+  =config.nix= (with =lib.mkForce= to disable systemd-boot).
+- *Match the release.* sway-home pins =system.stateVersion= to a
+  specific release, so install the matching NixOS release (or override
+  =system.stateVersion= in =config.nix= to whatever you installed).
+- *Your install password persists.* The shared config keeps
+  =users.mutableUsers= at its default (=true=), so the password you
+  set during the graphical install carries over.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+sway-home disables SSH password authentication when you switch, so
+make sure at least one SSH public key is in =config.nix= before
+applying, or you may lock yourself out on a headless machine.
+#+end_notice
+
+Full details, including how to enable sshd on the stock install for a
+remote convert, and how to rotate host keys on a disk cloned from an
+image, are in the [[https://github.com/EnigmaCurry/sway-home/blob/master/NIXOS.md#option-b-use-the-official-nixos-installer][sway-home NIXOS.md]] under /Option B/.
+
+* Build a custom installer ISO
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: build-iso
+:END:
+
+** Build a custom installer ISO
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 1000
+:END:
 
 Let's build a customized, *headless* NixOS installer ISO that will
 bake in our personal SSH keys and our WiFi credentials, so that the
@@ -232,7 +352,7 @@ there:
 ./bin/nix_build_iso.bb
 #+end_run
 
-**** Answer the questions to customize the installer:
+*** Answer the questions to customize the installer:
 
 #+begin_annotate
 #+begin_src bash
@@ -318,7 +438,7 @@ cleartext. Do not publish your =.iso= file.
 After a review screen, the finished ISO is copied to your =~/Downloads=
 directory, named like =<hostname>-<username>-custom-<date>.iso=.
 
-**** Create bootable USB stick
+*** Create bootable USB stick
 
 Write the =.iso= file to a USB drive to boot in your target machine.
 You can use a user friendly image writer app like [[https://flathub.org/en/apps/org.fedoraproject.MediaWriter][Fedora Media Writer]],
@@ -329,14 +449,10 @@ venerable =dd=:
 sudo dd if=~/Downloads/name_of_your.iso of=/dev/name_of_your_usb bs=4M status=progress conv=fsync
 #+end_run
 
-* Install
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: install
-:END:
 ** Boot the installer and run setup
 :PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
+:EXPORT_FILE_NAME: boot-installer
+:EXPORT_HUGO_SLUG: boot-installer
 :END:
 
 With your custom ISO written to a USB stick, you are ready to install
@@ -729,13 +845,13 @@ cd ~/nixos
 
 It contains:
 
-| File          | What it is                                                          |
-|---------------+--------------------------------------------------------------------|
-| =flake.nix=   | Depends on =sway-home= (pinned) and calls =sway-home.lib.mkHost=.   |
-| =disko.nix=   | The declarative disk layout.                                        |
-| =hardware.nix= | Detected hardware (no filesystems; disko owns those).             |
-| =config.nix=  | Your host-specific overrides (locale, packages, services, SSH keys). |
-| =Justfile=    | Convenience recipes, run via the =admin= alias below.              |
+| File           | What it is                                                           |
+|----------------+----------------------------------------------------------------------|
+| =flake.nix=    | Depends on =sway-home= (pinned) and calls =sway-home.lib.mkHost=.    |
+| =disko.nix=    | The declarative disk layout.                                         |
+| =hardware.nix= | Detected hardware (no filesystems; disko owns those).                |
+| =config.nix=   | Your host-specific overrides (locale, packages, services, SSH keys). |
+| =Justfile=     | Convenience recipes, run via the =admin= alias below.                |
 
 ** Applying changes with =admin=
 
@@ -827,14 +943,14 @@ headless server is just a host with no profiles enabled.
 
 ** The available profiles
 
-| Profile     | What it enables                                                                                                                                                                                                                                          |
-|-------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| =dotfiles=  | Your shell/CLI home environment with *no* GUI: the =sway-home= bashrc, the =~/bin= scripts, the =~/.config= dotfiles, git config, emacs, the =vm= command's setup, and the command-line package toolbox (ripgrep, fzf, bat, just, babashka, docker, kubectl, and so on). This is what you want on a headless server that you still live in over SSH. |
-| =sway=      | The full [[https://swaywm.org/][Sway]] desktop: a Wayland login greeter, the Sway compositor, fonts, firefox, and the Wayland desktop package set (waybar, foot, rofi, grim, ...). Enabling =sway= *implies* =dotfiles=, so a desktop gets the shell environment too -- you don't need to tick both. |
-| =sound=     | PipeWire audio (ALSA + PulseAudio compatibility). Nothing else in sway-home enables sound, so a desktop that wants audio needs this.                                                                                                                       |
-| =podman=    | Podman containers (Docker-compatible), with container DNS.                                                                                                                                                                                                |
-| =flatpak=   | Flatpak with the Flathub remote pre-added, ready for =flatpak install flathub <app>=.                                                                                                                                                                     |
-| =libvirt=   | libvirt/KVM virtualization: virt-manager and the =vm= command (nixos-vm-template). It also adds your user to the =libvirtd= group.                                                                                                                         |
+| Profile    | What it enables                                                                                                                                                                                                                                                                                                                                      |
+|------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| =dotfiles= | Your shell/CLI home environment with *no* GUI: the =sway-home= bashrc, the =~/bin= scripts, the =~/.config= dotfiles, git config, emacs, the =vm= command's setup, and the command-line package toolbox (ripgrep, fzf, bat, just, babashka, docker, kubectl, and so on). This is what you want on a headless server that you still live in over SSH. |
+| =sway=     | The full [[https://swaywm.org/][Sway]] desktop: a Wayland login greeter, the Sway compositor, fonts, firefox, and the Wayland desktop package set (waybar, foot, rofi, grim, ...). Enabling =sway= *implies* =dotfiles=, so a desktop gets the shell environment too -- you don't need to tick both.                                                                          |
+| =sound=    | PipeWire audio (ALSA + PulseAudio compatibility). Nothing else in sway-home enables sound, so a desktop that wants audio needs this.                                                                                                                                                                                                                 |
+| =podman=   | Podman containers (Docker-compatible), with container DNS.                                                                                                                                                                                                                                                                                           |
+| =flatpak=  | Flatpak with the Flathub remote pre-added, ready for =flatpak install flathub <app>=.                                                                                                                                                                                                                                                                |
+| =libvirt=  | libvirt/KVM virtualization: virt-manager and the =vm= command (nixos-vm-template). It also adds your user to the =libvirtd= group.                                                                                                                                                                                                                   |
 
 Each profile is a module under =nixos/modules/profiles/= in sway-home. They
 are *always* imported but do nothing until their flag is set, so enabling one
