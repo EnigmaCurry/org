@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Configure d.rymcg.tech for the sentry · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/" aria-label="Previous: set-up-docker-context" title="prev: set-up-docker-context"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/configure-wireguard-tunnel/" aria-label="Next: configure-wireguard-tunnel" title="next: configure-wireguard-tunnel"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul><li class="lvl1"><a href="#">configure-d-rymcg-tech-for-sentry</a></li><li class="lvl2"><a href="#run-the-main-config">Run the main config</a></li><li class="lvl2"><a href="#install-traefik">Install Traefik</a></li><li class="lvl2"><a href="#install-traefik">Install Traefik</a></li><li class="lvl2"><a href="#install-whoami">Install whoami</a></li><li class="lvl2"><a href="#wait-a-few-minutes-for-the-tls-certificate-to-generate">Wait a few minutes for the TLS certificate to generate</a></li><li class="lvl2"><a href="#test-the-whoami-instance">Test the whoami instance</a></li><li class="lvl2"><a href="#next-steps">Next steps</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node open">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul class="sections"><li><a class="" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/">launch-digitalocean-droplet</a></li><li><a class="" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/">set-up-docker-context</a></li><li><a class="active" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/">configure-d-rymcg-tech-for-sentry</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/set-up-cloud-sentry/">/set-up-cloud-sentry</a><a class="pseg pcur" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/">/configure-d-rymcg-tech-for-sentry</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Configure d.rymcg.tech for the sentry</a></h1>
+
+
+<h2 id="run-the-main-config"><a class="heading-anchor" href="#run-the-main-config">Run the main config</a></h2>
+<p>The main config must be run for each new context you create:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+> This will make a configuration for the current docker context (sentry). Proceed? Yes
+
+ROOT_DOMAIN: Enter the root domain for this context (e.g., d.example.com)
+
+: sentry.example.com
+</pre></div>
+</div>
+
+<h2 id="install-traefik"><a class="heading-anchor" href="#install-traefik">Install Traefik</a></h2>
+<p>This is a very similar process as when you installed Traefik on the
+Raspberry Pi:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry make traefik config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+</pre></div>
+</div>
+
+<p>Create the traefik user:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+> Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+</pre></div>
+</div>
+
+<p>Configure TLS:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+</pre></div>
+</div>
+
+<p>Configure ACME:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+> Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+</pre></div>
+</div>
+
+<p>Choose Let&rsquo;s Encrypt:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Which ACME provider do you want to use?
+> Let's Encrypt (ACME)
+  Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+</pre></div>
+</div>
+
+<p>Choose the Production environment:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Which LE environment do you want to use?
+> Production (recommended!)
+  Staging (untrusted / testing)
+</pre></div>
+</div>
+
+<p>Choose the DNS-01 challenge type:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Which type of ACME challenge should be used?
+  TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+> DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+
+Find the provider code of your supported DNS provider here:
+https://go-acme.github.io/lego/dns/#dns-providers
+
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (e.g., digitalocean)
+
+: digitalocean
+</pre></div>
+</div>
+
+<p>Enter the variable <em>name</em> literal DO_AUTH_TOKEN:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (e.g., DO_AUTH_TOKEN)
+
+: DO_AUTH_TOKEN
+
+TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+
+:
+</pre></div>
+</div>
+
+<p>Enter a blank for the second var name, because there isn&rsquo;t one.</p>
+<p>Now enter the variable <em>value</em> for DO_AUTH_TOKEN (this should actually
+be the secret <a href="https://cloud.digitalocean.com/account/api/tokens/new">personal access token that you generate on DigitalOcean</a>):</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Now to enter the values for the custom DNS API variables:
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
+
+: dop_v1_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre></div>
+</div>
+
+<p>Create a new TLS certificate:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+> Configure TLS certificates (make certs)
+
+? Configure Traefik TLS certificates
+  Manage all certificates.
+> Create a new certificate.
+  Done / Go back
+
+Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
+
+: sentry.example.com
+
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+
+: *.sentry.example.com
+
+Enter a secondary domain (enter blank to skip)
+
+:
+
+Main domain:
+ sentry.example.com
+Secondary (SANS) domains:
+ *.sentry.example.com
+</pre></div>
+</div>
+
+<h2 id="install-traefik"><a class="heading-anchor" href="#install-traefik">Install Traefik</a></h2>
+<p>Press <code>ESC</code> three times to go back to the main menu.</p>
+<p>Install Traefik:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre></div>
+</div>
+
+<p>When done, press <code>ESC</code> to quit the Traefik config program.</p>
+<h2 id="install-whoami"><a class="heading-anchor" href="#install-whoami">Install whoami</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry make whoami config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+WHOAMI_TRAEFIK_HOST: Enter the whoami domain name (e.g., whoami.example.com)
+
+: whoami.sentry.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+> No
+  Yes, with HTTP Basic Authentication
+  Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+</pre></div>
+</div>
+
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry make whoami install
+</pre></div>
+</div>
+
+
+<div class="box notice notice-info"><div class="label">Whoami on the sentry</div>
+  <div class="body">
+<p>This instance of whoami runs on the droplet, and it is only to test
+the connectivity of the public droplet itself. We still have not yet
+exposed the whoami running on the Raspberry Pi publicly.</p>
+  </div>
+</div>
+<h2 id="wait-a-few-minutes-for-the-tls-certificate-to-generate"><a class="heading-anchor" href="#wait-a-few-minutes-for-the-tls-certificate-to-generate">Wait a few minutes for the TLS certificate to generate</a></h2>
+<h2 id="test-the-whoami-instance"><a class="heading-anchor" href="#test-the-whoami-instance">Test the whoami instance</a></h2>
+<p>You can open the page in <code>w3m</code>:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry make whoami open
+</pre></div>
+</div>
+
+
+<p>Or test it with curl:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+curl https://whoami.sentry.example.com
+</pre></div>
+</div>
+
+
+<p>Note that if the TLS certificate has not been issued yet, you will get
+this error from curl (and a similar error in <code>w3m</code>):</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+curl: (60) SSL certificate problem: self-signed certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+</pre></div>
+</div>
+
+<p>Simply wait a bit longer for the TLS cert to issue, or check the logs
+for errors (<code>d make traefik logs service=traefik</code>). You can also tell
+curl to ignore the error (<code>-k</code>):</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## This is insecure, but fine for testing:
+curl -k https://whoami.sentry.example.com
+</pre></div>
+</div>
+
+
+<p>A valid whoami response page looks like similar to this:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Name: default
+Hostname: 52a9750ecaa4
+IP: 127.0.0.1
+IP: ::1
+IP: 172.19.0.2
+RemoteAddr: 172.19.0.1:56082
+GET / HTTP/1.1
+Host: whoami.sentry.example.com
+User-Agent: curl/7.88.1
+Accept: */*
+Accept-Encoding: gzip
+X-Forwarded-For: X.X.X.X
+X-Forwarded-Host: whoami.sentry.example.com
+X-Forwarded-Port: 443
+X-Forwarded-Proto: https
+X-Forwarded-Server: sentry
+X-Real-Ip: X.X.X.X
+</pre></div>
+</div>
+
+<h2 id="next-steps"><a class="heading-anchor" href="#next-steps">Next steps</a></h2>
+<ul>
+<li>Configure the WireGuard VPN.</li>
+<li>Set up public SSH.</li>
+<li>Install core services.</li>
+<li>Install apps.</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

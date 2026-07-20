@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Launch DigitalOcean droplet · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/set-up-cloud-sentry/" aria-label="Previous: set-up-cloud-sentry" title="prev: set-up-cloud-sentry"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/" aria-label="Next: set-up-docker-context" title="next: set-up-docker-context"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul><li class="lvl1"><a href="#">launch-digitalocean-droplet</a></li><li class="lvl2"><a href="#set-up-your-ssh-key-on-digitalocean">Set up your SSH key on DigitalOcean</a></li><li class="lvl2"><a href="#create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</a></li><li class="lvl2"><a href="#create-the-digitalocean-droplet">Create the DigitalOcean droplet</a></li><li class="lvl2"><a href="#apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</a></li><li class="lvl2"><a href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node open">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul class="sections"><li><a class="active" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/">launch-digitalocean-droplet</a></li><li><a class="" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/">set-up-docker-context</a></li><li><a class="" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/">configure-d-rymcg-tech-for-sentry</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/set-up-cloud-sentry/">/set-up-cloud-sentry</a><a class="pseg pcur" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/">/launch-digitalocean-droplet</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Launch DigitalOcean droplet</a></h1>
+
+
+<h2 id="set-up-your-ssh-key-on-digitalocean"><a class="heading-anchor" href="#set-up-your-ssh-key-on-digitalocean">Set up your SSH key on DigitalOcean</a></h2>
+<div class="box notice notice-info"><div class="label">How to do this in the DigitalOcean cloud console</div>
+  <div class="body">
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Settings</code> in the menu.</li>
+<li>Click on the <code>Security</code> tab.</li>
+<li>Click on the <code>Add SSH Key</code> button.</li>
+<li>Paste the public SSH key of the <code>pi</code> user into the box. (copy the
+contents of <code>~/.ssh/id_ed25519.pub</code> from the Raspberry Pi.)</li>
+<li>Enter a key name e.g., <code>pi@pi.example.com</code>.</li>
+<li>Finish adding the key, click <code>Add SSH Key</code>.</li>
+</ul>
+  </div>
+</div>
+<h2 id="create-a-digitalocean-firewall-template"><a class="heading-anchor" href="#create-a-digitalocean-firewall-template">Create a DigitalOcean firewall template</a></h2>
+<div class="box notice notice-info"><div class="label">How to do this in the DigitalOcean cloud console</div>
+  <div class="body">
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Click the <code>Firewalls</code> tab.</li>
+<li>Click <code>Create Firewall</code>.</li>
+<li>Enter the name, e.g., <code>sentry.example.com</code>.</li>
+<li>Enter the following rules:
+<ul>
+<li>SSH:
+<ul>
+<li>Type: <code>SSH</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>22</code></li>
+<li>Sources: All IPv4, All IPv6, or a specific static IP address if
+you want to be more secure.</li>
+<li>Description: This is so you can access the SSH console of the
+public sentry.</li>
+</ul>
+</li>
+<li>HTTP:
+<ul>
+<li>Type: <code>HTTP</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>80</code></li>
+<li>Sources: All IPv4, All IPv6.</li>
+<li>Description: This is used solely to forward incoming HTTP
+connections to HTTPS.</li>
+</ul>
+</li>
+<li>HTTPS:
+<ul>
+<li>Type: <code>HTTPS</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>443</code></li>
+<li>Sources: All IPv4, All IPv6.</li>
+<li>Description: This allows incoming HTTPs connections.</li>
+</ul>
+</li>
+<li>WireGuard VPN:
+<ul>
+<li>Type: <code>Custom</code></li>
+<li>Protocol: <code>UDP</code></li>
+<li>Port Range: <code>51820</code></li>
+<li>Sources: All IPv4, All IPv6, unless you know the Pi will only
+connect from a set of specific IP addresses.</li>
+<li>Description: This allows incoming VPN connections from the Pi.</li>
+</ul>
+</li>
+<li>ICMP:
+<ul>
+<li>Type: ICMP</li>
+<li>Description: <em>Optional</em> - to allow ping response to the public sentry.</li>
+</ul>
+</li>
+<li>Public SSH to the Pi:
+<ul>
+<li>Type: <code>Custom</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>2220</code></li>
+<li>Sources: All IPv4, All IPv6, or a specific set of static IP
+addresses if you want to be more secure.</li>
+<li>Description: <em>Optional</em> - this is so you can access the SSH
+console of the Raspberry Pi through the public sentry.</li>
+</ul>
+</li>
+<li>Public SSH access for Forgejo (public git access):
+<ul>
+<li>Type: <code>Custom</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>2222</code></li>
+<li>Sources: All IPv4, All IPv6, or a specific set of static IP
+addresses if you want to be more secure.</li>
+<li>Description: <em>Optional</em> - this is so you can fetch and push to
+git repositories over SSH.</li>
+</ul>
+</li>
+<li>Public SFTP access:
+<ul>
+<li>Type: <code>Custom</code></li>
+<li>Protocol: <code>TCP</code></li>
+<li>Port Range: <code>2223</code></li>
+<li>Sources: All IPv4, All IPv6, or a specific set of static IP
+addresses if you want to be more secure.</li>
+<li>Description: <em>Optional</em> - this is so you can use <a href="/portable-docker/install-web-services/sftp/">SFTP</a>.</li>
+</ul>
+</li>
+<li>Click <code>Create Firewall</code>.</li>
+</ul>
+</li>
+</ul>
+  </div>
+</div>
+<h2 id="create-the-digitalocean-droplet"><a class="heading-anchor" href="#create-the-digitalocean-droplet">Create the DigitalOcean droplet</a></h2>
+<div class="box notice notice-info"><div class="label">How to do this in the DigitalOcean cloud console</div>
+  <div class="body">
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Droplets</code> in the menu.</li>
+<li>Click <code>Create Droplet</code>.</li>
+<li>Choose a Region (e.g., New York), where the droplet will be created.</li>
+<li>Underneath the heading <code>Choose an image</code>, choose <code>Debian</code> (select
+the latest version).</li>
+<li>Choose a droplet size. For a wireguard proxy by itself, 1GB should
+be fine. 2GB RAM and 50GB disk recommended for medium size
+production installs with some apps installed on the droplet itself.
+(It is also tested working on as little as 512MB ram,
+<a href="https://blog.rymcg.tech/blog/linux/zram/">if you enable zram</a>
+and/or create a 1GB swapfile. Do not abuse swap space like this in
+production! However I think its fine for development use, but you
+may occasionally run into low memory issues if less than 1GB.)</li>
+<li>Select the <code>pi</code> user&rsquo;s SSH key to access this droplet.</li>
+<li>Set the hostname for the Docker server. The name should be short
+and typeable, as it will become a part of the canononical service
+URLs. For this example, we choose <code>sentry</code>.</li>
+<li>Verify everything is correct, and then click <code>Create Dropet</code>.</li>
+</ul>
+  </div>
+</div>
+<h2 id="apply-the-digitalocean-droplet-firewall"><a class="heading-anchor" href="#apply-the-digitalocean-droplet-firewall">Apply the DigitalOcean droplet firewall</a></h2>
+<div class="box notice notice-info"><div class="label">How to do this in the DigitalOcean cloud console</div>
+  <div class="body">
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Find the firewall template you created, and click on it.</li>
+<li>Click on the firewall&rsquo;s <code>Droplets</code> tab.</li>
+<li>Click <code>Add Droplets</code> and search for the droplet you created and select it.</li>
+<li>Click <code>Add Droplet</code> to add the firewall to the droplet.</li>
+</ul>
+  </div>
+</div>
+<h2 id="create-wildcard-dns-records-for-the-droplet"><a class="heading-anchor" href="#create-wildcard-dns-records-for-the-droplet">Create wildcard DNS records for the droplet</a></h2>
+<div class="box notice notice-info"><div class="label">How to do this in the DigitalOcean cloud console</div>
+  <div class="body">
+<ul>
+<li>Login to the <a href="https://cloud.digitalocean.com/">DigitalOcean cloud console</a>.</li>
+<li>Click <code>Networking</code> in the menu.</li>
+<li>Click the <code>Domains</code> tab.</li>
+<li>Find the domain you created earlier, and click it.</li>
+<li>Create an <code>A</code> record for the sentry:
+<ul>
+<li>Hostname: enter the subdomain name without the domain part (e.g.,
+<code>sentry</code>, the name of your docker server, without the
+<code>.example.com</code> suffix).</li>
+<li>Will direct to: select the droplet you created from the list.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Create another <code>A</code> record, for the wildcard of the sentry:
+<ul>
+<li>Hostname: enter the same name as before but prepend <code>*.</code> in front
+of it (e.g., if the server is named <code>sentry</code>, create a record for
+<code>*.sentry</code>, without the <code>.example.com</code> suffix).</li>
+<li>Will direct to: select the same droplet as before.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Create another <code>A</code> record, for the Raspberry Pi:
+<ul>
+<li>Hostname: e.g., <code>pi.example.com</code>.</li>
+<li>Will direct to to: select the same droplet as before.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Create another <code>A</code> record, for the wildcard of the Raspberry Pi:
+<ul>
+<li>Hostname: e.g., <code>*.pi.example.com</code>.</li>
+<li>Will direct to to: select the same droplet as before.</li>
+<li>Click <code>Create Record</code>.</li>
+</ul>
+</li>
+<li>Create any more <code>A</code> records that you may need.</li>
+</ul>
+  </div>
+</div>
+<div class="box notice notice-secondary"><div class="label">Test DNS</div>
+  <div class="body">
+<p>Test that your wildcard record actually works. Use the <code>dig</code> command
+(For Debian/Ubuntu install the <code>dnsutils</code> package. For Arch Linux
+install <code>bind-tools</code>. For Fedora install <code>bind-utils</code>.)</p>
+<p>Pick some random subdomain off your domain:</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+dig laksdflkweieri.sentry.example.com
+</pre></div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+;; ANSWER SECTION:
+laksdflkweieri.sentry.example.com.    3600    IN      A       153.114.12.78
+</pre></div>
+</div>
+<p>Since you created the wildcard record for <code>*.sentry.example.com</code> dig
+should return your Docker server&rsquo;s IP address in the <code>ANSWER SECTION</code>
+of the output. You can test all your other records the same way.</p>
+<p>If you run into DNS caching problems, verify with the source DNS
+server directly:</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+dig @ns1.digitalocean.com laksdflkweieri.sentry.example.com
+</pre></div>
+</div>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

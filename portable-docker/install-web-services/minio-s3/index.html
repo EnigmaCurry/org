@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>MinIO S3 (and Filestash) · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/install-web-services/sftp/" aria-label="Previous: sftp" title="prev: sftp"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/install-web-services/homepage/" aria-label="Next: homepage" title="next: homepage"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/install-web-services/">install-web-services</a><ul><li class="lvl1"><a href="#">minio-s3</a></li><li class="lvl2"><a href="#configure-minio">Configure MinIO</a></li><li class="lvl2"><a href="#enable-admin-console--optional">Enable admin console (optional)</a></li><li class="lvl2"><a href="#install-minio">Install MinIO</a></li><li class="lvl2"><a href="#add-two-new-routes-on-the-sentry">Add two new routes on the sentry</a></li><li class="lvl2"><a href="#create-an-s3-bucket-and-credentials">Create an S3 bucket and credentials</a></li><li class="lvl2"><a href="#configure-filestash-instance">Configure Filestash instance</a></li><li class="lvl2"><a href="#install-the-filestash-instance">Install the Filestash instance</a></li><li class="lvl2"><a href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></li><li class="lvl2"><a href="#open-filestash">Open Filestash</a></li><li class="lvl2"><a href="#administer-filestash">Administer Filestash</a></li><li class="lvl2"><a href="#using-filestash">Using filestash</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node open">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a><ul class="sections"><li><a class="" href="/portable-docker/install-web-services/immich/">immich</a></li><li><a class="" href="/portable-docker/install-web-services/sftp/">sftp</a></li><li><a class="active" href="/portable-docker/install-web-services/minio-s3/">minio-s3</a></li><li><a class="" href="/portable-docker/install-web-services/homepage/">homepage</a></li><li><a class="" href="/portable-docker/install-web-services/yourls/">yourls</a></li><li><a class="" href="/portable-docker/install-web-services/nginx-and-php/">nginx-and-php</a></li><li><a class="" href="/portable-docker/install-web-services/jupyterlab/">jupyterlab</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/install-web-services/">/install-web-services</a><a class="pseg pcur" href="/portable-docker/install-web-services/minio-s3/">/minio-s3</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">MinIO S3 (and Filestash)</a></h1>
+
+
+<p><a href="https://en.wikipedia.org/wiki/Amazon_S3">S3</a> is a storage API first implemented at Amazon AWS, but has since
+been copied and re-implemented as open source <a href="https://github.com/minio/minio">MinIO</a>. MinIO is a
+service you can install to centrally store files in your network via
+the S3 API. With a web frontend like <a href="https://github.com/mickael-kerjean/filestash">Filestash</a>, you can host a file
+manager webapp for easy file sharing.</p>
+<figure><img src="/img/portable-docker/filestash-window.webp">
+</figure>
+
+<pre class="mermaid">
+sequenceDiagram
+    participant Browser as FileStash UI - Web Browser
+    participant FileStash as FileStash static server
+    participant Minio as Minio S3 - Object store
+
+Browser->>FileStash: HTTP request for static app page
+FileStash->>Browser: Response with static app page
+Browser->>Minio: Direct API request for object data
+Minio->>Browser: Direct response with object data
+</pre>
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>Running MinIO on a single Raspberry Pi is perfect for personal use.
+However, for heavier production use, you will need to plan to use
+beefier hardware with redundant storage.</p>
+  </div>
+</div>
+<h2 id="configure-minio"><a class="heading-anchor" href="#configure-minio">Configure MinIO</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make minio config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+MINIO_TRAEFIK_HOST: Enter the minio domain name (eg. s3.example.com)
+
+: s3.pi.example.com
+
+MINIO_CONSOLE_TRAEFIK_HOST: Enter the minio console domain name (eg. console.s3.example.com)
+
+: s3-console.pi.example.com
+
+MINIO_SITE_REGION: Enter the self-described region of the server (eg. default)
+
+: default
+
+MINIO_ROOT_USER: Enter the minio root username (eg. root)
+
+: root
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+> No
+  Yes, with Mutual TLS (mTLS)
+</pre></div>
+</div>
+
+<h2 id="enable-admin-console--optional"><a class="heading-anchor" href="#enable-admin-console--optional">Enable admin console (optional)</a></h2>
+<p>The admin console is optional and it is blocked by default. If you
+want to access the console, you must unblock it, by providing your
+client IP address:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Unblock the console for your specific IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=X.X.X.X/32
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>To allow any IP address access to the minio console use <code>0.0.0.0/0</code>:</p>
+<div class="box run">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## To unblock the console for any IP address:
+pi make minio reconfigure var=CONSOLE_SOURCERANGE=0.0.0.0/0
+</pre></div>
+</div>
+<p>Once installed, the console will be accessible at
+<code>https://s3-console.pi.example.com</code>. You will need to enter the
+username (<code>root</code>) and the password can be retrieved from the
+<code>.env_{CONTEXT}_{INSTANCE}</code> file:</p>
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## To retrieve the minio console root password:
+pi make minio dotenv_get var=MINIO_ROOT_PASSWORD
+</pre></div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+</pre></div>
+</div>
+  </div>
+</div>
+<h2 id="install-minio"><a class="heading-anchor" href="#install-minio">Install MinIO</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make minio install wait
+</pre></div>
+</div>
+
+
+<h2 id="add-two-new-routes-on-the-sentry"><a class="heading-anchor" href="#add-two-new-routes-on-the-sentry">Add two new routes on the sentry</a></h2>
+<p>Create a route for S3 and the console:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry route set --layer7 s3.pi.example.com 10.13.16.2 443 --proxy-protocol false --restart false
+sentry route set --layer7 s3-console.pi.example.com 10.13.16.2 443 --proxy-protocol false --restart true
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You may also create the route interactively through the <a href="/portable-docker/appendix/traefik-config-menu/#create-custom-routes">Traefik config
+menu</a>.</p>
+  </div>
+</div>
+<h2 id="create-an-s3-bucket-and-credentials"><a class="heading-anchor" href="#create-an-s3-bucket-and-credentials">Create an S3 bucket and credentials</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make minio bucket
+</pre></div>
+</div>
+
+
+<p>Create the bucket name: <code>demo</code> and then leave the policy, group, and
+username blank to use the same value:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Enter a new bucket name (test): demo
+Enter a new policy name (demo):
+Enter a new group name (demo):
+Enter a new user name (demo):
+</pre></div>
+</div>
+
+<p>This will create the bucket and the output the endpoint and access
+credentials, which is all of the information necessary to provide
+access:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Bucket: demo
+Endpoint: s3.pi.example.com
+Access Key: demo
+Secret Key: XxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXx
+</pre></div>
+</div>
+
+<h2 id="configure-filestash-instance"><a class="heading-anchor" href="#configure-filestash-instance">Configure Filestash instance</a></h2>
+<p>It is likely you will want several instances of filestash for
+different buckets, so you you should configure them separately as
+named instances:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Create an instance named test:
+
+pi make filestash config instance=test
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+FILESTASH_TRAEFIK_HOST: Enter the filestash domain name (eg. filestash.example.com)
+
+: filestash-test.pi.example.com
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+  No
+  Yes, with HTTP Basic Authentication
+> Yes, with Oauth2
+  Yes, with Mutual TLS (mTLS)
+</pre></div>
+</div>
+
+<div class="box notice notice-warning"><div class="label">Warning</div>
+  <div class="body">
+<p><strong>sentry authorization is a requirement</strong> as the S3 credentials are
+stored in the filestash client (i.e., web browser), therefore you
+should not allow anyone you do not trust with this information to
+access the page.</p>
+  </div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Which authorization group do you want to permit access to this app?
+> admin
+</pre></div>
+</div>
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>This will allow only the <code>admin</code> authorization group to access this
+instance.</p>
+<p>Remember, you can create <a href="/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization">extra authorization groups</a> in the Traefik
+config, that way you can have separate user access per instance.</p>
+  </div>
+</div>
+<h2 id="install-the-filestash-instance"><a class="heading-anchor" href="#install-the-filestash-instance">Install the Filestash instance</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Install the instance named test:
+
+pi make filestash install instance=test
+</pre></div>
+</div>
+
+
+<div class="box notice notice-primary"><div class="label">Info</div>
+  <div class="body">
+<p>The build process for filestash may take awhile, as it is built from
+source code. This is because the <a href="https://hub.docker.com/r/machines/filestash/">upstream images</a> were out of date for
+ARM64.</p>
+  </div>
+</div>
+<h2 id="add-a-new-route-on-the-sentry"><a class="heading-anchor" href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry route set --layer7 filestash-test.pi.example.com 10.13.16.2 443 --proxy-protocol true
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You may also create the route interactively through the <a href="/portable-docker/appendix/traefik-config-menu/#create-custom-routes">Traefik config
+menu</a>.</p>
+  </div>
+</div>
+<h2 id="open-filestash"><a class="heading-anchor" href="#open-filestash">Open Filestash</a></h2>
+<p>Open the URL in your browser: <code>https://filestash-test.pi.example.com</code>.</p>
+<ul>
+<li>The initial page will ask you to create an admin password.</li>
+</ul>
+<h2 id="administer-filestash"><a class="heading-anchor" href="#administer-filestash">Administer Filestash</a></h2>
+<p>The admin page is only accessible from
+<code>https://filestash-test.pi.example.com/admin/</code>, and it is here you
+must configure the storage backend.</p>
+<ul>
+<li>Click <code>Backend</code> in the menu.</li>
+<li>Remove every backend except for <code>S3</code>.</li>
+<li>Do not select any authentication middleware.</li>
+<li>Click the icon in the upper left to go to main page, or simply go
+to <code>https://filestash-test.pi.example.com/</code>.</li>
+</ul>
+<p>On the main page, enter the credentials for the S3 connection:</p>
+<ul>
+<li>Click <code>Advanced</code></li>
+<li>Enter the Access key ID</li>
+<li>Enter the Secret Access Key</li>
+<li>Enter the Endpoint</li>
+<li>Leave the other options blank.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-connect.webp">
+</figure>
+
+<ul>
+<li>Click <code>Connect</code>.</li>
+</ul>
+<p>Once logged in you should see a single folder with the same name as
+the bucket (<code>test</code>):</p>
+<figure><img src="/img/portable-docker/filestash-folder.webp">
+</figure>
+
+<ul>
+<li>Click the Share icon in the top right of the folder container.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-share-link.webp">
+</figure>
+
+<ul>
+<li>
+<p>Choose the appropriate permission for the person you are sharing
+with:</p>
+<ul>
+<li><code>Editor</code> has full access, download, upload, view, and delete.</li>
+<li><code>Viewer</code> is read only.</li>
+<li><code>Uploader</code> is write only (they won&rsquo;t be able to see any files,
+not even the ones they upload.)</li>
+</ul>
+</li>
+<li>
+<p>Under <code>Advanced</code> settings, you may optionally set an expiration for
+the link, or customize the link URL.</p>
+</li>
+<li>
+<p>Do not set a password, as you can rely upon the sentry
+authorization instead.</p>
+</li>
+<li>
+<p>Copy the link, and share this link with your friends!</p>
+</li>
+<li>
+<p>Try the link yourself in an Incognito browser window so that you
+test it with no existing cookies. It should force you to login
+through Forgejo first, and then once on the filestash page, test
+the permissions you set are working.</p>
+</li>
+</ul>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Because you enabled sentry authorization for this route, your friends
+will also need to create Forgejo accounts, and you will need to add
+them to the <a href="/portable-docker/install-core-services/traefik-forward-auth/#add-user-groups-for-sentry-authorization">sentry authorization group</a> in the Traefik config.</p>
+  </div>
+</div>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Create an admin link for yourself, so that you don&rsquo;t need to enter the
+S3 credentials again, and you can create new share links too:</p>
+<ul>
+<li>Create a new share link like before.</li>
+<li>Choose <code>Editor</code> privilege.</li>
+<li>Click <code>Advanced</code>.</li>
+<li>Click <code>Can Reshare</code>.</li>
+</ul>
+<figure><img src="/img/portable-docker/filestash-share-admin.webp">
+</figure>
+  </div>
+</div>
+<h2 id="using-filestash"><a class="heading-anchor" href="#using-filestash">Using filestash</a></h2>
+<ul>
+<li>
+<p>You can upload multiple files at a time by draging and dropping
+them directly from your computer&rsquo;s file manager into the browser
+window (FYI the dropzone is only near the top of the page).</p>
+</li>
+<li>
+<p>Many media types are supported with rich viewers, including images,
+audio, and video.</p>
+</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  
+  mermaid.initialize({ startOnLoad: false });
+  mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+</script>
+
+
+</body>
+</html>

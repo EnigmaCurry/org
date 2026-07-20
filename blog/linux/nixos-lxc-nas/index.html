@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" aria-disabled="true" aria-label="No previous page"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/migration-announcement/" aria-label="Next: migration-announcement" title="next: migration-announcement"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">nixos-lxc-nas</a></li><li class="lvl2"><a href="#why-a-container-instead-of-a-vm">Why a container instead of a VM?</a></li><li class="lvl2"><a href="#how-the-backend-works">How the backend works</a></li><li class="lvl2"><a href="#set-up-the-connection">Set up the connection</a></li><li class="lvl2"><a href="#build-and-create-the-nas">Build and create the NAS</a></li><li class="lvl2"><a href="#one-dataset-three-protocols">One dataset, three protocols</a></li><li class="lvl2"><a href="#access-control">Access control</a></li><li class="lvl2"><a href="#applying-changes-without-recreating">Applying changes without recreating</a></li><li class="lvl2"><a href="#the-web-ui-and-webdav">The web UI and WebDAV</a></li><li class="lvl2"><a href="#browsing-without-an-ip">Browsing without an IP</a></li><li class="lvl2"><a href="#stateless-recreate-instead-of-upgrade">Stateless: recreate instead of upgrade</a></li><li class="lvl2"><a href="#putting-it-together">Putting it together</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="active" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/nixos-lxc-nas/">/nixos-lxc-nas</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-06-26">2026-06-26</time></span>
+  <span>updated <time datetime="2026-06-26">2026-06-26</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/nixos/">nixos</a>
+      <a href="/tags/proxmox/">proxmox</a>
+      <a href="/tags/lxc/">lxc</a>
+      <a href="/tags/zfs/">zfs</a>
+      <a href="/tags/nas/">nas</a>
+      <a href="/tags/samba/">samba</a>
+      <a href="/tags/nfs/">nfs</a>
+      <a href="/tags/nixos-vm-template/">nixos-vm-template</a>
+  </span>
+</div>
+
+<p><em>This is part 5 of a series on <a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>:</em></p>
+<ol>
+<li><em><a href="/blog/linux/code-agent-vm/">Running code agents in an immutable NixOS VM</a></em></li>
+<li><em><a href="/blog/linux/nixos-proxmox-vm/">Bootstrapping a Docker server with immutable NixOS on Proxmox</a></em></li>
+<li><em><a href="/blog/linux/mutable-vms/">Mutable VMs are cool too</a></em></li>
+<li><em><a href="/blog/linux/nixos-vm-home-manager/">Managing VMs with home-manager and sway-home</a></em></li>
+<li><em>A NixOS NAS in a Proxmox LXC container (this post)</em></li>
+</ol>
+<hr>
+<p>Every post in this series so far has been about <em>virtual machines</em> -
+libvirt on a laptop, KVM on Proxmox, immutable or mutable, but always a
+full guest with its own kernel. This post is about the thing a VM
+fundamentally <em>can&rsquo;t</em> do well, and the new backend
+<a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>
+grew to do it: run NixOS in a <strong>Proxmox LXC container</strong> so it can
+bind-mount a host ZFS dataset directly, and serve it as a NAS over NFS,
+Samba, and a web UI - all from one declarative profile.</p>
+<p>You could just as easily read this as a continuation of the older
+<a href="/tags/proxmox/">Proxmox series</a>, picking up from
+<a href="/blog/proxmox/08-truenas/">part 8: TrueNAS Core</a>. Running TrueNAS as a
+VM on top of Proxmox was an interesting design, but it had a fundamental
+awkwardness: the storage lived <em>inside</em> the TrueNAS guest, so if you
+wanted to use that storage for your <em>other</em> Proxmox VMs, you had to
+funnel the disks back out over NFS - Proxmox mounting a network share
+that was served by a VM running on Proxmox itself. A storage round-trip
+through a guest, just to get back to disks the host already had.</p>
+<p>The LXC NAS turns that inside out. Proxmox keeps its <strong>native ZFS pool</strong>
+and uses it directly for VM disks - no NFS round-trip, no TrueNAS in the
+middle. The container doesn&rsquo;t <em>own</em> the storage; it just bind-mounts
+whichever datasets you want to <em>share</em> and serves them over kernel NFS,
+Samba, or copyparty. The pool is the host&rsquo;s; the container is only the
+file server sitting in front of it.</p>
+<h2 id="why-a-container-instead-of-a-vm"><a class="heading-anchor" href="#why-a-container-instead-of-a-vm">Why a container instead of a VM?</a></h2>
+<p>A KVM virtual machine cannot bind-mount a host directory. It can only
+<em>share</em> one over a network protocol or hand it a virtual disk. If you
+want a VM to serve files that live on the host&rsquo;s ZFS pool, you&rsquo;re stuck
+re-exporting them over virtiofs or 9p and hoping the semantics line up.</p>
+<p>A Proxmox <strong>LXC container</strong> can do the real thing:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pct set &lt;vmid&gt; -mp0 /tank/nas,mp<span style="color:#f92672">=</span>/srv/nas
+</span></span></code></pre></div><p>That&rsquo;s a first-class host bind mount. The dataset appears <em>inside</em> the
+container as a real <code>zfs</code> mount - same xattrs, same ZFS semantics, no
+translation layer. That makes LXC the natural home for a NAS that serves
+host-native ZFS, which is exactly what the new <code>proxmox-lxc</code> backend and
+its <code>nas</code> profile are built around.</p>
+<p>The tradeoff is that a container shares the host kernel, so this backend
+is <strong>mutable-only</strong>: no bootloader and no read-only root, so the
+immutable and semi-mutable modes from the earlier posts don&rsquo;t apply. But
+don&rsquo;t read &ldquo;mutable&rdquo; as &ldquo;manage it from the inside.&rdquo; The container
+carries no durable state of its own - all of its configuration is
+injected from your workstation when it&rsquo;s built, and all of its <em>data</em>
+lives on the host ZFS dataset that&rsquo;s bind-mounted in. So the right mental
+model isn&rsquo;t the in-container <code>nixos-rebuild</code> workflow from the mutable
+VMs in <a href="/blog/linux/mutable-vms/">part 3</a>; it&rsquo;s <em>stateless</em>. To change
+the system you edit your config on the workstation and <code>just recreate</code> -
+blow the container away and build a fresh one. The bind-mounted dataset
+isn&rsquo;t part of the container, so your files are untouched. That&rsquo;s the
+payoff for giving up the read-only root: host bind mounts, which no KVM
+backend can offer.</p>
+<h2 id="how-the-backend-works"><a class="heading-anchor" href="#how-the-backend-works">How the backend works</a></h2>
+<p>Same shape as the Proxmox KVM backend from
+<a href="/blog/linux/nixos-proxmox-vm/">part 2</a>: build locally, ship over SSH, no
+API tokens or web-UI clicking. The difference is what gets built and how
+it lands:</p>
+<ol>
+<li><strong>Build</strong>: Nix builds a NixOS <strong>rootfs tarball</strong> (<code>vm.container = true</code>) - no bootloader, no virtio disks.</li>
+<li><strong>Transfer</strong>: <code>rsync</code> sends the tarball to the PVE node.</li>
+<li><strong>Create</strong>: <code>pct create … --ostype unmanaged --rootfs &lt;storage&gt;:&lt;size&gt;</code>
+with a per-machine <strong>pinned MAC</strong>.</li>
+<li><strong>Bind mounts</strong>: each configured host dataset is attached with <code>pct set -mpN &lt;hostpath&gt;,mp=&lt;ctpath&gt;</code> - and the dataset is <em>created on the
+host if it doesn&rsquo;t exist yet</em>.</li>
+<li><strong>Inject identity</strong>: the stopped rootfs is opened with <code>pct mount</code> and
+the hostname, machine-id, SSH keys, firewall ports, and an
+<code>/etc/nixos</code> flake are rsynced into <code>/etc</code>.</li>
+<li><strong>Start</strong>: <code>pct start</code>. The IP comes from <code>lxc-info -iH</code> (no guest
+agent needed).</li>
+</ol>
+<h2 id="set-up-the-connection"><a class="heading-anchor" href="#set-up-the-connection">Set up the connection</a></h2>
+<p>Like the KVM Proxmox backend, all you need is SSH access to your PVE node
+configured in <code>~/.ssh/config</code>. Create a <code>.env</code> in the project root and
+set the backend:</p>
+<div class="box notice env">
+    <div class="label">[bash]: Set env vars</div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+BACKEND=proxmox-lxc
+PVE_HOST=pve
+PVE_STORAGE=local-zfs
+PVE_BRIDGE=vmbr0
+PVE_BACKUP_STORAGE=local
+</pre></div>
+</div>
+
+<p>One gotcha worth calling out, because it&rsquo;s the most common first-run
+mistake: <code>PVE_STORAGE</code> is a Proxmox <strong>storage name</strong> (a <code>zfspool</code> or
+<code>dir</code> storage, like <code>local-zfs</code>), <em>not</em> a bare ZFS pool path. A pool
+named <code>rust</code> only works if a storage of that name exists - check with
+<code>ssh pve pvesm status</code>.</p>
+<p>Test the connection:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just test-connection
+</pre></div>
+</div>
+
+
+<h2 id="build-and-create-the-nas"><a class="heading-anchor" href="#build-and-create-the-nas">Build and create the NAS</a></h2>
+<p>The <code>nas</code> profile is <strong>LXC-only</strong> - it asserts <code>vm.container</code>, so trying
+to build it on a KVM backend fails with a friendly message. Build the
+rootfs tarball for it, then create the container:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just build nas
+just create mynas
+</pre></div>
+</div>
+
+
+<p>The wizard opens with a profile picker. On the <code>proxmox-lxc</code> backend the
+LXC-only <code>nas</code> profile shows up in the list (while the kernel-bound
+<code>nvidia</code>, <code>pipewire</code>, and <code>zram</code> profiles are hidden) - check it and
+continue:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Select profile(s) to include:
+
+  [ ] claude
+  [ ] dev
+  [ ] docker
+  [ ] kubernetes
+> [x] nas
+  [ ] podman
+  [ ] python
+  [ ] rust
+  [ ] step-ca
+
+Selected profile(s): nas
+Privileged: yes (required by the nas profile for kernel NFS)
+</pre></div>
+</div>
+
+<p>From there it prompts for the usual resources (cores, memory, rootfs
+size), plus the two things specific to this backend:</p>
+<ul>
+<li><strong>Privileged</strong>: the <code>nas</code> profile forces this to <code>yes</code> automatically.
+Kernel <code>nfsd</code> does not work in an unprivileged container, so the
+backend runs it privileged and appends <code>lxc.apparmor.profile: unconfined</code> to the container config.</li>
+<li><strong>Host ZFS bind mounts</strong>: the wizard introspects the pools and datasets
+on your PVE node and lets you pick an existing dataset or create a new
+one. The <code>nas</code> profile offers a default <code>rust/nas:/srv/nas</code> mount. Each
+selected dataset gets mounted at <code>/srv/&lt;leaf&gt;</code> inside the container.</li>
+</ul>
+<p>When it finishes, SSH in:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just ssh mynas
+</pre></div>
+</div>
+
+
+<h2 id="one-dataset-three-protocols"><a class="heading-anchor" href="#one-dataset-three-protocols">One dataset, three protocols</a></h2>
+<p>Here&rsquo;s the part that makes the <code>nas</code> profile more than a thin wrapper
+around <code>exportfs</code>. Every dataset bind-mounted under <code>/srv/&lt;name&gt;</code> becomes
+<strong>one share named <code>&lt;name&gt;</code>, served simultaneously over three protocols</strong>:</p>
+<ul>
+<li><strong>NFS</strong> - kernel <code>nfsd</code>, NFSv4-only (everything over <code>2049/tcp</code>).</li>
+<li><strong>Samba</strong> - SMB for Windows/macOS/Linux file managers.</li>
+<li><strong>copyparty</strong> - a web UI <em>and</em> WebDAV server on port 3923.</li>
+</ul>
+<p>You don&rsquo;t configure these three times. A boot service (<code>nas-shares</code>)
+discovers the <code>/srv/*</code> mountpoints at runtime and generates the NFS
+exports, the Samba share stanzas, and the copyparty config from the same
+source of truth. Add another dataset and you automatically get another
+share on all three protocols. The reason it&rsquo;s a boot-time service rather
+than baked into the image: the set of datasets isn&rsquo;t known when the image
+is built (the backend mounts them later), so the image stays generic and
+the container figures out what it&rsquo;s serving on the way up.</p>
+<h2 id="access-control"><a class="heading-anchor" href="#access-control">Access control</a></h2>
+<p>There are two access-control surfaces because the protocols authenticate
+differently, and both are driven by plain text files in the machine
+config (<code>machines/proxmox-lxc/&lt;host&gt;/&lt;name&gt;/</code>). The create wizard seeds
+commented templates for all of them.</p>
+<p><strong>Samba and copyparty</strong> share one user database and one ACL:</p>
+<p><code>nas_passwd</code> (mode 0600) lists the users, one <code>&lt;user&gt; &lt;password&gt;</code> per
+line:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># user   password
+</span></span><span style="display:flex;"><span>alice    s3cret
+</span></span><span style="display:flex;"><span>bob      hunter2
+</span></span></code></pre></div><p><code>nas_acl</code> (no secrets) grants access, one <code>&lt;user&gt; &lt;share&gt; &lt;access&gt;</code> per
+line, where access is <code>r</code> (read-only) or <code>rw</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># user   share   access
+</span></span><span style="display:flex;"><span>alice    *       rw     # alice: read-write on EVERY share
+</span></span><span style="display:flex;"><span>bob      nas     r      # bob: read-only on share &#39;nas&#39;
+</span></span><span style="display:flex;"><span>*        media   r      # guest (anonymous): read-only on &#39;media&#39;
+</span></span></code></pre></div><p>The model is <strong>deny-by-default, unconditionally</strong>: a user or guest gets
+<em>only</em> what an explicit rule grants. No rule means no access - there is
+no &ldquo;open when unconfigured&rdquo; fallback. <code>r</code> maps to Samba read-only /
+copyparty <code>r</code>; <code>rw</code> maps to the Samba write list / copyparty <code>rwmd</code>
+(read + write + move + delete). Samba even uses <em>access-based share
+enumeration</em>, so users don&rsquo;t even see the names of shares they can&rsquo;t
+reach.</p>
+<p><strong>NFS</strong> is separate, because NFS (<code>sec=sys</code>) has no per-user
+authentication - the client just asserts its own uid. So NFS access is
+<strong>host-based</strong> and also deny-by-default, in <code>nfs_clients</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>10.13.0.0/16       # a LAN subnet, read-write
+</span></span><span style="display:flex;"><span>192.168.1.50 ro    # a single host, read-only
+</span></span></code></pre></div><p>With no entries, NFS exports nothing to anyone (Samba and copyparty are
+unaffected). A fresh <code>nas</code> ships with an all-commented template, so NFS
+is off until you add a CIDR.</p>
+<p>The thing that ties all of this together is a single shared owner. Every
+NFS client uid (via <code>all_squash</code>), every Samba user (via <code>force user</code>),
+and copyparty all map to one unprivileged <code>nas</code> user (uid/gid 1500), and
+the share directories are <code>nas:nas</code> mode <code>2775</code>. So anyone who&rsquo;s
+authorized can read and write every file regardless of their own uid, and
+file ownership never causes a surprise permission error. It&rsquo;s flat,
+shared, trusted-LAN semantics - which is what most homelab NAS setups
+actually want.</p>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p><strong>A note on security.</strong> <code>nas_passwd</code> holds <em>plaintext</em> passwords (mode 0600)
+both on your workstation and inside the container. Samba and copyparty
+access is gated per-user, NFS is gated per-host, and everything runs as
+the unprivileged <code>nas</code> user. This is fine for a trusted home network. It
+is <em>not</em> a design for untrusted multi-tenant use.</p>
+  </div>
+</div>
+<h2 id="applying-changes-without-recreating"><a class="heading-anchor" href="#applying-changes-without-recreating">Applying changes without recreating</a></h2>
+<p>You don&rsquo;t have to rebuild the container to change users, ACLs, or NFS
+clients. Edit the files in <code>machines/proxmox-lxc/&lt;host&gt;/&lt;name&gt;/</code> and sync:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just sync-identity mynas
+</pre></div>
+</div>
+
+
+<p>That re-injects the files and reloads the services in place. The same
+goes for the firewall: the <code>nas</code> profile seeds its ports into the
+machine&rsquo;s <code>tcp_ports</code>/<code>udp_ports</code> at create time - SMB <code>445</code>, NFSv4
+<code>2049</code>, copyparty <code>3923</code>, WS-Discovery <code>5357</code> (tcp); mDNS <code>5353</code>,
+WS-Discovery <code>3702</code> (udp). Those files are the single source of truth for
+<em>both</em> the in-container NixOS firewall and the Proxmox CT firewall. They
+are written once, visible, and editable, so you can delete any port you
+don&rsquo;t want exposed and <code>just sync-identity</code> to apply.</p>
+<h2 id="the-web-ui-and-webdav"><a class="heading-anchor" href="#the-web-ui-and-webdav">The web UI and WebDAV</a></h2>
+<p><a href="https://github.com/9001/copyparty">copyparty</a> gives the NAS a browser
+front end and a WebDAV endpoint on port 3923, using the <em>same</em> users and
+permissions as Samba:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>http://&lt;ip&gt;:3923/             # web UI - log in as a nas_passwd user
+</span></span><span style="display:flex;"><span>http://&lt;ip&gt;:3923/&lt;share&gt;      # a share; this is also its WebDAV URL
+</span></span></code></pre></div><p>Uploads land as the <code>nas</code> user like everything else, so a file dropped in
+through the browser is readable over NFS and Samba immediately, with no
+ownership fixups.</p>
+<h2 id="browsing-without-an-ip"><a class="heading-anchor" href="#browsing-without-an-ip">Browsing without an IP</a></h2>
+<p>You shouldn&rsquo;t have to memorize the container&rsquo;s DHCP lease. The <code>nas</code>
+profile advertises itself two ways:</p>
+<ul>
+<li><strong>WS-Discovery</strong> (<code>wsdd</code>) - shows up under &ldquo;Network&rdquo; in Windows
+Explorer and in modern Linux file managers.</li>
+<li><strong>mDNS</strong> (<code>avahi</code>) - gives you <code>&lt;hostname&gt;.local</code> resolution and shows
+up in macOS Finder.</li>
+</ul>
+<p>Legacy NetBIOS (<code>nmbd</code>) is disabled, because modern SMB2/3 clients ignore
+it anyway. Both WSD and mDNS are link-local multicast, so the client has
+to be on the same LAN segment. Test by name:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ping nas.local
+smbclient -L nas.local -N        # list shares by name, no IP
+</pre></div>
+</div>
+
+
+<h2 id="stateless-recreate-instead-of-upgrade"><a class="heading-anchor" href="#stateless-recreate-instead-of-upgrade">Stateless: recreate instead of upgrade</a></h2>
+<p>There&rsquo;s no <code>just upgrade</code> for this backend - it&rsquo;s intentionally disabled.
+The container is disposable, so &ldquo;upgrading&rdquo; it means rebuilding it from
+your workstation:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just recreate mynas
+</pre></div>
+</div>
+
+
+<p>That builds a fresh rootfs from your current Nix config and re-injects
+the identity files - effectively a brand new container. It&rsquo;s safe to run
+anytime, because the bind-mounted datasets are <strong>created if missing but
+never destroyed on teardown</strong> - the data lives on the host&rsquo;s ZFS pool,
+not in the container, and outlives any number of recreates. Nothing on
+the NAS itself is precious; the pool is.</p>
+<p>That&rsquo;s also why the <code>just sync-identity</code> from earlier exists: for the
+config that <em>isn&rsquo;t</em> baked into the image (users, ACLs, NFS clients,
+firewall ports) you don&rsquo;t even need to rebuild - sync re-injects those
+files and reloads the services in place.</p>
+<p>The rootfs is read-write, so you <em>can</em> <code>ssh</code> in and run <code>sudo nixos-rebuild switch</code> against the seeded <code>/etc/nixos</code> flake for a quick
+experiment. But treat anything you change by hand that way as scratch: it
+isn&rsquo;t captured on your workstation and won&rsquo;t survive the next <code>recreate</code>.
+The source of truth is your config repo, not the running container.</p>
+<h2 id="putting-it-together"><a class="heading-anchor" href="#putting-it-together">Putting it together</a></h2>
+<p>From zero to a running NAS serving a host ZFS dataset over NFS, Samba, and
+the web:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# One-time setup on your workstation:
+git clone https://github.com/EnigmaCurry/nixos-vm-template ~/nixos-vm-template
+cd ~/nixos-vm-template
+
+cat &gt; .env &lt;&lt;&#39;EOF&#39;
+BACKEND=proxmox-lxc
+PVE_HOST=pve
+PVE_STORAGE=local-zfs
+PVE_BRIDGE=vmbr0
+EOF
+
+just test-connection
+
+# Build the nas rootfs and create the container
+just build nas
+just create mynas
+# wizard: nas profile, accept the rust/nas:/srv/nas mount, privileged (auto)
+
+# Add a user and grant them access, then apply
+$EDITOR machines/proxmox-lxc/pve/mynas/nas_passwd   # alice s3cret
+$EDITOR machines/proxmox-lxc/pve/mynas/nas_acl      # alice * rw
+$EDITOR machines/proxmox-lxc/pve/mynas/nfs_clients  # 10.13.0.0/16
+just sync-identity mynas
+
+# Mount it from a client
+mount &lt;ip&gt;:/srv/nas /mnt          # NFS
+smbclient -L nas.local -N         # SMB
+# or open http://&lt;ip&gt;:3923/ in a browser
+</pre></div>
+</div>
+
+
+<p>A KVM VM could never bind-mount that ZFS dataset; a container can, and the
+<code>nas</code> profile turns it into a real NAS - three protocols, one set of
+users, deny-by-default, declared in Nix and reproducible from your git
+repository. The whole thing is the natural payoff of the container
+backend: the one place where giving up the immutable root buys you
+something a VM simply can&rsquo;t do.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

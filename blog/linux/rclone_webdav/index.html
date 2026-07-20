@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>WebDAV with Rclone and mTLS · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/code-agent-vm/" aria-label="Previous: code-agent-vm" title="prev: code-agent-vm"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/ssh-remote-xdg-open/" aria-label="Next: ssh-remote-xdg-open" title="next: ssh-remote-xdg-open"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">rclone_webdav</a></li><li class="lvl2"><a href="#provision-your-webdav-server">Provision your WebDAV server</a></li><li class="lvl2"><a href="#mutual-tls-optional">Mutual TLS (optional)</a></li><li class="lvl2"><a href="#example">Example</a></li><li class="lvl2"><a href="#download-the-script">Download the script</a></li><li class="lvl2"><a href="#configuration">Configuration</a></li><li class="lvl2"><a href="#install-service">Install service</a></li><li class="lvl2"><a href="#check-service-status">Check service status</a></li><li class="lvl2"><a href="#check-logs-for-debugging-purposes">Check logs for debugging purposes</a></li><li class="lvl2"><a href="#uninstall-service">Uninstall service</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="active" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/rclone_webdav/">/rclone_webdav</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">WebDAV with Rclone and mTLS</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2025-10-26">2025-10-26</time></span>
+  <span>updated <time datetime="2025-10-27">2025-10-27</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/rclone/">rclone</a>
+      <a href="/tags/webdav/">webdav</a>
+  </span>
+</div>
+
+<p><a href="https://datatracker.ietf.org/doc/html/rfc4918">WebDAV</a> is an open
+extension to the HTTP protocol that lets you treat a web server like a
+remote filesystem. <a href="https://rclone.org/">Rclone</a> is an open source
+WebDAV client that lets you mount remote volumes for read/write access
+on your local computer.</p>
+<h2 id="provision-your-webdav-server"><a class="heading-anchor" href="#provision-your-webdav-server">Provision your WebDAV server</a></h2>
+<p>You can use any WebDAV server that you have access to. If you need to
+install one, I recommend
+<a href="https://github.com/9001/copyparty">copyparty</a> or
+<a href="https://nextcloud.com/">nextcloud</a> (Use the
+<a href="https://github.com/enigmaCurry/d.rymcg.tech?tab=readme-ov-file#readme">d.rymcg.tech</a>
+distribution to install these on Docker.)</p>
+<h2 id="mutual-tls-optional"><a class="heading-anchor" href="#mutual-tls-optional">Mutual TLS (optional)</a></h2>
+<p>For extra security, the server may require authentication with a
+client TLS certificate, which this script fully supports. You will
+just need to place the certificate file (e.g., <code>ryan-files.pem</code>) and
+the unencrypted key file (e.g., <code>ryan-files.key</code>) and put them
+someplace permanent (e.g., directly in the rclone config directory).</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Copy the cert and key file to someplace permanent:
+mkdir -p ~/.config/rclone
+cp ryan-files.pem ~/.config/rclone/
+cp ryan-files.key ~/.config/rclone/
+</pre></div>
+</div>
+
+
+<p>Note: the certificate should have been provided to you by your
+administrator. If you are deploying your own server, check out
+<a href="https://smallstep.com/docs/step-ca/">Step-CA</a> (and the
+<a href="https://github.com/EnigmaCurry/d.rymcg.tech">d.rymcg.tech</a>
+distribution for installing it on Docker).</p>
+<h2 id="example"><a class="heading-anchor" href="#example">Example</a></h2>
+<p>In this example, let&rsquo;s assume the following connection details when
+setting up the WebDAV service:</p>
+<ul>
+<li>
+<p>URL: <code>https://files.example.com</code></p>
+<ul>
+<li>Note: for copyparty, there is usually no path necessary. For
+Nextcloud, you need to specify the URL with a path, e.g.:
+<code>https://files.example.com/nextcloud/remote.php/dav/files/USERNAME/</code>)</li>
+</ul>
+</li>
+<li>
+<p>Username: <code>ryan</code></p>
+<ul>
+<li>HTTP authentication username.</li>
+<li>Note: copyparty ignores the username field.</li>
+</ul>
+</li>
+<li>
+<p>Password: <code>hunter2</code></p>
+<ul>
+<li>HTTP authentication password.</li>
+<li>Note: for copyparty, this is your only authentication (besides mTLS).</li>
+</ul>
+</li>
+<li>
+<p>Volume name: <code>ryan-files</code></p>
+<ul>
+<li>This is the internal name that Rclone will reference this remote with.</li>
+<li>This is also the default name of the mount point. (e.g.,
+<code>~/ryan-files</code>)</li>
+</ul>
+</li>
+<li>
+<p>Certificate: <code>~/.config/rclone/ryan-files.pem</code></p>
+<ul>
+<li>Optional client TLS certificate.</li>
+</ul>
+</li>
+<li>
+<p>Key: <code>~/.config/rclone/ryan-files.key</code></p>
+<ul>
+<li>Optional client TLS key.</li>
+</ul>
+</li>
+</ul>
+<h2 id="download-the-script"><a class="heading-anchor" href="#download-the-script">Download the script</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/rclone/rclone_webdav.sh
+chmod &#43;x rclone_webdav.sh
+</pre></div>
+</div>
+
+
+<h2 id="configuration"><a class="heading-anchor" href="#configuration">Configuration</a></h2>
+<p>Create a new config (or update an existing one) named <code>ryan-files</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./rclone_webdav.sh config ryan-files
+</pre></div>
+</div>
+
+
+<p>Follow the prompts to configure the volume:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>== Interactive rclone WebDAV setup (idempotent) ==
+</span></span><span style="display:flex;"><span>WebDAV URL (e.g., https://copyparty.example.com): https://files.example.com
+</span></span><span style="display:flex;"><span>Vendor (copyparty|owncloud|nextcloud|other) [copyparty]: copyparty
+</span></span><span style="display:flex;"><span>Username (HTTP Auth; username ignored copyparty): admin
+</span></span><span style="display:flex;"><span>Password (HTTP Auth): hunter2
+</span></span><span style="display:flex;"><span>Client certificate PEM path [/var/home/ryan/.config/rclone/client.crt]: /var/home/ryan/.config/rclone/ryan-files.pem
+</span></span><span style="display:flex;"><span>Client key PEM path [/var/home/ryan/.config/rclone/client.key]: /var/home/ryan/.config/rclone/ryan-files.key
+</span></span><span style="display:flex;"><span>Mount point (absolute) [/var/home/ryan/ryan-files]: /var/home/ryan/ryan-files
+</span></span></code></pre></div><p>This will save the Rclone configuration to
+<code>~/.config/rclone/rclone.conf</code>.</p>
+<h2 id="install-service"><a class="heading-anchor" href="#install-service">Install service</a></h2>
+<p>Install the systemd/User service to automatically mount the volume:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./rclone_webdav.sh enable ryan-files
+</pre></div>
+</div>
+
+
+<h2 id="check-service-status"><a class="heading-anchor" href="#check-service-status">Check service status</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./rclone_webdav.sh status ryan-files
+</pre></div>
+</div>
+
+
+<p>Now the remote volume should be mounted locally at <code>~/ryan-files</code> and
+will automatically mount when you login.</p>
+<p>If you want the volume mounted on system boot (prior to first login),
+you may want to turn on <a href="https://wiki.archlinux.org/title/Systemd/User#Automatic_start-up_of_systemd_user_instances">systemd
+&ldquo;lingering&rdquo;</a>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Allow user services to automatically start on system boot:
+sudo loginctl enable-linger ${USER}
+</pre></div>
+</div>
+
+
+<h2 id="check-logs-for-debugging-purposes"><a class="heading-anchor" href="#check-logs-for-debugging-purposes">Check logs for debugging purposes</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./rclone_webdav.sh log ryan-files
+</pre></div>
+</div>
+
+
+<h2 id="uninstall-service"><a class="heading-anchor" href="#uninstall-service">Uninstall service</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./rclone_webdav.sh uninstall ryan-files
+</pre></div>
+</div>
+
+
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/rclone/rclone_webdav.sh">Download the script directly</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>set -Eeuo pipefail
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># === Settings ===</span>
+</span></span><span style="display:flex;"><span>: <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>XDG_CONFIG_HOME:=<span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.config&#34;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>RCLONE_CFG_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$XDG_CONFIG_HOME<span style="color:#e6db74">/rclone&#34;</span>
+</span></span><span style="display:flex;"><span>MOUNT_POINTS_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$RCLONE_CFG_DIR<span style="color:#e6db74">/mount_points.cfg&#34;</span>
+</span></span><span style="display:flex;"><span>SYSTEMD_USER_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$XDG_CONFIG_HOME<span style="color:#e6db74">/systemd/user&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Defaults for mount behavior (can be overridden via environment)</span>
+</span></span><span style="display:flex;"><span>: <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RCLONE_VFS_CACHE_MODE:=writes<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>: <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RCLONE_DIR_CACHE_TIME:=5s<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># === Helpers ===</span>
+</span></span><span style="display:flex;"><span>_die<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Error: </span>$*<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>_need<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> command -v <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Required command &#39;</span>$1<span style="color:#e6db74">&#39; not found&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>_mkdirp<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> mkdir -p <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_yesno<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># _yesno &#34;Prompt&#34; default_yes|default_no</span>
+</span></span><span style="display:flex;"><span>  local prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> def<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span> ans defc
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$def<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    default_yes<span style="color:#f92672">)</span> defc<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>;;
+</span></span><span style="display:flex;"><span>    default_no<span style="color:#f92672">)</span>  defc<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span> _die <span style="color:#e6db74">&#34;_yesno: second arg must be default_yes|default_no&#34;</span>;;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>  read -r -p <span style="color:#e6db74">&#34;</span>$prompt<span style="color:#e6db74"> [</span>$defc<span style="color:#e6db74">] &#34;</span> ans <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  ans<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ans,,<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$ans<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$def<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;default_yes&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$ans<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;</span>$ans<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Read mountpoint for a remote from ~/.config/rclone/mount_points.cfg</span>
+</span></span><span style="display:flex;"><span>_get_mountpoint<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># lines like: name=/path/to/mount</span>
+</span></span><span style="display:flex;"><span>  awk -F<span style="color:#f92672">=</span> -v k<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;$1==k {print $2}&#39;</span> <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span> | tail -n1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set/replace mountpoint entry</span>
+</span></span><span style="display:flex;"><span>_set_mountpoint<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> mp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  _mkdirp <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  touch <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># remove old line(s) for name</span>
+</span></span><span style="display:flex;"><span>  grep -v -e <span style="color:#e6db74">&#34;^</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">=&#34;</span> <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MOUNT_POINTS_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">=</span><span style="color:#e6db74">${</span>mp<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MOUNT_POINTS_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp&#34;</span>
+</span></span><span style="display:flex;"><span>  mv <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MOUNT_POINTS_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp&#34;</span> <span style="color:#e6db74">&#34;</span>$MOUNT_POINTS_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Systemd unit filename for a remote</span>
+</span></span><span style="display:flex;"><span>_unit_name<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># keep it simple; allow letters, digits, dash/underscore</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;rclone-</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create (or overwrite) systemd --user unit for a remote</span>
+</span></span><span style="display:flex;"><span>_write_unit<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local mp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local unit<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  _mkdirp <span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SYSTEMD_USER_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>unit<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=Mount ${name} via rclone
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">After=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Wants=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Type=simple
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># You can tweak these defaults via environment variables.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Environment=RCLONE_VFS_CACHE_MODE=${RCLONE_VFS_CACHE_MODE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Environment=RCLONE_DIR_CACHE_TIME=${RCLONE_DIR_CACHE_TIME}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=/usr/bin/rclone mount ${name}: ${mp}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStop=/bin/fusermount -u ${mp}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Restart=on-failure
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=default.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_print_help<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  cat <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: rclone-webdav.sh &lt;command&gt; [args]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Commands:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  help                    Show this help text.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  config                  Interactive setup: creates/updates an rclone WebDAV remote
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                          and saves its mount point in ~/.config/rclone/mount_points.cfg.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  mount &lt;name&gt;            Mount the remote now (foreground). Uses saved mount point.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  enable &lt;name&gt;           Install and enable a systemd --user service for the remote.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  disable &lt;name&gt;          Disable and stop the systemd --user service for the remote.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  uninstall &lt;name&gt;        Disable, stop, and remove the systemd --user service file.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  status &lt;name&gt;           Check status of the systemd unit.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  log &lt;name&gt;              Show log from the systemd unit.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Notes:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">- mTLS (client cert/key) is optional. If enabled in the wizard, the paths are stored as
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  global.client_cert/global.client_key in rclone.conf for the remote.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">- Mount options default to RCLONE_VFS_CACHE_MODE=&#34;writes&#34; and RCLONE_DIR_CACHE_TIME=&#34;5s&#34;.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  Override by exporting env vars before running, or edit the generated unit.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">- Mount point paths are stored as entries in ~/.config/rclone/mount_points.cfg (format: NAME=/path).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_prompt_default<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local ans
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$default<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    read -r -p <span style="color:#e6db74">&#34;</span>$prompt<span style="color:#e6db74"> [</span>$default<span style="color:#e6db74">]: &#34;</span> ans <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ans<span style="color:#66d9ef">:-</span>$default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    read -r -p <span style="color:#e6db74">&#34;</span>$prompt<span style="color:#e6db74">: &#34;</span> ans <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$ans<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_prompt_secret<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local ans
+</span></span><span style="display:flex;"><span>  read -r -s -p <span style="color:#e6db74">&#34;</span>$prompt<span style="color:#e6db74">: &#34;</span> ans <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$ans<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_config<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need rclone
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;== Interactive rclone WebDAV setup (idempotent) ==&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> config &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  local url vendor user pass enable_mtls client_cert client_key mount_point
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># --- prompts ---</span>
+</span></span><span style="display:flex;"><span>  url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;WebDAV URL (e.g., https://copyparty.example.com)&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  vendor<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;Vendor (copyparty|owncloud|nextcloud|other)&#39;</span> <span style="color:#e6db74">&#39;copyparty&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  user<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;Username (HTTP Auth; username ignored by copyparty)&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  pass<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_secret <span style="color:#e6db74">&#39;Password (HTTP Auth)&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> _yesno <span style="color:#e6db74">&#34;Use mutual TLS (client certificate)?&#34;</span> default_no; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    enable_mtls<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    client_cert<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;Client certificate PEM path&#39;</span> <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.config/rclone/client.crt&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    client_key<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;Client key PEM path&#39;</span> <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.config/rclone/client.key&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># best-effort warnings if files missing; rclone will error if truly required</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">&#34;</span>$client_cert<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;Warning: client cert not found at &#39;</span>$client_cert<span style="color:#e6db74">&#39; (continuing)&#34;</span>&gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">&#34;</span>$client_key<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;Warning: client key not found at &#39;</span>$client_key<span style="color:#e6db74">&#39; (continuing)&#34;</span>&gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    enable_mtls<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  local mp_default
+</span></span><span style="display:flex;"><span>  mp_default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>realpath <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  mount_point<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_prompt_default <span style="color:#e6db74">&#39;Mount point (absolute)&#39;</span> <span style="color:#e6db74">&#34;</span>$mp_default<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># --- sanitize values to avoid CR/LF sneaking in ---</span>
+</span></span><span style="display:flex;"><span>  sanitize<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> printf %s <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | tr -d <span style="color:#e6db74">&#39;\r\n&#39;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  name<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>; url<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>; vendor<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span>$vendor<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  user<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span>$user<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>; pass<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span>$pass<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  client_cert<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>client_cert<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>; client_key<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sanitize <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>client_key<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># vendor alias</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$vendor<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;copyparty&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> vendor<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;owncloud&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Creating/updating rclone remote &#39;</span>$name<span style="color:#e6db74">&#39;...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># if exists, replace to keep idempotent</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> rclone config show 2&gt;/dev/null | grep -qxF <span style="color:#e6db74">&#34;[</span>$name<span style="color:#e6db74">]&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    rclone config delete <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> &gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># build args array</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># include mTLS settings only if enabled</span>
+</span></span><span style="display:flex;"><span>  args<span style="color:#f92672">=(</span> <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> webdav <span style="color:#e6db74">&#34;url=</span>$url<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;vendor=</span>$vendor<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;pacer_min_sleep=0.01ms&#34;</span> <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$enable_mtls<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    args<span style="color:#f92672">+=(</span> <span style="color:#e6db74">&#34;global.client_cert=</span>$client_cert<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;global.client_key=</span>$client_key<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$user<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    args<span style="color:#f92672">+=(</span> <span style="color:#e6db74">&#34;user=</span>$user<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$pass<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># use --obscure so rclone stores it safely</span>
+</span></span><span style="display:flex;"><span>    rclone config create <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>args[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;pass=</span>$pass<span style="color:#e6db74">&#34;</span> --obscure
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    rclone config create <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>args[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Saving mount point mapping: </span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74"> -&gt; </span><span style="color:#e6db74">${</span>mount_point<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  _set_mountpoint <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$mount_point<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Done. Try:&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;  </span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74"> mount </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;  </span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74"> enable </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_mount<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need rclone
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> mount &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  local mp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_get_mountpoint <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;No mount point stored for &#39;</span>$name<span style="color:#e6db74">&#39;. Run &#39;</span>$0<span style="color:#e6db74"> config&#39; first.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Ensure directory exists</span>
+</span></span><span style="display:flex;"><span>  _mkdirp <span style="color:#e6db74">&#34;</span>$mp<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Temporarily mounting </span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">: at </span>$mp<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;This process will now block as it services the mount.&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;If you want to run in the background, you should enable the systemd unit instead.&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;e.g., \`</span><span style="color:#e6db74">${</span>BASH_SOURCE<span style="color:#e6db74">}</span><span style="color:#e6db74"> enable </span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">\`&#34;</span>
+</span></span><span style="display:flex;"><span>  exec rclone mount <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">:&#34;</span> <span style="color:#e6db74">&#34;</span>$mp<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --vfs-cache-mode <span style="color:#e6db74">&#34;</span>$RCLONE_VFS_CACHE_MODE<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --dir-cache-time <span style="color:#e6db74">&#34;</span>$RCLONE_DIR_CACHE_TIME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_enable<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need systemctl
+</span></span><span style="display:flex;"><span>  _need rclone
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> enable &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  local mp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_get_mountpoint <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;No mount point stored for &#39;</span>$name<span style="color:#e6db74">&#39;. Run &#39;</span>$0<span style="color:#e6db74"> config&#39; first.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  _write_unit <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$mp<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  systemctl --user enable <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Enabled systemd/User service: </span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user start <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Started systemd/User service: </span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Waiting 5 seconds before checking status ...&#34;</span>
+</span></span><span style="display:flex;"><span>  sleep <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_disable<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need systemctl
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> disable &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  local unit<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user disable <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  systemctl --user stop <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Disabled service: </span>$unit<span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Stopped service: </span>$unit<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_uninstall<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need systemctl
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> uninstall &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  local unit<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user disable <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  systemctl --user stop <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  rm -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SYSTEMD_USER_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>unit<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span>$unit<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Removed </span><span style="color:#e6db74">${</span>unit<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_status<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need systemctl
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> status &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_cmd_log<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _need journalctl
+</span></span><span style="display:flex;"><span>  local name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> _die <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> log &lt;name&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  journalctl --user -u <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>_unit_name <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># === Main ===</span>
+</span></span><span style="display:flex;"><span>cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>help<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  help|-h|--help<span style="color:#f92672">)</span> _print_help ;;
+</span></span><span style="display:flex;"><span>  config<span style="color:#f92672">)</span> shift; _cmd_config <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  mount<span style="color:#f92672">)</span> shift; _cmd_mount <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  enable<span style="color:#f92672">)</span> shift; _cmd_enable <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  disable<span style="color:#f92672">)</span> shift; _cmd_disable <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  uninstall<span style="color:#f92672">)</span> shift; _cmd_uninstall <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  status<span style="color:#f92672">)</span> shift; _cmd_status <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  log|logs<span style="color:#f92672">)</span> shift; _cmd_log <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span> _die <span style="color:#e6db74">&#34;Unknown command: </span>$cmd<span style="color:#e6db74">. Try &#39;</span>$0<span style="color:#e6db74"> help&#39;.&#34;</span> ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

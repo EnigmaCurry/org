@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Virtual Proxmox part 1: Virtual Proxmox and K3s · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/virtual-proxmox/02-snapshots/" aria-label="Previous: snapshots" title="prev: snapshots"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/rclone_sync/" aria-label="Next: rclone_sync" title="next: rclone_sync"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">virtual-proxmox</a></li><li class="lvl2"><a href="#virtual-k3s-cluster-in-a-virtual-proxmox-host">Virtual K3s Cluster in a Virtual Proxmox Host</a></li><li class="lvl2"><a href="#test-for-nested-virtualization-support">Test for nested virtualization support:</a></li><li class="lvl2"><a href="#install-packages-and-start-libvirt-kvm-service">Install packages and start libvirt KVM service</a></li><li class="lvl2"><a href="#add-your-user-to-the-libvirt-group">Add your user to the libvirt group</a></li><li class="lvl2"><a href="#create-vm-with-virt-manager">Create VM with virt-manager</a></li><li class="lvl2"><a href="#setup-ssh-keys-and-secure-properly">Setup SSH keys and secure properly</a></li><li class="lvl2"><a href="#login-to-proxmox-web-console">Login to Proxmox web console</a></li><li class="lvl2"><a href="#disable-enterprise-features-and-enable-community-repository-optional">Disable Enterprise features and enable Community repository (optional)</a></li><li class="lvl2"><a href="#setup-firewall">Setup Firewall</a></li><li class="lvl2"><a href="#create-an-ubuntu-cloud-init-template">Create an Ubuntu cloud-init template</a></li><li class="lvl2"><a href="#create-k3s-nodes">Create K3s nodes</a></li><li class="lvl2"><a href="#setup-local-workstation">Setup local workstation</a></li><li class="lvl2"><a href="#now-you-have-a-virtual-k3s-cluster">Now you have a Virtual K3s cluster</a></li><li class="lvl2"><a href="#configure-extra-workstation-niceties">Configure extra workstation niceties</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="active" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/virtual-proxmox/01-virtual-proxmox/">/virtual-proxmox</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Virtual Proxmox part 1: Virtual Proxmox and K3s</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2021-07-21">2021-07-21</time></span>
+  <span>updated <time datetime="2023-11-21">2023-11-21</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/virtual-proxmox/">virtual-proxmox</a>
+  </span>
+</div>
+
+<p>This is the first post in the proxmox series, <a href="/tags/proxmox">read the introduction
+first</a>. This post describes how to install Proxmox
+inside of a KVM virtual machine on your development workstation and
+setup a small K3s cluster.</p>
+<p>If you want to install Proxmox on a non-virtual computer instead, you
+can <a href="https://www.proxmox.com/en/proxmox-ve/get-started">follow the official
+guide</a> and then
+come back here and skip to the middle of this page (<a href="#setup-ssh-keys-and-secure-properly">Setup SSH keys
+and secure properly</a>) and follow
+along from there.</p>
+<h2 id="virtual-k3s-cluster-in-a-virtual-proxmox-host"><a class="heading-anchor" href="#virtual-k3s-cluster-in-a-virtual-proxmox-host">Virtual K3s Cluster in a Virtual Proxmox Host</a></h2>
+<p>If you want to have a virtual <a href="https://k3s.io">K3s</a> cluster on your workstation,
+you have a lot of options. This is just one way of doing it.
+<a href="https://www.proxmox.com/">Proxmox</a> is an Operating System that manages Virtual
+Machines. Proxmox is designed to run on dedicated, bare-metal server hardware.
+You can abuse it however, in a development environment, and get Proxmox to run
+inside of another Virtual Machine host (<a href="https://wiki.archlinux.org/title/QEMU">Qemu KVM +
+libvirt</a>), running in your own user
+environment, on an existing Linux laptop/workstation.</p>
+<p>So, if you have a laptop, with a lot of free RAM and CPU, you can create a
+virtual machine (libvirt), install Proxmox inside that VM, use Proxmox to create
+several nested virtual machines, and install K3s worker nodes on those nested
+VMs. (K3s VMs on Proxmox VM on Libvirt Host.)</p>
+<p>This will also serve as a general introduction for installing and configuring
+Proxmox, even for non-virtual environments, it is the same.</p>
+<h2 id="test-for-nested-virtualization-support"><a class="heading-anchor" href="#test-for-nested-virtualization-support">Test for nested virtualization support:</a></h2>
+<p>To find out if your Linux host is capable of nested virtualization, run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Intel machine:
+systool -m kvm_intel -v | grep -E &#34;nested\W&#34;
+## AMD machine:
+systool -m kvm_amd -v | grep -E &#34;nested\W&#34;
+</pre></div>
+</div>
+
+
+<p>One of these lines should return : <code>nested = &quot;Y&quot;</code></p>
+<p>If the answer is not <code>Y</code>, read this <a href="https://wiki.archlinux.org/title/KVM#Nested_virtualization">Arch wiki
+section</a> for
+enabling this support in your kernel.</p>
+<h2 id="install-packages-and-start-libvirt-kvm-service"><a class="heading-anchor" href="#install-packages-and-start-libvirt-kvm-service">Install packages and start libvirt KVM service</a></h2>
+<p>On Arch Linux:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S qemu libvirt libguestfs virt-manager \
+    iptables-nft bridge-utils ebtables dnsmasq
+sudo systemctl enable --now libvirtd.service
+</pre></div>
+</div>
+
+
+<p>For other Linux distributions, you just need to install the same packages (the
+names may be different), and start the libvirt service.</p>
+<h2 id="add-your-user-to-the-libvirt-group"><a class="heading-anchor" href="#add-your-user-to-the-libvirt-group">Add your user to the libvirt group</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo gpasswd -a ${USER} libvirt
+</pre></div>
+</div>
+
+
+<h2 id="create-vm-with-virt-manager"><a class="heading-anchor" href="#create-vm-with-virt-manager">Create VM with virt-manager</a></h2>
+<p><code>virt-manager</code> is a GUI frontend for the libvirt backend service, which will
+allow you to create a virtual machine, boot from a <code>proxmox.iso</code> file, and
+install Proxmox.</p>
+<ul>
+<li>Download the latest version of <a href="https://www.proxmox.com/en/downloads">Proxmox VE ISO
+Installer</a></li>
+<li>Run <code>virt-manager</code></li>
+<li>Click <code>File -&gt; New Virtual Machine</code></li>
+<li>Follow through the wizard, clicking <code>Forward</code> on each page, reviewing to make
+sure you select all of the following options:
+<ul>
+<li>Select <code>Local install media (ISO image or CDROM)</code></li>
+<li>Choose the <code>ISO install media</code>, and click Browse to the install media file
+you downloaded.</li>
+<li>Uncheck <code>Automatically detect from the installation media / source</code>, and
+enter <code>Generic Linux 2020</code> as the operating system type.</li>
+<li>Choose appropriate Memory, CPU, and disk storage size, settings, depending on your specific
+hardware (Note this is for all of Proxmox and all of your k3s nodes combined).</li>
+<li>Give your new machine an appropriate name, like <code>proxmox</code>.</li>
+<li>Choose the Network selection type: <code>Virtual Network 'default': NAT</code> in
+order to provide NAT and DHCP to the Proxmox VM on a private subnet, so
+that the Proxmox installer should automatically detect all of the correct
+network IP address settings. You should still customize the new Hostname
+for Proxmox (default <code>pve</code>). The private subnet will route outgoing
+connections (eg. <code>curl</code> or <code>docker pull</code> initiated from inside a running
+VM), but it will not route incoming external connections by default (eg.
+you cannot <code>ssh</code> to a VM from an external network). The private subnet is
+accessible only between VMs and from the local host workstation, unless you
+add additional routing rules (See <a href="/blog/proxmox/03-port-forwarding/">Part 3 - Port
+Forwarding</a>).</li>
+</ul>
+</li>
+<li>Click <code>Finish</code> to commit the changes and create the VM.</li>
+<li>Click on the <code>Proxmox</code> VM in the main <code>virt-manager</code> window.</li>
+<li>Click on the menu entry <code>Edit -&gt; Connection Details</code>.</li>
+<li>In the <code>Connection Details</code> screen, click on the <code>Virtual Networks</code> tab.</li>
+<li>Edit the <code>default</code> Virtual Network, find the <code>Autostart</code> field and checkmark <code>On Boot</code>.</li>
+<li>Ensure the network has been started, click the <code>Start Network</code> button at the
+bottom of the window, which looks like a small play button on a remote
+control.</li>
+</ul>
+<p>Optionally, you can enable this VM to start on boot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Optional: autostart VM on boot:
+sudo virsh autostart Proxmox
+</pre></div>
+</div>
+
+
+<p>The virtual machine should boot, and provide you the graphical terminal to
+access it.</p>
+<ul>
+<li>On first boot of Proxmox, choose <code>Install Proxmox VE</code></li>
+<li>Click through the EULA.</li>
+<li>The <code>Target Harddisk</code> should be automatically selected for the disk created
+by <code>virt-manager</code>, click <code>Next</code>.</li>
+<li>Configure your time zone.</li>
+<li>Choose a password and email address.</li>
+<li>Click <code>Install</code> to finish installation.</li>
+<li>When finished, the virtual machine will reboot. Wait for, and watch through
+the first boot, until you see the login terminal.</li>
+</ul>
+<p>On the terminal login screen, you will see the URL to connect to. For example:
+<code>https://192.168.X.X:8006/</code> and please note that the <code>https://</code> and <code>:8006</code>
+parts of the URL are important! Open this URL in your web browser. The TLS
+certificate is self-signed by default, and so this will not be trusted by your
+web browser, and it will show an error about that, but also it should show an
+option for you to select that you want to proceed anyway. Now you should see the
+web login screen for Proxmox.</p>
+<ul>
+<li>You may close all the <code>virt-manager</code> windows, libvirt will continue to run
+your virtual machines in the background.</li>
+</ul>
+<h2 id="setup-ssh-keys-and-secure-properly"><a class="heading-anchor" href="#setup-ssh-keys-and-secure-properly">Setup SSH keys and secure properly</a></h2>
+<p>You can login to the Proxmox terminal through SSH (no need for the
+<code>virt-manager</code> terminal window ever again). The username is <code>root</code> and the
+password is the password you chose during install. Because passwords are less
+secure than SSH keys, that&rsquo;s the next step: to install your SSH key, and disable
+password authentication.</p>
+<p>Create an SSH host entry in your <code>$HOME/.ssh/config</code> file:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Host proxmox
+</span></span><span style="display:flex;"><span>    Hostname 192.168.X.X
+</span></span><span style="display:flex;"><span>    User root
+</span></span></code></pre></div><p>(Change the Hostname <code>192.168.X.X</code> to be the IP address of your Proxmox virtual machine.)</p>
+<p>If you have not created an SSH identity on this workstation, you will need to
+run <code>ssh-keygen</code>.</p>
+<ul>
+<li>From your workstation, run <code>ssh-copy-id proxmox</code>, which will ask you to
+confirm the ssh key fingerprint, and for your remote password (chosen during
+install) to login to the Proxmox server via SSH. It will copy your SSH key to
+the server&rsquo;s <code>authorized_keys</code> file, which will allow all future logins to be
+by key based authentication, instead of by password.</li>
+<li>SSH to the Proxmox host, run <code>ssh proxmox</code>. Ensure that no password is
+required (except perhaps for unlocking your key file). You will now be in the
+root account of Proxmox, be careful!</li>
+<li>You need to edit the <code>/etc/ssh/sshd_config</code> file. The text editors <code>nano</code> and
+<code>vi</code> are installed by default, or you can install other editors, for example
+<code>apt install emacs-nox</code>.</li>
+<li>Disable password authentication - search for the line that says
+<code>PasswordAuthentication yes</code>, which will be commented out with <code>#</code>. Remove
+the <code>#</code> to un-comment the line, and change the <code>yes</code> to a <code>no</code>.</li>
+<li>Save <code>/etc/ssh/sshd_config</code> and close the editor.</li>
+<li>Restart ssh, run: <code>systemctl restart sshd</code></li>
+<li>Exit the SSH session, and test logging in and out again still works, using
+your SSH key.</li>
+<li>To test that <code>PasswordAuthentication</code> is really turned off, you can attempt
+to SSH again, with a bogus username, one that you know does not really exist:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>$ ssh hunter1@proxmox-k3s-1
+</span></span><span style="display:flex;"><span>hunter1@192.168.122.177: Permission denied (publickey).
+</span></span></code></pre></div><p>The attempt should immediately fail and say <code>Permission denied (publickey)</code>, <em>and if it
+also does not ask you for a password</em>, then you have successfully turned off
+password authentication.</p>
+<h2 id="login-to-proxmox-web-console"><a class="heading-anchor" href="#login-to-proxmox-web-console">Login to Proxmox web console</a></h2>
+<ul>
+<li>In the Proxmox web console, login with the username <code>root</code> and the password
+you chose during installation.</li>
+</ul>
+<h2 id="disable-enterprise-features-and-enable-community-repository-optional"><a class="heading-anchor" href="#disable-enterprise-features-and-enable-community-repository-optional">Disable Enterprise features and enable Community repository (optional)</a></h2>
+<p>By default, Proxmox expects that you are an enterprise, and that you have an
+enterprise license for Proxmox. If you do, skip this section. However, you may
+also use the Proxmox community version, without a license (and it is the same
+.iso image installer and method for both versions.) To switch between these
+versions, you must use different apt package repositories. If you wish to use
+Proxmox exclusively with the Community, non-enterprise version, follow the rest
+of this section.</p>
+<ul>
+<li>You will see a warning message <code>No valid subscription</code>, which will nag you on
+each login unless you purchase an enterprise edition of Proxmox. Click <code>OK</code>
+to freely use the community version.</li>
+<li>On the left-hand side of the screen, find the <code>Server View</code> list, click the
+Proxmox host in the list.</li>
+<li>Find the <code>Updates</code> and <code>Repositories</code> screen on the Node details screen.</li>
+<li>Find the <code>pve-enterprise</code> repository in the list, and click it.</li>
+<li>Click the <code>Disable</code> button at the top of the list.</li>
+<li>You will see a message that says <code>No Proxmox VE repository is enabled.</code></li>
+<li>Click <code>Add</code>, it will nag you about the license again, just click <code>OK</code>.</li>
+<li>Select <code>No-Subscription</code> in the Repository drop-down list, click <code>Add</code>.</li>
+<li>You should now expect to to see this warning message: <code>The no-subscription repository is not recommended for production use</code>.</li>
+</ul>
+<h2 id="setup-firewall"><a class="heading-anchor" href="#setup-firewall">Setup Firewall</a></h2>
+<p>By default the proxmox instance has an open firewall, but this can be made more
+secure to only accept connections from specific sources, for example to lock
+down to only being accessed from your workstation. This is particularly
+important to do if you chose to use the <code>bridge</code> network selection, in
+<code>virt-manager</code> when you created the VM.</p>
+<ul>
+<li>In the <code>Server View</code> list, click the line that says <code>Datacenter</code>.</li>
+<li>On the datacenter screen, find the <code>Firewall</code> settings.</li>
+<li>Click the <code>Add</code> button to add firewall rules.</li>
+<li>There are default anti-lockout rules for port 22 and 8006, <em>but
+only acessible from the same subnet</em>. You should create your own
+rules for these ports so that you don&rsquo;t lock yourself out.</li>
+<li>To host websites, you&rsquo;ll want to open ports 80 and 443.</li>
+</ul>
+<p>The firewall is turned off by default. To enable the firewall, find the Firewall
+<code>Options</code> submenu page, on the new screen double-click <code>Firewall</code> (value <code>No</code>)
+at the top of the list. In the popup window, checkmark the box to enable the
+firewall, then click <code>OK</code>. (The <code>Firewall</code> value should now show <code>Yes</code>).</p>
+<h2 id="create-an-ubuntu-cloud-init-template"><a class="heading-anchor" href="#create-an-ubuntu-cloud-init-template">Create an Ubuntu cloud-init template</a></h2>
+<ul>
+<li>Open a terminal to the proxmox server (<code>ssh proxmox</code>)</li>
+<li>Download the Ubuntu 20.04 LTS cloud image:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget  http://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+</pre></div>
+</div>
+
+
+<ul>
+<li>Create a new VM that will become a template:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm create 9000
+</pre></div>
+</div>
+
+
+<ul>
+<li>Import the cloud image as the primary drive:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm importdisk 9000 focal-server-cloudimg-amd64.img local-lvm
+</pre></div>
+</div>
+
+
+<ul>
+<li>
+<p>You can delete the downloaded image now if you wish.</p>
+</li>
+<li>
+<p>Configure the VM:</p>
+</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set 9000 --name Ubuntu-20.04 --memory 2048 --net0 virtio,bridge=vmbr0 \
+  --scsihw virtio-scsi-pci --scsi0 local-lvm:vm-9000-disk-0 \
+  --ide0 none,media=cdrom --ide2 local-lvm:cloudinit --boot c \
+  --bootdisk scsi0 --serial0 socket --vga std --ciuser root \
+  --sshkey $HOME/.ssh/authorized_keys --ipconfig0 ip=dhcp
+</pre></div>
+</div>
+
+
+<ul>
+<li>Download the <code>gparted</code> ISO image, which is to be used to resize the disk:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget -P /var/lib/vz/template/iso \
+  https://downloads.sourceforge.net/gparted/gparted-live-1.3.0-1-amd64.iso
+</pre></div>
+</div>
+
+
+<ul>
+<li>Set the first boot device to load <code>gparted</code></li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set 9000 --ide0 local:iso/gparted-live-1.3.0-1-amd64.iso,media=cdrom \
+  --boot &#39;order=ide0;scsi0&#39;
+</pre></div>
+</div>
+
+
+<ul>
+<li>Resize the disk, adding 50GB (or whatever size you prefer for your template):</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm resize 9000 scsi0 &#43;50G
+</pre></div>
+</div>
+
+
+<p>Go to the web console, and find VM 9000 in the list, then click <code>Start</code>. Click
+<code>Console</code> in the node list, and Gparted will load on screen.</p>
+<ul>
+<li>Follow the on screen setup instructions.</li>
+<li>Once gparted loads, it will say <code>Not all of the space available to /dev/sda appears to be used,</code>. Click <code>Fix</code>.</li>
+<li>Select <code>/dev/sda1</code>, right click and choose <code>Resize/Move</code>.</li>
+<li>Click and drag the right hand side of the bar all the way to the right. (Free space before and after should both say 0, and with a new larger size listed.) Click <code>Resize/Move</code>.</li>
+<li>Click <code>Edit -&gt; Apply All Operations</code>, then <code>Apply</code>.</li>
+<li>When finished click <code>Close</code>, then Shutdown the VM.</li>
+</ul>
+<p>Remove the CD-ROM drive from the VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set 9000 --delete ide0
+</pre></div>
+</div>
+
+
+<p>Remove the VGA adapter (no longer needed, now that gparted is done), and replace
+it with a serial device:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set 9000 --vga serial0
+</pre></div>
+</div>
+
+
+<p>Convert virtual machine to a template:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm template 9000
+</pre></div>
+</div>
+
+
+<h2 id="create-k3s-nodes"><a class="heading-anchor" href="#create-k3s-nodes">Create K3s nodes</a></h2>
+<p>Now that you have an Ubuntu template, you can create nodes for K3s workers:</p>
+<ul>
+<li>From the web console, find VM 9000, right click it, and choose <code>Clone</code>.</li>
+<li>Use the default mode: <code>Linked Clone</code> (the clone creates a <a href="https://en.wikipedia.org/wiki/Copy-on-write">Copy on
+Write</a> volume, based off the
+original image: this will save you a ton of host disk space, if you create
+lots of clones that are mostly the same.)</li>
+<li>Enter the name <code>k3s-1</code> (or whatever you want)</li>
+<li>Click <code>Clone</code>.</li>
+<li>Start the VM.</li>
+<li>Repeat and clone for as many other worker nodes as you want.</li>
+</ul>
+<p>Once the machine starts, wait for DHCP to assign an IP address. You can check
+for the IP address on the host running libvirt (your workstation):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Query DHCP leases on the host:
+sudo cat /var/lib/libvirt/dnsmasq/virbr0.status
+</pre></div>
+</div>
+
+
+<p>When you find the IP addresses, edit <code>$HOME/.ssh/config</code> and add a new section for
+each of the nested VM hosts:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># Host SSH client config: ~/.ssh/config
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host proxmox-k3s-1
+</span></span><span style="display:flex;"><span>    Hostname 192.168.X.X
+</span></span><span style="display:flex;"><span>    User root
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host proxmox-k3s-2
+</span></span><span style="display:flex;"><span>    Hostname 192.168.X.X
+</span></span><span style="display:flex;"><span>    User root
+</span></span></code></pre></div><p>Test login via ssh with your key:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh proxmox-k3s-1
+</pre></div>
+</div>
+
+
+<p>On the first node, install the k3s server:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Install K3s server on first node:
+curl -sfL https://get.k3s.io | sh -s - server --disable traefik
+</pre></div>
+</div>
+
+
+<p>Retrieve the K3s cluster token:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat /var/lib/rancher/k3s/server/node-token
+</pre></div>
+</div>
+
+
+<p>On the second and rest of the nodes, install the k3s worker agent, filling in
+the proper cluster token you retreived, and the IP address of the first (k3s
+server) node:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Install K3s worker agent: fill in K3S_URL and K3S_TOKEN
+curl -sfL https://get.k3s.io | K3S_URL=https://192.168.X.X:6443 K3S_TOKEN=xxxx sh
+</pre></div>
+</div>
+
+
+<h2 id="setup-local-workstation"><a class="heading-anchor" href="#setup-local-workstation">Setup local workstation</a></h2>
+<p>In order to access the k3s cluster from the host workstation, you need to copy
+the config file:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# From your workstation:
+mkdir -p $HOME/.kube &amp;&amp; \
+scp proxmox-k3s-1:/etc/rancher/k3s/k3s.yaml $HOME/.kube/proxmox-k3s &amp;&amp; \
+echo &#34;export KUBECONFIG=$HOME/.kube/proxmox-k3s&#34; &gt;&gt; $HOME/.bash_profile &amp;&amp; \
+export KUBECONFIG=$HOME/.kube/proxmox-k3s
+</pre></div>
+</div>
+
+
+<p>You now must edit <code>$HOME/.kube/proxmox-k3s</code> and replace <code>127.0.0.1</code> with the IP
+address of the server node. Also search and replace for the word <code>default</code> and
+replace it with the name of the cluster <code>k3s-1</code>. Save the file.</p>
+<p>Install <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/">kubectl</a>
+and <a href="https://helm.sh/docs/intro/install/">helm</a>.</p>
+<p>Test that <code>kubectl</code> works:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl get nodes
+</pre></div>
+</div>
+
+
+<p>If you have more than one <code>kubectl</code> config file, you can list multiple in your
+<code>$HOME/.bash_profile</code>, separated with colons:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>export KUBECONFIG=&#34;$HOME/.kube/proxmox-k3s:$HOME/.kube/localhost-k3s&#34;
+</span></span></code></pre></div><p>Install the <a href="https://github.com/ahmetb/kubectx">kubectx</a> tool for easy switching
+between clusters (<code>kubectx</code>) and namespaces (<code>kubens</code>).</p>
+<h2 id="now-you-have-a-virtual-k3s-cluster"><a class="heading-anchor" href="#now-you-have-a-virtual-k3s-cluster">Now you have a Virtual K3s cluster</a></h2>
+<p>The next post in this series will install Traefik, and generate a wildcard TLS
+certificate using Let&rsquo;s Encrypt ACME DNS challenge (for certificate use beind
+LAN firewall).</p>
+<h2 id="configure-extra-workstation-niceties"><a class="heading-anchor" href="#configure-extra-workstation-niceties">Configure extra workstation niceties</a></h2>
+<p>All of these steps are optional, but improve the user experience:</p>
+<ul>
+<li>Install the <code>bash-completion</code> package. On Arch Linux:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S bash-completion
+</pre></div>
+</div>
+
+
+<ul>
+<li>Install the <code>kubectx</code> package. On Arch Linux:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S kubectx
+</pre></div>
+</div>
+
+
+<ul>
+<li>
+<p>Install the <a href="https://github.com/jonmosco/kube-ps1">kube-ps1</a> package. On Arch
+Linux you can install <code>kube-ps1</code> with an <a href="https://wiki.archlinux.org/title/AUR_helpers">AUR
+helper</a>.</p>
+</li>
+<li>
+<p>Enable Bash completion, create <code>k</code> alias for kubectl, and configure your
+<code>PS1</code> prompt to show the current K8s context and namespace. Put this in your
+<code>$HOME/.bash_profile</code> file:</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Enable bash completion:
+</span></span><span style="display:flex;"><span>if [ -f /etc/bash_completion ]; then
+</span></span><span style="display:flex;"><span>    source /etc/bash_completion
+</span></span><span style="display:flex;"><span>fi
+</span></span><span style="display:flex;"><span>## kubectl completion is automatically loaded
+</span></span><span style="display:flex;"><span>## from /usr/share/bash-completion/completions/kubectl
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## Alias k for kubectl:
+</span></span><span style="display:flex;"><span>alias k=&#34;kubectl&#34;
+</span></span><span style="display:flex;"><span>complete -F __start_kubectl k
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## Create PS1 prompt with current K8s context and namespace:
+</span></span><span style="display:flex;"><span>source &#39;/opt/kube-ps1/kube-ps1.sh&#39;
+</span></span><span style="display:flex;"><span>PS1=&#39;\[\u@\h $(kube_ps1)\] \W $ &#39;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## List several separate context files in one KUBECONFIG,
+</span></span><span style="display:flex;"><span>## separated with &#39;:&#39;:
+</span></span><span style="display:flex;"><span>export KUBECONFIG=&#34;$HOME/.kube/k3s-1:$HOME/.kube/k3s-2&#34;
+</span></span></code></pre></div><ul>
+<li>
+<p>Switch between contexts with <code>kubectx</code>.</p>
+</li>
+<li>
+<p>Switch the default Kubernetes namespace: <code>kubens</code> (<code>kubens</code> is
+installed with <code>kubectx</code>)</p>
+</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

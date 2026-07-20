@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Tunnel · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/plasma/" aria-label="Previous: plasma" title="prev: plasma"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/matrix/" aria-label="Next: matrix" title="next: matrix"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">tunnel</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="open">
+                  <a class="active" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/tunnel/">/tunnel</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Tunnel</a></h1>
+
+
+<p>An eight-sided wireframe wormhole where the tunnel&rsquo;s center wanders on
+a sum of sines, warping the perspective as if the tube itself were a
+snake. Behind the wireframe: a starfield glimpsed through the gaps,
+expanding gravity-wave rings, and 28 <code>tachyon</code> particles emitted from
+the eye and stretched into cubic-eased trails.</p>
+<p>The trick that makes the wireframe read as a tunnel is the map from
+screen-radius to depth: <code>z = 0.8 / (r + eps)</code> — pixels near the middle
+of the screen are far away, edges are near. Sliding <code>z + iTime * 3</code>
+scrolls the whole thing toward you. The winding uses screen radius as
+its interpolant so distant slices swing further than near ones, giving
+the tube its serpentine bend.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Eight-sided wireframe wormhole. Winds via nested sines on the tunnel
+// center; palette-cycled rings and side edges; starfield through the
+// gaps; gravity-wave ripples and tachyon particles from the eye.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+vec3 palette(float idx){
+  idx = fract(idx) * 4.0;
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  if(idx < 1.0)      return mix(c1, c2, idx);
+  else if(idx < 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
+  float t = iTime * 0.8 * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  // radius -> depth (edge = near, center = far), scroll toward the camera
+  float radius = length(uv);
+  float z = 0.8 / (radius + 0.001);
+  float zWorld = z + t * 3.0;
+
+  // tunnel center snakes through space: three sines each axis at
+  // irrational-ish frequencies so the loop never repeats cleanly
+  float windX = sin(zWorld * 0.15)         * 0.4
+              + sin(zWorld * 0.08 + 1.7)   * 0.25
+              + sin(zWorld * 0.23 + 3.1)   * 0.1;
+  float windY = cos(zWorld * 0.12 + 0.5)   * 0.35
+              + cos(zWorld * 0.07 + 2.3)   * 0.2
+              + sin(zWorld * 0.19 + 4.0)   * 0.1;
+
+  // offset by wind scaled by screen radius: far slices swing further
+  vec2 tunnelUV = uv - vec2(windX, windY) * radius;
+  float tunnelR = length(tunnelUV);
+  float angle  = atan(tunnelUV.y, tunnelUV.x);
+  float zCurved = 0.8 / (tunnelR + 0.001);
+  float zFinal  = zCurved + t * 3.0;
+
+  // octagonal cross section, twisted along depth
+  float sides = 8.0;
+  float sectorAngle = 2.0 * PI / sides;
+  float twist = zFinal * 0.3;
+  float twistedAngle = angle + twist;
+  float sector = mod(twistedAngle + PI, sectorAngle);
+  float sectorEdge = abs(sector - sectorAngle * 0.5);
+
+  // depth rings + side edges = the wireframe
+  float ringFreq = 2.0;
+  float rings = abs(fract(zFinal * ringFreq) - 0.5);
+  float ringLine = smoothstep(0.02, 0.0, rings);
+  float edgeWidth = 0.06 * tunnelR;
+  float sideLine = smoothstep(edgeWidth + 0.01, edgeWidth, sectorEdge);
+  float wire = max(ringLine, sideLine);
+
+  // palette rotation with ring depth, with side lines picking a different index
+  float ringIdx = mod(floor(zFinal * ringFreq), 4.0);
+  vec3 wireCol;
+  if(ringIdx < 1.0)      wireCol = c1;
+  else if(ringIdx < 2.0) wireCol = c2;
+  else if(ringIdx < 3.0) wireCol = c3;
+  else                   wireCol = c4;
+
+  float sideIdx = mod(floor((twistedAngle + PI) / sectorAngle), 4.0);
+  vec3 sideCol;
+  if(sideIdx < 1.0)      sideCol = c1;
+  else if(sideIdx < 2.0) sideCol = c2;
+  else if(sideIdx < 3.0) sideCol = c3;
+  else                   sideCol = c4;
+
+  vec3 col = mix(sideCol, wireCol, step(ringLine, sideLine)) * wire;
+
+  // neon halo along both edge families
+  float glowRing = exp(-rings * 40.0) * 0.3;
+  float glowSide = exp(-sectorEdge / max(edgeWidth, 0.001) * 2.0) * 0.2 * step(0.01, tunnelR);
+  col += wireCol * glowRing + sideCol * glowSide;
+
+  // fade near the eye so the mouth of the tube stays dark
+  float depthFade = smoothstep(0.0, 0.5, tunnelR);
+  col *= depthFade;
+
+  // wormhole eye glow: shifts hue as it travels
+  float centerGlow = exp(-tunnelR * 8.0) * 0.35;
+  vec3 portalColor = mix(c1, c3, sin(t * 0.7) * 0.5 + 0.5);
+  portalColor      = mix(portalColor, c2, sin(t * 0.4 + 2.0) * 0.5 + 0.5);
+  col += portalColor * centerGlow;
+
+  // starfield visible through the gaps in the wireframe
+  if(wire < 0.1){
+    vec2 starUV = tunnelUV * 5.0 + vec2(windX, windY) * 0.5;
+    vec2 starCell = floor(starUV * 30.0);
+    float starHash = fract(sin(dot(starCell, vec2(127.1, 311.7))) * 43758.5453);
+    if(starHash > 0.97){
+      float twinkle = sin(t * 4.0 + starHash * 6.28) * 0.5 + 0.5;
+      float starBright = (0.4 + 0.6 * twinkle) * depthFade * 0.3;
+      col += vec3(starBright);
+    }
+  }
+
+  // gentle pulse tied to loop phase
+  float beatPulse = exp(-fract(t) * 4.0) * 0.15;
+  col += wireCol * beatPulse * wire;
+
+  // gravity waves — five concentric rings expanding outward, ea rippled
+  for(int w = 0; w < 5; w++){
+    float wavePhase = fract(t * 0.22 + float(w) * 0.2);
+    float waveRadius = wavePhase * wavePhase * 0.45;
+    float waveFade  = pow(1.0 - wavePhase, 1.5);
+    float waveWidth = 0.004 + wavePhase * 0.018;
+    float wave = exp(-pow(tunnelR - waveRadius, 2.0) / (waveWidth * waveWidth)) * waveFade;
+    wave *= 0.8 + 0.2 * sin(angle * 8.0 + float(w) * 2.1 + t * 0.6);
+    vec3 waveCol = palette(float(w) * 0.2 + t * 0.06);
+    col += waveCol * wave * 0.55;
+  }
+
+  // tachyon particles — cubic acceleration turns them into stretched streaks
+  for(int i = 0; i < 28; i++){
+    float id = float(i);
+    float lifespan = 2.0 + hash1(id * 17.3) * 2.5;
+    float life = mod(t + hash1(id * 13.7) * lifespan, lifespan);
+    float progress = life / lifespan;
+    float pAngle = hash1(id * 7.3 + 0.5) * 2.0 * PI + t * 0.1 * (hash1(id * 3.1) - 0.5);
+    float speed = progress * progress * progress;
+    float pDist = speed * 0.5;
+    vec2 pPos = vec2(cos(pAngle), sin(pAngle)) * pDist;
+    vec2 toPixel = tunnelUV - pPos;
+    float d = length(toPixel);
+    // stretched motion trail behind the head
+    vec2 radDir = vec2(cos(pAngle), sin(pAngle));
+    float along = dot(toPixel, radDir);
+    float perp  = length(toPixel - radDir * along);
+    float trailLen = 0.01 + speed * 0.12;
+    float inTrail = smoothstep(0.0, -trailLen, along) * step(along, 0.003);
+    float trailWidth = 0.003 * (1.0 - progress * 0.5);
+    float trail = exp(-perp / trailWidth) * inTrail * (1.0 - progress);
+    // bright particle head
+    float fade = 1.0 - progress * 0.4;
+    float brightness = fade * 0.0012 / (d * d + 0.00012);
+    brightness = min(brightness, 5.0);
+    vec3 pCol = palette(id / 28.0 + t * 0.04);
+    vec3 particleCol = pCol * (1.0 + smoothstep(1.0, 3.0, brightness) * 0.5);
+    col += particleCol * brightness * 0.35 + pCol * trail * 1.0;
+  }
+
+  // central emission point pulses
+  float tachyonCenterGlow = 0.002 / (tunnelR * tunnelR + 0.004);
+  float tachyonPulse = 0.7 + 0.3 * sin(t * 3.5);
+  col += palette(t * 0.12) * tachyonCenterGlow * 0.15 * tachyonPulse;
+
+  // scanlines + vignette
+  float scanline = 0.9 + 0.1 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  float vig = 1.0 - dot(uv, uv) * 0.3;
+  col *= vig;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Eight-sided wireframe wormhole. Winds via nested sines on the tunnel
+// center; palette-cycled rings and side edges; starfield through the
+// gaps; gravity-wave ripples and tachyon particles from the eye.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+vec3 palette(float idx){
+  idx = fract(idx) * 4.0;
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  if(idx &lt; 1.0)      return mix(c1, c2, idx);
+  else if(idx &lt; 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx &lt; 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
+  float t = iTime * 0.8 * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  // radius -&gt; depth (edge = near, center = far), scroll toward the camera
+  float radius = length(uv);
+  float z = 0.8 / (radius &#43; 0.001);
+  float zWorld = z &#43; t * 3.0;
+
+  // tunnel center snakes through space: three sines each axis at
+  // irrational-ish frequencies so the loop never repeats cleanly
+  float windX = sin(zWorld * 0.15)         * 0.4
+              &#43; sin(zWorld * 0.08 &#43; 1.7)   * 0.25
+              &#43; sin(zWorld * 0.23 &#43; 3.1)   * 0.1;
+  float windY = cos(zWorld * 0.12 &#43; 0.5)   * 0.35
+              &#43; cos(zWorld * 0.07 &#43; 2.3)   * 0.2
+              &#43; sin(zWorld * 0.19 &#43; 4.0)   * 0.1;
+
+  // offset by wind scaled by screen radius: far slices swing further
+  vec2 tunnelUV = uv - vec2(windX, windY) * radius;
+  float tunnelR = length(tunnelUV);
+  float angle  = atan(tunnelUV.y, tunnelUV.x);
+  float zCurved = 0.8 / (tunnelR &#43; 0.001);
+  float zFinal  = zCurved &#43; t * 3.0;
+
+  // octagonal cross section, twisted along depth
+  float sides = 8.0;
+  float sectorAngle = 2.0 * PI / sides;
+  float twist = zFinal * 0.3;
+  float twistedAngle = angle &#43; twist;
+  float sector = mod(twistedAngle &#43; PI, sectorAngle);
+  float sectorEdge = abs(sector - sectorAngle * 0.5);
+
+  // depth rings &#43; side edges = the wireframe
+  float ringFreq = 2.0;
+  float rings = abs(fract(zFinal * ringFreq) - 0.5);
+  float ringLine = smoothstep(0.02, 0.0, rings);
+  float edgeWidth = 0.06 * tunnelR;
+  float sideLine = smoothstep(edgeWidth &#43; 0.01, edgeWidth, sectorEdge);
+  float wire = max(ringLine, sideLine);
+
+  // palette rotation with ring depth, with side lines picking a different index
+  float ringIdx = mod(floor(zFinal * ringFreq), 4.0);
+  vec3 wireCol;
+  if(ringIdx &lt; 1.0)      wireCol = c1;
+  else if(ringIdx &lt; 2.0) wireCol = c2;
+  else if(ringIdx &lt; 3.0) wireCol = c3;
+  else                   wireCol = c4;
+
+  float sideIdx = mod(floor((twistedAngle &#43; PI) / sectorAngle), 4.0);
+  vec3 sideCol;
+  if(sideIdx &lt; 1.0)      sideCol = c1;
+  else if(sideIdx &lt; 2.0) sideCol = c2;
+  else if(sideIdx &lt; 3.0) sideCol = c3;
+  else                   sideCol = c4;
+
+  vec3 col = mix(sideCol, wireCol, step(ringLine, sideLine)) * wire;
+
+  // neon halo along both edge families
+  float glowRing = exp(-rings * 40.0) * 0.3;
+  float glowSide = exp(-sectorEdge / max(edgeWidth, 0.001) * 2.0) * 0.2 * step(0.01, tunnelR);
+  col &#43;= wireCol * glowRing &#43; sideCol * glowSide;
+
+  // fade near the eye so the mouth of the tube stays dark
+  float depthFade = smoothstep(0.0, 0.5, tunnelR);
+  col *= depthFade;
+
+  // wormhole eye glow: shifts hue as it travels
+  float centerGlow = exp(-tunnelR * 8.0) * 0.35;
+  vec3 portalColor = mix(c1, c3, sin(t * 0.7) * 0.5 &#43; 0.5);
+  portalColor      = mix(portalColor, c2, sin(t * 0.4 &#43; 2.0) * 0.5 &#43; 0.5);
+  col &#43;= portalColor * centerGlow;
+
+  // starfield visible through the gaps in the wireframe
+  if(wire &lt; 0.1){
+    vec2 starUV = tunnelUV * 5.0 &#43; vec2(windX, windY) * 0.5;
+    vec2 starCell = floor(starUV * 30.0);
+    float starHash = fract(sin(dot(starCell, vec2(127.1, 311.7))) * 43758.5453);
+    if(starHash &gt; 0.97){
+      float twinkle = sin(t * 4.0 &#43; starHash * 6.28) * 0.5 &#43; 0.5;
+      float starBright = (0.4 &#43; 0.6 * twinkle) * depthFade * 0.3;
+      col &#43;= vec3(starBright);
+    }
+  }
+
+  // gentle pulse tied to loop phase
+  float beatPulse = exp(-fract(t) * 4.0) * 0.15;
+  col &#43;= wireCol * beatPulse * wire;
+
+  // gravity waves — five concentric rings expanding outward, ea rippled
+  for(int w = 0; w &lt; 5; w&#43;&#43;){
+    float wavePhase = fract(t * 0.22 &#43; float(w) * 0.2);
+    float waveRadius = wavePhase * wavePhase * 0.45;
+    float waveFade  = pow(1.0 - wavePhase, 1.5);
+    float waveWidth = 0.004 &#43; wavePhase * 0.018;
+    float wave = exp(-pow(tunnelR - waveRadius, 2.0) / (waveWidth * waveWidth)) * waveFade;
+    wave *= 0.8 &#43; 0.2 * sin(angle * 8.0 &#43; float(w) * 2.1 &#43; t * 0.6);
+    vec3 waveCol = palette(float(w) * 0.2 &#43; t * 0.06);
+    col &#43;= waveCol * wave * 0.55;
+  }
+
+  // tachyon particles — cubic acceleration turns them into stretched streaks
+  for(int i = 0; i &lt; 28; i&#43;&#43;){
+    float id = float(i);
+    float lifespan = 2.0 &#43; hash1(id * 17.3) * 2.5;
+    float life = mod(t &#43; hash1(id * 13.7) * lifespan, lifespan);
+    float progress = life / lifespan;
+    float pAngle = hash1(id * 7.3 &#43; 0.5) * 2.0 * PI &#43; t * 0.1 * (hash1(id * 3.1) - 0.5);
+    float speed = progress * progress * progress;
+    float pDist = speed * 0.5;
+    vec2 pPos = vec2(cos(pAngle), sin(pAngle)) * pDist;
+    vec2 toPixel = tunnelUV - pPos;
+    float d = length(toPixel);
+    // stretched motion trail behind the head
+    vec2 radDir = vec2(cos(pAngle), sin(pAngle));
+    float along = dot(toPixel, radDir);
+    float perp  = length(toPixel - radDir * along);
+    float trailLen = 0.01 &#43; speed * 0.12;
+    float inTrail = smoothstep(0.0, -trailLen, along) * step(along, 0.003);
+    float trailWidth = 0.003 * (1.0 - progress * 0.5);
+    float trail = exp(-perp / trailWidth) * inTrail * (1.0 - progress);
+    // bright particle head
+    float fade = 1.0 - progress * 0.4;
+    float brightness = fade * 0.0012 / (d * d &#43; 0.00012);
+    brightness = min(brightness, 5.0);
+    vec3 pCol = palette(id / 28.0 &#43; t * 0.04);
+    vec3 particleCol = pCol * (1.0 &#43; smoothstep(1.0, 3.0, brightness) * 0.5);
+    col &#43;= particleCol * brightness * 0.35 &#43; pCol * trail * 1.0;
+  }
+
+  // central emission point pulses
+  float tachyonCenterGlow = 0.002 / (tunnelR * tunnelR &#43; 0.004);
+  float tachyonPulse = 0.7 &#43; 0.3 * sin(t * 3.5);
+  col &#43;= palette(t * 0.12) * tachyonCenterGlow * 0.15 * tachyonPulse;
+
+  // scanlines &#43; vignette
+  float scanline = 0.9 &#43; 0.1 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  float vig = 1.0 - dot(uv, uv) * 0.3;
+  col *= vig;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

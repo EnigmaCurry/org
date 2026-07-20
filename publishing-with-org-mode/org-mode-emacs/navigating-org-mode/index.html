@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Navigating Org-mode files · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/publishing-with-org-mode/org-mode-emacs/" aria-label="Previous: org-mode-emacs" title="prev: org-mode-emacs"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/" aria-label="Next: editing-org-mode" title="next: editing-org-mode"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/publishing-with-org-mode/org-mode-emacs/">org-mode-emacs</a><ul><li class="lvl1"><a href="#">navigating-org-mode</a></li><li class="lvl2"><a href="#navigating-by-search">Navigating by search</a></li><li class="lvl2"><a href="#navigating-by-headers">Navigating by headers</a></li><li class="lvl2"><a href="#jumping-around--org-goto">Jumping around (org-goto)</a></li><li class="lvl2"><a href="#indirect-buffers-and-narrow-to-subtree">Indirect Buffers and Narrow To Subtree</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book open">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a><ul class="chapters"><li class="">
+                  <a class="" href="/publishing-with-org-mode/dependencies/">dependencies</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/building-locally/">building-locally</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/publish-with-github-pages/">publish-with-github-pages</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/publish-with-sftp/">publish-with-sftp</a></li><li class="node open">
+                  <a class="" href="/publishing-with-org-mode/org-mode-emacs/">org-mode-emacs</a><ul class="sections"><li><a class="active" href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/">navigating-org-mode</a></li><li><a class="" href="/publishing-with-org-mode/org-mode-emacs/editing-org-mode/">editing-org-mode</a></li></ul></li><li class="node ">
+                  <a class="" href="/publishing-with-org-mode/examples/">examples</a></li></ul></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/publishing-with-org-mode/">/publishing-with-org-mode</a><a class="pseg" href="/publishing-with-org-mode/org-mode-emacs/">/org-mode-emacs</a><a class="pseg pcur" href="/publishing-with-org-mode/org-mode-emacs/navigating-org-mode/">/navigating-org-mode</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Navigating Org-mode files</a></h1>
+
+
+<h2 id="navigating-by-search"><a class="heading-anchor" href="#navigating-by-search">Navigating by search</a></h2>
+<p>One of the easiest ways of navigating an Org document, isn&rsquo;t even an
+Org feature. Just search for the text you&rsquo;re looking for and jump
+right to it.</p>
+<ul>
+<li>Press <code>C-s</code> (or <code>M-x isearch-forward</code>)</li>
+</ul>
+<p>Of course, you might not always know the exact text (or it might not
+be unique enough to take you right there), so its useful to know some
+other ways of navigating Org documents.</p>
+<h2 id="navigating-by-headers"><a class="heading-anchor" href="#navigating-by-headers">Navigating by headers</a></h2>
+<p>Another great way to navigate your Org documents is by traversing the
+headers. My emacs config sets the default startup visibility to
+folded, so you can always get back to a folded state:</p>
+<ul>
+<li>Press <code>C-u C-u TAB</code> (or <code>M-x org-set-startup-visibility</code>)</li>
+</ul>
+<p>Cycle the visibility of the headers (foldedness):</p>
+<ul>
+<li>Press <code>TAB</code> to cycle the folding of the selected header (your
+cursor has to be on a header).</li>
+<li>Press <code>C-u TAB</code> to cycle the folding of the headers in
+the whole buffer (cursor can be anywhere).</li>
+<li>Press <code>C-u C-u C-u TAB</code> (or =M-x org-show-all) to show the entire
+buffer unfolded.</li>
+</ul>
+<p>If you&rsquo;re in the middle of a paragraph, and want to move to the header
+of the current section:</p>
+<ul>
+<li>Press <code>s-&lt;up&gt;</code> (or <code>C-c C-p</code> or <code>M-x org-previous-visible-heading</code>)</li>
+<li>Press it again to go to the section before that, etc.</li>
+</ul>
+<p>To move to the next section:</p>
+<ul>
+<li>Press <code>s-&lt;down&gt;</code> (or <code>C-c C-n</code> or <code>M-x org-next-visible-heading</code>)</li>
+</ul>
+<p>Moving to the next higher heading is very useful:</p>
+<ul>
+<li>Press <code>C-c C-u</code> (or <code>M-x outline-up-heading</code>).</li>
+</ul>
+<p>From the parent heading you get to see the outline of the outer
+context of what you&rsquo;re currently writing about. From here you can
+press <code>Tab</code> twice to fold all all the sibling sections and get an
+overview.</p>
+<ul>
+<li>Press <code>C-c C-u TAB TAB</code>.</li>
+</ul>
+<p>Here are some other header movement commands:</p>
+<ul>
+<li><code>C-c C-f</code> (<code>M-x org-forward-heading-same-level</code>)</li>
+<li><code>C-c C-b</code> (<code>M-x org-backward-heading-same-level</code>)</li>
+</ul>
+<h2 id="jumping-around--org-goto"><a class="heading-anchor" href="#jumping-around--org-goto">Jumping around (org-goto)</a></h2>
+<p>You may frequently find yourself needing to jump around in a document,
+but don&rsquo;t want to lose your current place.</p>
+<ul>
+<li>Press <code>C-c C-j</code> (or <code>M-x org-goto</code>). Mnemonic &ldquo;jump&rdquo;.</li>
+<li>Immediately press <code>Enter</code> to close the org-goto menu (theres
+advanced searching functions in there, but you ignore that for
+now).</li>
+</ul>
+<p>This will save your current place, allowing you to go find the place
+you need to temporarily go to.</p>
+<p>When you&rsquo;re done, and you want to go back to to where you were:</p>
+<ul>
+<li>Press <code>C-c &amp;</code>. (or <code>M-x org-mark-ring-goto</code>).</li>
+</ul>
+<p>One mnemonic for <code>&amp;</code> is that it is the same syntax for a C pointer
+reference.</p>
+<h2 id="indirect-buffers-and-narrow-to-subtree"><a class="heading-anchor" href="#indirect-buffers-and-narrow-to-subtree">Indirect Buffers and Narrow To Subtree</a></h2>
+<p>One of the advantages of Org-mode is you can organize lots of
+different articles into one big file. This is also a disadvantage when
+you are trying to focus on just one of them. It is easy to get lost.</p>
+<p>As an example, open the other book named <a href="https://github.com/EnigmaCurry/org/blob/ox-hugo/books/d.rymcg.tech.org?plain=1">d.rymcg.tech.org</a> (found in
+this same directory). Let&rsquo;s say we want to focus on the chapter named
+<code>Traefik Proxy</code>.</p>
+<ul>
+<li>Press <code>C-x 4 c</code>. (or <code>M-x clone-indirect-buffer-other-window</code>).</li>
+</ul>
+<p>You now have <strong>two buffers</strong> open for the <strong>same</strong> file:
+<code>d.rymcg.tech.org</code> (the original) and <code>d.rymcg.tech.org&lt;2&gt;</code> (the
+clone), and you are automatically switched focus to the newly cloned
+buffer.</p>
+<p>Rename the new buffer to <code>traefik</code> so you don&rsquo;t get confused:</p>
+<ul>
+<li>Press <code>C-x x r</code> (or <code>M-x rename-buffer</code>).</li>
+<li>Type the new name: <code>traefik</code>.</li>
+</ul>
+<p>Now find the chapter you want to focus on:</p>
+<ul>
+<li>Navigate to the chapter heading named <code>* Traefik Proxy</code>, make sure
+your cursor is now somewhere on this line.</li>
+</ul>
+<p>Narrow the buffer to the selected subtree:</p>
+<ul>
+<li>Press <code>C-x n s</code> (or <code>M-x org-narrow-to-subtree</code>).</li>
+</ul>
+<p>You have now completed the process of narrowing the content of this
+buffer to only the Traefik Proxy article. It is important to know that
+the <code>traefik</code> buffer is still an indirect clone of the original
+<code>d.rymcg.tech.org</code> buffer, and they are both simultaneously editing
+the same underlying file. But now you know how to focus on a bite
+sized peice of a larger file. Go ahead and create more buffers to work
+on other parts you frequently need to focus on.</p>
+<p>If you need to widen the buffer again:</p>
+<ul>
+<li>Press <code>C-x n w</code> (or <code>M-x widen</code>)</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

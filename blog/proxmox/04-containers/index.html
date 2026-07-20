@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 4: Containers · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/05-kvm-templates/" aria-label="Previous: kvm-templates" title="prev: kvm-templates"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/03-notifications/" aria-label="Next: notifications" title="next: notifications"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">containers</a></li><li class="lvl2"><a href="#lxc">LXC?</a></li><li class="lvl2"><a href="#usage">Usage</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="active" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/04-containers/">/containers</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 4: Containers</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-04">2022-05-04</time></span>
+  <span>updated <time datetime="2023-11-22">2023-11-22</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>Here is an automated script to install Proxmox containers (LXC) from
+base templates, configuring their SSH servers with passwords disabled,
+and optionally installing Docker for nesting containers.</p>
+<p>Honestly, LXC is cool, but KVM is compelling. If you&rsquo;re in a hurry,
+you might want to skip directly to the next post <a href="/blog/proxmox/05-kvm-templates/">part 5:
+KVM</a></p>
+<h2 id="lxc"><a class="heading-anchor" href="#lxc">LXC?</a></h2>
+<p>According to the <a href="https://linuxcontainers.org/lxc/introduction/">LXC Introduction
+page</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>LXC is a userspace interface for the Linux kernel containment
+</span></span><span style="display:flex;"><span>features. Through a powerful API and simple tools, it lets Linux
+</span></span><span style="display:flex;"><span>users easily create and manage system or application containers.
+</span></span></code></pre></div><p>So LXC is another way to create containers on Linux, and it predates
+both Docker and Podman. Unlike Docker containers, LXC containers are
+more stateful: inside of an LXC container you usually run systemd, you
+can SSH into one, and you use the package manager inside to install
+software, and basically treat the system like a virtual machine (more
+like a &ldquo;pet&rdquo;, less like &ldquo;cattle&rdquo;).</p>
+<p>Unlike virtual machines (eg. KVM, VMWare, VirtualBox), containers
+don&rsquo;t have any virtualized hardware: instead they run as a process
+directly on the host system, under the same Linux kernel. You also
+can&rsquo;t use a normal Linux distribution&rsquo;s <code>.iso</code> file to install an LXC
+container, because LXC can&rsquo;t &ldquo;boot&rdquo; a second kernel (it can only spawn
+PID 1, eg. systemd). Startup time is extremely quick.</p>
+<p><a href="https://pve.proxmox.com/wiki/Linux_Container">In Proxmox, you install LXC containers via maintained
+templates.</a> The script
+outlined in this post is simply automation for the process of
+downloading the template and creating a container based upon it.</p>
+<p>This script currently supports the following container distributions
+(more are easily added):</p>
+<ul>
+<li><code>arch</code> - Arch Linux</li>
+<li><code>debian</code> - Debian 11</li>
+<li><code>alpine</code> - Alpine 3.15</li>
+<li><code>fedora</code> - Fedora 35</li>
+</ul>
+<h2 id="usage"><a class="heading-anchor" href="#usage">Usage</a></h2>
+<p>Login to your Proxmox server as the root user via SSH.</p>
+<p>Download the script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_container.sh
+</pre></div>
+</div>
+
+
+<p>Read all of the comments, and then edit the variables at the top of
+the script to change any defaults you desire. You can also override
+the configuration defaults in your parent shell environment.</p>
+<p>Make the script executable:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+chmod a&#43;x proxmox_container.sh
+</pre></div>
+</div>
+
+
+<p>Now run the script, passing any configuration you like to override:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=debian \
+INSTALL_DOCKER=yes \
+CONTAINER_ID=100 \
+CONTAINER_HOSTNAME=foo \
+./proxmox_container.sh create
+</pre></div>
+</div>
+
+
+<p>(The above example shows setting some variables outside the script,
+modifying the defaults. You can also just edit the script instead of
+providing them on the command line.)</p>
+<p>The container will be created, and at the very end the IP address of
+the new container will be printed. You can login via SSH to the <code>root</code>
+user.</p>
+<p>Password authentication is disabled; you must use SSH public key
+authentication. The default configuration will use the same SSH keys
+as you used for the root Proxmox user (<code>/root/.ssh/authorized_keys</code>).</p>
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_container.sh">You can download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">## Automated script to setup LXC containers on Proxmox (PVE)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## See https://blog.rymcg.tech/blog/proxmox/04-containers/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Choose your distribution base template:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Supported: arch, debian, alpine, fedora</span>
+</span></span><span style="display:flex;"><span>DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#66d9ef">:-</span>arch<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Set these variables to configure the container:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## (All variables can be overriden from the parent environment)</span>
+</span></span><span style="display:flex;"><span>CONTAINER_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#66d9ef">:-</span>8001<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CONTAINER_HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CONTAINER_HOSTNAME<span style="color:#66d9ef">:-$(</span>echo <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> | cut -d- -f1<span style="color:#66d9ef">)</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container CPUs:</span>
+</span></span><span style="display:flex;"><span>NUM_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>NUM_CORES<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container RAM in MB:</span>
+</span></span><span style="display:flex;"><span>MEMORY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#66d9ef">:-</span>2048<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container swap size in MB:</span>
+</span></span><span style="display:flex;"><span>SWAP_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SWAP_SIZE<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container root filesystem size in GB:</span>
+</span></span><span style="display:flex;"><span>FILESYSTEM_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FILESYSTEM_SIZE<span style="color:#66d9ef">:-</span>50<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Point to the local authorized_keys file to copy into container:</span>
+</span></span><span style="display:flex;"><span>SSH_KEYS<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SSH_KEYS<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.ssh/authorized_keys<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Set an IP address or use DHCP by default:</span>
+</span></span><span style="display:flex;"><span>IP_ADDRESS<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>IP_ADDRESS<span style="color:#66d9ef">:-</span>dhcp<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## To install docker inside the container, set INSTALL_DOCKER=yes</span>
+</span></span><span style="display:flex;"><span>INSTALL_DOCKER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Arch Linux specific:</span>
+</span></span><span style="display:flex;"><span>ARCH_MIRROR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ARCH_MIRROR<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;https://mirror.rackspace.com&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Proxmox specific variables:</span>
+</span></span><span style="display:flex;"><span>PUBLIC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#66d9ef">:-</span>vmbr0<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>TEMPLATE_STORAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>TEMPLATE_STORAGE<span style="color:#66d9ef">:-</span>local<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CONTAINER_STORAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CONTAINER_STORAGE<span style="color:#66d9ef">:-</span>local-lvm<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Set YES=yes to disable all confirmations:</span>
+</span></span><span style="display:flex;"><span>YES<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>YES<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## You can provide a password, or leave it blank to generate a secure one:</span>
+</span></span><span style="display:flex;"><span>PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PASSWORD<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${#</span>PASSWORD<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! command -v openssl &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;openssl is not installed. Cannot generate random password.&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Generate a long random password with openssl:</span>
+</span></span><span style="display:flex;"><span>    PASSWORD<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>openssl rand -hex 45<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_run<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    pct exec <span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span> -- <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>@<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_confirm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    test <span style="color:#e6db74">${</span>YES<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    default<span style="color:#f92672">=</span>$1; prompt<span style="color:#f92672">=</span>$2; question<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;. Proceed?&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prompt<span style="color:#e6db74">}${</span>question<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>dflt<span style="color:#e6db74">}</span><span style="color:#e6db74">): &#34;</span> answer
+</span></span><span style="display:flex;"><span>    answer<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>answer<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>default<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Exiting.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span>$BASH_SOURCE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## De-Reference common short distro aliases to the longer name:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;arch&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;archlinux&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;archlinux-base&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;debian&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;debian-11&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;debian-11-standard&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;alpine&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;alpine-3&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;alpine-3.15&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;fedora&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;fedora-35&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Only support specific templates that have been tested to work:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;archlinux-base&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Creating Arch Linux container&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;debian-11-standard&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Creating Debian 11 container&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;alpine-3.15&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Creating Alpine 3.15 container&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;fedora-35&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Creating Fedora 35 container&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;DISTRO &#39;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; is not supported by this script yet.&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    test -f <span style="color:#e6db74">${</span>SSH_KEYS<span style="color:#e6db74">}</span> <span style="color:#f92672">||</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        <span style="color:#f92672">(</span>echo <span style="color:#e6db74">&#34;Missing required SSH authorized_keys file: </span><span style="color:#e6db74">${</span>SSH_KEYS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit 1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Download latest template</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Updating templates ... &#34;</span>
+</span></span><span style="display:flex;"><span>    pveam update
+</span></span><span style="display:flex;"><span>    TEMPLATE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>pveam available --section system | grep <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> | sort -n | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>                       head -1 | tr -s <span style="color:#e6db74">&#39; &#39;</span> | cut -d<span style="color:#e6db74">&#34; &#34;</span> -f2<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    pveam download <span style="color:#e6db74">${</span>TEMPLATE_STORAGE<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>TEMPLATE<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    read -r -d <span style="color:#e6db74">&#39;&#39;</span> CREATE_COMMAND <span style="color:#e6db74">&lt;&lt;EOM || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    pct create ${CONTAINER_ID}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ${TEMPLATE_STORAGE}:vztmpl/${TEMPLATE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --storage ${CONTAINER_STORAGE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --rootfs ${CONTAINER_STORAGE}:${FILESYSTEM_SIZE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --unprivileged 1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --cores ${NUM_CORES}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --features nesting=1,keyctl=1,fuse=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --hostname ${CONTAINER_HOSTNAME}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --memory ${MEMORY}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --password ${PASSWORD}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --net0 name=eth0,bridge=${PUBLIC_BRIDGE},firewall=1,ip=${IP_ADDRESS}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --swap ${SWAP_SIZE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --ssh-public-keys ${SSH_KEYS}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOM</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CREATE_COMMAND<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    _confirm yes <span style="color:#e6db74">&#34;^^ This will create the container using the above settings&#34;</span>
+</span></span><span style="display:flex;"><span>    set -x
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">${</span>CREATE_COMMAND<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pct start <span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    sleep <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>    set +x
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^arch <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _archlinux_init
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^debian <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _debian_init
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^alpine <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _alpine_init
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^fedora <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _fedora_init
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    set +x
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Container IP address (eth0):&#34;</span>
+</span></span><span style="display:flex;"><span>    _run sh -c <span style="color:#e6db74">&#34;ip addr show dev eth0 | grep inet&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_debian_init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Mask these services because they fail:</span>
+</span></span><span style="display:flex;"><span>    _run systemctl mask systemd-journald-audit.socket
+</span></span><span style="display:flex;"><span>    _run systemctl mask sys-kernel-config.mount
+</span></span><span style="display:flex;"><span>    _run env apt-get update
+</span></span><span style="display:flex;"><span>    _run env DEBIAN_FRONTEND<span style="color:#f92672">=</span>noninteractive <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        apt-get <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -o Dpkg::Options::<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--force-confnew&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -fuy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        dist-upgrade
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _ssh_config
+</span></span><span style="display:flex;"><span>    _run systemctl enable --now ssh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _run apt-get -y install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>            ca-certificates <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>            curl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>            gnupg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>            lsb-release
+</span></span><span style="display:flex;"><span>        _run sh -c <span style="color:#e6db74">&#34;curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg&#34;</span>
+</span></span><span style="display:flex;"><span>        _run sh -c <span style="color:#e6db74">&#34;echo \&#34;deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \$(lsb_release -cs) stable\&#34; | tee /etc/apt/sources.list.d/docker.list &gt; /dev/null&#34;</span>
+</span></span><span style="display:flex;"><span>        _run apt-get update
+</span></span><span style="display:flex;"><span>        _run apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_archlinux_init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    _run pacman-key --init
+</span></span><span style="display:flex;"><span>    _run pacman-key --populate
+</span></span><span style="display:flex;"><span>    _run /bin/sh -c <span style="color:#e6db74">&#34;echo &#39;Server = </span><span style="color:#e6db74">${</span>ARCH_MIRROR<span style="color:#e6db74">}</span><span style="color:#e6db74">/archlinux/\$repo/os/\$arch&#39; &gt; /etc/pacman.d/mirrorlist&#34;</span>
+</span></span><span style="display:flex;"><span>    _run pacman -Syu --noconfirm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Mask this service because its failing:</span>
+</span></span><span style="display:flex;"><span>    _run systemctl mask systemd-journald-audit.socket
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    _ssh_config
+</span></span><span style="display:flex;"><span>    _run systemctl enable --now sshd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _run pacman -S --noconfirm docker
+</span></span><span style="display:flex;"><span>        _run systemctl enable --now docker
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_alpine_init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    _run apk upgrade -U
+</span></span><span style="display:flex;"><span>    _run apk add openssh
+</span></span><span style="display:flex;"><span>    _ssh_config
+</span></span><span style="display:flex;"><span>    _run rc-update add sshd
+</span></span><span style="display:flex;"><span>    _run /etc/init.d/sshd start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _run apk add docker
+</span></span><span style="display:flex;"><span>        _run rc-update add docker
+</span></span><span style="display:flex;"><span>        _run /etc/init.d/docker start
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_fedora_init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    _run dnf -y upgrade --refresh
+</span></span><span style="display:flex;"><span>    _run dnf -y install openssh-server less
+</span></span><span style="display:flex;"><span>    _ssh_config
+</span></span><span style="display:flex;"><span>    _run systemctl enable --now sshd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _run dnf -y install dnf-plugins-core
+</span></span><span style="display:flex;"><span>        _run dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+</span></span><span style="display:flex;"><span>        _run dnf -y install docker-ce docker-ce-cli containerd.io
+</span></span><span style="display:flex;"><span>        _run systemctl enable --now docker
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_ssh_config<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    SSHD_CONFIG<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>mktemp<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOM &gt; ${SSHD_CONFIG}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PermitRootLogin prohibit-password
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PasswordAuthentication no
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ChallengeResponseAuthentication no
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">AcceptEnv LANG LC_*
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Subsystem sftp /usr/lib/openssh/sftp-server
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOM</span>
+</span></span><span style="display:flex;"><span>    pct push <span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>SSHD_CONFIG<span style="color:#e6db74">}</span> /etc/ssh/sshd_config
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>destroy<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    _confirm yes <span style="color:#e6db74">&#34;This will destroy container </span><span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#66d9ef">$(</span>pct config <span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span> | grep hostname<span style="color:#66d9ef">)</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    set -x
+</span></span><span style="display:flex;"><span>    pct stop <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    pct destroy <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>login<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    pct enter <span style="color:#e6db74">${</span>CONTAINER_ID<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $# <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;# Documentation: https://blog.rymcg.tech/blog/proxmox/04-containers/&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Commands:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; create&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; destroy&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; login&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $# &gt; <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    shift
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Invalid arguments: </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

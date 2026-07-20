@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>VHS · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/giza/" aria-label="Previous: giza" title="prev: giza"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/letters/" aria-label="Next: letters" title="next: letters"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">vhs</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="open">
+                  <a class="active" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/vhs/">/vhs</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">VHS</a></h1>
+
+
+<p>Two layers stacked:</p>
+<ul>
+<li>a <strong>VHS/CRT treatment</strong> — CRT barrel distortion, vertical hold drift,
+tracking wobble, glitch tearing, chromatic aberration, composite
+color bleed, RF interference, snow, head-switch bar at the top,
+rolling brightness bar, static bursts, and posterization;</li>
+<li>an <strong>oscilloscope beam</strong> that traces a parametric shape, morphing
+continuously between nine of them — mushroom, star, heart, butterfly,
+spirograph, atom, clock, smiley, mushroom-man. Each shape is its own
+<code>vec2 f(s, t)</code> parameterised by <code>s ∈ [0,1]</code> (along the trace) and
+<code>t</code> (time), and each has its own internal animation: the heart beats,
+the butterfly flaps, the smiley blinks, the clock&rsquo;s hands sweep, the
+mushroom-man walks.</li>
+</ul>
+<p>The scope is drawn by, per pixel, sampling 200 points along the current
+morphed shape and taking the minimum distance — a naive but effective
+<code>argmin</code>-of-samples SDF. That&rsquo;s the dominant cost of the shader.</p>
+<p>Because the phosphor is stacked <strong>on top</strong> of a heavy CRT pass, the beam
+sits behind the aberration, scanlines, and snow, and reads as though
+some other machine were driving the tube&rsquo;s electron gun.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Full VHS/CRT treatment layered under an oscilloscope beam that
+// morphs continuously through nine parametric shapes.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+#define SCOPE_SAMPLES 200
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash2v(i);
+  float b = hash2v(i + vec2(1.0, 0.0));
+  float c = hash2v(i + vec2(0.0, 1.0));
+  float d = hash2v(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+  for(int i = 0; i < 4; i++){
+    v += a * valueNoise(p);
+    p = rot * p * 2.0;
+    a *= 0.5;
+  }
+  return v;
+}
+
+vec3 palette(float idx){
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  idx = fract(idx) * 4.0;
+  if(idx < 1.0)      return mix(c1, c2, idx);
+  else if(idx < 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx < 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+// --- Parametric oscilloscope shapes ---
+
+vec2 mushroom(float s, float t){
+  float breath = 1.0 + 0.08 * sin(t * 1.5);
+  float sway = sin(t * 0.8) * 0.03;
+  if(s < 0.4){
+    float a = PI - s / 0.4 * PI;
+    float ripple = 0.015 * sin(a * 6.0 + t * 4.0);
+    return vec2(cos(a) * 0.3 * breath + sway, sin(a) * 0.12 + 0.05 + ripple);
+  } else if(s < 0.44){
+    float f = (s - 0.4) / 0.04;
+    return mix(vec2(0.3 * breath + sway, 0.05), vec2(0.22 * breath + sway, -0.02), f);
+  } else if(s < 0.52){
+    float f = (s - 0.44) / 0.08;
+    return mix(vec2(0.22 * breath + sway, -0.02), vec2(0.08 + sway, -0.06), f);
+  } else if(s < 0.62){
+    float f = (s - 0.52) / 0.1;
+    float stemSway = sway + sin(f * PI + t * 1.2) * 0.015;
+    return mix(vec2(0.08 + stemSway, -0.06), vec2(0.1 + stemSway, -0.32), f);
+  } else if(s < 0.7){
+    float f = (s - 0.62) / 0.08;
+    return mix(vec2(0.1 + sway, -0.32), vec2(-0.1 + sway, -0.32), f);
+  } else if(s < 0.8){
+    float f = (s - 0.7) / 0.1;
+    float stemSway = sway + sin((1.0 - f) * PI + t * 1.2) * 0.015;
+    return mix(vec2(-0.1 + stemSway, -0.32), vec2(-0.08 + stemSway, -0.06), f);
+  } else if(s < 0.88){
+    float f = (s - 0.8) / 0.08;
+    return mix(vec2(-0.08 + sway, -0.06), vec2(-0.22 * breath + sway, -0.02), f);
+  } else {
+    float f = (s - 0.88) / 0.12;
+    return mix(vec2(-0.22 * breath + sway, -0.02), vec2(-0.3 * breath + sway, 0.05), f);
+  }
+}
+
+vec2 starShape(float s, float t){
+  float a = s * PI * 2.0 + t * 0.4;
+  float points = 5.0 + sin(t * 0.13) * 1.5;
+  float outerPulse = 0.17 + 0.04 * sin(t * 1.8);
+  float innerPulse = 0.15 + 0.03 * sin(t * 2.3 + 1.0);
+  float r = innerPulse + outerPulse * pow(abs(cos(a * points * 0.5)), 0.7);
+  float tipWobble = sin(a * points + t * 3.0) * 0.012;
+  return vec2(cos(a), sin(a)) * (r + tipWobble);
+}
+
+vec2 heart(float s, float t){
+  float a = s * PI * 2.0 + t * 0.15;
+  float beat = 1.0 + 0.12 * pow(abs(sin(t * 2.0)), 8.0);
+  float x = 0.28 * sin(a) * sin(a) * sin(a);
+  float y = 0.22 * cos(a) - 0.08 * cos(2.0 * a) - 0.04 * cos(3.0 * a) - 0.015 * cos(4.0 * a);
+  vec2 p = vec2(x, y * 0.9 + 0.02) * beat;
+  p += vec2(sin(a * 3.0 + t * 2.5), cos(a * 3.0 + t * 2.0)) * 0.01;
+  return p;
+}
+
+vec2 butterfly(float s, float t){
+  float a = s * PI * 2.0;
+  float r = exp(sin(a)) - 2.0 * cos(4.0 * a) + pow(sin((2.0 * a - PI) / 24.0), 5.0);
+  vec2 p = vec2(sin(a), cos(a)) * r * 0.08;
+  float flap = 0.5 + 0.5 * sin(t * 2.5);
+  p.x *= 0.4 + flap * 0.6;
+  p.y += flap * 0.02;
+  p += vec2(sin(a * 8.0 + t * 3.0), cos(a * 6.0 - t * 2.0)) * 0.008;
+  p.x += sin(t * 0.6) * 0.03;
+  p.y += sin(t * 1.2) * 0.015;
+  return p;
+}
+
+vec2 spirograph(float s, float t){
+  float a = s * PI * 2.0 * 3.0;
+  float fx = 3.0 + sin(t * 0.05);
+  float fy = 2.0 + cos(t * 0.07);
+  return vec2(sin(a * fx + t * 0.2), cos(a * fy)) * 0.25;
+}
+
+vec2 atom(float s, float t){
+  float plane = floor(s * 3.0);
+  float localS = fract(s * 3.0);
+  float localA = localS * PI * 2.0;
+  float tilt = plane * PI / 3.0 + t * 0.1;
+  float rx = 0.25;
+  float ry = 0.08;
+  vec2 p = vec2(cos(localA + t * (1.5 + plane * 0.4)) * rx,
+                sin(localA + t * (1.5 + plane * 0.4)) * ry);
+  float ct = cos(tilt), st = sin(tilt);
+  p = vec2(p.x * ct - p.y * st, p.x * st + p.y * ct);
+  if(s < 0.04){
+    float na = s / 0.04 * PI * 2.0;
+    p = vec2(cos(na + t * 5.0), sin(na + t * 5.0)) * 0.02;
+  }
+  return p;
+}
+
+vec2 clockShape(float s, float t){
+  if(s < 0.5){
+    float a = s / 0.5 * PI * 2.0;
+    float baseR = 0.25;
+    float tickAngle = mod(a, PI / 6.0) - PI / 12.0;
+    float tick = smoothstep(0.06, 0.0, abs(tickAngle)) * 0.02;
+    float r = baseR + tick;
+    r *= 1.0 + 0.015 * sin(t * 1.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s < 0.75){
+    float f = (s - 0.5) / 0.25;
+    float minuteAngle = PI * 0.5 - t * 0.2;
+    vec2 tip = vec2(cos(minuteAngle), sin(minuteAngle)) * 0.2;
+    tip += vec2(sin(t * 3.0), cos(t * 2.7)) * 0.003;
+    return mix(vec2(0.0), tip, f);
+  } else {
+    float f = (s - 0.75) / 0.25;
+    float hourAngle = PI * 0.5 - t * 0.017;
+    vec2 tip = vec2(cos(hourAngle), sin(hourAngle)) * 0.14;
+    tip += vec2(sin(t * 2.5 + 1.0), cos(t * 2.0 + 1.0)) * 0.002;
+    return mix(vec2(0.0), tip, f);
+  }
+}
+
+vec2 smiley(float s, float t){
+  float blinkCycle = mod(t, 4.0);
+  float blink = 1.0 - 0.9 * pow(max(1.0 - abs(blinkCycle - 0.15) * 10.0, 0.0), 2.0);
+  float grinWidth = 0.14 + 0.04 * sin(t * 0.7);
+  float grinCurve = 0.08 + 0.06 * sin(t * 0.5);
+
+  if(s < 0.4){
+    float a = s / 0.4 * PI * 2.0;
+    float r = 0.25 + 0.008 * sin(a * 5.0 + t * 2.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s < 0.52){
+    float a = (s - 0.4) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(-0.09 + cos(a) * ex, 0.06 + sin(a) * ey);
+    p += vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else if(s < 0.64){
+    float a = (s - 0.52) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(0.09 + cos(a) * ex, 0.06 + sin(a) * ey);
+    p += vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else {
+    float f = (s - 0.64) / 0.36;
+    float a = PI + f * PI;
+    float mx = cos(a) * grinWidth;
+    float my = sin(a) * grinCurve - 0.08;
+    float corner = sin(t * 0.3) * 0.02 * (1.0 - abs(f - 0.5) * 2.0);
+    return vec2(mx, my + corner);
+  }
+}
+
+vec2 mushroomMan(float s, float t){
+  float walk = sin(t * 2.0);
+  float bob  = abs(sin(t * 2.0)) * 0.01;
+
+  if(s < 0.08){
+    float a = s / 0.08 * PI * 2.0;
+    return vec2(-0.12 + cos(a) * 0.04, 0.02 + sin(a) * 0.04 + bob);
+  } else if(s < 0.16){
+    float f = (s - 0.08) / 0.08;
+    return mix(vec2(-0.12, -0.02 + bob), vec2(-0.12, -0.18 + bob), f);
+  } else if(s < 0.22){
+    float f = (s - 0.16) / 0.06;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.12, -0.18 + bob), vec2(-0.16 - swing, -0.32 + bob), f);
+  } else if(s < 0.24){
+    float f = (s - 0.22) / 0.02;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.16 - swing, -0.32 + bob), vec2(-0.12, -0.18 + bob), f);
+  } else if(s < 0.30){
+    float f = (s - 0.24) / 0.06;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.12, -0.18 + bob), vec2(-0.08 - swing, -0.32 + bob), f);
+  } else if(s < 0.32){
+    float f = (s - 0.30) / 0.02;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.08 - swing, -0.32 + bob), vec2(-0.12, -0.06 + bob), f);
+  } else if(s < 0.38){
+    float f = (s - 0.32) / 0.06;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.12, -0.06 + bob), vec2(-0.2 + swing, -0.14 + bob), f);
+  } else if(s < 0.40){
+    float f = (s - 0.38) / 0.02;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.2 + swing, -0.14 + bob), vec2(-0.12, -0.06 + bob), f);
+  } else if(s < 0.46){
+    float f = (s - 0.40) / 0.06;
+    float reach = sin(t * 1.5) * 0.01;
+    return mix(vec2(-0.12, -0.06 + bob), vec2(-0.02 + reach, 0.06 + bob), f);
+  } else if(s < 0.48){
+    float f = (s - 0.46) / 0.02;
+    return mix(vec2(-0.02, 0.06 + bob), vec2(0.18, 0.12 + bob), f);
+  } else if(s < 0.72){
+    float a = PI - (s - 0.48) / 0.24 * PI;
+    float breath = 1.0 + 0.05 * sin(t * 1.8);
+    float ripple = 0.01 * sin(a * 5.0 + t * 3.0);
+    return vec2(cos(a) * 0.2 * breath + 0.1, sin(a) * 0.1 + 0.12 + bob + ripple);
+  } else if(s < 0.78){
+    float f = (s - 0.72) / 0.06;
+    return mix(vec2(0.3, 0.12 + bob), vec2(0.22, 0.06 + bob), f);
+  } else if(s < 0.84){
+    float f = (s - 0.78) / 0.06;
+    return mix(vec2(0.22, 0.06 + bob), vec2(0.15, -0.12 + bob), f);
+  } else if(s < 0.90){
+    float f = (s - 0.84) / 0.06;
+    return mix(vec2(0.15, -0.12 + bob), vec2(0.05, -0.12 + bob), f);
+  } else if(s < 0.96){
+    float f = (s - 0.90) / 0.06;
+    return mix(vec2(0.05, -0.12 + bob), vec2(-0.02, 0.06 + bob), f);
+  } else {
+    float f = (s - 0.96) / 0.04;
+    return mix(vec2(-0.02, 0.06 + bob), vec2(-0.1, 0.12 + bob), f);
+  }
+}
+
+vec2 getShape(int idx, float s, float t){
+  if(idx == 0)      return mushroom(s, t);
+  else if(idx == 1) return starShape(s, t);
+  else if(idx == 2) return heart(s, t);
+  else if(idx == 3) return butterfly(s, t);
+  else if(idx == 4) return spirograph(s, t);
+  else if(idx == 5) return atom(s, t);
+  else if(idx == 6) return clockShape(s, t);
+  else if(idx == 7) return smiley(s, t);
+  else              return mushroomMan(s, t);
+}
+
+// morph between shapes, hang time weighted so each shape gets a beat to breathe
+vec2 morphShape(float s, float t){
+  float rawPhase = t * 0.04;
+  float f = fract(rawPhase);
+  float eased = f * f * (3.0 - 2.0 * f);
+  eased = eased * eased * (3.0 - 2.0 * eased);
+  float base = floor(rawPhase);
+  int shapeIdx = int(mod(base, 9.0));
+  int nextIdx  = int(mod(base + 1.0, 9.0));
+  return mix(getShape(shapeIdx, s, t), getShape(nextIdx, s, t), eased);
+}
+
+// per-pixel scope glow: min-distance to 200 samples along the current shape
+float scopeGlow(vec2 p, float t){
+  float aspect = iResolution.x / iResolution.y;
+  vec2 centered = (p - 0.5) * vec2(aspect, 1.0);
+  float minDist = 1.0;
+  for(int i = 0; i < SCOPE_SAMPLES; i++){
+    float s = float(i) / float(SCOPE_SAMPLES);
+    vec2 shapeP = morphShape(s, t);
+    // analog wobble on the beam
+    shapeP += vec2(sin(s * 40.0 + t * 3.0), cos(s * 35.0 + t * 2.5)) * 0.003;
+    float d = length(centered - shapeP);
+    minDist = min(minDist, d);
+  }
+  float core = 0.0015 / (minDist * minDist + 0.0015);
+  float halo = 0.008  / (minDist + 0.02);
+  return min(core + halo, 5.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float t = iTime * tempo;
+
+  // CRT barrel distortion
+  vec2 crtUV = uv * 2.0 - 1.0;
+  float barrel = 0.12;
+  float r2 = dot(crtUV, crtUV);
+  crtUV *= 1.0 + barrel * r2;
+  vec2 curvedUV = crtUV * 0.5 + 0.5;
+  float offScreen = step(0.0, curvedUV.x) * step(curvedUV.x, 1.0)
+                  * step(0.0, curvedUV.y) * step(curvedUV.y, 1.0);
+
+  // three overlapping glitch triggers with different rates and thresholds
+  float glitch1 = step(0.90, hash1(floor(t * 2.0)));
+  float glitch2 = step(0.95, hash1(floor(t * 3.0 + 7.0)));
+  float glitch3 = step(0.97, hash1(floor(t * 1.5 + 13.0)));
+
+  // vertical hold drifting slowly
+  float holdPhase = t * 0.04;
+  float holdDrift = fract(sin(holdPhase * 0.7) * 0.5 + holdPhase * 0.02);
+  float vHold = holdDrift * 0.06 * sin(t * 0.3);
+  vHold += glitch3 * (hash1(floor(t * 2.0 + 5.0)) - 0.5) * 0.15;
+
+  // tracking wobble: normal drift bands + three burst bands during glitches
+  float trackingPhase = t * 0.7;
+  float trackBand1 = 1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - fract(trackingPhase)));
+  float trackBand2 = 1.0 - smoothstep(0.0, 0.04, abs(curvedUV.y - fract(trackingPhase * 1.3 + 0.33)));
+  float glitchY1 = hash1(floor(t * 4.0));
+  float glitchY2 = hash1(floor(t * 6.0 + 3.0));
+  float glitchY3 = hash1(floor(t * 2.5 + 9.0));
+  float glitchBand1 = (1.0 - smoothstep(0.0, 0.03, abs(curvedUV.y - glitchY1)))
+                    * smoothstep(0.0, 0.08, abs(curvedUV.y - glitchY1 - 0.05));
+  float glitchBand2 = (1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - glitchY2)))
+                    * smoothstep(0.0, 0.12, abs(curvedUV.y - glitchY2 - 0.08));
+  float glitchBand3 = (1.0 - smoothstep(0.0, 0.02, abs(curvedUV.y - glitchY3)))
+                    * smoothstep(0.0, 0.15, abs(curvedUV.y - glitchY3 - 0.1));
+  float wobble = trackBand1 * 0.008 + trackBand2 * 0.006
+               + glitchBand1 * glitch1 * 0.04
+               + glitchBand2 * glitch2 * 0.07
+               + glitchBand3 * glitch3 * 0.12;
+
+  // horizontal tearing band during heavy glitches
+  float tearOffset = 0.0;
+  if(glitch3 > 0.0){
+    float tearY = hash1(floor(t * 2.0 + 5.0));
+    float tearBand = step(tearY, curvedUV.y) * step(curvedUV.y, tearY + 0.08);
+    tearOffset = tearBand * (hash1(floor(t * 8.0)) - 0.5) * 0.2;
+  }
+
+  vec2 distUV = curvedUV;
+  distUV.y = fract(distUV.y + vHold);
+  distUV.x += wobble * sin(curvedUV.y * 100.0 + t * 10.0) + tearOffset;
+
+  // wandering drift direction so the pattern never repeats
+  float driftAngle = sin(t * 0.011)         * 2.5
+                   + sin(t * 0.0047 + 1.0)  * 1.8
+                   + sin(t * 0.0023 + 4.0)  * 1.0;
+  float driftSpeed = 0.35 + 0.15 * sin(t * 0.007 + 2.0);
+  vec2 drift = vec2(cos(driftAngle), sin(driftAngle)) * driftSpeed * t;
+
+  // composite video color bleed
+  float bleedAmt = 0.008 + glitch1 * 0.015;
+  vec2 bleedUV1 = distUV + vec2(bleedAmt, 0.0);
+  vec2 bleedUV2 = distUV - vec2(bleedAmt, 0.0);
+
+  float aberr = 0.003 + glitch1 * 0.008 + glitch2 * 0.015 + glitch3 * 0.03;
+  float lumC = fbm(distUV  * 4.0 + drift * 1.2);
+  float lumL = fbm(bleedUV2 * 4.0 + drift * 1.2);
+  float lumR = fbm(bleedUV1 * 4.0 + drift * 1.2);
+
+  float n = fbm(distUV * 3.0 + drift);
+  vec3 baseCol = palette(n);
+  vec3 bleedColL = palette(n - aberr * 8.0);
+  vec3 bleedColR = palette(n + aberr * 8.0);
+  vec3 col = mix(baseCol, bleedColL, 0.15) * (0.4 + lumL * 0.4)
+           + mix(baseCol, baseCol,   0.7)  * (0.4 + lumC * 0.4)
+           + mix(baseCol, bleedColR, 0.15) * (0.4 + lumR * 0.4);
+  col /= 1.8;
+
+  // posterization
+  float posterLevels = 12.0 - glitch2 * 6.0;
+  col = floor(col * posterLevels + 0.5) / posterLevels;
+
+  if(glitch2 > 0.0){
+    float dropChoice = hash1(floor(t * 5.0 + 2.0));
+    vec3 shiftColor = palette(dropChoice);
+    float aberrLum = (lumL + lumC + lumR) / 3.0;
+    col = mix(col, shiftColor * (0.5 + aberrLum * 0.5), 0.6);
+  }
+
+  // soft scanlines
+  float scanline = 0.90 + 0.10 * sin(curvedUV.y * iResolution.y * 0.5);
+  col *= scanline;
+
+  // RF interference cross-hatched sines
+  float rf = sin((curvedUV.x + curvedUV.y) * 20.0 + t * 5.0) * 0.5 + 0.5;
+  rf *= sin((curvedUV.x - curvedUV.y * 0.5) * 30.0 - t * 3.0) * 0.5 + 0.5;
+  col += palette(curvedUV.y + t * 0.1) * rf * 0.03;
+
+  // static bursts during glitches
+  if(glitch1 > 0.0){
+    float burstY = hash1(floor(t * 3.0 + 11.0));
+    float burstBand = smoothstep(burstY - 0.01, burstY, curvedUV.y)
+                    * smoothstep(burstY + 0.05, burstY + 0.04, curvedUV.y);
+    float burstNoise = hash2v(vec2(fragCoord.x * 0.3, floor(t * 25.0)));
+    vec3 burstTint = palette(hash1(floor(t * 3.0 + 17.0)));
+    col = mix(col, burstTint * burstNoise, burstBand * 0.8);
+  }
+  if(glitch2 > 0.0){
+    float burst2Y = hash1(floor(t * 2.0 + 19.0));
+    float burst2Band = smoothstep(burst2Y - 0.01, burst2Y, curvedUV.y)
+                     * smoothstep(burst2Y + 0.07, burst2Y + 0.06, curvedUV.y);
+    float burst2Noise = hash2v(vec2(fragCoord.x * 0.2, floor(t * 20.0) + 5.0));
+    vec3 burst2Tint = palette(hash1(floor(t * 2.0 + 23.0)));
+    col = mix(col, burst2Tint * burst2Noise, burst2Band * 0.7);
+  }
+
+  // snow + horizontal noise bars
+  float snow = hash2v(fragCoord * 0.1 + floor(t * 60.0) * 7.0);
+  float snowAmt = 0.03 + glitch3 * 0.25;
+  col = mix(col, palette(snow) * snow, snowAmt);
+  float staticBar  = valueNoise(vec2(0.0, curvedUV.y *  80.0 + t * 20.0));
+  float staticBar2 = valueNoise(vec2(3.0, curvedUV.y * 120.0 - t * 15.0));
+  col += baseCol * (staticBar * 0.03 + staticBar2 * 0.02);
+
+  // VHS head-switch bar along the top edge
+  float headSwitch = smoothstep(0.0, 0.02, curvedUV.y) * smoothstep(0.06, 0.03, curvedUV.y);
+  float headNoise  = hash1(floor(t * 30.0) + curvedUV.x * 10.0);
+  col = mix(col, baseCol * headNoise, headSwitch * 0.8);
+
+  // rolling brightness bar
+  float roll = sin(curvedUV.y * 6.28 - t * 1.5) * 0.5 + 0.5;
+  col *= 0.85 + 0.15 * roll;
+
+  // CRT bloom in bright regions
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  float bloom = smoothstep(0.35, 0.7, lum);
+  col += baseCol * bloom * 0.12;
+
+  // frame jitter during heavy glitch
+  if(glitch3 > 0.0){
+    float jitter = (hash1(floor(t * 10.0)) - 0.5) * 0.03;
+    col *= 0.85 + 0.3 * valueNoise(curvedUV * 50.0 + jitter);
+  }
+
+  // ghost / lag
+  float ghostN = fbm((distUV - vec2(0.02, 0.005)) * 3.0 + t * 0.3);
+  vec3 ghostCol = palette(ghostN) * 0.08;
+  col += ghostCol;
+
+  // oscilloscope beam over everything
+  float glow = scopeGlow(curvedUV, t);
+  vec3 scopeColor = palette(t * 0.02);
+  vec3 scopeBeam = mix(scopeColor * 2.0, vec3(1.0), smoothstep(1.0, 4.0, glow));
+  col += scopeBeam * glow * 0.7;
+
+  vec2 vig = curvedUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 1.2;
+  col *= offScreen;
+
+  fragColor = vec4(col * 0.45, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Full VHS/CRT treatment layered under an oscilloscope beam that
+// morphs continuously through nine parametric shapes.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+#define PI 3.14159265359
+#define SCOPE_SAMPLES 200
+
+float hash1(float n){
+  return fract(sin(n) * 43758.5453);
+}
+float hash2v(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash2v(i);
+  float b = hash2v(i &#43; vec2(1.0, 0.0));
+  float c = hash2v(i &#43; vec2(0.0, 1.0));
+  float d = hash2v(i &#43; vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  mat2 rot = mat2(0.8, 0.6, -0.6, 0.8);
+  for(int i = 0; i &lt; 4; i&#43;&#43;){
+    v &#43;= a * valueNoise(p);
+    p = rot * p * 2.0;
+    a *= 0.5;
+  }
+  return v;
+}
+
+vec3 palette(float idx){
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  idx = fract(idx) * 4.0;
+  if(idx &lt; 1.0)      return mix(c1, c2, idx);
+  else if(idx &lt; 2.0) return mix(c2, c3, idx - 1.0);
+  else if(idx &lt; 3.0) return mix(c3, c4, idx - 2.0);
+  else               return mix(c4, c1, idx - 3.0);
+}
+
+// --- Parametric oscilloscope shapes ---
+
+vec2 mushroom(float s, float t){
+  float breath = 1.0 &#43; 0.08 * sin(t * 1.5);
+  float sway = sin(t * 0.8) * 0.03;
+  if(s &lt; 0.4){
+    float a = PI - s / 0.4 * PI;
+    float ripple = 0.015 * sin(a * 6.0 &#43; t * 4.0);
+    return vec2(cos(a) * 0.3 * breath &#43; sway, sin(a) * 0.12 &#43; 0.05 &#43; ripple);
+  } else if(s &lt; 0.44){
+    float f = (s - 0.4) / 0.04;
+    return mix(vec2(0.3 * breath &#43; sway, 0.05), vec2(0.22 * breath &#43; sway, -0.02), f);
+  } else if(s &lt; 0.52){
+    float f = (s - 0.44) / 0.08;
+    return mix(vec2(0.22 * breath &#43; sway, -0.02), vec2(0.08 &#43; sway, -0.06), f);
+  } else if(s &lt; 0.62){
+    float f = (s - 0.52) / 0.1;
+    float stemSway = sway &#43; sin(f * PI &#43; t * 1.2) * 0.015;
+    return mix(vec2(0.08 &#43; stemSway, -0.06), vec2(0.1 &#43; stemSway, -0.32), f);
+  } else if(s &lt; 0.7){
+    float f = (s - 0.62) / 0.08;
+    return mix(vec2(0.1 &#43; sway, -0.32), vec2(-0.1 &#43; sway, -0.32), f);
+  } else if(s &lt; 0.8){
+    float f = (s - 0.7) / 0.1;
+    float stemSway = sway &#43; sin((1.0 - f) * PI &#43; t * 1.2) * 0.015;
+    return mix(vec2(-0.1 &#43; stemSway, -0.32), vec2(-0.08 &#43; stemSway, -0.06), f);
+  } else if(s &lt; 0.88){
+    float f = (s - 0.8) / 0.08;
+    return mix(vec2(-0.08 &#43; sway, -0.06), vec2(-0.22 * breath &#43; sway, -0.02), f);
+  } else {
+    float f = (s - 0.88) / 0.12;
+    return mix(vec2(-0.22 * breath &#43; sway, -0.02), vec2(-0.3 * breath &#43; sway, 0.05), f);
+  }
+}
+
+vec2 starShape(float s, float t){
+  float a = s * PI * 2.0 &#43; t * 0.4;
+  float points = 5.0 &#43; sin(t * 0.13) * 1.5;
+  float outerPulse = 0.17 &#43; 0.04 * sin(t * 1.8);
+  float innerPulse = 0.15 &#43; 0.03 * sin(t * 2.3 &#43; 1.0);
+  float r = innerPulse &#43; outerPulse * pow(abs(cos(a * points * 0.5)), 0.7);
+  float tipWobble = sin(a * points &#43; t * 3.0) * 0.012;
+  return vec2(cos(a), sin(a)) * (r &#43; tipWobble);
+}
+
+vec2 heart(float s, float t){
+  float a = s * PI * 2.0 &#43; t * 0.15;
+  float beat = 1.0 &#43; 0.12 * pow(abs(sin(t * 2.0)), 8.0);
+  float x = 0.28 * sin(a) * sin(a) * sin(a);
+  float y = 0.22 * cos(a) - 0.08 * cos(2.0 * a) - 0.04 * cos(3.0 * a) - 0.015 * cos(4.0 * a);
+  vec2 p = vec2(x, y * 0.9 &#43; 0.02) * beat;
+  p &#43;= vec2(sin(a * 3.0 &#43; t * 2.5), cos(a * 3.0 &#43; t * 2.0)) * 0.01;
+  return p;
+}
+
+vec2 butterfly(float s, float t){
+  float a = s * PI * 2.0;
+  float r = exp(sin(a)) - 2.0 * cos(4.0 * a) &#43; pow(sin((2.0 * a - PI) / 24.0), 5.0);
+  vec2 p = vec2(sin(a), cos(a)) * r * 0.08;
+  float flap = 0.5 &#43; 0.5 * sin(t * 2.5);
+  p.x *= 0.4 &#43; flap * 0.6;
+  p.y &#43;= flap * 0.02;
+  p &#43;= vec2(sin(a * 8.0 &#43; t * 3.0), cos(a * 6.0 - t * 2.0)) * 0.008;
+  p.x &#43;= sin(t * 0.6) * 0.03;
+  p.y &#43;= sin(t * 1.2) * 0.015;
+  return p;
+}
+
+vec2 spirograph(float s, float t){
+  float a = s * PI * 2.0 * 3.0;
+  float fx = 3.0 &#43; sin(t * 0.05);
+  float fy = 2.0 &#43; cos(t * 0.07);
+  return vec2(sin(a * fx &#43; t * 0.2), cos(a * fy)) * 0.25;
+}
+
+vec2 atom(float s, float t){
+  float plane = floor(s * 3.0);
+  float localS = fract(s * 3.0);
+  float localA = localS * PI * 2.0;
+  float tilt = plane * PI / 3.0 &#43; t * 0.1;
+  float rx = 0.25;
+  float ry = 0.08;
+  vec2 p = vec2(cos(localA &#43; t * (1.5 &#43; plane * 0.4)) * rx,
+                sin(localA &#43; t * (1.5 &#43; plane * 0.4)) * ry);
+  float ct = cos(tilt), st = sin(tilt);
+  p = vec2(p.x * ct - p.y * st, p.x * st &#43; p.y * ct);
+  if(s &lt; 0.04){
+    float na = s / 0.04 * PI * 2.0;
+    p = vec2(cos(na &#43; t * 5.0), sin(na &#43; t * 5.0)) * 0.02;
+  }
+  return p;
+}
+
+vec2 clockShape(float s, float t){
+  if(s &lt; 0.5){
+    float a = s / 0.5 * PI * 2.0;
+    float baseR = 0.25;
+    float tickAngle = mod(a, PI / 6.0) - PI / 12.0;
+    float tick = smoothstep(0.06, 0.0, abs(tickAngle)) * 0.02;
+    float r = baseR &#43; tick;
+    r *= 1.0 &#43; 0.015 * sin(t * 1.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s &lt; 0.75){
+    float f = (s - 0.5) / 0.25;
+    float minuteAngle = PI * 0.5 - t * 0.2;
+    vec2 tip = vec2(cos(minuteAngle), sin(minuteAngle)) * 0.2;
+    tip &#43;= vec2(sin(t * 3.0), cos(t * 2.7)) * 0.003;
+    return mix(vec2(0.0), tip, f);
+  } else {
+    float f = (s - 0.75) / 0.25;
+    float hourAngle = PI * 0.5 - t * 0.017;
+    vec2 tip = vec2(cos(hourAngle), sin(hourAngle)) * 0.14;
+    tip &#43;= vec2(sin(t * 2.5 &#43; 1.0), cos(t * 2.0 &#43; 1.0)) * 0.002;
+    return mix(vec2(0.0), tip, f);
+  }
+}
+
+vec2 smiley(float s, float t){
+  float blinkCycle = mod(t, 4.0);
+  float blink = 1.0 - 0.9 * pow(max(1.0 - abs(blinkCycle - 0.15) * 10.0, 0.0), 2.0);
+  float grinWidth = 0.14 &#43; 0.04 * sin(t * 0.7);
+  float grinCurve = 0.08 &#43; 0.06 * sin(t * 0.5);
+
+  if(s &lt; 0.4){
+    float a = s / 0.4 * PI * 2.0;
+    float r = 0.25 &#43; 0.008 * sin(a * 5.0 &#43; t * 2.0);
+    return vec2(cos(a), sin(a)) * r;
+  } else if(s &lt; 0.52){
+    float a = (s - 0.4) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(-0.09 &#43; cos(a) * ex, 0.06 &#43; sin(a) * ey);
+    p &#43;= vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else if(s &lt; 0.64){
+    float a = (s - 0.52) / 0.12 * PI * 2.0;
+    float ex = 0.055;
+    float ey = 0.06 * blink;
+    vec2 p = vec2(0.09 &#43; cos(a) * ex, 0.06 &#43; sin(a) * ey);
+    p &#43;= vec2(sin(t * 1.5), cos(t * 1.2)) * 0.005;
+    return p;
+  } else {
+    float f = (s - 0.64) / 0.36;
+    float a = PI &#43; f * PI;
+    float mx = cos(a) * grinWidth;
+    float my = sin(a) * grinCurve - 0.08;
+    float corner = sin(t * 0.3) * 0.02 * (1.0 - abs(f - 0.5) * 2.0);
+    return vec2(mx, my &#43; corner);
+  }
+}
+
+vec2 mushroomMan(float s, float t){
+  float walk = sin(t * 2.0);
+  float bob  = abs(sin(t * 2.0)) * 0.01;
+
+  if(s &lt; 0.08){
+    float a = s / 0.08 * PI * 2.0;
+    return vec2(-0.12 &#43; cos(a) * 0.04, 0.02 &#43; sin(a) * 0.04 &#43; bob);
+  } else if(s &lt; 0.16){
+    float f = (s - 0.08) / 0.08;
+    return mix(vec2(-0.12, -0.02 &#43; bob), vec2(-0.12, -0.18 &#43; bob), f);
+  } else if(s &lt; 0.22){
+    float f = (s - 0.16) / 0.06;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.12, -0.18 &#43; bob), vec2(-0.16 - swing, -0.32 &#43; bob), f);
+  } else if(s &lt; 0.24){
+    float f = (s - 0.22) / 0.02;
+    float swing = walk * 0.04;
+    return mix(vec2(-0.16 - swing, -0.32 &#43; bob), vec2(-0.12, -0.18 &#43; bob), f);
+  } else if(s &lt; 0.30){
+    float f = (s - 0.24) / 0.06;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.12, -0.18 &#43; bob), vec2(-0.08 - swing, -0.32 &#43; bob), f);
+  } else if(s &lt; 0.32){
+    float f = (s - 0.30) / 0.02;
+    float swing = -walk * 0.04;
+    return mix(vec2(-0.08 - swing, -0.32 &#43; bob), vec2(-0.12, -0.06 &#43; bob), f);
+  } else if(s &lt; 0.38){
+    float f = (s - 0.32) / 0.06;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.12, -0.06 &#43; bob), vec2(-0.2 &#43; swing, -0.14 &#43; bob), f);
+  } else if(s &lt; 0.40){
+    float f = (s - 0.38) / 0.02;
+    float swing = -walk * 0.03;
+    return mix(vec2(-0.2 &#43; swing, -0.14 &#43; bob), vec2(-0.12, -0.06 &#43; bob), f);
+  } else if(s &lt; 0.46){
+    float f = (s - 0.40) / 0.06;
+    float reach = sin(t * 1.5) * 0.01;
+    return mix(vec2(-0.12, -0.06 &#43; bob), vec2(-0.02 &#43; reach, 0.06 &#43; bob), f);
+  } else if(s &lt; 0.48){
+    float f = (s - 0.46) / 0.02;
+    return mix(vec2(-0.02, 0.06 &#43; bob), vec2(0.18, 0.12 &#43; bob), f);
+  } else if(s &lt; 0.72){
+    float a = PI - (s - 0.48) / 0.24 * PI;
+    float breath = 1.0 &#43; 0.05 * sin(t * 1.8);
+    float ripple = 0.01 * sin(a * 5.0 &#43; t * 3.0);
+    return vec2(cos(a) * 0.2 * breath &#43; 0.1, sin(a) * 0.1 &#43; 0.12 &#43; bob &#43; ripple);
+  } else if(s &lt; 0.78){
+    float f = (s - 0.72) / 0.06;
+    return mix(vec2(0.3, 0.12 &#43; bob), vec2(0.22, 0.06 &#43; bob), f);
+  } else if(s &lt; 0.84){
+    float f = (s - 0.78) / 0.06;
+    return mix(vec2(0.22, 0.06 &#43; bob), vec2(0.15, -0.12 &#43; bob), f);
+  } else if(s &lt; 0.90){
+    float f = (s - 0.84) / 0.06;
+    return mix(vec2(0.15, -0.12 &#43; bob), vec2(0.05, -0.12 &#43; bob), f);
+  } else if(s &lt; 0.96){
+    float f = (s - 0.90) / 0.06;
+    return mix(vec2(0.05, -0.12 &#43; bob), vec2(-0.02, 0.06 &#43; bob), f);
+  } else {
+    float f = (s - 0.96) / 0.04;
+    return mix(vec2(-0.02, 0.06 &#43; bob), vec2(-0.1, 0.12 &#43; bob), f);
+  }
+}
+
+vec2 getShape(int idx, float s, float t){
+  if(idx == 0)      return mushroom(s, t);
+  else if(idx == 1) return starShape(s, t);
+  else if(idx == 2) return heart(s, t);
+  else if(idx == 3) return butterfly(s, t);
+  else if(idx == 4) return spirograph(s, t);
+  else if(idx == 5) return atom(s, t);
+  else if(idx == 6) return clockShape(s, t);
+  else if(idx == 7) return smiley(s, t);
+  else              return mushroomMan(s, t);
+}
+
+// morph between shapes, hang time weighted so each shape gets a beat to breathe
+vec2 morphShape(float s, float t){
+  float rawPhase = t * 0.04;
+  float f = fract(rawPhase);
+  float eased = f * f * (3.0 - 2.0 * f);
+  eased = eased * eased * (3.0 - 2.0 * eased);
+  float base = floor(rawPhase);
+  int shapeIdx = int(mod(base, 9.0));
+  int nextIdx  = int(mod(base &#43; 1.0, 9.0));
+  return mix(getShape(shapeIdx, s, t), getShape(nextIdx, s, t), eased);
+}
+
+// per-pixel scope glow: min-distance to 200 samples along the current shape
+float scopeGlow(vec2 p, float t){
+  float aspect = iResolution.x / iResolution.y;
+  vec2 centered = (p - 0.5) * vec2(aspect, 1.0);
+  float minDist = 1.0;
+  for(int i = 0; i &lt; SCOPE_SAMPLES; i&#43;&#43;){
+    float s = float(i) / float(SCOPE_SAMPLES);
+    vec2 shapeP = morphShape(s, t);
+    // analog wobble on the beam
+    shapeP &#43;= vec2(sin(s * 40.0 &#43; t * 3.0), cos(s * 35.0 &#43; t * 2.5)) * 0.003;
+    float d = length(centered - shapeP);
+    minDist = min(minDist, d);
+  }
+  float core = 0.0015 / (minDist * minDist &#43; 0.0015);
+  float halo = 0.008  / (minDist &#43; 0.02);
+  return min(core &#43; halo, 5.0);
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float t = iTime * tempo;
+
+  // CRT barrel distortion
+  vec2 crtUV = uv * 2.0 - 1.0;
+  float barrel = 0.12;
+  float r2 = dot(crtUV, crtUV);
+  crtUV *= 1.0 &#43; barrel * r2;
+  vec2 curvedUV = crtUV * 0.5 &#43; 0.5;
+  float offScreen = step(0.0, curvedUV.x) * step(curvedUV.x, 1.0)
+                  * step(0.0, curvedUV.y) * step(curvedUV.y, 1.0);
+
+  // three overlapping glitch triggers with different rates and thresholds
+  float glitch1 = step(0.90, hash1(floor(t * 2.0)));
+  float glitch2 = step(0.95, hash1(floor(t * 3.0 &#43; 7.0)));
+  float glitch3 = step(0.97, hash1(floor(t * 1.5 &#43; 13.0)));
+
+  // vertical hold drifting slowly
+  float holdPhase = t * 0.04;
+  float holdDrift = fract(sin(holdPhase * 0.7) * 0.5 &#43; holdPhase * 0.02);
+  float vHold = holdDrift * 0.06 * sin(t * 0.3);
+  vHold &#43;= glitch3 * (hash1(floor(t * 2.0 &#43; 5.0)) - 0.5) * 0.15;
+
+  // tracking wobble: normal drift bands &#43; three burst bands during glitches
+  float trackingPhase = t * 0.7;
+  float trackBand1 = 1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - fract(trackingPhase)));
+  float trackBand2 = 1.0 - smoothstep(0.0, 0.04, abs(curvedUV.y - fract(trackingPhase * 1.3 &#43; 0.33)));
+  float glitchY1 = hash1(floor(t * 4.0));
+  float glitchY2 = hash1(floor(t * 6.0 &#43; 3.0));
+  float glitchY3 = hash1(floor(t * 2.5 &#43; 9.0));
+  float glitchBand1 = (1.0 - smoothstep(0.0, 0.03, abs(curvedUV.y - glitchY1)))
+                    * smoothstep(0.0, 0.08, abs(curvedUV.y - glitchY1 - 0.05));
+  float glitchBand2 = (1.0 - smoothstep(0.0, 0.05, abs(curvedUV.y - glitchY2)))
+                    * smoothstep(0.0, 0.12, abs(curvedUV.y - glitchY2 - 0.08));
+  float glitchBand3 = (1.0 - smoothstep(0.0, 0.02, abs(curvedUV.y - glitchY3)))
+                    * smoothstep(0.0, 0.15, abs(curvedUV.y - glitchY3 - 0.1));
+  float wobble = trackBand1 * 0.008 &#43; trackBand2 * 0.006
+               &#43; glitchBand1 * glitch1 * 0.04
+               &#43; glitchBand2 * glitch2 * 0.07
+               &#43; glitchBand3 * glitch3 * 0.12;
+
+  // horizontal tearing band during heavy glitches
+  float tearOffset = 0.0;
+  if(glitch3 &gt; 0.0){
+    float tearY = hash1(floor(t * 2.0 &#43; 5.0));
+    float tearBand = step(tearY, curvedUV.y) * step(curvedUV.y, tearY &#43; 0.08);
+    tearOffset = tearBand * (hash1(floor(t * 8.0)) - 0.5) * 0.2;
+  }
+
+  vec2 distUV = curvedUV;
+  distUV.y = fract(distUV.y &#43; vHold);
+  distUV.x &#43;= wobble * sin(curvedUV.y * 100.0 &#43; t * 10.0) &#43; tearOffset;
+
+  // wandering drift direction so the pattern never repeats
+  float driftAngle = sin(t * 0.011)         * 2.5
+                   &#43; sin(t * 0.0047 &#43; 1.0)  * 1.8
+                   &#43; sin(t * 0.0023 &#43; 4.0)  * 1.0;
+  float driftSpeed = 0.35 &#43; 0.15 * sin(t * 0.007 &#43; 2.0);
+  vec2 drift = vec2(cos(driftAngle), sin(driftAngle)) * driftSpeed * t;
+
+  // composite video color bleed
+  float bleedAmt = 0.008 &#43; glitch1 * 0.015;
+  vec2 bleedUV1 = distUV &#43; vec2(bleedAmt, 0.0);
+  vec2 bleedUV2 = distUV - vec2(bleedAmt, 0.0);
+
+  float aberr = 0.003 &#43; glitch1 * 0.008 &#43; glitch2 * 0.015 &#43; glitch3 * 0.03;
+  float lumC = fbm(distUV  * 4.0 &#43; drift * 1.2);
+  float lumL = fbm(bleedUV2 * 4.0 &#43; drift * 1.2);
+  float lumR = fbm(bleedUV1 * 4.0 &#43; drift * 1.2);
+
+  float n = fbm(distUV * 3.0 &#43; drift);
+  vec3 baseCol = palette(n);
+  vec3 bleedColL = palette(n - aberr * 8.0);
+  vec3 bleedColR = palette(n &#43; aberr * 8.0);
+  vec3 col = mix(baseCol, bleedColL, 0.15) * (0.4 &#43; lumL * 0.4)
+           &#43; mix(baseCol, baseCol,   0.7)  * (0.4 &#43; lumC * 0.4)
+           &#43; mix(baseCol, bleedColR, 0.15) * (0.4 &#43; lumR * 0.4);
+  col /= 1.8;
+
+  // posterization
+  float posterLevels = 12.0 - glitch2 * 6.0;
+  col = floor(col * posterLevels &#43; 0.5) / posterLevels;
+
+  if(glitch2 &gt; 0.0){
+    float dropChoice = hash1(floor(t * 5.0 &#43; 2.0));
+    vec3 shiftColor = palette(dropChoice);
+    float aberrLum = (lumL &#43; lumC &#43; lumR) / 3.0;
+    col = mix(col, shiftColor * (0.5 &#43; aberrLum * 0.5), 0.6);
+  }
+
+  // soft scanlines
+  float scanline = 0.90 &#43; 0.10 * sin(curvedUV.y * iResolution.y * 0.5);
+  col *= scanline;
+
+  // RF interference cross-hatched sines
+  float rf = sin((curvedUV.x &#43; curvedUV.y) * 20.0 &#43; t * 5.0) * 0.5 &#43; 0.5;
+  rf *= sin((curvedUV.x - curvedUV.y * 0.5) * 30.0 - t * 3.0) * 0.5 &#43; 0.5;
+  col &#43;= palette(curvedUV.y &#43; t * 0.1) * rf * 0.03;
+
+  // static bursts during glitches
+  if(glitch1 &gt; 0.0){
+    float burstY = hash1(floor(t * 3.0 &#43; 11.0));
+    float burstBand = smoothstep(burstY - 0.01, burstY, curvedUV.y)
+                    * smoothstep(burstY &#43; 0.05, burstY &#43; 0.04, curvedUV.y);
+    float burstNoise = hash2v(vec2(fragCoord.x * 0.3, floor(t * 25.0)));
+    vec3 burstTint = palette(hash1(floor(t * 3.0 &#43; 17.0)));
+    col = mix(col, burstTint * burstNoise, burstBand * 0.8);
+  }
+  if(glitch2 &gt; 0.0){
+    float burst2Y = hash1(floor(t * 2.0 &#43; 19.0));
+    float burst2Band = smoothstep(burst2Y - 0.01, burst2Y, curvedUV.y)
+                     * smoothstep(burst2Y &#43; 0.07, burst2Y &#43; 0.06, curvedUV.y);
+    float burst2Noise = hash2v(vec2(fragCoord.x * 0.2, floor(t * 20.0) &#43; 5.0));
+    vec3 burst2Tint = palette(hash1(floor(t * 2.0 &#43; 23.0)));
+    col = mix(col, burst2Tint * burst2Noise, burst2Band * 0.7);
+  }
+
+  // snow &#43; horizontal noise bars
+  float snow = hash2v(fragCoord * 0.1 &#43; floor(t * 60.0) * 7.0);
+  float snowAmt = 0.03 &#43; glitch3 * 0.25;
+  col = mix(col, palette(snow) * snow, snowAmt);
+  float staticBar  = valueNoise(vec2(0.0, curvedUV.y *  80.0 &#43; t * 20.0));
+  float staticBar2 = valueNoise(vec2(3.0, curvedUV.y * 120.0 - t * 15.0));
+  col &#43;= baseCol * (staticBar * 0.03 &#43; staticBar2 * 0.02);
+
+  // VHS head-switch bar along the top edge
+  float headSwitch = smoothstep(0.0, 0.02, curvedUV.y) * smoothstep(0.06, 0.03, curvedUV.y);
+  float headNoise  = hash1(floor(t * 30.0) &#43; curvedUV.x * 10.0);
+  col = mix(col, baseCol * headNoise, headSwitch * 0.8);
+
+  // rolling brightness bar
+  float roll = sin(curvedUV.y * 6.28 - t * 1.5) * 0.5 &#43; 0.5;
+  col *= 0.85 &#43; 0.15 * roll;
+
+  // CRT bloom in bright regions
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  float bloom = smoothstep(0.35, 0.7, lum);
+  col &#43;= baseCol * bloom * 0.12;
+
+  // frame jitter during heavy glitch
+  if(glitch3 &gt; 0.0){
+    float jitter = (hash1(floor(t * 10.0)) - 0.5) * 0.03;
+    col *= 0.85 &#43; 0.3 * valueNoise(curvedUV * 50.0 &#43; jitter);
+  }
+
+  // ghost / lag
+  float ghostN = fbm((distUV - vec2(0.02, 0.005)) * 3.0 &#43; t * 0.3);
+  vec3 ghostCol = palette(ghostN) * 0.08;
+  col &#43;= ghostCol;
+
+  // oscilloscope beam over everything
+  float glow = scopeGlow(curvedUV, t);
+  vec3 scopeColor = palette(t * 0.02);
+  vec3 scopeBeam = mix(scopeColor * 2.0, vec3(1.0), smoothstep(1.0, 4.0, glow));
+  col &#43;= scopeBeam * glow * 0.7;
+
+  vec2 vig = curvedUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 1.2;
+  col *= offScreen;
+
+  fragColor = vec4(col * 0.45, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

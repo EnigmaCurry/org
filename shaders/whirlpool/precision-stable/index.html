@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Whirlpool (precision-stable) · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/whirlpool/first-whirlpool/" aria-label="Previous: first-whirlpool" title="prev: first-whirlpool"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/whirlpool/palettes/" aria-label="Next: palettes" title="next: palettes"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/whirlpool/">whirlpool</a><ul><li class="lvl1"><a href="#">precision-stable</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node open">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a><ul class="sections"><li><a class="" href="/shaders/whirlpool/first-whirlpool/">first-whirlpool</a></li><li><a class="active" href="/shaders/whirlpool/precision-stable/">precision-stable</a></li><li><a class="" href="/shaders/whirlpool/palettes/">palettes</a></li><li><a class="" href="/shaders/whirlpool/palette-sweep/">palette-sweep</a></li><li><a class="" href="/shaders/whirlpool/looping-transport/">looping-transport</a></li><li><a class="" href="/shaders/whirlpool/spiral-tunnel/">spiral-tunnel</a></li><li><a class="" href="/shaders/whirlpool/living-drain/">living-drain</a></li></ul></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg" href="/shaders/whirlpool/">/whirlpool</a><a class="pseg pcur" href="/shaders/whirlpool/precision-stable/">/precision-stable</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Whirlpool (precision-stable)</a></h1>
+
+
+<p>Left to run, the <a href="/shaders/whirlpool/first-whirlpool/">whirlpool</a> slowly turns grainy and chunky,
+worst near the center. That isn&rsquo;t in the design — the <code>iTime</code> term adds a
+<strong>uniform</strong> angular offset, so the vortex should spin rigidly without ever
+changing detail. The decay is a numerical artifact:</p>
+<ul>
+<li><code>iTime * 0.3</code> grows without bound, so <code>cos=/=sin</code> lose precision in their
+fractional argument as the magnitude climbs.</li>
+<li><code>step(0.5, sw)</code> is a hard, un-antialiased edge, so any coordinate error gets
+thresholded into a full pixel flip — and the quadrant boundaries pack tightest
+near the center, where the speckle shows first.</li>
+</ul>
+<p>Two changes fix it, shown here via <code>#+attr_diff</code> as a changeset from the
+<a href="/shaders/whirlpool/first-whirlpool/">whirlpool</a> — wrap the time angle so <code>cos=/=sin</code> never see a large argument,
+and swap <code>step</code> for an <code>fwidth</code>-scaled <code>smoothstep</code> so precision noise no longer
+flips whole pixels:</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+  float r = length(p); // distance from the center
+  float a = atan(p.y, p.x); // current angle
+
+  // twist harder near the center; wrap the time term to one full turn so
+  // cos/sin never see a large argument (one revolution looks identical)
+  a += 6.0 * exp(-3.0 * r) + mod(iTime * 0.3, 6.2831853);
+
+  // rebuild swirled coordinates back in <0,1>
+  vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+
+  vec3 col = vec3(0); // start with black
+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+  col = vec3(e, 0); // same quadrants, now without the speckle
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+</script></div>
+<div class="box diffbox" data-view="diff" data-from="whirlpool-shader" data-to="whirlpool-stable-shader">
+  <div class="label"><span class="lt" title="Diff: whirlpool-shader → whirlpool-stable-shader" data-title-diff="Diff: whirlpool-shader → whirlpool-stable-shader" data-title-source="Source: whirlpool-stable-shader">Diff: whirlpool-shader → whirlpool-stable-shader</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- whirlpool-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ whirlpool-stable-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,20 +1,23 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> void mainImage( out vec4 fragColor, in vec2 fragCoord )
+</span></span><span style="display:flex;"><span> {
+</span></span><span style="display:flex;"><span>   vec2 uv = fragCoord/iResolution.xy; // &lt;0,1&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   vec2 p = uv - 0.5; // recenter so the swirl pivots on the middle
+</span></span><span style="display:flex;"><span>   float r = length(p); // distance from the center
+</span></span><span style="display:flex;"><span>   float a = atan(p.y, p.x); // current angle
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  // twist harder near the center, and let it flow slowly over time
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  a += 6.0 * exp(-3.0 * r) + iTime * 0.3;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // twist harder near the center; wrap the time term to one full turn so
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // cos/sin never see a large argument (one revolution looks identical)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  a += 6.0 * exp(-3.0 * r) + mod(iTime * 0.3, 6.2831853);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span>   // rebuild swirled coordinates back in &lt;0,1&gt;
+</span></span><span style="display:flex;"><span>   vec2 sw = vec2(cos(a), sin(a)) * r + 0.5;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   vec3 col = vec3(0); // start with black
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  col = vec3(step(0.5, sw), 0); // same quadrant step, now on the whirlpool
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  col = vec3(e, 0); // same quadrants, now without the speckle
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span>   // Output to screen
+</span></span><span style="display:flex;"><span>   fragColor = vec4(col,1.0);
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uv <span style="color:#f92672">=</span> fragCoord<span style="color:#f92672">/</span>iResolution.xy; <span style="color:#75715e">// &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> p <span style="color:#f92672">=</span> uv <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.5</span>; <span style="color:#75715e">// recenter so the swirl pivots on the middle</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> r <span style="color:#f92672">=</span> length(p); <span style="color:#75715e">// distance from the center</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> a <span style="color:#f92672">=</span> atan(p.y, p.x); <span style="color:#75715e">// current angle</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// twist harder near the center; wrap the time term to one full turn so</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// cos/sin never see a large argument (one revolution looks identical)</span>
+</span></span><span style="display:flex;"><span>  a <span style="color:#f92672">+=</span> <span style="color:#ae81ff">6.0</span> <span style="color:#f92672">*</span> exp(<span style="color:#f92672">-</span><span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> r) <span style="color:#f92672">+</span> mod(iTime <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.3</span>, <span style="color:#ae81ff">6.2831853</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// rebuild swirled coordinates back in &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> sw <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(cos(a), sin(a)) <span style="color:#f92672">*</span> r <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">0</span>); <span style="color:#75715e">// start with black</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> aa <span style="color:#f92672">=</span> fwidth(sw); <span style="color:#75715e">// pixel footprint of the swirled coords</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> e <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> aa, <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> aa, sw); <span style="color:#75715e">// antialiased quadrant edge</span>
+</span></span><span style="display:flex;"><span>  col <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec3</span>(e, <span style="color:#ae81ff">0</span>); <span style="color:#75715e">// same quadrants, now without the speckle</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Output to screen</span>
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col,<span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uv <span style="color:#f92672">=</span> fragCoord<span style="color:#f92672">/</span>iResolution.xy; <span style="color:#75715e">// &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> p <span style="color:#f92672">=</span> uv <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.5</span>; <span style="color:#75715e">// recenter so the swirl pivots on the middle</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> r <span style="color:#f92672">=</span> length(p); <span style="color:#75715e">// distance from the center</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> a <span style="color:#f92672">=</span> atan(p.y, p.x); <span style="color:#75715e">// current angle</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// twist harder near the center, and let it flow slowly over time</span>
+</span></span><span style="display:flex;"><span>  a <span style="color:#f92672">+=</span> <span style="color:#ae81ff">6.0</span> <span style="color:#f92672">*</span> exp(<span style="color:#f92672">-</span><span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> r) <span style="color:#f92672">+</span> iTime <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.3</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// rebuild swirled coordinates back in &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> sw <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(cos(a), sin(a)) <span style="color:#f92672">*</span> r <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">0</span>); <span style="color:#75715e">// start with black</span>
+</span></span><span style="display:flex;"><span>  col <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec3</span>(step(<span style="color:#ae81ff">0.5</span>, sw), <span style="color:#ae81ff">0</span>); <span style="color:#75715e">// same quadrant step, now on the whirlpool</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Output to screen</span>
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col,<span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div></div>
+  </div>
+</div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

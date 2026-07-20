@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Native Backup · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/maintainence/" aria-label="Previous: maintainence" title="prev: maintainence"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/maintainence/upgrade/" aria-label="Next: upgrade" title="next: upgrade"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/maintainence/">maintainence</a><ul><li class="lvl1"><a href="#">backup</a></li><li class="lvl2"><a href="#restic">Restic</a></li><li class="lvl2"><a href="#backup-volume">Backup-Volume</a></li><li class="lvl2"><a href="#setup-backup-volume">Setup Backup-Volume</a></li><li class="lvl3"><a href="#prepare-an-s3-bucket-offsite">Prepare an S3 bucket offsite</a></li><li class="lvl3"><a href="#configure-backup-volume">Configure Backup-Volume</a></li><li class="lvl3"><a href="#install">Install</a></li><li class="lvl3"><a href="#instances">Instances</a></li><li class="lvl3"><a href="#verify-backup-schedule">Verify backup schedule</a></li><li class="lvl3"><a href="#restore">Restore</a></li><li class="lvl3"><a href="#notifications">Notifications</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node open">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a><ul class="sections"><li><a class="active" href="/portable-docker/maintainence/backup/">backup</a></li><li><a class="" href="/portable-docker/maintainence/upgrade/">upgrade</a></li><li><a class="" href="/portable-docker/maintainence/troubleshooting/">troubleshooting</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/maintainence/">/maintainence</a><a class="pseg pcur" href="/portable-docker/maintainence/backup/">/backup</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Native Backup</a></h1>
+
+
+<p>Backup of native machines is much harder than for virtual machines,
+that&rsquo;s just the way it goes. With VMs, your hypervisor should have a
+builtin backup feature which can suspend (pause) the entire machine,
+make a snapshot of the disk and the entire RAM contents, resume the
+machine, and continue backing up the snapshot in the background. If
+you have the luxury of running your server as a VM (e.g., <a href="https://www.proxmox.com/en/proxmox-virtual-environment/overview">Proxmox PVE</a>,
+or any cloud provider), it makes backups so much easier.</p>
+<p>When running Docker natively on a Raspberry Pi, you do not have that
+option. This chapter deals with the more intricate procedure of the
+backup of a <em>non-virtual</em> machine.</p>
+<h2 id="restic"><a class="heading-anchor" href="#restic">Restic</a></h2>
+<p><a href="https://restic.net/">Restic</a> is a modern open source backup tool, which has many great
+features including incremental backups, encryption, and offsite
+upload. It can maintain backups of huge sizes, and it only needs to
+upload the changes since the last backup.</p>
+<p>One of the best ways to install Restic is with the script found on
+this blog post:</p>
+<p><a href="https://blog.rymcg.tech/blog/linux/restic_backup/">Daily backups to S3 with Restic and systemd timers</a></p>
+<div class="box notice notice-warning"><div class="label">Warning</div>
+  <div class="body">
+<p>The only problem with backing up files this way is that with
+containers that are always running, you need to make sure that the
+files are flushed to disk before the backup starts, otherwise your
+backup could become corrupted. For files that are only written to once
+(photos, videos, etc.) this might not be such a big deal, but for
+files that are constantly changing (e.g., databases) this is a
+problem.</p>
+  </div>
+</div>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Evaluating <a href="https://blog.rymcg.tech/blog/linux/restic_backup/">this Restic script</a>:</p>
+<p>Pros:</p>
+<ul>
+<li>It&rsquo;s a self contained script not dependent on Docker.</li>
+<li>It can backup several directories and upload to an offsite S3
+bucket. Point the script at any directory and it will make a backup
+of it (e.g., <code>/home/pi/</code>, <code>/var/lib/docker/volumes</code> [see Cons].)</li>
+<li>It supports a space-efficient incremental backup strategy.</li>
+<li>It&rsquo;s a good option for backup of home directories and large media
+folders.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>No integration with Docker; it cannot shutdown containers before
+backup. Backup of <code>/var/lib/docker/volumes</code> is not 100% safe. Files
+that are modified <strong>during</strong> the backup may become corrupted.</li>
+<li>Restoration requires the original script and for you to re-install
+Restic.</li>
+</ul>
+  </div>
+</div>
+<h2 id="backup-volume"><a class="heading-anchor" href="#backup-volume">Backup-Volume</a></h2>
+<p><a href="https://github.com/EnigmaCurry/backup-volume">Backup-Volume</a> is another backup tool that is specifically configured
+to backup Docker volumes and uploading archives to offsite storage
+(S3, SSH, DropBox).</p>
+<p><strong>Backup-Volume can only handle complete backups (no incremental
+storage)</strong>. For small datasets this is ideal, because each backup gets
+stored in a separate <code>backup-XXXX.tar.gz</code>, and its easy to restore
+with one file. For larger datasets, the duplication of backup files
+would be prohibitively expensive/wasteful (although you can tune the
+retention and pruning parameters to save some space, it won&rsquo;t compare
+to the efficiency of Restic).</p>
+<p>Backup-Volume has a trick it can use in its favor: it can
+automatically stop and start containers before and after the backup
+runs. This makes this style of backup much safer for write intensive
+volumes (e.g., databases) and ensures that the data gets flushed
+before the backup starts.</p>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Evaluating <a href="https://github.com/EnigmaCurry/backup-volume">Backup-Volume</a>:</p>
+<p>Pros:</p>
+<ul>
+<li>Specifically designed to backup Docker volumes on a cron-like
+schedule.</li>
+<li>Manages the lifecycle of the containers to shut them down before a
+backup starts and to restart them afterward.</li>
+<li>Each backup is contained in a single file (<code>backup-XXXX.tar.gz</code>)
+which is uploaded to your S3 provider. Restoration is easy, just
+download the latest tarball and extract it.</li>
+<li>Automatic pruning of old archives helps to save some space.</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>No incremental backup support. Each backup duplicates the entire
+dataset. Ill-suited for large datasets.</li>
+</ul>
+  </div>
+</div>
+<h2 id="setup-backup-volume"><a class="heading-anchor" href="#setup-backup-volume">Setup Backup-Volume</a></h2>
+<h3 id="prepare-an-s3-bucket-offsite"><a class="heading-anchor" href="#prepare-an-s3-bucket-offsite">Prepare an S3 bucket offsite</a></h3>
+<p>You may want to use your own <a href="/portable-docker/install-web-services/minio-s3/index.html">minio</a> S3 service (preferably installed on
+a separate offsite server), or a third party provider (AWS S3,
+DigitalOcean Spaces, Wasabi, etc.)</p>
+<p>You will need to provide the S3 bucket and credentials that the backup
+process will use when uploading archives:</p>
+<ul>
+<li>S3 Endpoint domain. e.g., <code>s3.example.com</code>.</li>
+<li>S3 bucket name. e.g., <code>test</code></li>
+<li>S3 access key id. e.g., <code>test</code>.</li>
+<li>S3 secret key. e.g., <code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code>.</li>
+</ul>
+<h3 id="configure-backup-volume"><a class="heading-anchor" href="#configure-backup-volume">Configure Backup-Volume</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Configures the default backup-volume instance:
+pi make backup-volume config
+</pre></div>
+</div>
+
+
+<p>Select multiple existing volumes to backup together as one archive:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Select all the volumes to backup
+> [x] test1_data
+  [ ] forgejo_data
+  [x] icecast_config
+  [ ] icecast_logs
+  [ ] mosquitto_mosquitto
+  [ ] traefik_geoip_database
+v [ ] traefik_traefik
+</pre></div>
+</div>
+
+<p>Choose the backup schedule in <a href="https://github.com/EnigmaCurry/d.rymcg.tech/blob/73648904e5a954e17077368c299a23a19947ab16/backup-volume/.env-dist#L23-L59">cron format</a> :</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+BACKUP_CRON_EXPRESSION: Enter the cron expression (eg. @daily)
+
+: @every 24h
+</pre></div>
+</div>
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Other example schedules:</p>
+<ul>
+<li><code>@every 1h15m</code></li>
+<li><code>@daily</code></li>
+<li><code>@weekly</code></li>
+<li><a href="https://github.com/EnigmaCurry/d.rymcg.tech/blob/19ee7e0e5e39350b86ec6317c4e1d3765c806378/backup-volume/.env-dist#L23-L59">See more in the .env-dist file</a></li>
+</ul>
+  </div>
+</div>
+<p>Choose the retention length (number of days) to keep backup archives
+before automatic pruning happens:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+BACKUP_RETENTION_DAYS: Rotate backups older than how many days? (eg. 30)
+
+: 30
+</pre></div>
+</div>
+
+<p>You can choose any of the supported storage mechanisms. For demo
+purposes, choose S3:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+> Which remote storage do you want to use? s3
+
+BACKUP_AWS_ENDPOINT: Enter the S3 endpoint (e.g., s3.example.com)
+
+: s3.d.example.com
+
+BACKUP_AWS_S3_BUCKET_NAME: Enter the S3 bucket name (e.g., my-bucket)
+
+: backup-test-1
+
+BACKUP_AWS_ACCESS_KEY_ID: Enter the S3 access key id (e.g., my-access-key)
+
+: backup-test-1
+
+BACKUP_AWS_SECRET_ACCESS_KEY: Enter the S3 secret access key
+
+: OEuL3lMSdvdoFyVjEQTM4Trj/7VhHq7Q7cOFEpQPuxMHxsTVK3Hxne7st6Ty
+
+BACKUP_AWS_S3_PATH: Choose a directory inside the bucket (blank for root)
+
+:
+</pre></div>
+</div>
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You should use a dedicated bucket for each backup instance, or you can
+share the same bucket between several instances, as long as you are
+careful to configure a unique <code>BACKUP_AWS_S3_PATH</code> bucket
+sub-directory for each instance.</p>
+  </div>
+</div>
+<p>You may optionally preserve an additional copy of the archive in a
+local volume:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+> Do you want to keep a local backup in addition to the remote one? No
+</pre></div>
+</div>
+
+<p>You can choose to turn on notifications (see separate instructions
+below.)</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Do you want to receive notifications for backup failure?
+> No.
+  Yes, via email.
+  Yes, via webhook.
+</pre></div>
+</div>
+
+<h3 id="install"><a class="heading-anchor" href="#install">Install</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## installs the default backup instance:
+pi make backup-volume install
+</pre></div>
+</div>
+
+
+<h3 id="instances"><a class="heading-anchor" href="#instances">Instances</a></h3>
+<p>All volume selections will backup to the same archive on the same
+schedule. To back up different volumes on different schedules, you
+should create more than one instance of Backup-Volume to create
+separate configs:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Creates a new backup instance named test:
+pi make backup-volume instance instance=test
+pi make backup-volume install instance=test
+</pre></div>
+</div>
+
+
+<h3 id="verify-backup-schedule"><a class="heading-anchor" href="#verify-backup-schedule">Verify backup schedule</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make backup-volume logs
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+backup-1  | 2024-10-16T02:37:00.263838944Z time=2024-10-16T02:37:00.262Z level=INFO msg="Successfully scheduled backup from environment with expression @daily"
+backup-1  | 2024-10-16T02:37:00.266773318Z time=2024-10-16T02:37:00.266Z level=INFO msg="The backup will start at 12:00 AM"
+</pre></div>
+</div>
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You should see a plain text log message describing when the backup
+will occur (<code>The backup will start at 12:00 AM</code>), except it will be
+ommitted if you use the <code>@every</code> syntax.</p>
+  </div>
+</div>
+<h3 id="restore"><a class="heading-anchor" href="#restore">Restore</a></h3>
+<p>To restore a volume from a backup, simply untar the archive into the
+appropriate directory under <code>/var/lib/docker/volumes</code>.</p>
+<h3 id="notifications"><a class="heading-anchor" href="#notifications">Notifications</a></h3>
+<p>In the event of a failed backup job, a notification can be sent to a
+configurable receiver with <a href="https://containrrr.dev/shoutrrr/v0.8/services/overview/">Shoutrrr</a> (including Email, Matrix, Discord,
+Ntfy, IFTTT etc.)</p>
+<h4 id="email-notifications"><a class="heading-anchor" href="#email-notifications">Email notifications</a></h4>
+<div class="box notice notice-primary"><div class="label">Info</div>
+  <div class="body">
+<p>To enable email notifications, you must setup postfix-relay separately
+and configure it to allow clients from the the <code>backup-volume</code> network
+to send mail.</p>
+  </div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Do you want to receive notifications for backup failure?
+  No.
+> Yes, via email.
+  Yes, via webhook.
+
+Enter the sender email address
+
+: backup-volume-default@pi.example.com
+
+Enter the recipient email address
+
+: test@example.com
+</pre></div>
+</div>
+
+<h4 id="matrix-notifications-via-webhook"><a class="heading-anchor" href="#matrix-notifications-via-webhook">Matrix notifications via webhook</a></h4>
+<p>You will need to setup the <a href="https://matrix-org.github.io/matrix-hookshot/latest/index.html">Matrix Hookshot</a> bot in order to receive a
+generic webhook from Backup-Volume that notifies the Matrix room you
+share with the bot.</p>
+<ul>
+<li>Create a new room and invite the hookshot bot to it.</li>
+<li>Message the room: <code>!hookshot setup-widget</code>.</li>
+<li>Open the room Extensions tab and click on the Hookshot extension.</li>
+<li>Create a new <code>Inbound (Generic) Webhook</code>.</li>
+<li>Name the webhook <code>backup-volume.example.com</code> after your
+backup-volume instance.</li>
+<li>Copy the long URL it gives you, e.g.,
+<code>https://matrix.example.com/hookshot/webhooks/webhook/xxxxxx</code>.</li>
+<li>Click <code>Save</code>.</li>
+</ul>
+<p>Reconfigure the <code>.env_{CONTEXT}_{INSTANCE}</code> file of the backup-volume
+instance, setting the notification URL as a <a href="https://containrrr.dev/shoutrrr/v0.8/services/generic/">Generic webhook</a>:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make backup-volume reconfigure var=BACKUP_NOTIFICATION_URLS=&#34;generic://matrix.example.com/hookshot/webhooks/webhook/xxxxx?template=json&#34;
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>Important: the Shoutrrr webhook notification URL should start with
+<code>generic://</code> (not <code>https://</code>). It should end with <code>?template=json</code>.</p>
+  </div>
+</div>
+<p>Re-install to load the new config:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make backup-volume install
+</pre></div>
+</div>
+
+
+<p>To test the notification, you can consider setting
+<code>BACKUP_CRON_EXPRESSION=@every 1m</code> and change the S3 credentials so
+that they are incorrect, thus triggering a failure notification to be
+sent.</p>
+<p>You should see the JSON notification in the channel, which
+unfortunately is not formatted very nicely :</p>
+<div class="box notice notice-info"><div class="label">Example matrix message:</div>
+  <div class="body">
+<p>{
+&ldquo;message&rdquo;: &ldquo;Running backup-volume failed with error: main.(*script).copyArchive: error copying archive: s3.(*s3Storage).Copy: error uploading backup to remote storage: [Message]: &lsquo;The specified bucket does not exist.&rsquo;, [Code]: NoSuchBucket, [StatusCode]: 404\n\nLog output of the failed run was:\n\ntime=2024-10-16T19:45:27.092Z level=INFO msg=\&ldquo;Stopping 1 out of 26 running container(s) as they were labeled backup-volume.stop-during-backup=true.\&quot;\ntime=2024-10-16T19:45:27.713Z level=INFO msg=\&ldquo;Created backup of `/backup` at `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\&quot;\ntime=2024-10-16T19:45:27.972Z level=INFO msg=\&ldquo;Restarted 1 container(s).\&quot;\ntime=2024-10-16T19:45:28.259Z level=INFO msg=\&ldquo;Removed tar file `/tmp/backup-default-2024-10-16T19-45-27.tar.gz`.\&quot;\n&rdquo;,
+&ldquo;title&rdquo;: &ldquo;Failure running backup-volume at 2024-10-16T19:45:27Z&rdquo;
+}</p>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

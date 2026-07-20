@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Distrobox · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/config/firefox/" aria-label="Previous: firefox" title="prev: firefox"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/config/emacs-on-fedora/" aria-label="Next: emacs-on-fedora" title="next: emacs-on-fedora"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/config/">config</a><ul><li class="lvl1"><a href="#">distrobox</a></li><li class="lvl2"><a href="#dev-distrobox--fedora">Dev distrobox (Fedora)</a></li><li class="lvl2"><a href="#arch-linux-distrobox">Arch Linux distrobox</a></li><li class="lvl2"><a href="#managing-distrobox-containers">Managing distrobox containers</a></li><li class="lvl2"><a href="#host-spawn">Host spawn</a></li><li class="lvl3"><a href="#install-host-spawn-inside-fedora-container">Install host-spawn inside Fedora container</a></li><li class="lvl3"><a href="#install-host-spawn-inside-arch-linux-container">Install host-spawn inside Arch Linux container</a></li><li class="lvl3"><a href="#run-host-programs">Run host programs</a></li><li class="lvl3"><a href="#create-host-program-shims">Create host program shims</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node open">
+                  <a class="" href="/linux-workstation/config/">config</a><ul class="sections"><li><a class="" href="/linux-workstation/config/sway/">sway</a></li><li><a class="" href="/linux-workstation/config/firefox/">firefox</a></li><li><a class="active" href="/linux-workstation/config/distrobox/">distrobox</a></li><li><a class="" href="/linux-workstation/config/emacs-on-fedora/">emacs-on-fedora</a></li><li><a class="" href="/linux-workstation/config/ssh/">ssh</a></li></ul></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg" href="/linux-workstation/config/">/config</a><a class="pseg pcur" href="/linux-workstation/config/distrobox/">/distrobox</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Distrobox</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>If you prefer to manage your user environment entirely with Nix and
+Home Manager, you can skip this section.</p>
+  </div>
+</div>
+<p><a href="https://docs.fedoraproject.org/en-US/fedora-silverblue/toolbox/">Distrobox</a> (and/or <a href="https://containertoolbx.org/">Toolbx</a>) is an integral part of Fedora Atomic, being
+one of the main methods of installing software, it lets you run your
+applications inside of <a href="https://podman.io">Podman</a> containers. Distrobox can actually be
+used on any Linux system that is capable of running Podman, but it is
+especially useful on Atomic hosts. Distrobox is more tightly
+integrated with your host OS than Docker or Podman containers normally
+are. Distrobox containers share the same <code>/home</code> directory with the
+host (bind mounted), and they live in the same network and process
+namespace as the host (i.e., they share the same IP addresses, and you
+can run <code>ps</code> or <code>kill</code> from inside the distrobox, and it will
+see/affect the host.) Distrobox containers are not sandboxed like
+normal Docker containers are, but they are a convenience for
+installing/removing software on Atomic hosts, since the host
+filesystem is read-only (but read-write inside of a container). The
+applications you install in the container will live only inside the
+distrobox.</p>
+<p>The killer feature of a distrobox is that it lets you try things out,
+and if you want to start over, you can just delete the distrobox
+container, and create a new one. You are less likely to mess up the
+host by playing around inside the distrobox. Just remember that <code>/home</code>
+is bind mounted to the host, and so if you change or delete things in
+those directories, they are also affected the same way on the host. u</p>
+<h2 id="dev-distrobox--fedora"><a class="heading-anchor" href="#dev-distrobox--fedora">Dev distrobox (Fedora)</a></h2>
+<p>Let&rsquo;s create a distrobox to install some of the common development tools
+we will use on a daily basis.</p>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>In <a href="http://localhost:1313/linux-workstation/config/sway/#sway-config">EnigmaCurry&rsquo;s sway config</a> there is a <a href="https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/fedora-dev.sh">fedora-dev.sh script</a> and <a href="https://github.com/EnigmaCurry/sway-home/blob/3c2f65cac1392d148a7b6aa50c3df833bc023e12/config/bash/alias.sh#L9-L12">alias</a>
+that sets up the container automatically:</p>
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in the dev distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Automatic install:
+dev-install
+</pre></div>
+</div>
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in the dev distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Alias to enter the container:
+dev
+</pre></div>
+</div>
+<p>If you are using this script, the rest of the commands in this chapter that are
+labeled <code>Manual install</code> may be skipped.</p>
+  </div>
+</div>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+distrobox create dev
+</pre></div>
+</div>
+
+
+<p>This will create a new distrobox container called <code>dev</code>.</p>
+<p>By default, the container image that distrobox selects is the same OS
+version as the host. (eg. If the host is running Fedora Atomic Sway
+40, the distrobox will run Fedora Workstation 40.)</p>
+<p>To enter the distrobox run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual method:
+distrobox enter dev
+</pre></div>
+</div>
+
+
+<p>This will enter the distrobox container, and now you can install extra
+software:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in the dev distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+sudo dnf install keychain htop gettext libwebp-tools flatpak-xdg-utils
+sudo dnf groupinstall &#34;Development Tools&#34; &#34;Development Libraries&#34;
+# Make xdg-open open the host web browser:
+sudo ln -s /usr/bin/flatpak-xdg-open /usr/local/bin/xdg-open
+</pre></div>
+</div>
+
+
+<h2 id="arch-linux-distrobox"><a class="heading-anchor" href="#arch-linux-distrobox">Arch Linux distrobox</a></h2>
+<p>You are not limited to using the default distrobox image, in fact you
+can run any container image you want, or even build your own from a
+<code>Dockerfile</code>. Here is how to build a custom Arch Linux container
+image:</p>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>In <a href="http://localhost:1313/linux-workstation/config/sway/#sway-config">EnigmaCurry&rsquo;s sway config</a> there is a <a href="https://github.com/EnigmaCurry/sway-home/blob/master/config/toolbox/arch-dev.sh">arch-dev.sh script</a> and <a href="https://github.com/EnigmaCurry/sway-home/blob/3c2f65cac1392d148a7b6aa50c3df833bc023e12/config/bash/alias.sh#L9-L12">alias</a>
+that sets up the container automatically:</p>
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in the dev distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Automatic install:
+arch-dev-install
+</pre></div>
+</div>
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in the dev distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Alias to enter container:
+arch-dev
+</pre></div>
+</div>
+<p>If you are using this script, the rest of the commands in this chapter
+that are labeled <code>Manual install</code> may be skipped.</p>
+  </div>
+</div>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+IMAGE=arch
+(set -e
+mkdir -p ~/toolbox/${IMAGE}
+cat &lt;&lt; &#39;EOF&#39; &gt; ~/toolbox/${IMAGE}/Dockerfile
+## http://book.rymcg.tech/linux-workstation/config/toolbox/#arch-linux-toolbox
+FROM docker.io/archlinux/archlinux:latest
+ENV NAME=arch-toolbox VERSION=rolling
+LABEL com.github.containers.toolbox=&#34;true&#34; name=${IMAGE}-toolbox
+RUN pacman -Syu --noconfirm \
+    &amp;&amp; pacman  -S --noconfirm sudo inetutils less \
+       git base-devel go \
+       noto-fonts noto-fonts-cjk \
+       noto-fonts-emoji noto-fonts-extra \
+    &amp;&amp; pacman -Scc --noconfirm \
+    &amp;&amp; echo &#34;%wheel ALL=(ALL) NOPASSWD: ALL&#34; &gt; /etc/sudoers.d/toolbox
+RUN sudo -u nobody git clone https://aur.archlinux.org/yay-bin.git /tmp/yay \
+    &amp;&amp; cd /tmp/yay \
+    &amp;&amp; sudo -u nobody makepkg -s \
+    &amp;&amp; pacman -U --noconfirm yay-bin-*.pkg.tar.zst
+CMD [&#34;bash&#34;]
+EOF
+podman build -t ${IMAGE} ~/toolbox/${IMAGE}
+)
+</pre></div>
+</div>
+
+
+<p>Now you can create a new distrobox based on the new image (both called
+<code>arch</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+distrobox create --image arch arch
+</pre></div>
+</div>
+
+
+<p>To enter the Arch Linux container, run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual method:
+distrobox enter arch
+</pre></div>
+</div>
+
+
+<p>Now that you&rsquo;re inside the distrobox, you can run any Arch Linux command
+(consult the <a href="http://wiki.archlinux.org/">Arch Wiki</a>).</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this inside the arch distrobox</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+sudo pacman -Syu
+sudo pacman -S keychain base-devel
+</pre></div>
+</div>
+
+
+<h2 id="managing-distrobox-containers"><a class="heading-anchor" href="#managing-distrobox-containers">Managing distrobox containers</a></h2>
+<p>You can list all of your distroboxes that you&rsquo;ve created:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+distrobox list
+</pre></div>
+</div>
+
+
+<p>You can remove existing distroboxes:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+distrobox rm --force arch
+</pre></div>
+</div>
+
+
+<p>(force is only required if the distrobox is currently running.)</p>
+<h2 id="host-spawn"><a class="heading-anchor" href="#host-spawn">Host spawn</a></h2>
+<p><a href="https://github.com/1player/host-spawn/tree/master">host-spawn</a> is a program you can install inside of a distrobox, to run
+commands on the host.</p>
+<h3 id="install-host-spawn-inside-fedora-container"><a class="heading-anchor" href="#install-host-spawn-inside-fedora-container">Install host-spawn inside Fedora container</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in your distrobox container:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+sudo dnf install host-spawn
+</pre></div>
+</div>
+
+
+<h3 id="install-host-spawn-inside-arch-linux-container"><a class="heading-anchor" href="#install-host-spawn-inside-arch-linux-container">Install host-spawn inside Arch Linux container</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Build and install host-spawn on Arch Linux</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+(set -e
+BUILD_DIR=~/aur/host-spawn
+rm -f ${BUILD_DIR}/*.zst
+mkdir -p ${BUILD_DIR}
+cat &lt;&lt; &#39;EOF&#39; &gt; ${BUILD_DIR}/PKGBUILD
+pkgname=host-spawn-git
+pkgver=v1.6.0.r0.ge150d2c
+pkgrel=1
+pkgdesc=&#39;Run commands on your host machine from inside your flatpak sandbox, distrobox or distrobox containers.&#39;
+arch=(&#39;any&#39;)
+url=&#34;https://github.com/1player/host-spawn&#34;
+license=(&#39;MIT-0&#39;)
+source=(&#34;${pkgname%-git}::git&#43;https://github.com/1player/host-spawn.git&#34;)
+depends=(&#39;go&#39;)
+makedepends=(&#39;git&#39;)
+conflicts=(&#34;${pkgname%-git}&#34;)
+provides=(&#34;${pkgname%-git}&#34;)
+package() {
+  cd &#34;${pkgname%-git}&#34;
+  ./build.sh $(uname -m)
+  install -Dm 555 build/host-spawn-$(uname -m) \
+    &#34;${pkgdir}&#34;/usr/bin/host-spawn
+}
+pkgver() {
+  cd &#34;${pkgname%-git}&#34;
+  git describe --long --tags | sed &#39;s/\([^-]*-g\)/r\1/;s/-/./g&#39;
+}
+sha256sums=(&#39;SKIP&#39;)
+EOF
+cd ${BUILD_DIR}
+makepkg
+sudo pacman -U host-spawn-*.zst
+)
+</pre></div>
+</div>
+
+
+<h3 id="run-host-programs"><a class="heading-anchor" href="#run-host-programs">Run host programs</a></h3>
+<p>Once you install <code>host-spawn</code> inside your container, you can use it to
+run any host command:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in your distrobox container:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+host-spawn distrobox list
+</pre></div>
+</div>
+
+
+<p>This will invoke <code>distrobox</code> <strong><em>on the host</em></strong>.</p>
+<h3 id="create-host-program-shims"><a class="heading-anchor" href="#create-host-program-shims">Create host program shims</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this in your distrobox container:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Manual install:
+##
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/toolbox
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/distrobox
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/podman
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/flatpak
+sudo ln -sf /usr/bin/host-spawn /usr/local/bin/firefox
+</pre></div>
+</div>
+
+
+<p>This will allow you to run the host programs <code>toolbox</code>, <code>podman</code> and
+<code>flatpak</code>, from inside the container, without needing to run
+<code>host-spawn</code> directly.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

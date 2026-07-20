@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Synthwave Trip · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/retrogrid/" aria-label="Previous: retrogrid" title="prev: retrogrid"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/giza/" aria-label="Next: giza" title="next: giza"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">synthwave-trip</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="open">
+                  <a class="active" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/synthwave-trip/">/synthwave-trip</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Synthwave Trip</a></h1>
+
+
+<p>A full sunset scene — gradient sky, a striped sun sitting on the
+horizon, a perspective ground grid receding to it, and a central dashed
+road. On top of that, the whole image is squeezed through a <strong>slowly
+morphing lens</strong>: fisheye strength, asymmetric squeeze, swirl, and a wave
+distortion all vary on sums of irrational-ratio sines so the picture
+never repeats the same distortion twice.</p>
+<p>The scene also runs <strong>UFO encounters</strong>: every 55 shader-seconds a
+deterministic random-check either skips the encounter or picks one of
+three set-pieces —</p>
+<ul>
+<li>a <strong>solo saucer</strong> streaking across the horizon dragging a tractor beam;</li>
+<li>a <strong>triangle formation</strong> that warps in to the sun, jump-cuts through
+seven poses in a Lissajous around it, then warps out;</li>
+<li>a <strong>cylindrical craft</strong> that descends to a hover, spins on its long
+axis, and sweeps a searchlight cone across the road.</li>
+</ul>
+<p>The saucer body is drawn from an SDF: an ellipse and a smaller ellipse
+sum to a saucer + dome; a per-rim ring of exp-decayed dots plus a
+bottom-glow blob complete it.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Synthwave sunset with a slowly-morphing fisheye lens and periodic
+// UFO encounters. Palette = iAccent + three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+vec3 rgb2hsv(vec3 c){
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c){
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// SDF-shaded saucer + dome + rim lights, blended into col
+void drawSaucer(vec2 d, float sW, float sH, float time,
+                vec3 ca, vec3 cb, vec3 cc, vec3 cd,
+                float glowStr, float colorSeed,
+                inout vec3 col, float vis){
+  float sDist = length(d / vec2(sW, sH));
+  float saucer = smoothstep(1.1, 0.85, sDist);
+  float dOffy = sH * 1.125;
+  float dDist = length((d - vec2(0.0, dOffy)) / vec2(sW * 0.4, sH * 2.0));
+  float dome = smoothstep(1.1, 0.85, dDist) * smoothstep(0.0, sH * 0.5, d.y);
+  float rimSum = 0.0;
+  for(int i = 0; i < 6; i++){
+    float a = float(i) * 1.0472 + time * 1.5;
+    vec2 lp = vec2(cos(a) * sW * 0.88, sin(a) * sH * 0.88);
+    rimSum += exp(-length(d - lp) * min(11.0 / sW, 400.0));
+  }
+  float botGlow = exp(-length(d / vec2(sW * 0.6, sH * 1.25) + vec2(0.0, 1.2)) * 2.0);
+  botGlow *= glowStr;
+  float body = max(saucer, dome);
+  vec3 uCol = cc * 0.12;
+  uCol = mix(uCol, mix(cb, vec3(0.7), 0.25) * 0.5, dome / max(body, 0.001));
+  uCol += mix(ca, cb, 0.5) * botGlow * 0.7;
+  uCol += mix(ca, cd, fract(time * 0.2 + colorSeed)) * rimSum;
+  col = mix(col, uCol, body * vis);
+  col += mix(ca, cb, 0.5) * exp(-length(d) * min(1.3 / sW, 50.0)) * 0.1 * vis;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 rawUV = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t = iTime * 0.3 * tempo;
+  float rawTime = iTime;
+
+  // fisheye envelope: breathes in and out on a sum of irrational-ratio sines
+  float mt = rawTime * 0.02;
+  float fishW = 0.5 + 0.5 * (
+    sin(mt * 1.6180339)       * 0.5 +
+    sin(mt * 1.4142135 + 2.1) * 0.3 +
+    sin(mt * 1.7320508 + 4.7) * 0.2);
+  fishW = smoothstep(0.15, 0.85, fishW);
+
+  float slowT = rawTime * 0.031;
+
+  // slow hue drift on the whole palette so the sky doesn't sit still
+  float hueShift = (
+    sin(slowT * 0.87)       * 0.5 +
+    sin(slowT * 1.31 + 1.9) * 0.3 +
+    sin(slowT * 0.53 + 4.1) * 0.2) * 0.06;
+  vec3 c1 = hsv2rgb(rgb2hsv(iAccent)                   + vec3(hueShift, 0.0, 0.0));
+  vec3 c2 = hsv2rgb(rgb2hsv(vec3(1.00, 0.35, 0.55))    + vec3(hueShift, 0.0, 0.0));
+  vec3 c3 = hsv2rgb(rgb2hsv(vec3(0.35, 0.75, 1.00))    + vec3(hueShift, 0.0, 0.0));
+  vec3 c4 = hsv2rgb(rgb2hsv(vec3(0.55, 0.25, 0.85))    + vec3(hueShift, 0.0, 0.0));
+
+  // fisheye center wanders
+  vec2 fishCenter = vec2(
+    sin(slowT * 1.6180339) * 0.07 + sin(slowT * 0.73 + 3.7) * 0.06,
+    sin(slowT * 1.4142135) * 0.05 + sin(slowT * 0.91 + 1.3) * 0.05);
+
+  float fishStrength = 1.0 + (
+    sin(slowT * 1.7320508)       * 0.5 +
+    sin(slowT * 0.67 + 2.1)      * 0.3 +
+    sin(slowT * 1.13 + 4.5)      * 0.2) * 1.5;
+
+  float sqX = 1.0 + sin(slowT * 2.2360679) * 0.25;
+  float sqY = 1.0 + sin(slowT * 1.8392867) * 0.20;
+
+  float swirlAmt =
+    sin(slowT * 0.618)       * 0.20 +
+    sin(slowT * 1.17 + 3.3)  * 0.15 +
+    sin(slowT * 0.41 + 1.7)  * 0.10;
+
+  float waveAmt = sin(slowT * 0.53 + 2.9) * 0.5 + 0.5;
+  waveAmt *= waveAmt;
+  float waveAngle = slowT * 0.31;
+
+  vec2 delta = (rawUV - 0.5 - fishCenter) * vec2(aspect * sqX, sqY);
+  float r2 = dot(delta, delta);
+  float ang = swirlAmt * r2;
+  float cs = cos(ang), sn = sin(ang);
+  delta = vec2(cs * delta.x - sn * delta.y, sn * delta.x + cs * delta.y);
+  vec2 distortedUV = delta * (1.0 + fishStrength * r2);
+
+  vec2 waveDir = vec2(cos(waveAngle), sin(waveAngle));
+  float waveDot = dot(delta, waveDir);
+  distortedUV += waveDir * sin(waveDot * 12.0) * 0.03 * waveAmt;
+  distortedUV /= vec2(aspect * sqX, sqY);
+
+  vec2 uv = mix(rawUV, distortedUV + 0.5 + fishCenter, fishW);
+
+  // drifting camera pitch and flight height
+  float camPitch =
+    sin(slowT * 0.61)       * 0.5 +
+    sin(slowT * 0.89 + 3.1) * 0.3 +
+    sin(slowT * 0.37 + 1.4) * 0.2;
+  float horizon = 0.40 + camPitch * 0.12;
+  float camH =
+    sin(slowT * 0.47)       * 0.5 +
+    sin(slowT * 0.79 + 2.7) * 0.3 +
+    sin(slowT * 0.31 + 5.3) * 0.2;
+  float heightOffset = 0.01 + (camH * 0.5 + 0.5) * 0.0012;
+
+  // sun position (computed here so mirage haze can trace its circumference)
+  float sunPhase =
+    sin(slowT * 0.73)       * 0.5 +
+    sin(slowT * 1.07 + 2.3) * 0.3 +
+    sin(slowT * 0.41 + 5.1) * 0.2;
+  float sunY = horizon + 0.10 + sunPhase * 0.30;
+  float sunProximity = 1.0 - smoothstep(0.0, 0.25, sunY - horizon);
+  vec2 sunCenter = vec2(0.5, sunY);
+  float sunRadius = 0.15 + sunProximity * 0.12;
+
+  // heat mirage along the horizon + sun rim
+  float mirageIntensity = 0.5 + 0.5 * (
+    sin(slowT * 0.87)       * 0.5 +
+    sin(slowT * 1.31 + 1.9) * 0.3 +
+    sin(slowT * 0.53 + 4.1) * 0.2);
+  mirageIntensity = mirageIntensity * mirageIntensity;
+  float mirageSpeed = 1.0 + mirageIntensity * 2.0;
+  float horizDist = abs(uv.y - horizon);
+  float mirageSpread = 0.05 + mirageIntensity * 0.10;
+  float horizHaze = smoothstep(mirageSpread, 0.0, horizDist);
+  vec2 toSun = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+  float distToSun = length(toSun);
+  float sunEdgeDist = abs(distToSun - sunRadius);
+  float sunHaze = smoothstep(0.06, 0.0, sunEdgeDist);
+  float mirageMask = max(horizHaze, sunHaze);
+  float mirageAmt = mirageMask * mirageIntensity;
+  uv.y += mirageAmt * (
+    sin(uv.x * 40.0 * aspect + rawTime * 1.3 * mirageSpeed)       * 0.005 +
+    sin(uv.x * 25.0 * aspect + rawTime * 0.9 * mirageSpeed + 1.7) * 0.004 +
+    sin(uv.x * 60.0 * aspect + rawTime * 2.1 * mirageSpeed + 3.2) * 0.003);
+  uv.x += sunHaze * mirageIntensity * (
+    sin(uv.y * 50.0 + rawTime * 1.7 * mirageSpeed)       * 0.003 +
+    sin(uv.y * 35.0 + rawTime * 1.1 * mirageSpeed + 2.9) * 0.002);
+
+  vec3 col = vec3(0.0);
+
+  // sky gradient + striped sun + stars
+  if(uv.y > horizon){
+    float skyT = clamp((uv.y - horizon) / (1.0 - horizon), 0.0, 1.0);
+    vec3 skyTop = c3 * 0.1;
+    vec3 skyBot = mix(c1, c2, 0.3) * 0.6;
+    col = mix(skyBot, skyTop, skyT);
+
+    vec2 sunUV = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+    float sunDist = length(sunUV);
+
+    if(sunDist < sunRadius){
+      float stripeFreq = 40.0;
+      float stripe = step(0.5, fract(uv.y * stripeFreq));
+      float gapGrow = smoothstep(sunCenter.y, sunCenter.y - sunRadius, uv.y);
+      float stripeWidth = mix(0.0, 0.7, gapGrow);
+      float sunMask = 1.0 - step(1.0 - stripeWidth, stripe) * step(0.3, gapGrow);
+      vec3 sunTop = c2;
+      vec3 sunBot = c1;
+      float sunGrad = (uv.y - (sunCenter.y - sunRadius)) / (2.0 * sunRadius);
+      vec3 sunCol = mix(sunBot, sunTop, clamp(sunGrad, 0.0, 1.0));
+      col = mix(col, sunCol * 1.5, sunMask * smoothstep(sunRadius, sunRadius - 0.005, sunDist));
+    }
+    float glow = exp(-sunDist * 4.0) * 0.4;
+    col += mix(c1, c2, 0.5) * glow;
+
+    // stars: hidden by sun + sun glow
+    float starMask = smoothstep(sunRadius, sunRadius + 0.08, sunDist);
+    if(skyT > 0.3){
+      vec2 starUV = floor(uv * vec2(80.0 * aspect, 80.0));
+      float starHash = fract(sin(dot(starUV, vec2(127.1, 311.7))) * 43758.5453);
+      float twinkle = sin(t * 3.0 + starHash * 6.28) * 0.5 + 0.5;
+      if(starHash > 0.985){
+        col += vec3(0.6 + 0.4 * twinkle) * (skyT - 0.3) * 2.0 * starMask;
+      }
+    }
+  }
+
+  // ground: perspective grid + central road
+  if(uv.y <= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    float z = 1.0 / (groundT + heightOffset);
+    float x = (uv.x - 0.5) * aspect * z;
+    z += t * 8.0;
+
+    float gridSpaceX = x * 0.5;
+    float gridSpaceZ = z * 0.2;
+    float gridX = abs(fract(gridSpaceX) - 0.5);
+    float gridZ = abs(fract(gridSpaceZ) - 0.5);
+    float aaX = fwidth(gridSpaceX) * 1.5;
+    float aaZ = fwidth(gridSpaceZ) * 1.5;
+    float lineWidth = 0.03;
+    float lineX = smoothstep(lineWidth + aaX, lineWidth, gridX);
+    float lineZ = smoothstep(lineWidth + aaZ, lineWidth, gridZ);
+    float grid = max(lineX, lineZ);
+    float fade = 1.0 - smoothstep(0.0, 0.8, groundT);
+    grid *= (0.3 + 0.7 * fade);
+
+    float cellX = floor(x * 0.5);
+    float cellZ = floor(z * 0.2);
+    int ci = int(mod(abs(cellX) + abs(cellZ), 4.0));
+    vec3 gridCol;
+    if(ci == 0)      gridCol = c1;
+    else if(ci == 1) gridCol = c2;
+    else if(ci == 2) gridCol = c3;
+    else             gridCol = c4;
+
+    vec3 groundBase = c3 * 0.02;
+    vec3 gridResult = groundBase + gridCol * grid;
+
+    // central road, edge + dashed centerline markings
+    float roadHalf = 3.0;
+    float roadAA   = fwidth(x) * 2.0;
+    float roadBlend = smoothstep(roadHalf + roadAA, roadHalf - roadAA, abs(x));
+    vec3 roadSurface = c4 * 0.12;
+    float markW = 0.12;
+    float markAA = fwidth(x) * 1.5;
+    float edgeLine   = smoothstep(markW + markAA, markW, abs(abs(x) - roadHalf));
+    float dashZ      = step(0.5, fract(z * 0.05));
+    float centerLine = smoothstep(markW + markAA, markW, abs(x)) * dashZ;
+    float marks = max(edgeLine, centerLine) * (0.3 + 0.7 * fade);
+    vec3 roadCol = mix(roadSurface, c2, marks);
+    col = mix(gridResult, roadCol, roadBlend);
+
+    float horizGlow = exp(-groundT * 6.0) * 0.3;
+    col += c1 * horizGlow;
+  }
+
+  // deterministic UFO encounters, 55 shader-seconds per slot
+  {
+    float ufoEpoch = 55.0;
+    float ufoSlot = floor(rawTime / ufoEpoch);
+    float ufoRng = fract(sin(ufoSlot * 127.31 + 91.7) * 43758.5453);
+
+    if(ufoRng > 0.45){
+      float lt = fract(rawTime / ufoEpoch);
+      float typeRng = fract(ufoRng * 3.71);
+
+      if(typeRng < 0.34){
+        // solo saucer + tractor beam
+        float ufoVis = smoothstep(0.05, 0.14, lt) * smoothstep(0.95, 0.86, lt);
+        if(ufoVis > 0.001){
+          float dir = step(0.5, fract(ufoRng * 7.31)) * 2.0 - 1.0;
+          float ft = lt * lt * (3.0 - 2.0 * lt);
+          ft = ft * ft * (3.0 - 2.0 * ft);
+          float ufoX = 0.5 + dir * (0.7 - 1.4 * ft);
+          float ufoY = horizon + 0.20 + sin(ft * 3.14159) * 0.05
+                       + sin(rawTime * 1.7) * 0.003;
+          vec2 dU = vec2((uv.x - ufoX) * aspect, uv.y - ufoY);
+          float beamStr = smoothstep(0.15, 0.05, abs(ufoX - 0.5));
+
+          if(beamStr > 0.01 && uv.y < ufoY - 0.005){
+            float bTop = ufoY - 0.005;
+            float bBot = horizon - 0.25;
+            float bT = clamp((bTop - uv.y) / (bTop - bBot), 0.0, 1.0);
+            float hw = mix(0.012, 0.11, bT * bT) / aspect;
+            float be = smoothstep(1.0, 0.4, abs(uv.x - ufoX) / hw);
+            be *= beamStr * ufoVis * (1.0 - bT * 0.35);
+            be *= 0.55 + 0.45 * sin(uv.y * 80.0 - rawTime * 4.0);
+            float spark = sin(uv.y * 140.0 + rawTime * 2.5)
+                        * sin(uv.x * 100.0 * aspect - rawTime * 0.8);
+            be += max(spark, 0.0) * 0.15 * be;
+            col += mix(c1, c2, 0.3) * be * 0.3;
+          }
+
+          drawSaucer(dU, 0.05, 0.008, rawTime, c1, c2, c3, c4,
+                     0.4 + 0.6 * beamStr, 0.0, col, ufoVis);
+        }
+      } else if(typeRng < 0.67){
+        // triangle formation: warp in to sun, Lissajous around it, warp out
+        float ufoVis = smoothstep(0.06, 0.14, lt) * smoothstep(0.88, 0.78, lt);
+        if(ufoVis > 0.001){
+          float dir = step(0.5, fract(ufoRng * 5.13)) * 2.0 - 1.0;
+          float warpEnd    = 0.20;
+          float danceStart = 0.22;
+          float danceEnd   = 0.72;
+          float danceLt = clamp(lt, danceStart, danceEnd);
+          float dp = (danceLt - danceStart) / (danceEnd - danceStart);
+          float jumpT = dp * 7.0;
+          float jumpIdx = floor(jumpT);
+          float snap = smoothstep(0.0, 0.04, fract(jumpT));
+          float ja1 = jumpIdx * 1.618 * 6.2832;
+          float ja2 = (jumpIdx + 1.0) * 1.618 * 6.2832;
+          float jr1 = 0.09 + sin(jumpIdx * 2.3) * 0.03;
+          float jr2 = 0.09 + sin((jumpIdx + 1.0) * 2.3) * 0.03;
+          vec2 fp1 = sunCenter + vec2(cos(ja1) * jr1, sin(ja1) * jr1 * 0.5);
+          vec2 fp2 = sunCenter + vec2(cos(ja2) * jr2, sin(ja2) * jr2 * 0.5);
+          vec2 formCenter = mix(fp1, fp2, snap);
+          float formRot = rawTime * 2.5 + snap * 0.8;
+          float formSize = 0.045 + sin(jumpIdx * 1.7) * 0.008;
+
+          if(lt < warpEnd){
+            float wt = clamp((lt - 0.06) / (warpEnd - 0.06), 0.0, 1.0);
+            vec2 startP = vec2(0.5 + dir * 0.9, horizon + 0.32);
+            formCenter = mix(startP, sunCenter + vec2(0.0, 0.06), wt);
+            formRot = rawTime * 2.0;
+            formSize = 0.05;
+          } else if(lt > danceEnd){
+            float exitT = clamp((lt - danceEnd) / (0.82 - danceEnd), 0.0, 1.0);
+            float exitD = smoothstep(0.0, 0.12, exitT);
+            formCenter += vec2(dir * 0.2, 0.7) * exitD;
+            formSize *= max(1.0 - exitT * 1.5, 0.0);
+          }
+
+          // three saucer positions — kept in scalars, not an array, because
+          // WebGL1 forbids indexing arrays with anything but constants or
+          // loop counters, and the connection step below needs sPos[(i+1)%3]
+          vec2 sP0 = formCenter + vec2(cos(formRot)              * formSize,
+                                       sin(formRot)              * formSize * 0.6);
+          vec2 sP1 = formCenter + vec2(cos(formRot + 2.0944)     * formSize,
+                                       sin(formRot + 2.0944)     * formSize * 0.6);
+          vec2 sP2 = formCenter + vec2(cos(formRot + 2.0 * 2.0944) * formSize,
+                                       sin(formRot + 2.0 * 2.0944) * formSize * 0.6);
+
+          // energy connections 0->1, 1->2, 2->0
+          for(int e = 0; e < 3; e++){
+            vec2 pa, ba;
+            if(e == 0){
+              pa = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+              ba = vec2((sP1.x - sP0.x) * aspect, sP1.y - sP0.y);
+            } else if(e == 1){
+              pa = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+              ba = vec2((sP2.x - sP1.x) * aspect, sP2.y - sP1.y);
+            } else {
+              pa = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+              ba = vec2((sP0.x - sP2.x) * aspect, sP0.y - sP2.y);
+            }
+            float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+            float ld = length(pa - ba * h);
+            float line = exp(-ld * 250.0) * 0.15;
+            line *= 0.6 + 0.4 * sin(h * 12.0 - rawTime * 3.0);
+            col += mix(c1, c4, 0.5) * line * ufoVis;
+          }
+
+          vec2 sd0 = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+          drawSaucer(sd0, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.00, col, ufoVis);
+          vec2 sd1 = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+          drawSaucer(sd1, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.33, col, ufoVis);
+          vec2 sd2 = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+          drawSaucer(sd2, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.66, col, ufoVis);
+        }
+      } else {
+        // cylindrical craft: descent → hover with axial spin + searchlight → ascent
+        float ufoVis = smoothstep(0.06, 0.16, lt) * smoothstep(0.93, 0.82, lt);
+        if(ufoVis > 0.001){
+          float hoverY = horizon + 0.22;
+          float cylY;
+          if(lt < 0.20){
+            float dsc = clamp((lt - 0.06) / 0.14, 0.0, 1.0);
+            cylY = mix(1.1, hoverY, dsc * dsc * (3.0 - 2.0 * dsc));
+          } else if(lt < 0.75){
+            cylY = hoverY + sin(rawTime * 0.7) * 0.008;
+          } else {
+            float asc = clamp((lt - 0.75) / 0.18, 0.0, 1.0);
+            cylY = mix(hoverY, 1.1, asc * asc);
+          }
+          float cylX = 0.5 + sin(rawTime * 0.13) * 0.03;
+          vec2 dC = vec2((uv.x - cylX) * aspect, uv.y - cylY);
+
+          // capsule SDF: rounded-rectangle
+          float cW = 0.07, cH = 0.016, cR = 0.016;
+          vec2 q = abs(dC) - vec2(cW - cR, max(cH - cR, 0.001));
+          float cylSDF = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - cR;
+          float cylMask = smoothstep(0.003, 0.0, cylSDF);
+
+          float sa = asin(clamp(dC.y / (cH * 0.95), -1.0, 1.0));
+          float rot = rawTime * 1.8;
+          float band1 = sin((sa + rot) *  5.0)       * 0.5 + 0.5;
+          float band2 = sin((sa + rot) * 11.0 + 1.7) * 0.5 + 0.5;
+          float lightPhase = fract(dC.x / (cW * 2.0) * 8.0 + rawTime * 0.4);
+          float lightBelt = smoothstep(0.5, 0.2, abs(sa) / 1.5708);
+          float lights = smoothstep(0.15, 0.08, abs(lightPhase - 0.5))
+                       * lightBelt * cylMask;
+
+          vec3 cylCol = c3 * 0.08 + c4 * 0.05;
+          cylCol += c2 * band1 * 0.1;
+          cylCol += c1 * band2 * 0.05;
+          cylCol += mix(c1, c2, fract(lightPhase * 3.0 + rawTime * 0.2))
+                   * lights * 1.5;
+          float edgeH = smoothstep(0.0, 0.004, -cylSDF)
+                      * smoothstep(0.012, 0.003, -cylSDF);
+          cylCol += mix(c1, c2, 0.5) * edgeH * 0.3;
+          col = mix(col, cylCol, cylMask * ufoVis);
+          col += mix(c1, c2, 0.5) * exp(-abs(cylSDF) * 50.0) * 0.12 * ufoVis;
+
+          // searchlight cone + ground spot
+          float searchA = rawTime * 0.6;
+          float searchX = cylX + sin(searchA) * 0.12 / aspect;
+          float coneTopY = cylY - 0.01;
+          float groundSearchY = horizon - 0.08;
+          if(uv.y < coneTopY && uv.y > groundSearchY - 0.05){
+            float ct = clamp((coneTopY - uv.y) / (coneTopY - groundSearchY), 0.0, 1.0);
+            float coneHW = mix(0.008, 0.045, ct) / aspect;
+            float coneX = mix(cylX, searchX, ct);
+            float coneDist = abs(uv.x - coneX) / coneHW;
+            float cone = smoothstep(1.0, 0.5, coneDist) * 0.12 * ct;
+            col += mix(c1, c2, 0.3) * cone * ufoVis;
+          }
+          if(uv.y <= horizon){
+            vec2 searchD = vec2((uv.x - searchX) * aspect,
+                                (uv.y - groundSearchY) * 2.5);
+            float searchLight = exp(-dot(searchD, searchD) * 50.0) * 0.2;
+            col += mix(c1, c2, 0.3) * searchLight * ufoVis;
+          }
+        }
+      }
+    }
+  }
+
+  // scanlines + vignette (against rawUV so vignette stays stable through the lens warp)
+  float scanline = 0.92 + 0.08 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = rawUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.5;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Synthwave sunset with a slowly-morphing fisheye lens and periodic
+// UFO encounters. Palette = iAccent &#43; three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+vec3 rgb2hsv(vec3 c){
+  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 1.0e-10;
+  return vec3(abs(q.z &#43; (q.w - q.y) / (6.0 * d &#43; e)), d / (q.x &#43; e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c){
+  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  vec3 p = abs(fract(c.xxx &#43; K.xyz) * 6.0 - K.www);
+  return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+// SDF-shaded saucer &#43; dome &#43; rim lights, blended into col
+void drawSaucer(vec2 d, float sW, float sH, float time,
+                vec3 ca, vec3 cb, vec3 cc, vec3 cd,
+                float glowStr, float colorSeed,
+                inout vec3 col, float vis){
+  float sDist = length(d / vec2(sW, sH));
+  float saucer = smoothstep(1.1, 0.85, sDist);
+  float dOffy = sH * 1.125;
+  float dDist = length((d - vec2(0.0, dOffy)) / vec2(sW * 0.4, sH * 2.0));
+  float dome = smoothstep(1.1, 0.85, dDist) * smoothstep(0.0, sH * 0.5, d.y);
+  float rimSum = 0.0;
+  for(int i = 0; i &lt; 6; i&#43;&#43;){
+    float a = float(i) * 1.0472 &#43; time * 1.5;
+    vec2 lp = vec2(cos(a) * sW * 0.88, sin(a) * sH * 0.88);
+    rimSum &#43;= exp(-length(d - lp) * min(11.0 / sW, 400.0));
+  }
+  float botGlow = exp(-length(d / vec2(sW * 0.6, sH * 1.25) &#43; vec2(0.0, 1.2)) * 2.0);
+  botGlow *= glowStr;
+  float body = max(saucer, dome);
+  vec3 uCol = cc * 0.12;
+  uCol = mix(uCol, mix(cb, vec3(0.7), 0.25) * 0.5, dome / max(body, 0.001));
+  uCol &#43;= mix(ca, cb, 0.5) * botGlow * 0.7;
+  uCol &#43;= mix(ca, cd, fract(time * 0.2 &#43; colorSeed)) * rimSum;
+  col = mix(col, uCol, body * vis);
+  col &#43;= mix(ca, cb, 0.5) * exp(-length(d) * min(1.3 / sW, 50.0)) * 0.1 * vis;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 rawUV = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t = iTime * 0.3 * tempo;
+  float rawTime = iTime;
+
+  // fisheye envelope: breathes in and out on a sum of irrational-ratio sines
+  float mt = rawTime * 0.02;
+  float fishW = 0.5 &#43; 0.5 * (
+    sin(mt * 1.6180339)       * 0.5 &#43;
+    sin(mt * 1.4142135 &#43; 2.1) * 0.3 &#43;
+    sin(mt * 1.7320508 &#43; 4.7) * 0.2);
+  fishW = smoothstep(0.15, 0.85, fishW);
+
+  float slowT = rawTime * 0.031;
+
+  // slow hue drift on the whole palette so the sky doesn&#39;t sit still
+  float hueShift = (
+    sin(slowT * 0.87)       * 0.5 &#43;
+    sin(slowT * 1.31 &#43; 1.9) * 0.3 &#43;
+    sin(slowT * 0.53 &#43; 4.1) * 0.2) * 0.06;
+  vec3 c1 = hsv2rgb(rgb2hsv(iAccent)                   &#43; vec3(hueShift, 0.0, 0.0));
+  vec3 c2 = hsv2rgb(rgb2hsv(vec3(1.00, 0.35, 0.55))    &#43; vec3(hueShift, 0.0, 0.0));
+  vec3 c3 = hsv2rgb(rgb2hsv(vec3(0.35, 0.75, 1.00))    &#43; vec3(hueShift, 0.0, 0.0));
+  vec3 c4 = hsv2rgb(rgb2hsv(vec3(0.55, 0.25, 0.85))    &#43; vec3(hueShift, 0.0, 0.0));
+
+  // fisheye center wanders
+  vec2 fishCenter = vec2(
+    sin(slowT * 1.6180339) * 0.07 &#43; sin(slowT * 0.73 &#43; 3.7) * 0.06,
+    sin(slowT * 1.4142135) * 0.05 &#43; sin(slowT * 0.91 &#43; 1.3) * 0.05);
+
+  float fishStrength = 1.0 &#43; (
+    sin(slowT * 1.7320508)       * 0.5 &#43;
+    sin(slowT * 0.67 &#43; 2.1)      * 0.3 &#43;
+    sin(slowT * 1.13 &#43; 4.5)      * 0.2) * 1.5;
+
+  float sqX = 1.0 &#43; sin(slowT * 2.2360679) * 0.25;
+  float sqY = 1.0 &#43; sin(slowT * 1.8392867) * 0.20;
+
+  float swirlAmt =
+    sin(slowT * 0.618)       * 0.20 &#43;
+    sin(slowT * 1.17 &#43; 3.3)  * 0.15 &#43;
+    sin(slowT * 0.41 &#43; 1.7)  * 0.10;
+
+  float waveAmt = sin(slowT * 0.53 &#43; 2.9) * 0.5 &#43; 0.5;
+  waveAmt *= waveAmt;
+  float waveAngle = slowT * 0.31;
+
+  vec2 delta = (rawUV - 0.5 - fishCenter) * vec2(aspect * sqX, sqY);
+  float r2 = dot(delta, delta);
+  float ang = swirlAmt * r2;
+  float cs = cos(ang), sn = sin(ang);
+  delta = vec2(cs * delta.x - sn * delta.y, sn * delta.x &#43; cs * delta.y);
+  vec2 distortedUV = delta * (1.0 &#43; fishStrength * r2);
+
+  vec2 waveDir = vec2(cos(waveAngle), sin(waveAngle));
+  float waveDot = dot(delta, waveDir);
+  distortedUV &#43;= waveDir * sin(waveDot * 12.0) * 0.03 * waveAmt;
+  distortedUV /= vec2(aspect * sqX, sqY);
+
+  vec2 uv = mix(rawUV, distortedUV &#43; 0.5 &#43; fishCenter, fishW);
+
+  // drifting camera pitch and flight height
+  float camPitch =
+    sin(slowT * 0.61)       * 0.5 &#43;
+    sin(slowT * 0.89 &#43; 3.1) * 0.3 &#43;
+    sin(slowT * 0.37 &#43; 1.4) * 0.2;
+  float horizon = 0.40 &#43; camPitch * 0.12;
+  float camH =
+    sin(slowT * 0.47)       * 0.5 &#43;
+    sin(slowT * 0.79 &#43; 2.7) * 0.3 &#43;
+    sin(slowT * 0.31 &#43; 5.3) * 0.2;
+  float heightOffset = 0.01 &#43; (camH * 0.5 &#43; 0.5) * 0.0012;
+
+  // sun position (computed here so mirage haze can trace its circumference)
+  float sunPhase =
+    sin(slowT * 0.73)       * 0.5 &#43;
+    sin(slowT * 1.07 &#43; 2.3) * 0.3 &#43;
+    sin(slowT * 0.41 &#43; 5.1) * 0.2;
+  float sunY = horizon &#43; 0.10 &#43; sunPhase * 0.30;
+  float sunProximity = 1.0 - smoothstep(0.0, 0.25, sunY - horizon);
+  vec2 sunCenter = vec2(0.5, sunY);
+  float sunRadius = 0.15 &#43; sunProximity * 0.12;
+
+  // heat mirage along the horizon &#43; sun rim
+  float mirageIntensity = 0.5 &#43; 0.5 * (
+    sin(slowT * 0.87)       * 0.5 &#43;
+    sin(slowT * 1.31 &#43; 1.9) * 0.3 &#43;
+    sin(slowT * 0.53 &#43; 4.1) * 0.2);
+  mirageIntensity = mirageIntensity * mirageIntensity;
+  float mirageSpeed = 1.0 &#43; mirageIntensity * 2.0;
+  float horizDist = abs(uv.y - horizon);
+  float mirageSpread = 0.05 &#43; mirageIntensity * 0.10;
+  float horizHaze = smoothstep(mirageSpread, 0.0, horizDist);
+  vec2 toSun = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+  float distToSun = length(toSun);
+  float sunEdgeDist = abs(distToSun - sunRadius);
+  float sunHaze = smoothstep(0.06, 0.0, sunEdgeDist);
+  float mirageMask = max(horizHaze, sunHaze);
+  float mirageAmt = mirageMask * mirageIntensity;
+  uv.y &#43;= mirageAmt * (
+    sin(uv.x * 40.0 * aspect &#43; rawTime * 1.3 * mirageSpeed)       * 0.005 &#43;
+    sin(uv.x * 25.0 * aspect &#43; rawTime * 0.9 * mirageSpeed &#43; 1.7) * 0.004 &#43;
+    sin(uv.x * 60.0 * aspect &#43; rawTime * 2.1 * mirageSpeed &#43; 3.2) * 0.003);
+  uv.x &#43;= sunHaze * mirageIntensity * (
+    sin(uv.y * 50.0 &#43; rawTime * 1.7 * mirageSpeed)       * 0.003 &#43;
+    sin(uv.y * 35.0 &#43; rawTime * 1.1 * mirageSpeed &#43; 2.9) * 0.002);
+
+  vec3 col = vec3(0.0);
+
+  // sky gradient &#43; striped sun &#43; stars
+  if(uv.y &gt; horizon){
+    float skyT = clamp((uv.y - horizon) / (1.0 - horizon), 0.0, 1.0);
+    vec3 skyTop = c3 * 0.1;
+    vec3 skyBot = mix(c1, c2, 0.3) * 0.6;
+    col = mix(skyBot, skyTop, skyT);
+
+    vec2 sunUV = vec2((uv.x - sunCenter.x) * aspect, uv.y - sunCenter.y);
+    float sunDist = length(sunUV);
+
+    if(sunDist &lt; sunRadius){
+      float stripeFreq = 40.0;
+      float stripe = step(0.5, fract(uv.y * stripeFreq));
+      float gapGrow = smoothstep(sunCenter.y, sunCenter.y - sunRadius, uv.y);
+      float stripeWidth = mix(0.0, 0.7, gapGrow);
+      float sunMask = 1.0 - step(1.0 - stripeWidth, stripe) * step(0.3, gapGrow);
+      vec3 sunTop = c2;
+      vec3 sunBot = c1;
+      float sunGrad = (uv.y - (sunCenter.y - sunRadius)) / (2.0 * sunRadius);
+      vec3 sunCol = mix(sunBot, sunTop, clamp(sunGrad, 0.0, 1.0));
+      col = mix(col, sunCol * 1.5, sunMask * smoothstep(sunRadius, sunRadius - 0.005, sunDist));
+    }
+    float glow = exp(-sunDist * 4.0) * 0.4;
+    col &#43;= mix(c1, c2, 0.5) * glow;
+
+    // stars: hidden by sun &#43; sun glow
+    float starMask = smoothstep(sunRadius, sunRadius &#43; 0.08, sunDist);
+    if(skyT &gt; 0.3){
+      vec2 starUV = floor(uv * vec2(80.0 * aspect, 80.0));
+      float starHash = fract(sin(dot(starUV, vec2(127.1, 311.7))) * 43758.5453);
+      float twinkle = sin(t * 3.0 &#43; starHash * 6.28) * 0.5 &#43; 0.5;
+      if(starHash &gt; 0.985){
+        col &#43;= vec3(0.6 &#43; 0.4 * twinkle) * (skyT - 0.3) * 2.0 * starMask;
+      }
+    }
+  }
+
+  // ground: perspective grid &#43; central road
+  if(uv.y &lt;= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    float z = 1.0 / (groundT &#43; heightOffset);
+    float x = (uv.x - 0.5) * aspect * z;
+    z &#43;= t * 8.0;
+
+    float gridSpaceX = x * 0.5;
+    float gridSpaceZ = z * 0.2;
+    float gridX = abs(fract(gridSpaceX) - 0.5);
+    float gridZ = abs(fract(gridSpaceZ) - 0.5);
+    float aaX = fwidth(gridSpaceX) * 1.5;
+    float aaZ = fwidth(gridSpaceZ) * 1.5;
+    float lineWidth = 0.03;
+    float lineX = smoothstep(lineWidth &#43; aaX, lineWidth, gridX);
+    float lineZ = smoothstep(lineWidth &#43; aaZ, lineWidth, gridZ);
+    float grid = max(lineX, lineZ);
+    float fade = 1.0 - smoothstep(0.0, 0.8, groundT);
+    grid *= (0.3 &#43; 0.7 * fade);
+
+    float cellX = floor(x * 0.5);
+    float cellZ = floor(z * 0.2);
+    int ci = int(mod(abs(cellX) &#43; abs(cellZ), 4.0));
+    vec3 gridCol;
+    if(ci == 0)      gridCol = c1;
+    else if(ci == 1) gridCol = c2;
+    else if(ci == 2) gridCol = c3;
+    else             gridCol = c4;
+
+    vec3 groundBase = c3 * 0.02;
+    vec3 gridResult = groundBase &#43; gridCol * grid;
+
+    // central road, edge &#43; dashed centerline markings
+    float roadHalf = 3.0;
+    float roadAA   = fwidth(x) * 2.0;
+    float roadBlend = smoothstep(roadHalf &#43; roadAA, roadHalf - roadAA, abs(x));
+    vec3 roadSurface = c4 * 0.12;
+    float markW = 0.12;
+    float markAA = fwidth(x) * 1.5;
+    float edgeLine   = smoothstep(markW &#43; markAA, markW, abs(abs(x) - roadHalf));
+    float dashZ      = step(0.5, fract(z * 0.05));
+    float centerLine = smoothstep(markW &#43; markAA, markW, abs(x)) * dashZ;
+    float marks = max(edgeLine, centerLine) * (0.3 &#43; 0.7 * fade);
+    vec3 roadCol = mix(roadSurface, c2, marks);
+    col = mix(gridResult, roadCol, roadBlend);
+
+    float horizGlow = exp(-groundT * 6.0) * 0.3;
+    col &#43;= c1 * horizGlow;
+  }
+
+  // deterministic UFO encounters, 55 shader-seconds per slot
+  {
+    float ufoEpoch = 55.0;
+    float ufoSlot = floor(rawTime / ufoEpoch);
+    float ufoRng = fract(sin(ufoSlot * 127.31 &#43; 91.7) * 43758.5453);
+
+    if(ufoRng &gt; 0.45){
+      float lt = fract(rawTime / ufoEpoch);
+      float typeRng = fract(ufoRng * 3.71);
+
+      if(typeRng &lt; 0.34){
+        // solo saucer &#43; tractor beam
+        float ufoVis = smoothstep(0.05, 0.14, lt) * smoothstep(0.95, 0.86, lt);
+        if(ufoVis &gt; 0.001){
+          float dir = step(0.5, fract(ufoRng * 7.31)) * 2.0 - 1.0;
+          float ft = lt * lt * (3.0 - 2.0 * lt);
+          ft = ft * ft * (3.0 - 2.0 * ft);
+          float ufoX = 0.5 &#43; dir * (0.7 - 1.4 * ft);
+          float ufoY = horizon &#43; 0.20 &#43; sin(ft * 3.14159) * 0.05
+                       &#43; sin(rawTime * 1.7) * 0.003;
+          vec2 dU = vec2((uv.x - ufoX) * aspect, uv.y - ufoY);
+          float beamStr = smoothstep(0.15, 0.05, abs(ufoX - 0.5));
+
+          if(beamStr &gt; 0.01 &amp;&amp; uv.y &lt; ufoY - 0.005){
+            float bTop = ufoY - 0.005;
+            float bBot = horizon - 0.25;
+            float bT = clamp((bTop - uv.y) / (bTop - bBot), 0.0, 1.0);
+            float hw = mix(0.012, 0.11, bT * bT) / aspect;
+            float be = smoothstep(1.0, 0.4, abs(uv.x - ufoX) / hw);
+            be *= beamStr * ufoVis * (1.0 - bT * 0.35);
+            be *= 0.55 &#43; 0.45 * sin(uv.y * 80.0 - rawTime * 4.0);
+            float spark = sin(uv.y * 140.0 &#43; rawTime * 2.5)
+                        * sin(uv.x * 100.0 * aspect - rawTime * 0.8);
+            be &#43;= max(spark, 0.0) * 0.15 * be;
+            col &#43;= mix(c1, c2, 0.3) * be * 0.3;
+          }
+
+          drawSaucer(dU, 0.05, 0.008, rawTime, c1, c2, c3, c4,
+                     0.4 &#43; 0.6 * beamStr, 0.0, col, ufoVis);
+        }
+      } else if(typeRng &lt; 0.67){
+        // triangle formation: warp in to sun, Lissajous around it, warp out
+        float ufoVis = smoothstep(0.06, 0.14, lt) * smoothstep(0.88, 0.78, lt);
+        if(ufoVis &gt; 0.001){
+          float dir = step(0.5, fract(ufoRng * 5.13)) * 2.0 - 1.0;
+          float warpEnd    = 0.20;
+          float danceStart = 0.22;
+          float danceEnd   = 0.72;
+          float danceLt = clamp(lt, danceStart, danceEnd);
+          float dp = (danceLt - danceStart) / (danceEnd - danceStart);
+          float jumpT = dp * 7.0;
+          float jumpIdx = floor(jumpT);
+          float snap = smoothstep(0.0, 0.04, fract(jumpT));
+          float ja1 = jumpIdx * 1.618 * 6.2832;
+          float ja2 = (jumpIdx &#43; 1.0) * 1.618 * 6.2832;
+          float jr1 = 0.09 &#43; sin(jumpIdx * 2.3) * 0.03;
+          float jr2 = 0.09 &#43; sin((jumpIdx &#43; 1.0) * 2.3) * 0.03;
+          vec2 fp1 = sunCenter &#43; vec2(cos(ja1) * jr1, sin(ja1) * jr1 * 0.5);
+          vec2 fp2 = sunCenter &#43; vec2(cos(ja2) * jr2, sin(ja2) * jr2 * 0.5);
+          vec2 formCenter = mix(fp1, fp2, snap);
+          float formRot = rawTime * 2.5 &#43; snap * 0.8;
+          float formSize = 0.045 &#43; sin(jumpIdx * 1.7) * 0.008;
+
+          if(lt &lt; warpEnd){
+            float wt = clamp((lt - 0.06) / (warpEnd - 0.06), 0.0, 1.0);
+            vec2 startP = vec2(0.5 &#43; dir * 0.9, horizon &#43; 0.32);
+            formCenter = mix(startP, sunCenter &#43; vec2(0.0, 0.06), wt);
+            formRot = rawTime * 2.0;
+            formSize = 0.05;
+          } else if(lt &gt; danceEnd){
+            float exitT = clamp((lt - danceEnd) / (0.82 - danceEnd), 0.0, 1.0);
+            float exitD = smoothstep(0.0, 0.12, exitT);
+            formCenter &#43;= vec2(dir * 0.2, 0.7) * exitD;
+            formSize *= max(1.0 - exitT * 1.5, 0.0);
+          }
+
+          // three saucer positions — kept in scalars, not an array, because
+          // WebGL1 forbids indexing arrays with anything but constants or
+          // loop counters, and the connection step below needs sPos[(i&#43;1)%3]
+          vec2 sP0 = formCenter &#43; vec2(cos(formRot)              * formSize,
+                                       sin(formRot)              * formSize * 0.6);
+          vec2 sP1 = formCenter &#43; vec2(cos(formRot &#43; 2.0944)     * formSize,
+                                       sin(formRot &#43; 2.0944)     * formSize * 0.6);
+          vec2 sP2 = formCenter &#43; vec2(cos(formRot &#43; 2.0 * 2.0944) * formSize,
+                                       sin(formRot &#43; 2.0 * 2.0944) * formSize * 0.6);
+
+          // energy connections 0-&gt;1, 1-&gt;2, 2-&gt;0
+          for(int e = 0; e &lt; 3; e&#43;&#43;){
+            vec2 pa, ba;
+            if(e == 0){
+              pa = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+              ba = vec2((sP1.x - sP0.x) * aspect, sP1.y - sP0.y);
+            } else if(e == 1){
+              pa = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+              ba = vec2((sP2.x - sP1.x) * aspect, sP2.y - sP1.y);
+            } else {
+              pa = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+              ba = vec2((sP0.x - sP2.x) * aspect, sP0.y - sP2.y);
+            }
+            float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+            float ld = length(pa - ba * h);
+            float line = exp(-ld * 250.0) * 0.15;
+            line *= 0.6 &#43; 0.4 * sin(h * 12.0 - rawTime * 3.0);
+            col &#43;= mix(c1, c4, 0.5) * line * ufoVis;
+          }
+
+          vec2 sd0 = vec2((uv.x - sP0.x) * aspect, uv.y - sP0.y);
+          drawSaucer(sd0, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.00, col, ufoVis);
+          vec2 sd1 = vec2((uv.x - sP1.x) * aspect, uv.y - sP1.y);
+          drawSaucer(sd1, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.33, col, ufoVis);
+          vec2 sd2 = vec2((uv.x - sP2.x) * aspect, uv.y - sP2.y);
+          drawSaucer(sd2, 0.028, 0.005, rawTime, c1, c2, c3, c4,
+                     0.5, 0.66, col, ufoVis);
+        }
+      } else {
+        // cylindrical craft: descent → hover with axial spin &#43; searchlight → ascent
+        float ufoVis = smoothstep(0.06, 0.16, lt) * smoothstep(0.93, 0.82, lt);
+        if(ufoVis &gt; 0.001){
+          float hoverY = horizon &#43; 0.22;
+          float cylY;
+          if(lt &lt; 0.20){
+            float dsc = clamp((lt - 0.06) / 0.14, 0.0, 1.0);
+            cylY = mix(1.1, hoverY, dsc * dsc * (3.0 - 2.0 * dsc));
+          } else if(lt &lt; 0.75){
+            cylY = hoverY &#43; sin(rawTime * 0.7) * 0.008;
+          } else {
+            float asc = clamp((lt - 0.75) / 0.18, 0.0, 1.0);
+            cylY = mix(hoverY, 1.1, asc * asc);
+          }
+          float cylX = 0.5 &#43; sin(rawTime * 0.13) * 0.03;
+          vec2 dC = vec2((uv.x - cylX) * aspect, uv.y - cylY);
+
+          // capsule SDF: rounded-rectangle
+          float cW = 0.07, cH = 0.016, cR = 0.016;
+          vec2 q = abs(dC) - vec2(cW - cR, max(cH - cR, 0.001));
+          float cylSDF = length(max(q, 0.0)) &#43; min(max(q.x, q.y), 0.0) - cR;
+          float cylMask = smoothstep(0.003, 0.0, cylSDF);
+
+          float sa = asin(clamp(dC.y / (cH * 0.95), -1.0, 1.0));
+          float rot = rawTime * 1.8;
+          float band1 = sin((sa &#43; rot) *  5.0)       * 0.5 &#43; 0.5;
+          float band2 = sin((sa &#43; rot) * 11.0 &#43; 1.7) * 0.5 &#43; 0.5;
+          float lightPhase = fract(dC.x / (cW * 2.0) * 8.0 &#43; rawTime * 0.4);
+          float lightBelt = smoothstep(0.5, 0.2, abs(sa) / 1.5708);
+          float lights = smoothstep(0.15, 0.08, abs(lightPhase - 0.5))
+                       * lightBelt * cylMask;
+
+          vec3 cylCol = c3 * 0.08 &#43; c4 * 0.05;
+          cylCol &#43;= c2 * band1 * 0.1;
+          cylCol &#43;= c1 * band2 * 0.05;
+          cylCol &#43;= mix(c1, c2, fract(lightPhase * 3.0 &#43; rawTime * 0.2))
+                   * lights * 1.5;
+          float edgeH = smoothstep(0.0, 0.004, -cylSDF)
+                      * smoothstep(0.012, 0.003, -cylSDF);
+          cylCol &#43;= mix(c1, c2, 0.5) * edgeH * 0.3;
+          col = mix(col, cylCol, cylMask * ufoVis);
+          col &#43;= mix(c1, c2, 0.5) * exp(-abs(cylSDF) * 50.0) * 0.12 * ufoVis;
+
+          // searchlight cone &#43; ground spot
+          float searchA = rawTime * 0.6;
+          float searchX = cylX &#43; sin(searchA) * 0.12 / aspect;
+          float coneTopY = cylY - 0.01;
+          float groundSearchY = horizon - 0.08;
+          if(uv.y &lt; coneTopY &amp;&amp; uv.y &gt; groundSearchY - 0.05){
+            float ct = clamp((coneTopY - uv.y) / (coneTopY - groundSearchY), 0.0, 1.0);
+            float coneHW = mix(0.008, 0.045, ct) / aspect;
+            float coneX = mix(cylX, searchX, ct);
+            float coneDist = abs(uv.x - coneX) / coneHW;
+            float cone = smoothstep(1.0, 0.5, coneDist) * 0.12 * ct;
+            col &#43;= mix(c1, c2, 0.3) * cone * ufoVis;
+          }
+          if(uv.y &lt;= horizon){
+            vec2 searchD = vec2((uv.x - searchX) * aspect,
+                                (uv.y - groundSearchY) * 2.5);
+            float searchLight = exp(-dot(searchD, searchD) * 50.0) * 0.2;
+            col &#43;= mix(c1, c2, 0.3) * searchLight * ufoVis;
+          }
+        }
+      }
+    }
+  }
+
+  // scanlines &#43; vignette (against rawUV so vignette stays stable through the lens warp)
+  float scanline = 0.92 &#43; 0.08 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = rawUV - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.5;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

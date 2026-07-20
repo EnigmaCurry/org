@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>K3s part 9: MariaDB backup · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/k3s/k3s-10-openfaas/" aria-label="Previous: k3s-10-OpenFaaS" title="prev: k3s-10-OpenFaaS"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/k3s/k3s-08-wordpress/" aria-label="Next: k3s-08-wordpress" title="next: k3s-08-wordpress"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">k3s-09-mariadb-backup</a></li><li class="lvl2"><a href="#config">Config</a></li><li class="lvl2"><a href="#generate-sealed-secret">Generate Sealed Secret</a></li><li class="lvl2"><a href="#create-persistent-volume-claim-for-backups">Create Persistent Volume Claim for backups</a></li><li class="lvl2"><a href="#recreate-mariadb-with-sidecars-for-backup">Recreate MariaDB with sidecars for backup</a></li><li class="lvl2"><a href="#recreate-kustomizationyaml">Recreate kustomization.yaml</a></li><li class="lvl2"><a href="#commit-and-push-new-files">Commit and push new files</a></li><li class="lvl2"><a href="#run-the-first-backup">Run the first backup</a></li><li class="lvl2"><a href="#in-case-you-need-to-restore-from-s3-backup">In case you need to restore from S3 backup</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="active" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/k3s/k3s-09-mariadb-backup/">/k3s-09-mariadb-backup</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">K3s part 9: MariaDB backup</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2020-12-11">2020-12-11</time></span>
+  <span>updated <time datetime="2020-12-21">2020-12-21</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/k3s/">k3s</a>
+  </span>
+</div>
+
+<p>This post directly follows <a href="/blog/k3s/k3s-08-wordpress">part 8</a> where you
+installed Wordpress and MariaDB. To avoid disaster, you now need to schedule
+backups of your database. You will modify the StatefulSet that runs MariaDB, so
+as to start two additional containers (called sidecars) in the same pod,
+<a href="https://github.com/woolfg/mysql-backup-sidecar">woolfg/mysql-backup-sidecar</a>
+that performs a backup of the database to a new volume, and
+<a href="https://github.com/Lobaro/restic-backup-docker">Lobaro/restic-backup-docker</a> to
+upload the backup to offsite S3.</p>
+<p>You will need to provide S3 compatible storage bucket, with access and secret
+keys. You can use <a href="https://www.digitalocean.com/products/spaces/">DigitalOcean
+Spaces</a>, AWS S3, Minio, CephFS,
+etc.</p>
+<h2 id="config"><a class="heading-anchor" href="#config">Config</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## Same git repo for infrastructure as in prior posts:</span>
+</span></span><span style="display:flex;"><span>FLUX_INFRA_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/git/flux-infra
+</span></span><span style="display:flex;"><span>CLUSTER<span style="color:#f92672">=</span>k3s.example.com
+</span></span><span style="display:flex;"><span>NAMESPACE<span style="color:#f92672">=</span>wordpress
+</span></span><span style="display:flex;"><span>MARIADB_VERSION<span style="color:#f92672">=</span>10.4
+</span></span><span style="display:flex;"><span>BACKUP_VOLUME_SIZE<span style="color:#f92672">=</span>10Gi
+</span></span></code></pre></div><p>Set your S3 bucket, endpoint, and credentials:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>RESTIC_BACKUP_IMAGE<span style="color:#f92672">=</span>lobaro/restic-backup-docker:1.3.1-0.9.6
+</span></span><span style="display:flex;"><span>MYSQL_BACKUP_IMAGE<span style="color:#f92672">=</span>woolfg/mysql-backup-sidecar:v0.3.1-mariadb-10.4
+</span></span><span style="display:flex;"><span>S3_BUCKET<span style="color:#f92672">=</span>your-bucket
+</span></span><span style="display:flex;"><span>S3_ENDPOINT<span style="color:#f92672">=</span>sfo2.digitaloceanspaces.com
+</span></span><span style="display:flex;"><span>S3_ACCESS_KEY_ID<span style="color:#f92672">=</span>xxxx
+</span></span><span style="display:flex;"><span>S3_SECRET_ACCESS_KEY<span style="color:#f92672">=</span>xxxx
+</span></span></code></pre></div><h2 id="generate-sealed-secret"><a class="heading-anchor" href="#generate-sealed-secret">Generate Sealed Secret</a></h2>
+<p>Create a passphrase to encrypt the backups:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+RESTIC_PASSWORD=$(head -c 16 /dev/urandom | sha256sum | head -c 32)
+echo &#34;SAVE THIS PASSWORD for restoring backups: ${RESTIC_PASSWORD}&#34;
+</pre></div>
+</div>
+
+
+<p>Copy the restic password someplace safe, you will need it, in case you need to
+restore your backups later on a fresh cluster.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl create secret generic mariadb-backups \
+   --namespace ${NAMESPACE} --dry-run=client -o json \
+   --from-literal=RESTIC_REPOSITORY=s3:https://${S3_ENDPOINT}/${S3_BUCKET} \
+   --from-literal=RESTIC_PASSWORD=${RESTIC_PASSWORD} \
+   --from-literal=S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID} \
+   --from-literal=S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY} \
+   | kubeseal -o yaml &gt; \
+  ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/mariadb-backups.sealed_secret.yaml
+</pre></div>
+</div>
+
+
+<h2 id="create-persistent-volume-claim-for-backups"><a class="heading-anchor" href="#create-persistent-volume-claim-for-backups">Create Persistent Volume Claim for backups</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/mariadb-backups.pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-backups
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: ${BACKUP_VOLUME_SIZE}
+  storageClassName: local-path
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="recreate-mariadb-with-sidecars-for-backup"><a class="heading-anchor" href="#recreate-mariadb-with-sidecars-for-backup">Recreate MariaDB with sidecars for backup</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/mariadb.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    app: mariadb
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: ${NAMESPACE}
+spec:
+  selector:
+    matchLabels:
+      app: mariadb
+  serviceName: mariadb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:${MARIADB_VERSION}
+          volumeMounts:
+            - name: mariadb
+              mountPath: /var/lib/mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MARIADB_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MARIADB_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MARIADB_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MARIADB_PASSWORD
+        - name: mariadb-backups
+          image: ${MYSQL_BACKUP_IMAGE}
+          env:
+            - name: CRON_SCHEDULE
+              value: &#34;30 2 * * *&#34;
+            - name: BACKUP_DIR
+              value: /backup
+            - name: INCREMENTAL
+              value: &#34;true&#34;
+            - name: MYSQL_HOST
+              value: mariadb
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb
+                  key: MARIADB_ROOT_PASSWORD
+          volumeMounts:
+            - name: mariadb
+              mountPath: /var/lib/mysql
+            - name: mariadb-backups
+              mountPath: /backup
+        - name: mariadb-s3-upload
+          image: ${RESTIC_BACKUP_IMAGE}
+          env:
+            - name: RESTIC_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-backups
+                  key: RESTIC_REPOSITORY
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-backups
+                  key: RESTIC_PASSWORD
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-backups
+                  key: S3_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mariadb-backups
+                  key: S3_SECRET_ACCESS_KEY
+          volumeMounts:
+            - name: mariadb-backups
+              mountPath: /data
+      volumes:
+        - name: mariadb
+          persistentVolumeClaim:
+            claimName: mariadb
+        - name: mariadb-backups
+          persistentVolumeClaim:
+            claimName: mariadb-backups
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="recreate-kustomizationyaml"><a class="heading-anchor" href="#recreate-kustomizationyaml">Recreate kustomization.yaml</a></h2>
+<p>Recreate the kustomization.yaml so as to include the backups sealed secret and
+PVC:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- mariadb.sealed_secret.yaml
+- mariadb-backups.sealed_secret.yaml
+- mariadb.pvc.yaml
+- mariadb-backups.pvc.yaml
+- mariadb.yaml
+- wordpress.yaml
+- wordpress.ingress.yaml
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="commit-and-push-new-files"><a class="heading-anchor" href="#commit-and-push-new-files">Commit and push new files</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ${FLUX_INFRA_DIR} add ${CLUSTER}
+git -C ${FLUX_INFRA_DIR} commit -m &#34;${CLUSTER} ${NAMESPACE} backups&#34;
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ${FLUX_INFRA_DIR} push
+</pre></div>
+</div>
+
+
+<h2 id="run-the-first-backup"><a class="heading-anchor" href="#run-the-first-backup">Run the first backup</a></h2>
+<p>The backup job is scheduled via cron to occur at 02:30 (am), so you can kick off
+the first backup job manually, rather than wait:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl -n wordpress exec -it mariadb-0 -c mariadb-backups -- /scripts/backup.sh
+</pre></div>
+</div>
+
+
+<p>The upload job is scheduled via cron to occur at 03:00 (am), so you can kick off the first upload job manually, rather than wait:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl -n wordpress exec -it mariadb-0 -c mariadb-s3-upload -- /bin/backup
+</pre></div>
+</div>
+
+
+<h2 id="in-case-you-need-to-restore-from-s3-backup"><a class="heading-anchor" href="#in-case-you-need-to-restore-from-s3-backup">In case you need to restore from S3 backup</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## Directory to restore to use (Use / if you want to overwrite existing /data)</span>
+</span></span><span style="display:flex;"><span>RESTORE_ROOT<span style="color:#f92672">=</span>/restore-tmp
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl -n wordpress exec -it mariadb-0 -c mariadb-s3-upload -- mkdir ${RESTORE_ROOT}
+kubectl -n wordpress exec -it mariadb-0 -c mariadb-s3-upload -- \
+  restic restore --target ${RESTORE_ROOT} latest
+</pre></div>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

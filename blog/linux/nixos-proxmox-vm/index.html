@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/just-tab-completion/" aria-label="Previous: just-tab-completion" title="prev: just-tab-completion"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/code-agent-vm/" aria-label="Next: code-agent-vm" title="next: code-agent-vm"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">nixos-proxmox-vm</a></li><li class="lvl2"><a href="#why-proxmox">Why Proxmox?</a></li><li class="lvl2"><a href="#the-backend-abstraction">The backend abstraction</a></li><li class="lvl2"><a href="#set-up-the-proxmox-connection">Set up the Proxmox connection</a></li><li class="lvl2"><a href="#build-and-create-the-docker-vm">Build and create the Docker VM</a></li><li class="lvl2"><a href="#first-boot">First boot</a></li><li class="lvl2"><a href="#docker-data-persistence">Docker data persistence</a></li><li class="lvl2"><a href="#firewall-configuration">Firewall configuration</a></li><li class="lvl2"><a href="#network-options">Network options</a></li><li class="lvl2"><a href="#snapshots-before-risky-changes">Snapshots before risky changes</a></li><li class="lvl2"><a href="#backups">Backups</a></li><li class="lvl2"><a href="#upgrades">Upgrades</a></li><li class="lvl2"><a href="#cloning">Cloning</a></li><li class="lvl2"><a href="#serial-console">Serial console</a></li><li class="lvl2"><a href="#proxmox-uses-full-clones-of-the-disk-image">Proxmox uses full clones of the disk image</a></li><li class="lvl2"><a href="#syncing-identity-files-into-var">Syncing identity files into /var</a></li><li class="lvl2"><a href="#putting-it-together">Putting it together</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="active" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/nixos-proxmox-vm/">/nixos-proxmox-vm</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-01-23">2026-01-23</time></span>
+  <span>updated <time datetime="2026-01-31">2026-01-31</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/nixos/">nixos</a>
+      <a href="/tags/proxmox/">proxmox</a>
+      <a href="/tags/docker/">docker</a>
+      <a href="/tags/nixos-vm-template/">nixos-vm-template</a>
+  </span>
+</div>
+
+<p><em>This is part 2 of a series on <a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>:</em></p>
+<ol>
+<li><em><a href="/blog/linux/code-agent-vm/">Running code agents in an immutable NixOS VM</a></em></li>
+<li><em>Bootstrapping a Docker server with immutable NixOS on Proxmox (this post)</em></li>
+<li><em><a href="/blog/linux/mutable-vms/">Mutable VMs are cool too</a></em></li>
+<li><em><a href="/blog/linux/nixos-vm-home-manager/">Managing VMs with home-manager and sway-home</a></em></li>
+<li><em><a href="/blog/linux/nixos-lxc-nas/">A NixOS NAS in a Proxmox LXC container</a></em></li>
+</ol>
+<hr>
+<p>In the <a href="http://blog.rymcg.tech/blog/linux/code-agent-vm/">last
+post</a> I
+described running AI code agents inside immutable NixOS VMs using
+libvirt on a laptop. That setup works well for local development, but
+sometimes you want to deploy VMs on actual infrastructure - a Proxmox
+server sitting in a closet, a rack, or someone else&rsquo;s datacenter.</p>
+<p>The
+<a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>
+project now supports multiple backends. You build the same NixOS
+images locally on your workstation, you run the same commands as you
+would with libvirt, and you get the same immutable VMs - the only
+difference is where they land. This post walks through using the
+Proxmox backend to bootstrap a Docker server VM.</p>
+<h2 id="why-proxmox"><a class="heading-anchor" href="#why-proxmox">Why Proxmox?</a></h2>
+<p>Libvirt is fine for laptops and &lsquo;sworkstations&rsquo;. You run <code>just create</code>, the VM shows up locally, and you SSH into it. But if you want
+VMs running 24/7 on dedicated hardware, you probably have a hypervisor
+already, and in the homelab world that hypervisor is usually Proxmox.</p>
+<p>The new Proxmox backend builds images locally with Nix, then ships
+them to your PVE node over SSH. No Proxmox API tokens, no web UI
+clicking, no cloud-init templates. Just NixOS config, SSH, and <code>qm</code>.</p>
+<h2 id="the-backend-abstraction"><a class="heading-anchor" href="#the-backend-abstraction">The backend abstraction</a></h2>
+<p>The tool now has a <code>BACKEND</code> variable. Set it to <code>libvirt</code> or
+<code>proxmox</code> and the same Justfile recipes work against either target:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Local libvirt (the default)
+just create
+
+# Remote Proxmox
+BACKEND=proxmox just create
+</pre></div>
+</div>
+
+
+<p>The <code>just create</code> command runs an interactive configuration wizard
+that prompts for the VM name, profiles, memory, CPUs, disk size, and
+network mode. After configuration, it builds the image, creates the
+VM, and starts it automatically.</p>
+<p>You can also put <code>BACKEND=proxmox</code> in a <code>.env</code> file and forget about
+it. The commands are identical - <code>just stop</code>, <code>just upgrade</code>, <code>just ssh</code> - they just talk to different backends.</p>
+<h2 id="set-up-the-proxmox-connection"><a class="heading-anchor" href="#set-up-the-proxmox-connection">Set up the Proxmox connection</a></h2>
+<p>All you need is SSH access to your PVE node. Create a <code>.env</code> file in
+the project root:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+BACKEND=proxmox
+PVE_HOST=pve
+PVE_NODE=pve
+PVE_STORAGE=local-zfs
+PVE_BRIDGE=vmbr0
+PVE_DISK_FORMAT=raw
+PVE_BACKUP_STORAGE=pbs
+</pre></div>
+</div>
+
+
+<p>A few notes on these:</p>
+<ul>
+<li><code>BACKEND</code> must be set to proxmox, otherwise libvirt is the default.</li>
+<li><code>PVE_HOST</code> must be the name of the SSH config entry in your <code>~/.ssh/config</code>.</li>
+<li><code>PVE_NODE</code> must match your Proxmox node&rsquo;s actual hostname. If your
+node is called <code>pve</code> in the web UI, put <code>pve</code> here.</li>
+<li><code>PVE_STORAGE</code> is which storage system the VM disks get stored on
+(i.e., <code>local</code>, <code>local-zfs</code>, <code>my-nfs</code>).</li>
+<li><code>PVE_BRIDGE</code> is the default network bridge. You can override this
+per-VM.</li>
+<li><code>PVE_DISK_FORMAT</code> use <code>raw</code> format for ZFS or LVM-thin, <code>qcow2</code> for
+directory/NFS storage.</li>
+<li><code>PVE_BACKUP_STORAGE</code> is optional, for vzdump backups. Point it at a
+PBS instance if you have one.</li>
+</ul>
+<p>Make sure you can SSH to the PVE node. Use a key without a password,
+or make sure that your SSH agent is loaded so you don&rsquo;t need to type
+the password:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh -i ~/.ssh/id_ed25519 root@192.168.1.100
+</pre></div>
+</div>
+
+
+<p>If that works, you&rsquo;re good.</p>
+<h2 id="build-and-create-the-docker-vm"><a class="heading-anchor" href="#build-and-create-the-docker-vm">Build and create the Docker VM</a></h2>
+<p>The project ships with composable mixin profiles. The <code>docker</code> profile
+includes the Docker daemon and adds users to the <code>docker</code> group. For a
+dedicated Docker server, you don&rsquo;t need the development tools or the
+AI agents that we used in the last post. The <code>docker</code> profile gives
+you a minimal system with SSH, Docker, and not much else (the <code>core</code>
+profile is always implicitly included).</p>
+<p>Run the interactive create command:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just create
+</pre></div>
+</div>
+
+
+<p>The wizard prompts you for:</p>
+<ul>
+<li><strong>VM name</strong>: e.g., <code>apps01</code></li>
+<li><strong>Profiles</strong>: select <code>docker</code></li>
+<li><strong>Memory</strong>: e.g., <code>4096</code> (4GB)</li>
+<li><strong>CPUs</strong>: e.g., <code>2</code></li>
+<li><strong>Var disk size</strong>: e.g., <code>50G</code></li>
+<li><strong>Network mode</strong>: select <code>bridge</code> and enter <code>vmbr0</code></li>
+</ul>
+<p>After configuration, <code>just create</code> builds the NixOS image with a
+read-only root filesystem and Docker enabled, transfers it to your PVE
+node via rsync, imports it as a Proxmox VM, and starts it
+automatically.</p>
+<h2 id="first-boot"><a class="heading-anchor" href="#first-boot">First boot</a></h2>
+<p>The VM starts automatically after <code>just create</code> completes. Check its
+status:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just status apps01
+</pre></div>
+</div>
+
+
+<p>The status command queries the QEMU guest agent for the VM&rsquo;s IP
+address. Once it&rsquo;s up:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just ssh admin@apps01
+</pre></div>
+</div>
+
+
+<p>You&rsquo;re now SSH&rsquo;d into a minimal NixOS system with Docker running.
+Verify it works:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+docker run --rm hello-world
+</pre></div>
+</div>
+
+
+<h2 id="docker-data-persistence"><a class="heading-anchor" href="#docker-data-persistence">Docker data persistence</a></h2>
+<p>The immutable root design means Docker&rsquo;s data directory
+(<code>/var/lib/docker</code>) lives on the read-write <code>/var</code> disk. This is where
+images, containers, volumes, and networks are stored. When you upgrade
+the base image, all of this survives.</p>
+<p>If you want to run containers with persistent data, use standard
+Docker volumes, or you may use bind mounts from another directory
+under <code>/var</code>.</p>
+<h2 id="firewall-configuration"><a class="heading-anchor" href="#firewall-configuration">Firewall configuration</a></h2>
+<p>By default, ports 22, 80, and 443 are open. The firewall rules are
+stored per-VM in <code>machines/&lt;name&gt;/tcp_ports</code> (one port per line). To
+open additional ports:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#34;8080&#34; &gt;&gt; machines/apps01/tcp_ports
+just upgrade apps01
+</pre></div>
+</div>
+
+
+<p>The upgrade syncs the new port list to the VM&rsquo;s identity files and
+rebuilds the boot image, and automatically reboots.</p>
+<p>Important note: The firewall rules are applied inside the VM <em>and</em> on
+the Proxmox host. This is a defense-in-depth approach. However, this
+also means that you should never manually touch the firewall config of
+the VM on the Proxmox console. All firewall changes must happen in the
+<code>machines/&lt;name&gt;/tcp_ports</code> and <code>machines/&lt;name&gt;/udp_ports</code> files, and
+subsequently run <code>just upgrade</code>.</p>
+<h2 id="network-options"><a class="heading-anchor" href="#network-options">Network options</a></h2>
+<p>Proxmox VMs can use any bridge configured on your PVE node. The
+network mode is stored per-VM and can be changed after creation:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Move to a different bridge
+just network-config apps01 bridge:vmbr1
+just upgrade apps01
+</pre></div>
+</div>
+
+
+<p>For NAT (if your PVE node has a NAT bridge configured):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just network-config apps01 nat
+just upgrade apps01
+</pre></div>
+</div>
+
+
+<h2 id="snapshots-before-risky-changes"><a class="heading-anchor" href="#snapshots-before-risky-changes">Snapshots before risky changes</a></h2>
+<p>About to <code>docker system prune -a</code> and hoping you don&rsquo;t regret it?
+Snapshot first:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just snapshot apps01 before-prune
+</pre></div>
+</div>
+
+
+<p>If things go wrong:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just stop apps01
+just restore-snapshot apps01 before-prune
+just start apps01
+</pre></div>
+</div>
+
+
+<h2 id="backups"><a class="heading-anchor" href="#backups">Backups</a></h2>
+<p>For proper backups (not just snapshots), the tool wraps Proxmox&rsquo;s
+vzdump:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just backup apps01
+</pre></div>
+</div>
+
+
+<p>This creates a compressed backup on your <code>PVE_BACKUP_STORAGE</code>. To
+restore:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just restore-backup apps01
+</pre></div>
+</div>
+
+
+<p>If you have a Proxmox Backup Server, point <code>PVE_BACKUP_STORAGE</code> at it
+and you get incremental, deduplicated backups for free.</p>
+<h2 id="upgrades"><a class="heading-anchor" href="#upgrades">Upgrades</a></h2>
+<p>The immutable design makes upgrades straightforward. Say you want to
+add
+<a href="https://github.com/jesseduffield/lazydocker">lazydocker</a>
+(A TUI manager for Docker). Edit the profile:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span><span style="color:#75715e"># profiles/docker.nix</span>
+</span></span><span style="display:flex;"><span>{ config<span style="color:#f92672">,</span> pkgs<span style="color:#f92672">,</span> <span style="color:#f92672">...</span> }:
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  config <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    virtualisation<span style="color:#f92672">.</span>docker<span style="color:#f92672">.</span>enable <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>    users<span style="color:#f92672">.</span>users<span style="color:#f92672">.</span><span style="color:#e6db74">${</span>config<span style="color:#f92672">.</span>core<span style="color:#f92672">.</span>adminUser<span style="color:#e6db74">}</span><span style="color:#f92672">.</span>extraGroups <span style="color:#f92672">=</span> [ <span style="color:#e6db74">&#34;docker&#34;</span> ];
+</span></span><span style="display:flex;"><span>    users<span style="color:#f92672">.</span>users<span style="color:#f92672">.</span><span style="color:#e6db74">${</span>config<span style="color:#f92672">.</span>core<span style="color:#f92672">.</span>regularUser<span style="color:#e6db74">}</span><span style="color:#f92672">.</span>extraGroups <span style="color:#f92672">=</span> [ <span style="color:#e6db74">&#34;docker&#34;</span> ];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    environment<span style="color:#f92672">.</span>systemPackages <span style="color:#f92672">=</span> <span style="color:#66d9ef">with</span> pkgs; [
+</span></span><span style="display:flex;"><span>      lazydocker
+</span></span><span style="display:flex;"><span>    ];
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Then upgrade the VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just upgrade apps01
+</pre></div>
+</div>
+
+
+<p>This rebuilds the image, syncs identity files, replaces the boot disk
+on Proxmox, and restarts the VM. Your <code>/var</code> disk - including all
+Docker data, volumes, and home directories - is untouched. The VM
+comes back up with the app <code>lazydocker</code> available and all your
+containers intact.</p>
+<h2 id="cloning"><a class="heading-anchor" href="#cloning">Cloning</a></h2>
+<p>Need another Docker server with the same setup? Clone it:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just clone apps01 apps02
+</pre></div>
+</div>
+
+
+<p>The clone command prompts for the new VM name and optionally lets you
+adjust hardware settings (memory, CPUs, network) while keeping the
+same profile and disk contents.</p>
+<p>This makes a full clone of the VM on Proxmox, generates fresh identity
+files (new hostname, machine-id, MAC address, SSH host keys), and
+syncs them onto the cloned <code>/var</code> disk. You get an independent VM
+that&rsquo;s otherwise identical to the original.</p>
+<h2 id="serial-console"><a class="heading-anchor" href="#serial-console">Serial console</a></h2>
+<p>If networking is broken and SSH won&rsquo;t connect, you can attach to the
+VM&rsquo;s serial console directly:</p>
+<p>First you&rsquo;ll need to set the root password (root login is disabled
+otherwise):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just passwd apps01
+just upgrade apps01
+</pre></div>
+</div>
+
+
+<p>Reboot, and you&rsquo;ll be able to login via the serial console:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just console apps01
+</pre></div>
+</div>
+
+
+<p>This opens an SSH session to the Proxmox node and attaches to the VM&rsquo;s
+serial port. You may need to press <code>Enter</code> to see the login prompt.
+Exit with <code>Ctrl-O</code> (that&rsquo;s the letter O, not zero).</p>
+<h2 id="proxmox-uses-full-clones-of-the-disk-image"><a class="heading-anchor" href="#proxmox-uses-full-clones-of-the-disk-image">Proxmox uses full clones of the disk image</a></h2>
+<p>Unlike the libvirt backend, which has thin provisioning of the boot
+device, the Proxmox backend sends a full clone of the boot device for
+each VM you create on Proxmox. This increases the disk space required
+per VM by about 3 to 4 GB. You can run as many Docker servers as you
+want from a single <code>just build docker</code>, but, on Proxmox, each <code>just create</code> produces an independent VM with its own boot disk, its own
+identity, and its own <code>/var</code> disk.</p>
+<p>If you really do want thin provisioning of Proxmox VMs, you could use
+nixos-vm-template to create the first VM, then turn that VM into a
+Proxmox template, and then use the Proxmox clone feature in the
+console, but then those clones would not be managed by
+nixos-vm-template.</p>
+<h2 id="syncing-identity-files-into-var"><a class="heading-anchor" href="#syncing-identity-files-into-var">Syncing identity files into /var</a></h2>
+<p>The Proxmox backend&rsquo;s identity sync is worth noting: during upgrades,
+it mounts the <code>/var</code> disk on the PVE node using <code>qemu-nbd</code> and writes
+identity files directly. No need to download a multi-gigabyte disk
+just to update a hostname.</p>
+<h2 id="putting-it-together"><a class="heading-anchor" href="#putting-it-together">Putting it together</a></h2>
+<p>Here&rsquo;s the full workflow for going from zero to a running Docker
+server on Proxmox:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# One-time setup on your workstation:
+git clone https://github.com/EnigmaCurry/nixos-vm-template
+cd nixos-vm-template
+
+cat &gt; .env &lt;&lt; &#39;EOF&#39;
+BACKEND=proxmox
+PVE_HOST=pve
+PVE_NODE=pve
+PVE_STORAGE=local-zfs
+PVE_DISK_FORMAT=raw
+PVE_BRIDGE=vmbr0
+EOF
+
+# Build and deploy (interactive wizard)
+just create
+# Enter: apps01, docker, 4096, 2, 50G, bridge, vmbr0
+
+# The VM starts automatically, then SSH in:
+just ssh admin@apps01
+
+# On the VM
+docker run -d --name nginx -p 80:80 nginx
+</pre></div>
+</div>
+
+
+<p>Now you have an immutable NixOS machine for your Docker server,
+running on your own Proxmox infrastructure, built from a declarative
+Nix configuration, with snapshots and backups available, upgradeable
+without losing data, plus even if you don&rsquo;t make backups, the whole
+machine is reproducible from the Nix config in your git repository
+(minus your data).</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

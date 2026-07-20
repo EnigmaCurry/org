@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Make SSH remote xdg-open use your local web browser · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/rclone_webdav/" aria-label="Previous: rclone_webdav" title="prev: rclone_webdav"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/ssh_expose/" aria-label="Next: ssh_expose" title="next: ssh_expose"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">ssh-remote-xdg-open</a></li><li class="lvl2"><a href="#how-it-works">How it works</a></li><li class="lvl3"><a href="#localhost-port-forwarding">Localhost port forwarding</a></li><li class="lvl2"><a href="#set-up-the-script">Set up the script</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="active" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/ssh-remote-xdg-open/">/ssh-remote-xdg-open</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Make SSH remote xdg-open use your local web browser</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2025-10-19">2025-10-19</time></span>
+  <span>updated <time datetime="2026-05-15">2026-05-15</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/ssh/">ssh</a>
+  </span>
+</div>
+
+<p>Have you ever SSHed into a remote machine and run a program that
+tried to automatically open a URL in your web browser using <code>xdg-open</code>?</p>
+<p><code>xdg-open</code> is designed to open URLs in your preferred web browser. On
+your local machine, that usually works great. Logged in remotely over
+SSH, without a graphical session, it <em>may</em> try to open the URL in a
+text-mode browser (e.g., <code>links</code>, <code>w3m</code>), but more than likely it will
+fail to find any browser. Wouldn&rsquo;t it be cool if <code>xdg-open</code> running on
+the remote machine could open URLs in your <em>local</em> web browser? That’s
+exactly what the following Bash script does.</p>
+<h2 id="how-it-works"><a class="heading-anchor" href="#how-it-works">How it works</a></h2>
+<p>The script works on Linux and requires <code>bash</code>, <code>ssh</code>, and
+<code>socat</code> to be installed on both the local and remote machines.</p>
+<p>It sets up a small reverse tunnel so that whenever the remote
+machine runs <code>xdg-open https://example.org</code>, the request is
+transparently forwarded back to your local workstation, where your
+normal browser handles it.</p>
+<p>On the local side, a user-level systemd socket listens on
+<code>/run/user/${UID}/ssh_remote_xdg_open.sock</code>. Each connection it
+receives spawns a handler that processes NUL-delimited messages.</p>
+<p>When the remote host connects via TCP to <code>127.0.0.1:19999</code>, SSH forwards
+the data back into your local UNIX socket.</p>
+<p>On the remote side, two helper programs are required (they’ll be
+automatically installed by the script):</p>
+<ul>
+<li><code>~/.local/bin/open-local</code> – sends URLs through the tunnel.</li>
+<li><code>~/.local/bin/xdg-open</code> – a shim that uses the tunnel if available,
+otherwise falls back to the normal opener.</li>
+</ul>
+<h3 id="localhost-port-forwarding"><a class="heading-anchor" href="#localhost-port-forwarding">Localhost port forwarding</a></h3>
+<p>If the URL points to <code>localhost</code> on the remote machine (e.g., a dev
+server running on <code>http://localhost:8080</code>), the script can
+automatically set up an SSH local port forward so your local browser
+can reach it.</p>
+<p>To avoid port conflicts, each remote host is assigned a deterministic
+<code>127.x.x.x</code> loopback address derived from the host alias. For
+example, if your SSH host is called <code>foo</code>, its URLs might be rewritten
+to <code>http://127.42.17.3:8080</code>. This means you can have multiple remote
+hosts forwarding the same port without collisions, and bookmarks
+remain stable across sessions.</p>
+<p>This feature requires SSH <code>ControlMaster</code> multiplexing, which the
+<code>configure-ssh</code> command sets up automatically. The dynamic port
+forwards are added via <code>ssh -O forward</code> against the existing
+multiplexed connection.</p>
+<h2 id="set-up-the-script"><a class="heading-anchor" href="#set-up-the-script">Set up the script</a></h2>
+<p>On your local computer (the one with your graphical web browser),
+download the script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/ssh/ssh_remote_xdg_open.sh
+chmod &#43;x ssh_remote_xdg_open.sh
+</pre></div>
+</div>
+
+
+<p>Install the bundled systemd service locally:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh install-local
+</pre></div>
+</div>
+
+
+<p>Configure your remote hosts in your local <code>${HOME}/.ssh/config</code>.
+Make sure each remote has a defined <code>Host</code> section:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Basic host example in ~/.ssh/config
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## This example assumes your user UID=1000
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host foo
+</span></span><span style="display:flex;"><span>    Hostname 192.168.1.1
+</span></span><span style="display:flex;"><span>    RemoteForward 127.0.0.1:19999 /run/user/1000/ssh_remote_xdg_open.sock
+</span></span><span style="display:flex;"><span>    ExitOnForwardFailure yes
+</span></span><span style="display:flex;"><span>    ControlMaster auto
+</span></span><span style="display:flex;"><span>    ControlPath ~/.ssh/sockets/%r@%h-%p
+</span></span><span style="display:flex;"><span>    ControlPersist 10m
+</span></span></code></pre></div><p>You can also run the script to automatically add the <code>RemoteForward</code> and
+<code>ExitOnForwardFailure</code> fields to an existing host entry (e.g., <code>foo</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh configure-ssh foo
+</pre></div>
+</div>
+
+
+<p>Install the helper scripts on the remote host (e.g., <code>foo</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh install-remote foo
+</pre></div>
+</div>
+
+
+<p>Test opening a URL from the remote host:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh test foo
+</pre></div>
+</div>
+
+
+<p>It should open the test URL in your local web browser — and never let
+you down.</p>
+<p>Check the status of the socket/service:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh status
+</pre></div>
+</div>
+
+
+<p>To uninstall the socket/service locally:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh uninstall-local
+</pre></div>
+</div>
+
+
+<p>To remove the helper scripts from the remote host:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./ssh_remote_xdg_open.sh remove-remote foo
+</pre></div>
+</div>
+
+
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/ssh/ssh_remote_xdg_open.sh">Download the script directly</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># ssh_remote_xdg_open.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Have remote ssh session open URLs with xdg-open in your local web browser.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uses: socat, systemd --user, ssh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage (do these steps in order):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh install-local            # create and enable local systemd socket+service</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh enable-socket            # enable+start local socket</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh configure-ssh &lt;host&gt;     # append RemoteForward block to ~/.ssh/config (local)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh install-remote &lt;host&gt;    # copy remote helper(s) to &lt;host&gt; (ssh target)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh test &lt;host&gt;              # quick smoke test (requires ssh session)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Other useful commands:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh disable-socket           # stop+disable local socket</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh remove-remote  &lt;host&gt;    # remove injected files on remote</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh uninstall-local          # remove local unit files (and stop socket)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh status                   # show overall status (socket + recent logs)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh status-socket            # show systemctl status for the socket</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh status-service           # show active service instances (if any)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh logs [--since -1h]       # show recent journal for socket/service</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ssh_remote_xdg_open.sh help</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Notes:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  - Run this on your workstation (where you want the browser to open).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  - It will inject scripts into the remote host using SSH + heredoc.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  - Defaults:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#      remote TCP port: 19999</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#      local socket:   $XDG_RUNTIME_DIR/ssh_remote_xdg_open.sock  (falls back to /run/user/$UID/ssh_remote_xdg_open.sock)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  - Requires `socat` on local machine and (on remote) `socat` if you want the helper to use it.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  - The script is conservative and idempotent where reasonable.</span>
+</span></span><span style="display:flex;"><span>set -Eeuo pipefail
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --- configuration defaults ---</span>
+</span></span><span style="display:flex;"><span>PORT_DEFAULT<span style="color:#f92672">=</span><span style="color:#ae81ff">19999</span>
+</span></span><span style="display:flex;"><span>SOCKET_PATH_DEFAULT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>XDG_RUNTIME_DIR<span style="color:#66d9ef">:-</span>/run/user/<span style="color:#66d9ef">$(</span>id -u<span style="color:#66d9ef">)</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/ssh_remote_xdg_open.sock&#34;</span>
+</span></span><span style="display:flex;"><span>SSH_CONFIG_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.ssh/config&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># name/location of injected remote helper</span>
+</span></span><span style="display:flex;"><span>REMOTE_BIN_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.local/bin&#34;</span>
+</span></span><span style="display:flex;"><span>REMOTE_OPEN_LOCAL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>REMOTE_BIN_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/open-local&#34;</span>
+</span></span><span style="display:flex;"><span>REMOTE_XDG_SHIM<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>REMOTE_BIN_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/xdg-open&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># local handler script</span>
+</span></span><span style="display:flex;"><span>LOCAL_BIN_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.local/bin&#34;</span>
+</span></span><span style="display:flex;"><span>LOCAL_HANDLER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>LOCAL_BIN_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/ssh-remote-xdg-open-handler&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># systemd unit filenames</span>
+</span></span><span style="display:flex;"><span>SYSTEMD_USER_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.config/systemd/user&#34;</span>
+</span></span><span style="display:flex;"><span>SOCKET_UNIT_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ssh_remote_xdg_open.socket&#34;</span>
+</span></span><span style="display:flex;"><span>SERVICE_UNIT_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ssh_remote_xdg_open@.service&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --- helper functions ---</span>
+</span></span><span style="display:flex;"><span>die<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;ERROR: </span>$*<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>info<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;==&gt; </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>require_cmd<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  command -v <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;required command &#39;</span>$1<span style="color:#e6db74">&#39; not found in PATH&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ensure_dir<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  mkdir -p -- <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>local_socket_path<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SSH_OPENURL_SOCKET<span style="color:#66d9ef">:-</span>$SOCKET_PATH_DEFAULT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Write the local handler script</span>
+</span></span><span style="display:flex;"><span>write_local_handler<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  ensure_dir <span style="color:#e6db74">&#34;</span>$LOCAL_BIN_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Writing local handler to </span>$LOCAL_HANDLER<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$LOCAL_HANDLER<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;&#39;HANDLER_EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ssh-remote-xdg-open-handler
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Reads NUL-delimited &#34;host\turl&#34; messages from stdin.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># For localhost URLs, sets up an SSH local port forward via control socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># and rewrites the URL to a deterministic 127.x.x.x address.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">set -eu
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Hash a string to a deterministic 127.x.x.x address (avoiding 127.0.0.1)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">host_to_loopback() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _alias=&#34;$1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _hash=$(printf &#39;%s&#39; &#34;$_alias&#34; | cksum | cut -d&#39; &#39; -f1)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _b1=$(( (_hash &gt;&gt; 16) % 254 + 1 ))  # 1-254
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _b2=$(( (_hash &gt;&gt; 8)  % 256 ))      # 0-255
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _b3=$(( _hash         % 254 + 1 ))  # 1-254 (avoid .0)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Avoid 127.0.0.1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if [ &#34;$_b1&#34; -eq 0 ] &amp;&amp; [ &#34;$_b2&#34; -eq 0 ] &amp;&amp; [ &#34;$_b3&#34; -eq 1 ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    _b3=2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  printf &#39;127.%d.%d.%d&#39; &#34;$_b1&#34; &#34;$_b2&#34; &#34;$_b3&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Extract scheme, host, port, and path from a URL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">parse_url() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _url=&#34;$1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  URL_SCHEME=&#34;${_url%%://*}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _rest=&#34;${_url#*://}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _hostport=&#34;${_rest%%/*}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  URL_PATH=&#34;/${_rest#*/}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Handle URLs with no path (e.g., http://localhost:8080)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  case &#34;$_rest&#34; in
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    */*) URL_PATH=&#34;/${_rest#*/}&#34; ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    *)   URL_PATH=&#34;&#34; ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  esac
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Split host:port
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  case &#34;$_hostport&#34; in
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    *:*) URL_HOST=&#34;${_hostport%%:*}&#34;; URL_PORT=&#34;${_hostport##*:}&#34; ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    *)   URL_HOST=&#34;$_hostport&#34;; URL_PORT=&#34;&#34; ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  esac
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Check if a host is localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">is_localhost() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  case &#34;$1&#34; in
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    localhost|127.0.0.1|&#34;[::1]&#34;|::1) return 0 ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    *) return 1 ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  esac
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Try to set up an SSH local port forward via control socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">setup_forward() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _ssh_host=&#34;$1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _local_addr=&#34;$2&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _port=&#34;$3&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # -O forward uses the existing multiplexed connection
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  ssh -O forward -L &#34;${_local_addr}:${_port}:localhost:${_port}&#34; &#34;$_ssh_host&#34; 2&gt;/dev/null || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Process a single host\turl message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">handle_message() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _msg=&#34;$1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Split on tab
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _host_alias=&#34;${_msg%%	*}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  _url=&#34;${_msg#*	}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # If no tab was found (backwards compat: bare URL), just open it
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if [ &#34;$_host_alias&#34; = &#34;$_url&#34; ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    xdg-open &#34;$_url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    return
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  parse_url &#34;$_url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if is_localhost &#34;$URL_HOST&#34; &amp;&amp; [ -n &#34;$URL_PORT&#34; ] &amp;&amp; [ -n &#34;$_host_alias&#34; ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    _local_addr=$(host_to_loopback &#34;$_host_alias&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    setup_forward &#34;$_host_alias&#34; &#34;$_local_addr&#34; &#34;$URL_PORT&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    _new_url=&#34;${URL_SCHEME}://${_local_addr}:${URL_PORT}${URL_PATH}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    xdg-open &#34;$_new_url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  else
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    xdg-open &#34;$_url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Read NUL-delimited messages from stdin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Using tr to convert NUL to newline, then process line by line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">tr &#39;\0&#39; &#39;\n&#39; | while IFS= read -r msg; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  [ -z &#34;$msg&#34; ] &amp;&amp; continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  handle_message &#34;$msg&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">HANDLER_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  chmod +x <span style="color:#e6db74">&#34;</span>$LOCAL_HANDLER<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Handler installed.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Write local user systemd units</span>
+</span></span><span style="display:flex;"><span>write_systemd_units<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local socket_path
+</span></span><span style="display:flex;"><span>  socket_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>local_socket_path<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ensure_dir <span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  local socket_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">/</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local service_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">/</span>$SERVICE_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Writing systemd user socket to </span>$socket_file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$socket_file<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=Local &#34;open URL&#34; socket for ssh-openurl
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Socket]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ListenStream=$socket_path
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SocketMode=0600
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Accept=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=default.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Writing systemd user service to </span>$service_file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$service_file<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=Local &#34;open URL&#34; service instance
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Read NUL-separated host\\turl messages from socket and handle them.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># The handler sets up SSH port forwards for localhost URLs.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=/bin/sh -lc &#39;${LOCAL_HANDLER}&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">StandardInput=socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Reloading user systemd daemon&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Done writing units.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>enable_socket<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  write_systemd_units &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Enabling and starting </span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user enable --now <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Socket enabled and started (if supported).&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>disable_socket<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Stopping and disabling </span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user stop <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  systemctl --user disable <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Done.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uninstall_local<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  disable_socket
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Removing systemd unit files&#34;</span>
+</span></span><span style="display:flex;"><span>  rm -f -- <span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">/</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$SYSTEMD_USER_DIR<span style="color:#e6db74">/</span>$SERVICE_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Removing local handler&#34;</span>
+</span></span><span style="display:flex;"><span>  rm -f -- <span style="color:#e6db74">&#34;</span>$LOCAL_HANDLER<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Removed.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add RemoteForward block to ~/.ssh/config (idempotent)</span>
+</span></span><span style="display:flex;"><span>configure_ssh<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local remote_host<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local socket_path remote_port cfg tmp managed_tag want_rf want_eo
+</span></span><span style="display:flex;"><span>  socket_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>local_socket_path<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  remote_port<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SSH_OPENURL_PORT<span style="color:#66d9ef">:-</span>$PORT_DEFAULT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  cfg<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SSH_CONFIG_PATH<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  tmp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>cfg<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp&#34;</span>
+</span></span><span style="display:flex;"><span>  managed_tag<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;# ssh_remote_xdg_open: managed&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ensure_dir <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$cfg<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  touch <span style="color:#e6db74">&#34;</span>$cfg<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;cannot create </span>$cfg<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  chmod <span style="color:#ae81ff">600</span> <span style="color:#e6db74">&#34;</span>$cfg<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  want_rf<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;RemoteForward 127.0.0.1:</span><span style="color:#e6db74">${</span>remote_port<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>socket_path<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  want_eo<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ExitOnForwardFailure yes&#34;</span>
+</span></span><span style="display:flex;"><span>  want_cm<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ControlMaster auto&#34;</span>
+</span></span><span style="display:flex;"><span>  want_cp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ControlPath ~/.ssh/sockets/%r@%h-%p&#34;</span>
+</span></span><span style="display:flex;"><span>  want_cps<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ControlPersist 10m&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Ensure the control socket directory exists</span>
+</span></span><span style="display:flex;"><span>  ensure_dir <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span><span style="color:#e6db74">/.ssh/sockets&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Merge/update while preserving formatting. We:</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#  - Find exact &#34;Host &lt;remote_host&gt;&#34; stanza.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#  - Insert our managed lines immediately after the Host line.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#  - Indent with the first directive indent of the stanza if present, else 2 spaces.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#  - Move leading blank/comment lines to *after* our insert.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#  - Skip any old managed lines elsewhere in the stanza.</span>
+</span></span><span style="display:flex;"><span>  awk -v tgt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$remote_host<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      -v rf<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$want_rf<span style="color:#e6db74">&#34;</span> -v eo<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$want_eo<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      -v cm<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$want_cm<span style="color:#e6db74">&#34;</span> -v cp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$want_cp<span style="color:#e6db74">&#34;</span> -v cps<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$want_cps<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      -v tag<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$managed_tag<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    function ltrim(s){ sub(/^[ \t]+/, &#34;&#34;, s); return s }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    function leadws(s,   m){ if (match(s, /^[ \t]*/)) return substr(s,1,RLENGTH); return &#34;&#34; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    function is_managed(s){ return (s ~ /[ \t]*#[ \t]*ssh_remote_xdg_open: managed[ \t]*$/) }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    BEGIN{
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      in_tgt=0; saw_any=0; inserted=0; indent=&#34;  &#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      bufN=0; preN=0; last_nonempty=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    # Flush buffered Host line + (optional) our inserts + pre-buffer lines
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    function flush_buffer(){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (bufN&gt;0){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        for(i=1;i&lt;=bufN;i++) print buf[i]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        bufN=0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (in_tgt &amp;&amp; !inserted){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # insert our managed lines right after Host line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print indent rf &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print indent eo &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print indent cm &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print indent cp &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print indent cps &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        inserted=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # then print preserved pre-buffer (blanks/comments that originally followed Host)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        for(i=1;i&lt;=preN;i++) print pre[i]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        preN=0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    # Leaving a target stanza: ensure we inserted; reset state
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    function close_tgt(){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (in_tgt){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        flush_buffer()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      in_tgt=0; inserted=0; preN=0; indent=&#34;  &#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      raw=$0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      line=raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      ltrim(line)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (line ~ /^Host[ \t]+/){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # starting a new stanza: close previous
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        close_tgt()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # parse host patterns
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        pat=line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        sub(/^Host[ \t]+/,&#34;&#34;,pat)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        n=split(pat, arr, /[ \t]+/)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        exact = (n==1 &amp;&amp; arr[1]==tgt)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # print new Host line later (buffer), so we can inject right after it
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        buf[++bufN]=raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        in_tgt = exact
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if (exact) { saw_any=1; inserted=0; preN=0; indent=&#34;  &#34; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (in_tgt){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # If not yet inserted, figure out indentation on first real directive
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if (!inserted){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          # skip our own (old) managed lines
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          if (is_managed(raw)) next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          # classify the line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          if (line==&#34;&#34; || line ~ /^#/){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            # Preserve, but it will be printed *after* our insert
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            pre[++preN]=raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            # First real directive: adopt its indent and flush Host + inserts, then print this line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            indent = leadws(raw)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            flush_buffer()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            print raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          # Already inserted; just skip any old managed lines and pass others
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          if (is_managed(raw)) next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          print raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          next
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      # Not in target stanza: if we had a buffered Host (non-target), flush it now
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (bufN&gt;0){ flush_buffer() }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      print raw
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      last_nonempty = (raw != &#34;&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    END{
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      # File ended: close any open stanza
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (bufN&gt;0 || in_tgt){ flush_buffer() }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (!saw_any){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Append a dedicated Host block; avoid double blank line
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if (last_nonempty) print &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;Host &#34; tgt
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;  &#34; rf &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;  &#34; eo &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;  &#34; cm &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;  &#34; cp &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print &#34;  &#34; cps &#34;  &#34; tag
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#39;</span> <span style="color:#e6db74">&#34;</span>$cfg<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;awk merge failed; SSH config unchanged&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  mv <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$cfg<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;could not write merged SSH config to </span>$cfg<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Updated SSH config for host &#39;</span><span style="color:#e6db74">${</span>remote_host<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; at: </span>$cfg<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;→ RemoteForward set to 127.0.0.1:</span><span style="color:#e6db74">${</span>remote_port<span style="color:#e6db74">}</span><span style="color:#e6db74"> -&gt; </span><span style="color:#e6db74">${</span>socket_path<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;→ ControlMaster enabled (socket: ~/.ssh/sockets/)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Simple smoke test: connect via ssh and call open-local to see if it reaches local socket</span>
+</span></span><span style="display:flex;"><span>test_roundtrip<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local remote<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local test_url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span>https://www.youtube.com/watch?v=dQw4w9WgXcQ<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  local port<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SSH_OPENURL_PORT<span style="color:#66d9ef">:-</span>$PORT_DEFAULT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Testing roundtrip: will call open-local on remote -&gt; should trigger local xdg-open&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Hint: ensure the local socket is active: systemctl --user status </span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Opening </span><span style="color:#e6db74">${</span>test_url<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Use the remote&#39;s $HOME path at runtime, not a locally-expanded path.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Also run via a login shell so PATH/env behave like your normal session.</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;${SHELL:-sh} -lc &#34;OPEN_LOCAL_PORT=&#39;</span><span style="color:#e6db74">&#34;</span>$port<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#39; \&#34;\$HOME/.local/bin/open-local\&#34; \&#34;&#39;</span><span style="color:#e6db74">&#34;</span>$test_url<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#39;\&#34;&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;If nothing opened locally, check:&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;  1) Local socket active: systemctl --user status </span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;  2) SSH reverse forward present: ssh -G </span>$remote<span style="color:#e6db74"> | sed -n \&#34;s/^remoteforward //p\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;  3) socat installed on remote (already checked during install)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -------- NEW: status helpers --------</span>
+</span></span><span style="display:flex;"><span>_status_overview<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local sock_path; sock_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>local_socket_path<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;=== ssh_remote_xdg_open: status overview ===&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Socket path: </span>$sock_path<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -S <span style="color:#e6db74">&#34;</span>$sock_path<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Socket exists: yes&#34;</span>
+</span></span><span style="display:flex;"><span>    ls -l <span style="color:#e6db74">&#34;</span>$sock_path<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Socket exists: no&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;— systemctl (socket) —&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> --no-pager <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;— active service instances —&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user list-units --type<span style="color:#f92672">=</span>service --all | grep -E <span style="color:#e6db74">&#34;ssh_remote_xdg_open@\.service&#34;</span> <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;(none active)&#34;</span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;— recent logs (last hour) —&#34;</span>
+</span></span><span style="display:flex;"><span>  journalctl --user -u <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> -u <span style="color:#e6db74">&#34;</span>$SERVICE_UNIT_NAME<span style="color:#e6db74">&#34;</span> --since -1h --no-pager <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_status_socket<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  systemctl --user status <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> --no-pager
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_status_service<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Show any active or recently run instances</span>
+</span></span><span style="display:flex;"><span>  systemctl --user list-units --type<span style="color:#f92672">=</span>service --all | grep -E <span style="color:#e6db74">&#34;ssh_remote_xdg_open@\.service&#34;</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Tip: use &#39;logs&#39; to see journal entries for spawned instances.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_logs<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local since<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>--since -1h<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># If user passed multiple args (e.g. --since &#39;today&#39;), keep them</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$since<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;--since&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    shift <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    since<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--since </span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;-1h&#34;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    shift <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  journalctl --user -u <span style="color:#e6db74">&#34;</span>$SOCKET_UNIT_NAME<span style="color:#e6db74">&#34;</span> -u <span style="color:#e6db74">&#34;</span>$SERVICE_UNIT_NAME<span style="color:#e6db74">&#34;</span> $since --no-pager
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ------------------------------------</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Print usage</span>
+</span></span><span style="display:flex;"><span>usage<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  cat <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssh_remote_xdg_open.sh - local installer for &#34;open remote URL on local desktop&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Commands:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  install-local
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Create systemd user socket+service units and enable/start the socket.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  enable-socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Enable and start the user socket.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  disable-socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Stop and disable the user socket.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  uninstall-local
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Stop socket and remove local unit files.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  install-remote &lt;ssh-target&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Inject remote helpers (open-local, optional xdg-open shim) into the SSH target.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  remove-remote &lt;ssh-target&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Remove the injected files on the remote.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  configure-ssh &lt;ssh-target&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Append RemoteForward and ControlMaster blocks to your local ~/.ssh/config.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  test &lt;ssh-target&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Quick smoke test that calls open-local on the remote (requires SSH with forwarded port active).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  status
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Overview: socket status, any active service instances, recent logs.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  status-socket
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Focused systemctl status of the socket unit.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  status-service
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      List any active or recent service instances (socket-activated).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  logs [--since -1h]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      Show recent logs for the socket and service units. Example: &#39;logs --since today&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Environment variables:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  SSH_OPENURL_PORT     Remote TCP port on remote host (default: $PORT_DEFAULT)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  SSH_OPENURL_SOCKET   Local socket path (default: $SOCKET_PATH_DEFAULT)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>install_remote_helpers<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local remote<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  require_cmd ssh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># --- Preflight: socat must exist on the remote ---</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Preflight: checking for &#39;socat&#39; on remote &#39;</span>$remote<span style="color:#e6db74">&#39;…&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ! ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;command -v socat &gt;/dev/null 2&gt;&amp;1&#39;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    die <span style="color:#e6db74">&#34;Remote host &#39;</span>$remote<span style="color:#e6db74">&#39; is missing &#39;socat&#39;. Install it (apt/dnf/pacman/brew) and retry.&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Installing remote helper(s) to &#39;</span>$remote<span style="color:#e6db74">:~/.local/bin&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Create remote bin dir and data dir with safe perms (expand on remote)</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;mkdir -p &#34;$HOME/.local/bin&#34; &#34;$HOME/.local/share/ssh_remote_xdg_open&#34; &amp;&amp; chmod 700 &#34;$HOME/.local/bin&#34;&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Failed to create directories on remote&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Store the host alias so remote helpers can identify themselves to the local handler</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Storing host alias &#39;</span>$remote<span style="color:#e6db74">&#39; on remote&#34;</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;printf &#39;%s&#39; &#39;</span>$remote<span style="color:#e6db74">&#39; &gt; \&#34;\$HOME/.local/share/ssh_remote_xdg_open/host_alias\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># ---- open-local ----</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Uploading open-local to remote&#34;</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;cat &gt; &#34;$HOME/.local/bin/open-local&#34; &amp;&amp; chmod +x &#34;$HOME/.local/bin/open-local&#34;&#39;</span> <span style="color:#e6db74">&lt;&lt;&#39;REMOTE_OPEN_LOCAL_EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Send NUL-delimited host\turl messages to the forwarded TCP port on the remote,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># which sshd will forward back to the local UNIX socket.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">set -eu
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PORT=&#34;${OPEN_LOCAL_PORT:-19999}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">HOST=&#34;127.0.0.1&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ALIAS_FILE=&#34;$HOME/.local/share/ssh_remote_xdg_open/host_alias&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">HOST_ALIAS=&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if [ -f &#34;$ALIAS_FILE&#34; ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  HOST_ALIAS=$(cat &#34;$ALIAS_FILE&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if [ $# -eq 0 ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  echo &#34;Usage: open-local &lt;url&gt; [more-urls...]&#34; &gt;&amp;2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  exit 2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">{
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  for url in &#34;$@&#34;; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    printf &#39;%s\t%s\0&#39; &#34;$HOST_ALIAS&#34; &#34;$url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">} | socat - &#34;TCP:${HOST}:${PORT}&#34;,connect-timeout=3
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">REMOTE_OPEN_LOCAL_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># ---- xdg-open shim ----</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Uploading xdg-open shim to remote (~/.local/bin/xdg-open)&#34;</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;cat &gt; &#34;$HOME/.local/bin/xdg-open&#34; &amp;&amp; chmod +x &#34;$HOME/.local/bin/xdg-open&#34;&#39;</span> <span style="color:#e6db74">&lt;&lt;&#39;REMOTE_XDG_SHIM_EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Prefer the SSH reverse-forward to open URLs locally; otherwise use a native opener.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">set -eu
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PORT=&#34;${OPEN_LOCAL_PORT:-19999}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ALIAS_FILE=&#34;$HOME/.local/share/ssh_remote_xdg_open/host_alias&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">HOST_ALIAS=&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if [ -f &#34;$ALIAS_FILE&#34; ]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  HOST_ALIAS=$(cat &#34;$ALIAS_FILE&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Choose a native opener on the remote (Linux/macOS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if command -v xdg-open &gt;/dev/null 2&gt;&amp;1; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  FALLBACK_OPENER=&#34;xdg-open&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">elif command -v open &gt;/dev/null 2&gt;&amp;1; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  FALLBACK_OPENER=&#34;open&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">else
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  FALLBACK_OPENER=&#34;/usr/bin/xdg-open&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># If the tunnel is reachable, ship NUL-delimited host\turl messages through it.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if socat -u - &#34;TCP:127.0.0.1:${PORT}&#34;,connect-timeout=3 &lt;/dev/null &gt;/dev/null 2&gt;&amp;1; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for url in &#34;$@&#34;; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      printf &#39;%s\t%s\0&#39; &#34;$HOST_ALIAS&#34; &#34;$url&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  } | socat - &#34;TCP:127.0.0.1:${PORT}&#34; || exit $?
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">else
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  exec &#34;$FALLBACK_OPENER&#34; &#34;$@&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">REMOTE_XDG_SHIM_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># ---- Post-install: static guidance (no PATH probing) ----</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Remote helpers installed.&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;To ensure programs on the remote use the shim by default, add this to your remote shell config:&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#39;  # Bash:&#39;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#39;  echo &#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;export PATH=&#34;$HOME/.local/bin:$PATH&#34;&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39; &gt;&gt; ~/.bashrc&#39;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#39;  # Zsh:&#39;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#39;  echo &#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;export PATH=&#34;$HOME/.local/bin:$PATH&#34;&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39; &gt;&gt; ~/.zshrc&#39;</span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;For non-interactive SSH commands, add to ~/.ssh/rc on the remote:&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#39;  echo &#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;export PATH=&#34;$HOME/.local/bin:$PATH&#34;&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39; &gt;&gt; ~/.ssh/rc &amp;&amp; chmod 700 ~/.ssh/rc&#39;</span>
+</span></span><span style="display:flex;"><span>  echo
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Done.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>remove_remote_helpers<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local remote<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Removing remote helper(s) from </span>$remote<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  ssh <span style="color:#e6db74">&#34;</span>$remote<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;rm -f &#34;$HOME/.local/bin/open-local&#34; &#34;$HOME/.local/bin/xdg-open&#34; || true; rm -rf &#34;$HOME/.local/share/ssh_remote_xdg_open&#34; || true&#39;</span>
+</span></span><span style="display:flex;"><span>  info <span style="color:#e6db74">&#34;Done.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --- entrypoint ---</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $# -lt <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> usage; exit 1; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; shift <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  help|-h|--help<span style="color:#f92672">)</span> usage ;;
+</span></span><span style="display:flex;"><span>  install-local<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    require_cmd systemctl
+</span></span><span style="display:flex;"><span>    require_cmd xdg-open
+</span></span><span style="display:flex;"><span>    require_cmd ssh
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! command -v socat &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      info <span style="color:#e6db74">&#34;Warning: &#39;socat&#39; not found locally. Remote helpers use socat; install it for best results.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    write_local_handler
+</span></span><span style="display:flex;"><span>    write_systemd_units
+</span></span><span style="display:flex;"><span>    enable_socket
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  enable-socket<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    require_cmd systemctl
+</span></span><span style="display:flex;"><span>    enable_socket
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  disable-socket<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    require_cmd systemctl
+</span></span><span style="display:flex;"><span>    disable_socket
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  uninstall-local<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    uninstall_local
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  install-remote<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;install-remote requires &lt;ssh-target&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    install_remote_helpers <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  remove-remote<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;remove-remote requires &lt;ssh-target&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    remove_remote_helpers <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  configure-ssh<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;configure-ssh requires &lt;ssh-target&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    configure_ssh <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  test<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;test requires &lt;ssh-target&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    test_roundtrip <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  status<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    _status_overview
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  status-socket<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    _status_socket
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  status-service<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    _status_service
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  logs<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    _logs <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    die <span style="color:#e6db74">&#34;Unknown command: </span>$cmd<span style="color:#e6db74"> (try &#39;help&#39;)&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

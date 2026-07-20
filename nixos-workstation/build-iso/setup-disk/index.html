@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Configure the disk · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/nixos-workstation/build-iso/boot-installer/" aria-label="Previous: boot-installer" title="prev: boot-installer"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/nixos-workstation/build-iso/setup-host/" aria-label="Next: setup-host" title="next: setup-host"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/nixos-workstation/build-iso/">build-iso</a><ul><li class="lvl1"><a href="#">setup-disk</a></li><li class="lvl2"><a href="#encryption">Encryption</a></li><li class="lvl2"><a href="#swap">Swap</a></li><li class="lvl2"><a href="#confirm-and-apply">Confirm and apply</a></li><li class="lvl2"><a href="#reinstalling-over-an-existing-layout">Reinstalling over an existing layout</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/nixos-workstation/">nixos-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/nixos-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/nixos-workstation/install-choice/">install-choice</a></li><li class="node open">
+                  <a class="" href="/nixos-workstation/build-iso/">build-iso</a><ul class="sections"><li><a class="" href="/nixos-workstation/build-iso/boot-installer/">boot-installer</a></li><li><a class="active" href="/nixos-workstation/build-iso/setup-disk/">setup-disk</a></li><li><a class="" href="/nixos-workstation/build-iso/setup-host/">setup-host</a></li><li><a class="" href="/nixos-workstation/build-iso/setup-install/">setup-install</a></li></ul></li><li class="">
+                  <a class="" href="/nixos-workstation/making-changes/">making-changes</a></li><li class="">
+                  <a class="" href="/nixos-workstation/profiles/">profiles</a></li><li class="">
+                  <a class="" href="/nixos-workstation/sudo-solokey/">sudo-solokey</a></li></ul></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/nixos-workstation/">/nixos-workstation</a><a class="pseg" href="/nixos-workstation/build-iso/">/build-iso</a><a class="pseg pcur" href="/nixos-workstation/build-iso/setup-disk/">/setup-disk</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Configure the disk</a></h1>
+
+
+<p>The first phase partitions, formats, and mounts the target disk. It
+lays out the filesystem declaratively with <a href="https://github.com/nix-community/disko">disko</a>, as a GPT disk with:</p>
+<ul>
+<li>a <a href="https://btrfs.readthedocs.io/">btrfs</a> root, all mounted with <code>compress=zstd</code> and <code>noatime</code>,
+split into subvolumes:
+<ul>
+<li><code>@</code> → <code>/</code></li>
+<li><code>@home</code> → <code>/home</code></li>
+<li><code>@nix</code> → <code>/nix</code></li>
+</ul>
+</li>
+<li>a boot partition chosen automatically from the detected firmware: an
+EFI System Partition on UEFI machines, or a small <code>bios_grub</code>
+partition on legacy BIOS machines;</li>
+<li>optionally, full-disk LUKS encryption of the root;</li>
+<li>optionally, a swap partition.</li>
+</ul>
+<p>Start it from the menu, or directly:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup disk
+</pre></div>
+</div>
+
+
+<p>It detects your firmware (UEFI vs. legacy BIOS) automatically, then
+shows the disks you can install onto:</p>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">==</span> Configure a disk <span style="color:#66d9ef">for</span> NixOS <span style="color:#f92672">==</span>
+</span></span><span style="display:flex;"><span>Firmware detected: UEFI
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Select the target disk:
+</span></span><span style="display:flex;"><span>&gt; /dev/nvme0n1   --   3.6T     --   CT4000P3PSSD8     --   <span style="color:#f92672">(</span>NVME, SSD<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  /dev/sda       --   931.5G   --   Samsung SSD <span style="color:#ae81ff">870</span>   --   <span style="color:#f92672">(</span>SATA, SSD<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Disks that are currently in use by the running system &ndash; most importantly
+the live USB stick you booted from &ndash; are hidden, so you cannot
+accidentally wipe them. (Pass <code>--include-mounted</code> to override this, but
+that is rarely what you want.)</p>
+  </div>
+</div>
+<h2 id="encryption"><a class="heading-anchor" href="#encryption">Encryption</a></h2>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Encrypt the disk with LUKS? <span style="color:#f92672">(</span>disko will prompt <span style="color:#66d9ef">for</span> a passphrase during formatting<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>y/N<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Optionally encrypt the root with <a href="https://gitlab.com/cryptsetup/cryptsetup">LUKS</a>. Answer <code>y</code> and the btrfs
+root is placed inside a LUKS2 container; disko itself prompts you to
+set (and confirm) the passphrase during formatting, and the system
+prompts for it again at every boot to unlock the disk. The tool never
+handles the passphrase &ndash; so keep it safe, <strong>it cannot be recovered</strong>.</p>
+<p>If you also add swap (below), the swap partition is re-keyed with a
+random passphrase on every boot, so it never leaks RAM contents in
+plaintext on an otherwise-encrypted disk. The trade-off is that this
+rules out hibernation (suspend-to-disk), since the swap contents are
+unreadable after a reboot.</p>
+<p>Encryption is a fresh-install choice only: an existing encrypted disk
+is not recognized as a reusable btrfs layout, so the reinstall option
+below is not offered for it.</p>
+  </div>
+</div>
+<h2 id="swap"><a class="heading-anchor" href="#swap">Swap</a></h2>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Detected RAM: 15.3G.
+</span></span><span style="display:flex;"><span>? Add a swap partition? <span style="color:#f92672">(</span>recommended <span style="color:#66d9ef">for</span> low-RAM machines<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>y/N<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>? Swap size <span style="color:#f92672">(</span>e.g. 8G, 2048M<span style="color:#f92672">)</span> <span style="color:#f92672">(</span>8G<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Optionally add a swap partition. This matters most on low-RAM
+machines: the live ISO&rsquo;s Nix store is held in RAM (tmpfs), so without
+swap, a large download or build during <code>nixos-install</code> can exhaust
+memory. The default size is <code>8G</code>.</p>
+  </div>
+</div>
+<h2 id="confirm-and-apply"><a class="heading-anchor" href="#confirm-and-apply">Confirm and apply</a></h2>
+<p>Because this erases the disk, you have to re-type the device path to
+confirm, and then approve a review screen:</p>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>About to DESTROY everything on: /dev/nvme0n1
+</span></span><span style="display:flex;"><span>? Type <span style="color:#e6db74">&#39;/dev/nvme0n1&#39;</span> to confirm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">================</span> Review <span style="color:#f92672">=================</span>
+</span></span><span style="display:flex;"><span>Target disk:  /dev/nvme0n1
+</span></span><span style="display:flex;"><span>Firmware:     UEFI <span style="color:#f92672">(</span>ESP /boot<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Filesystem:   btrfs
+</span></span><span style="display:flex;"><span>Encryption:   LUKS2 <span style="color:#f92672">(</span>passphrase set during format, prompted at boot<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Subvolumes:   @ -&gt; /, @home -&gt; /home, @nix -&gt; /nix
+</span></span><span style="display:flex;"><span>Swap:         8G <span style="color:#f92672">(</span>random-key encrypted<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Config:       /tmp/nixos-disk-xxxx/disko.nix
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=========================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>⚠️  This ERASES ALL DATA on /dev/nvme0n1 and mounts the new
+</span></span><span style="display:flex;"><span>    filesystems under /mnt.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    disko will prompt you to set the LUKS passphrase during
+</span></span><span style="display:flex;"><span>    formatting -- keep it safe, it cannot be recovered.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>? Proceed? <span style="color:#f92672">(</span>y/N<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Once you confirm, it fetches and runs disko (over the network) to wipe
+the disk, create the partitions and subvolumes, and mount everything
+under <code>/mnt</code>. The generated layout is saved into the new system at
+<code>/mnt/etc/nixos/disko.nix</code>, where the next phase picks it up.</p>
+  </div>
+</div>
+<h2 id="reinstalling-over-an-existing-layout"><a class="heading-anchor" href="#reinstalling-over-an-existing-layout">Reinstalling over an existing layout</a></h2>
+<p>If the disk you select <strong>already</strong> has this btrfs layout (<code>@</code>, <code>@home</code>,
+<code>@nix</code>) from a previous install, <code>setup disk</code> offers a <strong>reinstall</strong>
+option instead of erasing everything:</p>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>⚠️  /dev/nvme0n1 already has a NixOS btrfs layout <span style="color:#f92672">(</span>@, @home, @nix<span style="color:#f92672">)</span>.
+</span></span><span style="display:flex;"><span>? How <span style="color:#66d9ef">do</span> you want to install?
+</span></span><span style="display:flex;"><span>&gt; Reinstall -- keep /home and /nix, wipe / and reinstall the bootloader
+</span></span><span style="display:flex;"><span>  Fresh install -- ERASE the entire disk and recreate everything
+</span></span></code></pre></div><p>A <strong>reinstall</strong> wipes only <code>@</code> (the root filesystem) and reformats the
+ESP for a fresh bootloader, but keeps <code>@home</code> and <code>@nix</code>, so your home
+directory (including the config repo generated in the next phase) and
+the Nix store survive. After a reinstall you skip <strong>Configure Host</strong> (the
+preserved config repo is reused) and go straight to <strong>Install</strong>, which
+rebuilds that existing configuration. <code>setup nixos</code> detects this and
+skips the host phase for you.</p>
+  </div>
+</div>
+<p>When the disk is ready and mounted under <code>/mnt</code>, continue to the next
+phase.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

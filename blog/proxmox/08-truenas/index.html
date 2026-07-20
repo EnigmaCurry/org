@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 8: TrueNAS Core · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/wireguard_p2p/" aria-label="Previous: wireguard_p2p" title="prev: wireguard_p2p"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/07-proxmox-in-proxmox/" aria-label="Next: proxmox-in-proxmox" title="next: proxmox-in-proxmox"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">truenas</a></li><li class="lvl2"><a href="#upload-the-truenas-core-iso-image">Upload the TrueNAS Core .iso image</a></li><li class="lvl2"><a href="#create-the-truenas-vm">Create the TrueNAS VM</a></li><li class="lvl2"><a href="#add-serial-numbers-to-the-virtual-drives">Add serial numbers to the virtual drives</a></li><li class="lvl2"><a href="#install-truenas-core">Install TrueNAS Core</a></li><li class="lvl2"><a href="#configure-truenas-core">Configure TrueNAS Core</a></li><li class="lvl3"><a href="#configure-the-root-user-account">Configure the root user account</a></li><li class="lvl3"><a href="#configure-user-accounts">Configure user accounts</a></li><li class="lvl3"><a href="#configure-the-timezone">Configure the timezone</a></li><li class="lvl3"><a href="#configure-email-smtp-server">Configure Email SMTP server</a></li><li class="lvl3"><a href="#create-a-storage-pool">Create a storage pool</a></li><li class="lvl2"><a href="#create-an-smb-file-share">Create an SMB file share</a></li><li class="lvl3"><a href="#create-the-movies-dataset">Create the Movies dataset</a></li><li class="lvl3"><a href="#create-the-movies-share">Create the Movies share</a></li><li class="lvl3"><a href="#test-the-samba-share-from-another-desktop">Test the Samba share from another desktop</a></li><li class="lvl2"><a href="#create-an-nfs-share-for-proxmox-use">Create an NFS share for proxmox use</a></li><li class="lvl3"><a href="#create-a-private-network-for-nfs-between-proxmox-and-truenas">Create a private network for NFS between proxmox and truenas</a></li><li class="lvl3"><a href="#create-the-pve-dataset">Create the PVE dataset</a></li><li class="lvl3"><a href="#create-the-pve-share">Create the PVE share</a></li><li class="lvl3"><a href="#mount-the-nfs-share-on-proxmox">Mount the NFS share on Proxmox</a></li><li class="lvl2"><a href="#configure-the-truenas-vm-to-start-before-all-others">Configure the truenas VM to start before all others</a></li><li class="lvl2"><a href="#add-physical-drives">Add physical drives</a></li><li class="lvl3"><a href="#pci-passthrough">PCI passthrough</a></li><li class="lvl3"><a href="#hdd-passthrough">HDD passthrough</a></li><li class="lvl2"><a href="#add-serial-numbers-to-the-physical-drives">Add serial numbers to the physical drives</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="active" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/08-truenas/">/truenas</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 8: TrueNAS Core</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2023-11-18">2023-11-18</time></span>
+  <span>updated <time datetime="2023-11-19">2023-11-19</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>Networked Attached Storage (NAS) is a very useful service to provide
+for your homelab. It can serve many different roles:</p>
+<ul>
+<li>Samba share on your LAN for storing all your files</li>
+<li>NFS remote for mounting as proxmox VM storage</li>
+<li>local S3 compatible buckets</li>
+<li>iSCSI block storage</li>
+<li>and more</li>
+</ul>
+<p>Proxmox has great ZFS support all by itself, and if you only need to
+create VMs, you should probably stick with that. If you want to create
+a Samba share, or do any of the other things listed above, Proxmox
+can&rsquo;t do those things alone.</p>
+<p><a href="https://www.truenas.com/">TrueNAS Core</a> is a FreeBSD distribution
+that is custom built to serve the role of a NAS appliance and can do
+all the things listed above. By creating a TrueNAS VM on Proxmox,
+you can dedicate all of your storage devices (except the proxmox boot
+device) to the TrueNAS VM, and then re-mount those disks back on
+Proxmox over NFS, available to use as a storage pool for other VMs on
+proxmox.</p>
+<p>You might call this an Ouroboros situation.</p>
+<figure>
+    <img
+        srcset="/img/Serpiente_alquimica_hucff6a1b2423f5a1e68222ed47748a33b_150247_480x0_resize_q75_box.jpg 480w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/Serpiente_alquimica.jpg"
+        alt="The uroboros serpent, eating its own tail"
+        width="100%"
+        height="auto"/>
+    <figcaption>The uroboros serpent, eating its own tail</figcaption>
+</figure>
+
+<h2 id="upload-the-truenas-core-iso-image"><a class="heading-anchor" href="#upload-the-truenas-core-iso-image">Upload the TrueNAS Core .iso image</a></h2>
+<ul>
+<li><a href="https://www.truenas.com/download-truenas-core/">Download the TrueNAS core .iso image
+here</a></li>
+<li>Open your proxmox dashboard</li>
+<li>Underneath the proxmox host found in <code>Datacenter</code> list, click on
+the <code>local</code> storage pool.</li>
+<li>Click <code>ISO Images</code></li>
+<li>Click <code>Upload</code> and select the .iso image to upload (<code>TrueNAS-13.0-U5.3.iso</code> or similar)</li>
+</ul>
+<h2 id="create-the-truenas-vm"><a class="heading-anchor" href="#create-the-truenas-vm">Create the TrueNAS VM</a></h2>
+<p>For demonstration purposes, this configuration will use three virtual
+disk images: 1) for the boot device, with 2) and 3) for a ZFS mirrored
+data pool for initial testing purposes only. (You will add your own
+physical disks and create a final pool later on):</p>
+<ul>
+<li>Under the <code>Datacenter</code> list, right click the proxmox server</li>
+<li>Click <code>Create VM</code></li>
+<li>Enter the name: <code>truenas</code></li>
+<li>Select the ISO image you uploaded</li>
+<li>Choose the storage pool for the root disk.</li>
+<li>Leave the default size of 32GB (it won&rsquo;t need very much of that).</li>
+<li>Click <code>Add</code> to add an additional disk, 32GB or whatever.</li>
+<li>Click <code>Add</code> and create a <em>third</em> disk, same size as before.</li>
+<li>Give it some CPU cores (2) and some RAM (8192)</li>
+<li>Finalize the creation of the VM.</li>
+</ul>
+<h2 id="add-serial-numbers-to-the-virtual-drives"><a class="heading-anchor" href="#add-serial-numbers-to-the-virtual-drives">Add serial numbers to the virtual drives</a></h2>
+<p>TrueNAS requires each drive in your storage pools to have a unique
+serial number. By default, Proxmox does not assign any serial numbers
+to the virtual disks, and there also does not appear to be any way to
+add a serial using the dashboard. You must edit the VM configuration
+file by hand:</p>
+<ul>
+<li>Login to the Proxmox console, either by SSH, or through the <code>Console</code> tab.</li>
+<li>Use a text editor (<code>nano</code>) to edit the VM configuration file:
+<code>/etc/pve/nodes/{host}/qemu-server/{vm_id}.conf</code></li>
+<li>Find the line that starts with <code>scsi0</code>, and append the following text: <code>,serial=0000</code></li>
+<li>Find the line that starts with <code>scsi1</code>, and append the following text: <code>,serial=0001</code></li>
+<li>Find the line that starts with <code>scsi2</code>, and append the following text: <code>,serial=0002</code></li>
+<li>In the dashboard navigate to the VM&rsquo;s <code>Hardware</code> page and verify the serials have been added.</li>
+</ul>
+<h2 id="install-truenas-core"><a class="heading-anchor" href="#install-truenas-core">Install TrueNAS Core</a></h2>
+<ul>
+<li>Click on the new VM ID (truenas) in the server list.</li>
+<li>Click <code>Console</code></li>
+<li>Click <code>Start now</code></li>
+<li>The TrueNAS installer will boot.</li>
+<li>Choose <code>Install/Upgrade</code> and press Enter.</li>
+<li>Select only the first hard drive in the list to use as the root
+device.</li>
+<li>Proceed with the installation.</li>
+<li>Choose a root password.</li>
+<li>Select <code>Boot via BIOS</code>.</li>
+<li>When the installation is complete, reboot the VM.</li>
+<li>The VM will restart and print a lot of <code>...+..</code> to the screen for
+awhile.</li>
+<li>You should now see the <code>Console setup</code> menu.</li>
+<li>Notice the URL printed to the console, containing the IP address of
+the truenas VM.</li>
+</ul>
+<h2 id="configure-truenas-core"><a class="heading-anchor" href="#configure-truenas-core">Configure TrueNAS Core</a></h2>
+<ul>
+<li>Open the VM URL in your browser.</li>
+<li>Login as the <code>root</code> user using the password you created during
+install.</li>
+</ul>
+<h3 id="configure-the-root-user-account"><a class="heading-anchor" href="#configure-the-root-user-account">Configure the root user account</a></h3>
+<ul>
+<li>Click <code>Accounts</code></li>
+<li>Click <code>Users</code></li>
+<li>Find the <code>root</code> user and click the blue arrow on the right.</li>
+<li>Click <code>Edit</code></li>
+<li>In the <code>Email</code> field, enter your own email address</li>
+<li>In the <code>SSH Public Key</code> field, enter your own SSH public key (eg.
+from your workstation&rsquo;s ssh agent <code>ssh-add -L</code>, or from
+<code>~/.ssh/id_rsa.pub</code>)</li>
+<li>Click <code>Save</code></li>
+</ul>
+<h3 id="configure-user-accounts"><a class="heading-anchor" href="#configure-user-accounts">Configure user accounts</a></h3>
+<p>You should limit the <code>root</code> account only to administrative tasks, for
+daily usage, you should use a user account instead:</p>
+<ul>
+<li>Click <code>Accounts</code></li>
+<li>Click <code>Users</code></li>
+<li>Click <code>Add</code></li>
+<li>Enter the name, username, email address, password. (Do not enter
+any SSH key, as the user will have no home directory)</li>
+<li>Click <code>Submit</code></li>
+</ul>
+<h3 id="configure-the-timezone"><a class="heading-anchor" href="#configure-the-timezone">Configure the timezone</a></h3>
+<ul>
+<li>Click <code>System</code></li>
+<li>Click <code>General</code></li>
+<li>Select your server&rsquo;s timezone</li>
+<li>Click <code>Save</code></li>
+</ul>
+<h3 id="configure-email-smtp-server"><a class="heading-anchor" href="#configure-email-smtp-server">Configure Email SMTP server</a></h3>
+<p>Email notifications are optional, but highly recommended so that you
+can quickly become aware of any critical storage errors that may
+arise. To send mail from TrueNAS, you will need access to an external
+outgoing SMTP server (TODO: a future post will show how to install
+postfix on your Proxmox host, and how to create a private network
+between truenas and proxmox, to help protect access to your SMTP
+server).</p>
+<ul>
+<li>Click <code>System</code></li>
+<li>Click <code>Email</code></li>
+<li>Enter the <code>Outgoing Mail Server</code> address</li>
+<li>Verify the correct port, TLS setting, and authentication settings (if applicable)</li>
+<li>Send a test mail to ensure mail is functional. It will send it to
+the email address you set for the <code>root</code> user.</li>
+<li>Click <code>Save</code></li>
+</ul>
+<p>You can configure all the different types of alerts under <code>Alert Settings</code>.</p>
+<h3 id="create-a-storage-pool"><a class="heading-anchor" href="#create-a-storage-pool">Create a storage pool</a></h3>
+<p>The initial pool will just be for demo purposees, using the two extra
+virtual disks added to the VM at creation:</p>
+<ul>
+<li>Click <code>Storage</code></li>
+<li>Click <code>Pools</code></li>
+<li>Click <code>Add</code></li>
+<li>Click <code>Create Pool</code></li>
+<li>Enter a name: <code>test</code></li>
+<li>Select the two disks from the <code>Available Disks</code> column: <code>da1</code> and
+<code>da2</code></li>
+<li>Click the blue right pointing arrow to add them to the <code>Data VDevs</code>
+column.</li>
+<li>The default <code>Mirror</code> strategy is preselected.</li>
+<li>Click <code>Create</code> and confirm.</li>
+</ul>
+<h2 id="create-an-smb-file-share"><a class="heading-anchor" href="#create-an-smb-file-share">Create an SMB file share</a></h2>
+<h3 id="create-the-movies-dataset"><a class="heading-anchor" href="#create-the-movies-dataset">Create the Movies dataset</a></h3>
+<p>For this example, we will create a dataset sharing some movie files:</p>
+<ul>
+<li>Click <code>Storage</code></li>
+<li>Click <code>Pools</code></li>
+<li>Find the <code>test</code> pool you created</li>
+<li>Click the three dot context menu on the right</li>
+<li>Click <code>Add Dataset</code></li>
+<li>Enter the name: <code>Movies</code></li>
+<li>Click <code>Submit</code></li>
+<li>Find the new <code>Movies</code> dataset, and click the three dot context menu
+on its right hand side.</li>
+<li>Click <code>Edit permissions</code></li>
+<li>Select the <code>User</code> using the username you created (not root).</li>
+<li>Click <code>Apply User</code></li>
+<li>Select the <code>Group</code> using the same username (not wheel).</li>
+<li>Click <code>Apply Group</code></li>
+<li>Click <code>Save</code></li>
+</ul>
+<h3 id="create-the-movies-share"><a class="heading-anchor" href="#create-the-movies-share">Create the Movies share</a></h3>
+<p>To share our Movies dataset with other devices on the LAN, a Samba
+share may be created:</p>
+<ul>
+<li>Click <code>Sharing</code></li>
+<li>Click <code>Windows Shares (SMB)</code></li>
+<li>Click <code>Add</code></li>
+<li>Find the folder under <code>/mnt/test/Movies</code> and select <code>Movies</code></li>
+<li>Leave the name as the same: <code>Movies</code></li>
+<li>Click <code>Advanced Options</code></li>
+<li>Enable <code>Allow Guest Access</code></li>
+<li>Click <code>Submit</code></li>
+<li>If you have not yet enabled the SMB service, it will ask to: click
+<code>Enable Service</code></li>
+<li>It should ask you to configure the ACL: click <code>Configure Now</code></li>
+<li>Choose <code>Select a preset ACL</code> and select the <code>OPEN</code> preset.</li>
+<li>Click <code>Continue</code></li>
+<li>Scroll down in the <code>Edit ACL</code> dialog that remains open, there are
+three sections: 1) owner 2) group 3) everyone.</li>
+<li>Near the bottom find the <code>everyone</code> config and change the
+<code>Permissions</code> to <code>Read</code>.</li>
+<li>Click <code>Save</code></li>
+</ul>
+<h3 id="test-the-samba-share-from-another-desktop"><a class="heading-anchor" href="#test-the-samba-share-from-another-desktop">Test the Samba share from another desktop</a></h3>
+<p>Use your file browser to browse the network, you should find the
+truenas SMB service and the <code>Movies</code> folder inside. You should be
+presented with an authentication dialog and you can choose to login
+anonymously, or with the truenas username/password for the user
+account you created. The anonymous user should only be able to read
+files, not create nor delete anything. Only the authenticated user
+account may modify the files.</p>
+<h2 id="create-an-nfs-share-for-proxmox-use"><a class="heading-anchor" href="#create-an-nfs-share-for-proxmox-use">Create an NFS share for proxmox use</a></h2>
+<p>This is where the Ouroborus makes his move, you can create an NFS
+share so that the Proxmox host may mount the storage provided by
+TrueNAS, so that <em>other</em> VMs on the same host may use the storage
+provided.</p>
+<h3 id="create-a-private-network-for-nfs-between-proxmox-and-truenas"><a class="heading-anchor" href="#create-a-private-network-for-nfs-between-proxmox-and-truenas">Create a private network for NFS between proxmox and truenas</a></h3>
+<p>Create the private bridge:</p>
+<ul>
+<li>On the proxmox host dashboard, click on the server in the
+<code>Datacenter</code> list</li>
+<li>Click <code>Network</code></li>
+<li>Click <code>Create</code></li>
+<li>Click <code>Linux Bridge</code></li>
+<li>Enter the name: <code>vmbr50</code></li>
+<li>Enter the IPv4/CIDR: <code>10.50.0.1/24</code></li>
+<li>Enter the description: <code>Local TrueNAS access only</code></li>
+<li>Click <code>Create</code></li>
+<li>Click <code>Apply Configuration</code></li>
+</ul>
+<p>Create the private network link:</p>
+<ul>
+<li>Find the truenas VM in the list, and go to its <code>Hardware</code> page.</li>
+<li>Click <code>Add</code></li>
+<li>Click <code>Network Device</code></li>
+<li>Choose the bridge: <code>vmbr50 (Local TrueNAS access only)</code></li>
+<li>Click <code>Add</code></li>
+<li>Reboot the truenas VM so that it detects this new network device.</li>
+</ul>
+<p>Once the trunas VM has rebooted, open the truenas dashboard:</p>
+<ul>
+<li>Click <code>Network</code></li>
+<li>Click <code>Interfaces</code></li>
+<li>Find the second interface <code>vtnet1</code> and click the blue arrow on the
+right hand side.</li>
+<li>Click the <code>EDIT</code> button (scroll down, it may be hidden)</li>
+<li>Unselect <code>DHCP</code></li>
+<li>Enter the IP address: <code>10.50.0.2</code></li>
+<li>Click <code>Apply</code></li>
+<li>Make sure the first interface <code>vtnet0</code> retains the DHCP setting
+(yes). (it may need to be turned back on after disabling dhcp on
+the other interface, weird.)</li>
+<li>Click <code>Test Changes</code> and confirm</li>
+<li>Click <code>Save Changes</code></li>
+</ul>
+<h3 id="create-the-pve-dataset"><a class="heading-anchor" href="#create-the-pve-dataset">Create the PVE dataset</a></h3>
+<ul>
+<li>Click <code>Storage</code></li>
+<li>Click <code>Pools</code></li>
+<li>Find the <code>test</code> pool you created</li>
+<li>Click the three dot context menu on the right</li>
+<li>Click <code>Add Dataset</code></li>
+<li>Enter the name: <code>PVE</code></li>
+<li>Click <code>Submit</code></li>
+</ul>
+<h3 id="create-the-pve-share"><a class="heading-anchor" href="#create-the-pve-share">Create the PVE share</a></h3>
+<ul>
+<li>Click <code>Sharing</code></li>
+<li>Click <code>Unix Shares (NFS)</code></li>
+<li>Click <code>Add</code></li>
+<li>Find the folder under <code>/mnt/test/PVE</code> and select <code>PVE</code></li>
+<li>Leave the name as the same: <code>PVE</code></li>
+<li>Click <code>Advanced Options</code></li>
+<li>Select the <code>Maproot User</code>: <code>root</code></li>
+<li>Select the <code>Maproot Group</code> <code>wheel</code></li>
+<li>Enter the Authorized Hosts and IP addresses: <code>10.50.0.1</code></li>
+<li>Click <code>Submit</code></li>
+<li>If you have not yet enabled the NFS service, it will ask to: click
+<code>Enable Service</code></li>
+</ul>
+<h3 id="mount-the-nfs-share-on-proxmox"><a class="heading-anchor" href="#mount-the-nfs-share-on-proxmox">Mount the NFS share on Proxmox</a></h3>
+<ul>
+<li>On the proxmox dashboard, click the <code>Datacenter</code> at the top of the list</li>
+<li>Click <code>Storage</code></li>
+<li>Click <code>Add</code></li>
+<li>Click <code>NFS</code></li>
+<li>Enter the ID: <code>truenas</code></li>
+<li>Enter the server IP address: <code>10.50.0.2</code></li>
+<li>Enter the export: <code>/mnt/test/PVE</code></li>
+<li>Choose all the Content types you want to store on this share,
+probably just: <code>Disk Image</code> and <code>Container</code></li>
+<li>Click <code>Add</code></li>
+</ul>
+<p>Now you have a new storage pool on proxmox, hosted by the nested
+truenas VM, with which to store VM disks!</p>
+<h2 id="configure-the-truenas-vm-to-start-before-all-others"><a class="heading-anchor" href="#configure-the-truenas-vm-to-start-before-all-others">Configure the truenas VM to start before all others</a></h2>
+<p>If you have just now setup the NFS storage, the truenas VM is now part
+of your critical infrastructure. You need to ensure that the truenas
+VM starts on boot <em>before</em> all other VMs that require the storage
+provided by it.</p>
+<ul>
+<li>On the proxmox dashboard, click on the truenas VM</li>
+<li>Click <code>Options</code></li>
+<li>Double click the <code>Start at boot</code> field</li>
+<li>Checkmark the <code>Start at boot</code> box</li>
+<li>Click <code>OK</code></li>
+<li>Double click the <code>Start/Shutdown order</code> field</li>
+<li>Enter the star/shutdown order: <code>1</code></li>
+<li>Enter the startup delay: 150 (this is the time that delays all
+<em>other</em> VMs. So make this however long you need for the Truenas to
+boot.)</li>
+</ul>
+<p>Now for your other VMs, set the boot order greater than 1, and they
+will boot automatically after 150s allowance for truenas to start.
+That should be enough time so that truenas boots and starts the
+storage shares.</p>
+<h2 id="add-physical-drives"><a class="heading-anchor" href="#add-physical-drives">Add physical drives</a></h2>
+<p>So far you have only created the shares on a temporary <code>test</code> pool.
+Now its time to upgrade your truenas VM to use real physical drives
+and to create a permanent ZFS pool.</p>
+<p>You have two options for hard drive passthrough:</p>
+<ul>
+<li>NVME PCI passthrough</li>
+<li>Per device passthrough (supports any drive type, like SATA or NVME)</li>
+</ul>
+<h3 id="pci-passthrough"><a class="heading-anchor" href="#pci-passthrough">PCI passthrough</a></h3>
+<p>To add PCI devices directly, your system must support IOMMU.</p>
+<p>To enable IOMMU, you must enable it in the grub bootloader config. Log
+in to the Proxmox console via SSH, and edit the file
+<code>/etc/default/grub</code>. Change the following line to add the iommu
+support:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>GRUB_CMDLINE_LINUX_DEFAULT=&#34;intel_iommu=on quiet&#34;
+</span></span></code></pre></div><p>(if you are using an AMD system, use <code>amd_iommu=on</code> instead)</p>
+<p>Run <code>update-grub</code>, then reboot the proxmox host to enable the setting.</p>
+<p>Once rebooted, open the dashboard:</p>
+<ul>
+<li>Go to the truenas VM <code>Hardware</code> page</li>
+<li>Click <code>Add</code></li>
+<li>Click <code>PCI Device</code></li>
+<li>Click <code>Raw Device</code></li>
+<li>Find the PCI device for your NVME drive in the list</li>
+<li>Click <code>All Functions</code> for good measure</li>
+<li>Click <code>Add</code></li>
+<li>Repeat these steps to add all the physical PCI devices</li>
+</ul>
+<h3 id="hdd-passthrough"><a class="heading-anchor" href="#hdd-passthrough">HDD passthrough</a></h3>
+<p>If your system does not support PCI passthrough, or if you are using a
+JBOD sata controller, you may alternatively passthrough each block
+device individually. This must be configured through the terminal
+following the <a href="https://pve.proxmox.com/wiki/Passthrough_Physical_Disk_to_Virtual_Machine_(VM)">Passthrough Physical Disk to Virtual Machine
+guide</a></p>
+<h2 id="add-serial-numbers-to-the-physical-drives"><a class="heading-anchor" href="#add-serial-numbers-to-the-physical-drives">Add serial numbers to the physical drives</a></h2>
+<p>TrueNAS requires each drive in your storage pools to have a unique
+serial number. By default, Proxmox does not assign any serial numbers
+to the disks being passthrough, and there also does not appear to be
+any way to add a serial using the dashboard. You must edit the VM
+configuration file by hand:</p>
+<ul>
+<li>Login to the Proxmox console, either by SSH, or through the <code>Console</code> tab.</li>
+<li>Use a text editor (<code>nano</code>) to edit the VM configuration file:
+<code>/etc/pve/nodes/{host}/qemu-server/{vm_id}.conf</code></li>
+<li>Find each line that starts with <code>scsi0</code>, and append the following
+text: <code>,serial=0000</code> where <code>0000</code> should match the physical serial
+number of the device. Confirm the serial number with <code>lshw</code></li>
+<li>In the dashboard navigate to the VM&rsquo;s <code>Hardware</code> page and verify
+the serials have been added</li>
+<li>Reboot the truenas VM and the drives should be detected, and you
+can setup your new pool the same way as before</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

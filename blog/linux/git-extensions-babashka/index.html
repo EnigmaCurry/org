@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Git extensions in Babashka · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/migration-announcement/" aria-label="Previous: migration-announcement" title="prev: migration-announcement"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/09-vpc/" aria-label="Next: vpc" title="next: vpc"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">git-extensions-babashka</a></li><li class="lvl2"><a href="#why-babashka">Why Babashka?</a></li><li class="lvl2"><a href="#what-changed">What changed</a></li><li class="lvl2"><a href="#how-the-port-went">How the port went</a></li><li class="lvl2"><a href="#installation">Installation</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="active" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/git-extensions-babashka/">/git-extensions-babashka</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Git extensions in Babashka</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-06-02">2026-06-02</time></span>
+  <span>updated <time datetime="2026-06-17">2026-06-17</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/git/">git</a>
+      <a href="/tags/clojure/">clojure</a>
+      <a href="/tags/babashka/">babashka</a>
+  </span>
+</div>
+
+<p>In a <a href="https://book.rymcg.tech/blog/linux/git-extensions/">previous post</a>, I
+introduced <code>git_extensions.sh</code> &ndash; a monolithic bash script providing
+custom git subcommands (<code>git vendor</code>, <code>git deploy</code>, <code>git deploy-key</code>,
+<code>git remote-proto</code>). It worked fine. It was also a sprawling monolith
+of bash, with global variables named things like
+<code>VENDOR_SSH_PORT</code> and URL parsing done through cascading regex in
+<code>BASH_REMATCH</code>. The kind of code where adding a feature means holding
+your breath and hoping <code>set -eo pipefail</code> catches whatever you break.</p>
+<p>So I ported it to <a href="https://babashka.org/">Babashka</a>.</p>
+<h2 id="why-babashka"><a class="heading-anchor" href="#why-babashka">Why Babashka?</a></h2>
+<p>Babashka is a fast-starting Clojure scripting runtime. It ships as a
+single static binary, starts in under 50ms, and gives you a real
+language with real data structures instead of a stringly-typed
+minefield.</p>
+<p>The pitch for porting a bash script to Babashka:</p>
+<ul>
+<li><strong>Maps instead of globals.</strong> URL parsing returns <code>{:host &quot;github.com&quot; :path &quot;user/repo&quot;}</code> instead of setting <code>REMOTE_PROTO_HOST</code> and
+praying nobody clobbers it.</li>
+<li><strong>Explicit parameters instead of <code>cd</code>.</strong> The bash version relies on
+<code>cd &quot;$dest&quot;</code> to set the working directory for subsequent git
+commands. The Babashka version passes <code>:dir</code> explicitly to every
+process call. No spooky action at a distance.</li>
+<li><strong>Actual testable functions.</strong> Each function takes arguments and
+returns values. No subshell surprises, no nameref tricks (<code>local -n</code>), no quoting emergencies.</li>
+<li><strong>Less code.</strong> Noticeably smaller than the bash version, with
+identical functionality and CLI interface.</li>
+</ul>
+<p>The tradeoff is a runtime dependency &ndash; you need <code>bb</code> on your PATH.
+But if you&rsquo;re already using Nix (and if you&rsquo;re reading this blog, you
+probably are), that&rsquo;s a non-issue.</p>
+<h2 id="what-changed"><a class="heading-anchor" href="#what-changed">What changed</a></h2>
+<p>Nothing, from the user&rsquo;s perspective. The CLI is identical:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git vendor enigmacurry/sway-home
+git deploy git@github.com:user/repo.git
+git deploy-key list
+git remote-proto ssh --port 2222
+</pre></div>
+</div>
+
+
+<p>Same flags, same output, same symlink dispatch trick. The script
+detects its invoked name and dispatches accordingly, with a fallback
+to first-argument dispatch:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Via symlink (git finds git-vendor in PATH):
+git vendor org/repo
+
+# Direct invocation:
+bb git_extensions.bb vendor org/repo
+</pre></div>
+</div>
+
+
+<h2 id="how-the-port-went"><a class="heading-anchor" href="#how-the-port-went">How the port went</a></h2>
+<p>Most of the translation was mechanical. Bash patterns have direct
+Clojure equivalents:</p>
+<table>
+<thead>
+<tr>
+<th>Bash</th>
+<th>Babashka</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[[ &quot;$url&quot; =~ ^git@([^:]+):(.+)$ ]]</code></td>
+<td><code>(re-matches #&quot;git@([^:]+):(.+)&quot; url)</code></td>
+</tr>
+<tr>
+<td><code>REPO_URL=&quot;${BASH_REMATCH[1]}&quot;</code></td>
+<td><code>(let [[_ host path] (re-matches ...)])</code></td>
+</tr>
+<tr>
+<td><code>local -n _host=$2</code></td>
+<td>Just return a map</td>
+</tr>
+<tr>
+<td><code>check_deps git ssh-keygen</code></td>
+<td><code>(check-deps &quot;git&quot; &quot;ssh-keygen&quot;)</code></td>
+</tr>
+<tr>
+<td><code>git remote get-url origin</code></td>
+<td><code>(git-out dir &quot;remote&quot; &quot;get-url&quot; &quot;origin&quot;)</code></td>
+</tr>
+<tr>
+<td><code>git config core.sshCommand ...</code></td>
+<td><code>(git! dir &quot;config&quot; &quot;core.sshCommand&quot; ...)</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Update:</strong> Both versions originally bound a deploy key to a repo by
+generating an SSH host alias in <code>~/.ssh/config</code> and rewriting the
+remote URL to use it (<code>git@deploy--github.com--user-repo:...</code>). They
+now use a per-repo <code>core.sshCommand</code> instead, which keeps the remote
+URL canonical and writes nothing to <code>~/.ssh/config</code>. This deleted all
+the SSH-config-munging code (adding/removing/parsing <code>Host</code> blocks) &ndash;
+which had been the most awkward part of both ports &ndash; in favor of a
+single <code>git config</code> call.</p>
+</blockquote>
+<p>The one genuinely tricky part was symlink detection. Babashka resolves
+<code>*file*</code> to the actual script, not the symlink. The solution tries two
+strategies: on Linux it reads <code>/proc/self/cmdline</code> (the null-separated
+argv), and on macOS/BSD it falls back to <code>ps -p &lt;pid&gt; -o args=</code>. Both
+scan the process command line for an argv entry starting with <code>git-</code>.</p>
+<h2 id="installation"><a class="heading-anchor" href="#installation">Installation</a></h2>
+<p>If you use my <a href="https://github.com/EnigmaCurry/sway-home">sway-home</a>
+config with home-manager, it&rsquo;s already wired up &ndash; the symlinks now
+point to <code>git_extensions.bb</code>.</p>
+<p>For manual installation, you&rsquo;ll need
+<a href="https://github.com/babashka/babashka#installation">Babashka</a>
+installed, then:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Download the script and make it executable:
+curl -Lo ~/.local/bin/git_extensions.bb \
+  https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/git/git_extensions.bb
+chmod &#43;x ~/.local/bin/git_extensions.bb
+
+## Create symlinks for each extension:
+ln -s git_extensions.bb ~/.local/bin/git-vendor
+ln -s git_extensions.bb ~/.local/bin/git-deploy
+ln -s git_extensions.bb ~/.local/bin/git-deploy-key
+ln -s git_extensions.bb ~/.local/bin/git-remote-proto
+</pre></div>
+</div>
+
+
+<p>The bash version still works and isn&rsquo;t going anywhere. Use whichever
+you prefer.</p>
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/git/git_extensions.bb">Download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-clojure" data-lang="clojure"><span style="display:flex;"><span><span style="color:#f92672">#</span>!/usr/bin/env bb
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Git Extensions Framework</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; A multi-command git extension framework.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Create symlinks like `git-deploy` pointing to this script.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; The script detects the command from the symlink name.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Supported extensions:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;   - vendor: Clone repositories to ~/git/vendor/{org}/{repo}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;   - deploy: Clone repositories using deploy key authentication</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;   - deploy-key: Manage deploy keys (list, show, remove)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;   - remote-proto: Convert remote URL protocol (https, git, ssh)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;   - autopull: Pull this repo when GitHub receives a push</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">ns </span>git-extensions
+</span></span><span style="display:flex;"><span>  (<span style="color:#e6db74">:require</span> [babashka.fs <span style="color:#e6db74">:as</span> fs]
+</span></span><span style="display:flex;"><span>            [babashka.process <span style="color:#e6db74">:as</span> proc]
+</span></span><span style="display:flex;"><span>            [clojure.string <span style="color:#e6db74">:as</span> str]
+</span></span><span style="display:flex;"><span>            [clojure.java.io <span style="color:#e6db74">:as</span> io]
+</span></span><span style="display:flex;"><span>            [cheshire.core <span style="color:#e6db74">:as</span> json]
+</span></span><span style="display:flex;"><span>            [org.httpkit.server <span style="color:#e6db74">:as</span> http]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>original-args *command-line-args*)
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>home (<span style="color:#a6e22e">System/getProperty</span> <span style="color:#e6db74">&#34;user.home&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Common Utilities</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>stderr [<span style="color:#f92672">&amp;</span> args]
+</span></span><span style="display:flex;"><span>  (binding [*out* *err*]
+</span></span><span style="display:flex;"><span>    (apply println args)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>error [<span style="color:#f92672">&amp;</span> args]
+</span></span><span style="display:flex;"><span>  (apply stderr <span style="color:#e6db74">&#34;Error:&#34;</span> args))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>fault [<span style="color:#f92672">&amp;</span> [msg]]
+</span></span><span style="display:flex;"><span>  (when msg (<span style="color:#a6e22e">error</span> msg))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;Exiting.&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>check-deps [<span style="color:#f92672">&amp;</span> deps]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[missing (remove <span style="color:#f92672">#</span>(<span style="color:#a6e22e">fs/which</span> %) deps)]
+</span></span><span style="display:flex;"><span>    (when (seq missing)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Missing dependencies: &#34;</span> (<span style="color:#a6e22e">str/join</span> <span style="color:#e6db74">&#34; &#34;</span> missing))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>ask-yes-no
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Prompt for yes/no confirmation. Returns true for yes.&#34;</span>
+</span></span><span style="display:flex;"><span>  ([prompt] (<span style="color:#a6e22e">ask-yes-no</span> prompt nil))
+</span></span><span style="display:flex;"><span>  ([prompt default]
+</span></span><span style="display:flex;"><span>   (<span style="color:#66d9ef">loop </span>[]
+</span></span><span style="display:flex;"><span>     (<span style="color:#66d9ef">let </span>[suffix (<span style="color:#a6e22e">case</span> default <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#e6db74">&#34; [Y/n] &#34;</span> <span style="color:#e6db74">&#34;n&#34;</span> <span style="color:#e6db74">&#34; [y/N] &#34;</span> <span style="color:#e6db74">&#34; [y/n] &#34;</span>)]
+</span></span><span style="display:flex;"><span>       (print (str prompt suffix))
+</span></span><span style="display:flex;"><span>       (<span style="color:#a6e22e">flush</span>)
+</span></span><span style="display:flex;"><span>       (<span style="color:#66d9ef">let </span>[reply (<span style="color:#a6e22e">str/lower-case</span> (<span style="color:#a6e22e">str/trim</span> (or (<span style="color:#a6e22e">read-line</span>) <span style="color:#e6db74">&#34;&#34;</span>)))
+</span></span><span style="display:flex;"><span>             reply (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/blank?</span> reply) (or default <span style="color:#e6db74">&#34;&#34;</span>) reply)]
+</span></span><span style="display:flex;"><span>         (<span style="color:#a6e22e">case</span> reply
+</span></span><span style="display:flex;"><span>           (<span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#e6db74">&#34;yes&#34;</span>) true
+</span></span><span style="display:flex;"><span>           (<span style="color:#e6db74">&#34;n&#34;</span> <span style="color:#e6db74">&#34;no&#34;</span>) false
+</span></span><span style="display:flex;"><span>           (<span style="color:#66d9ef">do </span>(println <span style="color:#e6db74">&#34;Please answer yes or no.&#34;</span>) (<span style="color:#a6e22e">recur</span>))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>ask-input
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Prompt for text input with optional default.&#34;</span>
+</span></span><span style="display:flex;"><span>  ([prompt] (<span style="color:#a6e22e">ask-input</span> prompt nil))
+</span></span><span style="display:flex;"><span>  ([prompt default]
+</span></span><span style="display:flex;"><span>   (<span style="color:#66d9ef">if </span>default
+</span></span><span style="display:flex;"><span>     (<span style="color:#66d9ef">do </span>(print (str prompt <span style="color:#e6db74">&#34; [&#34;</span> default <span style="color:#e6db74">&#34;] &#34;</span>)) (<span style="color:#a6e22e">flush</span>)
+</span></span><span style="display:flex;"><span>         (<span style="color:#66d9ef">let </span>[reply (<span style="color:#a6e22e">str/trim</span> (or (<span style="color:#a6e22e">read-line</span>) <span style="color:#e6db74">&#34;&#34;</span>))]
+</span></span><span style="display:flex;"><span>           (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/blank?</span> reply) default reply)))
+</span></span><span style="display:flex;"><span>     (<span style="color:#66d9ef">do </span>(print (str prompt <span style="color:#e6db74">&#34; &#34;</span>)) (<span style="color:#a6e22e">flush</span>)
+</span></span><span style="display:flex;"><span>         (<span style="color:#a6e22e">str/trim</span> (or (<span style="color:#a6e22e">read-line</span>) <span style="color:#e6db74">&#34;&#34;</span>))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Git helpers — all take an explicit directory</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>git-out
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Run git in dir, return trimmed stdout or nil on failure.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir <span style="color:#f92672">&amp;</span> args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[r (apply proc/shell {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;git&#34;</span> args)]
+</span></span><span style="display:flex;"><span>    (when (zero? (<span style="color:#e6db74">:exit</span> r))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">str/trim</span> (<span style="color:#e6db74">:out</span> r)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>git-ok?
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Run git in dir, return true if exit 0.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir <span style="color:#f92672">&amp;</span> args]
+</span></span><span style="display:flex;"><span>  (zero? (<span style="color:#e6db74">:exit</span> (apply proc/shell {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;git&#34;</span> args))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>git!
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Run git in dir with output to terminal, exit on failure.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir <span style="color:#f92672">&amp;</span> args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[r (apply proc/shell {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;git&#34;</span> args)]
+</span></span><span style="display:flex;"><span>    (when-not (zero? (<span style="color:#e6db74">:exit</span> r))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;git &#34;</span> (<span style="color:#a6e22e">str/join</span> <span style="color:#e6db74">&#34; &#34;</span> args) <span style="color:#e6db74">&#34; failed&#34;</span>)))
+</span></span><span style="display:flex;"><span>    r))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; URL Parsing (shared)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>parse-remote-url
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Parse a git remote URL. Returns {:host :path} or nil.&#34;</span>
+</span></span><span style="display:flex;"><span>  [url]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[url (<span style="color:#a6e22e">str/replace</span> url <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\.git$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (or (when-let [[_ host path] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;git@([^:]+):(.+)&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:path</span> path})
+</span></span><span style="display:flex;"><span>        (when-let [[_ _ host path] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;ssh://([^@]+@)?([^/]+)/(.+)&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:path</span> path})
+</span></span><span style="display:flex;"><span>        (when-let [[_ host path] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;https?://([^/]+)/(.+)&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:path</span> path}))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Deploy Extension</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-parse-repo-spec
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Parse &#39;url#branch&#39; → {:url :branch}.&#34;</span>
+</span></span><span style="display:flex;"><span>  [spec]
+</span></span><span style="display:flex;"><span>  (if-let [[_ url branch] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;(.+)#([^#]+)&#34;</span> spec)]
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">:url</span> url <span style="color:#e6db74">:branch</span> branch}
+</span></span><span style="display:flex;"><span>    {<span style="color:#e6db74">:url</span> spec <span style="color:#e6db74">:branch</span> nil}))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-default-destination
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Derive ~/git/vendor/{org}/{repo} from URL.&#34;</span>
+</span></span><span style="display:flex;"><span>  [url]
+</span></span><span style="display:flex;"><span>  (if-let [{<span style="color:#e6db74">:keys</span> [path]} (<span style="color:#a6e22e">parse-remote-url</span> url)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[path (<span style="color:#a6e22e">str/replace</span> path <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;^/&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)
+</span></span><span style="display:flex;"><span>          parts (<span style="color:#a6e22e">str/split</span> path <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span>          org (<span style="color:#a6e22e">str/lower-case</span> (first parts))
+</span></span><span style="display:flex;"><span>          repo (last parts)]
+</span></span><span style="display:flex;"><span>      (str home <span style="color:#e6db74">&#34;/git/vendor/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo))
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">;; Fallback: just repo name</span>
+</span></span><span style="display:flex;"><span>    (-&gt; url (<span style="color:#a6e22e">str/replace</span> <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\.git$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>) (<span style="color:#a6e22e">str/split</span> <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;/&#34;</span>) last)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-normalize-url
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Normalize URL to a canonical SSH remote, preserving a custom port.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   No custom port  -&gt; scp-style git@host:path.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   Custom SSH port -&gt; ssh://git@host:port/path.git (scp-style can&#39;t carry a port).&#34;</span>
+</span></span><span style="display:flex;"><span>  [url]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[url (<span style="color:#a6e22e">str/replace</span> url <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\.git$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">cond</span>
+</span></span><span style="display:flex;"><span>      (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;https?://([^/]+)/(.+)&#34;</span> url)
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[[_ host path] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;https?://([^/]+)/(.+)&#34;</span> url)]
+</span></span><span style="display:flex;"><span>        (str <span style="color:#e6db74">&#34;git@&#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> path <span style="color:#e6db74">&#34;.git&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">str/starts-with?</span> url <span style="color:#e6db74">&#34;git@&#34;</span>)
+</span></span><span style="display:flex;"><span>      (str url <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">str/starts-with?</span> url <span style="color:#e6db74">&#34;ssh://&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[rest (-&gt; url (<span style="color:#a6e22e">str/replace</span> <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;^ssh://&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>) (<span style="color:#a6e22e">str/replace</span> <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;^[^@]+@&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>))]
+</span></span><span style="display:flex;"><span>        (if-let [[_ host _ port path] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;([^:/]+)(:([0-9]+))?/(.+)&#34;</span> rest)]
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">if </span>port
+</span></span><span style="display:flex;"><span>            (str <span style="color:#e6db74">&#34;ssh://git@&#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> port <span style="color:#e6db74">&#34;/&#34;</span> path <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>            (str <span style="color:#e6db74">&#34;git@&#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> path <span style="color:#e6db74">&#34;.git&#34;</span>))
+</span></span><span style="display:flex;"><span>          (str url <span style="color:#e6db74">&#34;.git&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">:else</span> (str url <span style="color:#e6db74">&#34;.git&#34;</span>))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy Key Management ---</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Keys live in ~/.ssh/deploy-keys/ and are bound to a repo via that repo&#39;s</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; local core.sshCommand git config. The remote URL stays canonical and</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; nothing is written to ~/.ssh/config.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>ssh-keys-dir []
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[dir (str home <span style="color:#e6db74">&#34;/.ssh/deploy-keys&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">fs/create-dirs</span> dir)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">fs/set-posix-file-permissions</span> dir <span style="color:#e6db74">&#34;rwx------&#34;</span>)
+</span></span><span style="display:flex;"><span>    dir))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-generate-keyname
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Deploy key filename of the form deploy--&lt;host&gt;--&lt;path&gt; (slashes in the path
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   become single dashes). This is just the key&#39;s filename, not an SSH host alias.&#34;</span>
+</span></span><span style="display:flex;"><span>  [host path]
+</span></span><span style="display:flex;"><span>  (-&gt; (str <span style="color:#e6db74">&#34;deploy--&#34;</span> host <span style="color:#e6db74">&#34;--&#34;</span> path)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">str/replace</span> <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#e6db74">&#34;-&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-file-path [keyname]
+</span></span><span style="display:flex;"><span>  (str (<span style="color:#a6e22e">ssh-keys-dir</span>) <span style="color:#e6db74">&#34;/&#34;</span> keyname))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-ssh-command
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;core.sshCommand value binding a repo to its deploy key. IdentitiesOnly=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   offers only this key; a custom port travels in the remote URL, not here.&#34;</span>
+</span></span><span style="display:flex;"><span>  [key-file]
+</span></span><span style="display:flex;"><span>  (str <span style="color:#e6db74">&#34;ssh -i &#34;</span> key-file <span style="color:#e6db74">&#34; -o IdentitiesOnly=yes&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-keyfile-from-sshcommand
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Extract the key file (token after -i) from a core.sshCommand value.&#34;</span>
+</span></span><span style="display:flex;"><span>  [cmd]
+</span></span><span style="display:flex;"><span>  (second (re-find <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;-i\s+(\S+)&#34;</span> cmd)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-repo-keyfile
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Key file path if dir&#39;s local core.sshCommand is bound to a deploy key, else nil.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir]
+</span></span><span style="display:flex;"><span>  (when-let [cmd (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;config&#34;</span> <span style="color:#e6db74">&#34;--local&#34;</span> <span style="color:#e6db74">&#34;--get&#34;</span> <span style="color:#e6db74">&#34;core.sshCommand&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (when (<span style="color:#a6e22e">str/includes?</span> cmd <span style="color:#e6db74">&#34;deploy-keys&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">deploy-keyfile-from-sshcommand</span> cmd))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>local-hostname
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Best-effort hostname for deploy key comments. HOSTNAME is usually not
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   exported to the environment, so fall back to the `hostname` command.&#34;</span>
+</span></span><span style="display:flex;"><span>  []
+</span></span><span style="display:flex;"><span>  (or (<span style="color:#a6e22e">not-empty</span> (<span style="color:#a6e22e">System/getenv</span> <span style="color:#e6db74">&#34;HOSTNAME&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[r (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;hostname&#34;</span>)]
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">not-empty</span> (<span style="color:#a6e22e">str/trim</span> (<span style="color:#e6db74">:out</span> r))))
+</span></span><span style="display:flex;"><span>      <span style="color:#e6db74">&#34;localhost&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-generate-key [key-file comment]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span>}
+</span></span><span style="display:flex;"><span>              <span style="color:#e6db74">&#34;ssh-keygen&#34;</span> <span style="color:#e6db74">&#34;-t&#34;</span> <span style="color:#e6db74">&#34;ed25519&#34;</span> <span style="color:#e6db74">&#34;-f&#34;</span> key-file <span style="color:#e6db74">&#34;-N&#34;</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#e6db74">&#34;-C&#34;</span> comment)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">fs/set-posix-file-permissions</span> key-file <span style="color:#e6db74">&#34;rw-------&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">fs/set-posix-file-permissions</span> (str key-file <span style="color:#e6db74">&#34;.pub&#34;</span>) <span style="color:#e6db74">&#34;rw-r--r--&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Generated new deploy key: &#34;</span> key-file)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy Key Setup ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-setup-key
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Setup deploy key for a remote in a given repo dir. Binds the key via the
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   repo&#39;s local core.sshCommand; the remote URL is left canonical.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   Returns {:keyname :key-file :created?}.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir remote-name]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[remote-url (or (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;get-url&#34;</span> remote-name)
+</span></span><span style="display:flex;"><span>                       (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Remote &#39;&#34;</span> remote-name <span style="color:#e6db74">&#34;&#39; not found&#34;</span>)))]
+</span></span><span style="display:flex;"><span>    (if-let [existing-key (<span style="color:#a6e22e">deploy-repo-keyfile</span> dir)]
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">;; Already configured</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Already configured with deploy key: &#34;</span> (<span style="color:#a6e22e">fs/file-name</span> existing-key)))
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:keyname</span> (<span style="color:#a6e22e">fs/file-name</span> existing-key) <span style="color:#e6db74">:key-file</span> existing-key <span style="color:#e6db74">:created?</span> false})
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">;; Parse and setup</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[{<span style="color:#e6db74">:keys</span> [host path]} (or (<span style="color:#a6e22e">parse-remote-url</span> remote-url)
+</span></span><span style="display:flex;"><span>                                    (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Cannot parse remote URL: &#34;</span> remote-url)))
+</span></span><span style="display:flex;"><span>            _ (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Host: &#34;</span> host))
+</span></span><span style="display:flex;"><span>            _ (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Path: &#34;</span> path))
+</span></span><span style="display:flex;"><span>            keyname (<span style="color:#a6e22e">deploy-generate-keyname</span> host path)
+</span></span><span style="display:flex;"><span>            key-file (<span style="color:#a6e22e">deploy-key-file-path</span> keyname)
+</span></span><span style="display:flex;"><span>            _ (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Key name: &#34;</span> keyname))
+</span></span><span style="display:flex;"><span>            _ (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Key file: &#34;</span> key-file))
+</span></span><span style="display:flex;"><span>            created? (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">fs/exists?</span> key-file)
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Deploy key already exists&#34;</span>) false)
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">let </span>[hostname (<span style="color:#a6e22e">local-hostname</span>)]
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">deploy-generate-key</span> key-file
+</span></span><span style="display:flex;"><span>                           (str <span style="color:#e6db74">&#34;deploy-key@&#34;</span> hostname <span style="color:#e6db74">&#34; &#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> path))
+</span></span><span style="display:flex;"><span>                         true))]
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">;; Bind key to this repo via core.sshCommand (remote URL stays canonical)</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">git!</span> dir <span style="color:#e6db74">&#34;config&#34;</span> <span style="color:#e6db74">&#34;core.sshCommand&#34;</span> (<span style="color:#a6e22e">deploy-ssh-command</span> key-file))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Set core.sshCommand to use deploy key&#34;</span>)
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">:keyname</span> keyname <span style="color:#e6db74">:key-file</span> key-file <span style="color:#e6db74">:created?</span> created?}))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy Repository Setup ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-init-repo [dest url remote-name]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">fs/directory?</span> dest)
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">fs/directory?</span> (str dest <span style="color:#e6db74">&#34;/.git&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Directory already contains a git repository: &#34;</span> dest))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Updating configuration...&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Directory exists but is not a git repository: &#34;</span> dest)))
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">fs/create-dirs</span> dest)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Created directory: &#34;</span> dest))))
+</span></span><span style="display:flex;"><span>  (when-not (<span style="color:#a6e22e">fs/directory?</span> (str dest <span style="color:#e6db74">&#34;/.git&#34;</span>))
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">git!</span> dest <span style="color:#e6db74">&#34;init&#34;</span> <span style="color:#e6db74">&#34;--quiet&#34;</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Initialized empty git repository&#34;</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">git!</span> dest <span style="color:#e6db74">&#34;symbolic-ref&#34;</span> <span style="color:#e6db74">&#34;HEAD&#34;</span> <span style="color:#e6db74">&#34;refs/heads/__deploy_pending__&#34;</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">git-out</span> dest <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;get-url&#34;</span> remote-name)
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">git!</span> dest <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;set-url&#34;</span> remote-name url)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Updated remote &#39;&#34;</span> remote-name <span style="color:#e6db74">&#34;&#39;: &#34;</span> url)))
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">git!</span> dest <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;add&#34;</span> remote-name url)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Added remote &#39;&#34;</span> remote-name <span style="color:#e6db74">&#34;&#39;: &#34;</span> url))))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">git!</span> dest <span style="color:#e6db74">&#34;config&#34;</span> <span style="color:#e6db74">&#34;checkout.defaultRemote&#34;</span> remote-name))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-test-key [dir remote-name <span style="color:#f92672">&amp;</span> [timeout-secs]]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[t (str (or timeout-secs <span style="color:#ae81ff">10</span>))]
+</span></span><span style="display:flex;"><span>    (zero? (<span style="color:#e6db74">:exit</span> (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                              <span style="color:#e6db74">&#34;timeout&#34;</span> t <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;ls-remote&#34;</span> <span style="color:#e6db74">&#34;--heads&#34;</span> remote-name)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-get-default-branch [dir remote-name]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[result (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;ls-remote&#34;</span> <span style="color:#e6db74">&#34;--symref&#34;</span> remote-name <span style="color:#e6db74">&#34;HEAD&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (or (when result
+</span></span><span style="display:flex;"><span>          (some <span style="color:#f92672">#</span>(second (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;ref:\s+refs/heads/(\S+)\s+HEAD&#34;</span> %))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">str/split-lines</span> result)))
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">;; Fallback: check common names</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[branches (<span style="color:#a6e22e">-&gt;&gt;</span> (<span style="color:#a6e22e">str/split-lines</span> (or (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;ls-remote&#34;</span> <span style="color:#e6db74">&#34;--heads&#34;</span> remote-name) <span style="color:#e6db74">&#34;&#34;</span>))
+</span></span><span style="display:flex;"><span>                            (<span style="color:#a6e22e">keep</span> <span style="color:#f92672">#</span>(second (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;.*refs/heads/(.+)&#34;</span> %))))]
+</span></span><span style="display:flex;"><span>          (or (some <span style="color:#f92672">#</span>{<span style="color:#e6db74">&#34;main&#34;</span>} branches)
+</span></span><span style="display:flex;"><span>              (some <span style="color:#f92672">#</span>{<span style="color:#e6db74">&#34;master&#34;</span>} branches)
+</span></span><span style="display:flex;"><span>              (some <span style="color:#f92672">#</span>{<span style="color:#e6db74">&#34;develop&#34;</span>} branches)
+</span></span><span style="display:flex;"><span>              (first branches))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-show-key-instructions [key-file]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;DEPLOY KEY NOT YET AUTHORIZED&#34;</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;Add this public key as a deploy key on your git server:&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>  (print (slurp (str key-file <span style="color:#e6db74">&#34;.pub&#34;</span>)))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;For GitHub: Settings \u2192 Deploy keys \u2192 Add deploy key&#34;</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;For GitLab: Settings \u2192 Repository \u2192 Deploy keys&#34;</span>)
+</span></span><span style="display:flex;"><span>  (println <span style="color:#e6db74">&#34;For Forgejo/Gitea: Settings \u2192 Deploy Keys \u2192 Add Deploy Key&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">println</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy Help ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>deploy-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## git deploy - Clone a repository using a deploy key
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git deploy &lt;repo-url[#branch]&gt; [destination] [options]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">       git deploy &lt;path&gt; [options]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Arguments:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    repo-url        Repository URL (supports #branch suffix)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    destination     Local directory (default: ~/git/vendor/{ORG}/{REPO})
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    path            Path to existing git repo (converts remote to deploy key)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --remote &lt;name&gt;    Remote name (default: origin)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --branch &lt;name&gt;    Branch to clone (overrides #branch in URL)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    -h, --help         Show this help message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Clones a repository using a dedicated deploy key for authentication,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    or converts an existing repository to use a deploy key.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    The key is bound to the repository through its local core.sshCommand git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    config, so the remote URL stays canonical (e.g. git@github.com:user/repo.git)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    and nothing is written to ~/.ssh/config. Keys live in ~/.ssh/deploy-keys/.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    When given a URL:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Creates a new clone using a deploy key for authentication
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    When given a path to an existing git repository:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Offers to configure the repo to use a deploy key (remote URL unchanged)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - If no remote exists, prompts for a URL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - If already configured, tests the deploy key
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    If the deploy key is already authorized:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Discovers the default branch automatically (if not specified)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Fetches and checks out the repository
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Exits successfully (code 0)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    If the deploy key is NOT yet authorized:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Creates the deploy key and shows the public key
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Prints instructions to add it to your git server
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - Exits with error code 1 (re-run after adding the key)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">URL Formats:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git@github.com:user/repo.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git@github.com:user/repo.git#main
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    https://github.com/user/repo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    https://github.com/user/repo#develop
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ssh://git@host:port/user/repo.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy git@github.com:user/repo.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy git@github.com:user/repo.git#develop
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy git@github.com:user/repo.git ~/projects/myrepo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy /path/to/existing/repo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy .
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Workflow:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    1. Run &#39;git deploy &lt;url&gt;&#39; or &#39;git deploy &lt;path&gt;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    2. If key not yet authorized, add the printed key to your git server
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    3. Re-run the command - repository will be cloned/configured&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy: Parse CLI args ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-parse-args [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">loop </span>[[arg <span style="color:#f92672">&amp;</span> more] args
+</span></span><span style="display:flex;"><span>         opts {<span style="color:#e6db74">:repo-spec</span> nil <span style="color:#e6db74">:destination</span> nil <span style="color:#e6db74">:remote</span> <span style="color:#e6db74">&#34;origin&#34;</span> <span style="color:#e6db74">:branch-override</span> nil}]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(nil? arg)
+</span></span><span style="display:flex;"><span>      opts
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">case</span> arg
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--remote&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:remote</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--branch&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:branch-override</span> (first more)))
+</span></span><span style="display:flex;"><span>        (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span>) (<span style="color:#66d9ef">do </span>(println deploy-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/starts-with?</span> arg <span style="color:#e6db74">&#34;-&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown option:&#34;</span> arg) (println deploy-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">cond</span>
+</span></span><span style="display:flex;"><span>            (nil? (<span style="color:#e6db74">:repo-spec</span> opts)) (<span style="color:#a6e22e">recur</span> more (assoc opts <span style="color:#e6db74">:repo-spec</span> arg))
+</span></span><span style="display:flex;"><span>            (nil? (<span style="color:#e6db74">:destination</span> opts)) (<span style="color:#a6e22e">recur</span> more (assoc opts <span style="color:#e6db74">:destination</span> arg))
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">:else</span> (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Too many arguments&#34;</span>)
+</span></span><span style="display:flex;"><span>                      (println deploy-help-text)
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy: Clone success handler ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-clone-success [dir remote branch]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[branch (or branch
+</span></span><span style="display:flex;"><span>                   (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Discovering default branch...&#34;</span>)
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">let </span>[b (<span style="color:#a6e22e">deploy-get-default-branch</span> dir remote)]
+</span></span><span style="display:flex;"><span>                         (when b (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Default branch: &#34;</span> b)))
+</span></span><span style="display:flex;"><span>                         b)))]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/blank?</span> branch)
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Repository is empty (no branches on remote)&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Location: &#34;</span> dir))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Fetching from &#34;</span> remote <span style="color:#e6db74">&#34;...&#34;</span>))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">git!</span> dir <span style="color:#e6db74">&#34;fetch&#34;</span> remote)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Checking out branch &#39;&#34;</span> branch <span style="color:#e6db74">&#34;&#39;...&#34;</span>))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">git!</span> dir <span style="color:#e6db74">&#34;checkout&#34;</span> branch)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                      <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;branch&#34;</span> (str <span style="color:#e6db74">&#34;--set-upstream-to=&#34;</span> remote <span style="color:#e6db74">&#34;/&#34;</span> branch) branch)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Repository cloned successfully!&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Location: &#34;</span> dir))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Branch: &#34;</span> branch))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy: Key failure handler ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-failure [key-file dest convert-mode?]
+</span></span><span style="display:flex;"><span>  (when (and key-file (<span style="color:#a6e22e">fs/exists?</span> (str key-file <span style="color:#e6db74">&#34;.pub&#34;</span>)))
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">deploy-show-key-instructions</span> key-file))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Repository prepared at: &#34;</span> dest))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## After adding the deploy key, run this command again:&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">if </span>convert-mode?
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;##   git deploy&#34;</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;##   git deploy &#34;</span> (<span style="color:#a6e22e">str/join</span> <span style="color:#e6db74">&#34; &#34;</span> original-args))))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; --- Deploy Main ---</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-main [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">check-deps</span> <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;ssh-keygen&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[{<span style="color:#e6db74">:keys</span> [repo-spec destination remote branch-override]} (<span style="color:#a6e22e">deploy-parse-args</span> args)]
+</span></span><span style="display:flex;"><span>    (when (<span style="color:#a6e22e">str/blank?</span> repo-spec)
+</span></span><span style="display:flex;"><span>      (println deploy-help-text)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">;; Validate: must be a directory or a URL</span>
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[is-dir (<span style="color:#a6e22e">fs/directory?</span> repo-spec)
+</span></span><span style="display:flex;"><span>          is-url (boolean (re-find <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;^(git@|ssh://|https?://)&#34;</span> (or repo-spec <span style="color:#e6db74">&#34;&#34;</span>)))]
+</span></span><span style="display:flex;"><span>      (when (and (not is-dir) (not is-url))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Invalid argument: &#39;&#34;</span> repo-spec <span style="color:#e6db74">&#34;&#39; is not a directory or a valid URL&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">if </span>is-dir
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">;; ---- Convert mode ----</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[target-dir (str (<span style="color:#a6e22e">fs/absolutize</span> repo-spec))]
+</span></span><span style="display:flex;"><span>          (when-not (<span style="color:#a6e22e">git-ok?</span> target-dir <span style="color:#e6db74">&#34;rev-parse&#34;</span> <span style="color:#e6db74">&#34;--git-dir&#34;</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Directory is not a git repository: &#34;</span> target-dir)))
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">let </span>[existing-url (<span style="color:#a6e22e">git-out</span> target-dir <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;get-url&#34;</span> remote)
+</span></span><span style="display:flex;"><span>                already-configured (boolean (<span style="color:#a6e22e">deploy-repo-keyfile</span> target-dir))
+</span></span><span style="display:flex;"><span>                repo-spec (<span style="color:#a6e22e">cond</span>
+</span></span><span style="display:flex;"><span>                            (nil? existing-url)
+</span></span><span style="display:flex;"><span>                            (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>                                (println (str <span style="color:#e6db74">&#34;Repository has no &#39;&#34;</span> remote <span style="color:#e6db74">&#34;&#39; remote configured.&#34;</span>))
+</span></span><span style="display:flex;"><span>                                (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>                                (<span style="color:#66d9ef">let </span>[url (<span style="color:#a6e22e">ask-input</span> <span style="color:#e6db74">&#34;Enter repository URL:&#34;</span>)]
+</span></span><span style="display:flex;"><span>                                  (when (<span style="color:#a6e22e">str/blank?</span> url) (<span style="color:#a6e22e">fault</span> <span style="color:#e6db74">&#34;No URL provided&#34;</span>))
+</span></span><span style="display:flex;"><span>                                  url))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                            already-configured existing-url
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                            <span style="color:#e6db74">:else</span>
+</span></span><span style="display:flex;"><span>                            (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>                                (println (str <span style="color:#e6db74">&#34;Found existing remote &#39;&#34;</span> remote <span style="color:#e6db74">&#34;&#39;:&#34;</span>))
+</span></span><span style="display:flex;"><span>                                (println (str <span style="color:#e6db74">&#34;  &#34;</span> existing-url))
+</span></span><span style="display:flex;"><span>                                (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>                                (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">ask-yes-no</span> <span style="color:#e6db74">&#34;Convert this remote to use a deploy key?&#34;</span> <span style="color:#e6db74">&#34;y&#34;</span>)
+</span></span><span style="display:flex;"><span>                                  existing-url
+</span></span><span style="display:flex;"><span>                                  (<span style="color:#66d9ef">do </span>(println <span style="color:#e6db74">&#34;Aborted.&#34;</span>) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>)))))
+</span></span><span style="display:flex;"><span>                {<span style="color:#e6db74">:keys</span> [url branch]} (<span style="color:#a6e22e">deploy-parse-repo-spec</span> repo-spec)
+</span></span><span style="display:flex;"><span>                branch (or branch-override branch)
+</span></span><span style="display:flex;"><span>                url (<span style="color:#66d9ef">if </span>already-configured url (<span style="color:#a6e22e">deploy-normalize-url</span> url))]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Repository URL: &#34;</span> url))
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Destination: &#34;</span> target-dir))
+</span></span><span style="display:flex;"><span>            (when branch (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Branch: &#34;</span> branch)))
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">let </span>[key-info (<span style="color:#66d9ef">if </span>already-configured
+</span></span><span style="display:flex;"><span>                             (<span style="color:#66d9ef">let </span>[key-file (<span style="color:#a6e22e">deploy-repo-keyfile</span> target-dir)]
+</span></span><span style="display:flex;"><span>                               (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Deploy key already configured: &#34;</span> (<span style="color:#a6e22e">fs/file-name</span> key-file)))
+</span></span><span style="display:flex;"><span>                               {<span style="color:#e6db74">:key-file</span> key-file})
+</span></span><span style="display:flex;"><span>                             (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">deploy-init-repo</span> target-dir url remote)
+</span></span><span style="display:flex;"><span>                                 (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>                                 (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Setting up deploy key...&#34;</span>)
+</span></span><span style="display:flex;"><span>                                 (<span style="color:#a6e22e">deploy-setup-key</span> target-dir remote)))]
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Testing deploy key...&#34;</span>)
+</span></span><span style="display:flex;"><span>              (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">deploy-test-key</span> target-dir remote)
+</span></span><span style="display:flex;"><span>                (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Deploy key is working!&#34;</span>)
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>)
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">stderr</span> (<span style="color:#66d9ef">if </span>already-configured
+</span></span><span style="display:flex;"><span>                              <span style="color:#e6db74">&#34;## Deploy key is working!&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#e6db74">&#34;## Remote converted to deploy key successfully!&#34;</span>))
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Location: &#34;</span> target-dir))
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;========================================&#34;</span>))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">deploy-key-failure</span> (<span style="color:#e6db74">:key-file</span> key-info) target-dir true)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">;; ---- Clone mode ----</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[{<span style="color:#e6db74">:keys</span> [url branch]} (<span style="color:#a6e22e">deploy-parse-repo-spec</span> repo-spec)
+</span></span><span style="display:flex;"><span>              branch (or branch-override branch)
+</span></span><span style="display:flex;"><span>              url (<span style="color:#a6e22e">deploy-normalize-url</span> url)
+</span></span><span style="display:flex;"><span>              dest (or destination (<span style="color:#a6e22e">deploy-default-destination</span> url))
+</span></span><span style="display:flex;"><span>              dest (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/starts-with?</span> dest <span style="color:#e6db74">&#34;/&#34;</span>) dest
+</span></span><span style="display:flex;"><span>                       (str (<span style="color:#a6e22e">System/getProperty</span> <span style="color:#e6db74">&#34;user.dir&#34;</span>) <span style="color:#e6db74">&#34;/&#34;</span> dest))]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Repository URL: &#34;</span> url))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Destination: &#34;</span> dest))
+</span></span><span style="display:flex;"><span>          (when branch (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Branch: &#34;</span> branch)))
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">deploy-init-repo</span> dest url remote)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Setting up deploy key...&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">let </span>[key-info (<span style="color:#a6e22e">deploy-setup-key</span> dest remote)]
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Testing deploy key...&#34;</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">deploy-test-key</span> dest remote)
+</span></span><span style="display:flex;"><span>              (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Deploy key is working!&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">deploy-clone-success</span> dest remote branch))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">deploy-key-failure</span> (<span style="color:#e6db74">:key-file</span> key-info) dest false))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Deploy-Key Extension</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-list []
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[keys-dir (str home <span style="color:#e6db74">&#34;/.ssh/deploy-keys&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (if-not (<span style="color:#a6e22e">fs/directory?</span> keys-dir)
+</span></span><span style="display:flex;"><span>      (println <span style="color:#e6db74">&#34;No deploy keys found.&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[key-files (<span style="color:#a6e22e">-&gt;&gt;</span> (<span style="color:#a6e22e">fs/list-dir</span> keys-dir)
+</span></span><span style="display:flex;"><span>                           (map str)
+</span></span><span style="display:flex;"><span>                           (remove <span style="color:#f92672">#</span>(<span style="color:#a6e22e">str/ends-with?</span> % <span style="color:#e6db74">&#34;.pub&#34;</span>))
+</span></span><span style="display:flex;"><span>                           (filter <span style="color:#f92672">#</span>(<span style="color:#a6e22e">fs/regular-file?</span> %))
+</span></span><span style="display:flex;"><span>                           sort)]
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">empty?</span> key-files)
+</span></span><span style="display:flex;"><span>          (println <span style="color:#e6db74">&#34;No deploy keys found.&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">do </span>(println <span style="color:#e6db74">&#34;Deploy keys:&#34;</span>)
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>              (doseq [key-file key-files]
+</span></span><span style="display:flex;"><span>                (<span style="color:#66d9ef">let </span>[keyname (<span style="color:#a6e22e">fs/file-name</span> key-file)
+</span></span><span style="display:flex;"><span>                      pub-file (str key-file <span style="color:#e6db74">&#34;.pub&#34;</span>)
+</span></span><span style="display:flex;"><span>                      <span style="color:#75715e">;; Key names are deploy--&lt;host&gt;--&lt;path&gt;; recover host for display</span>
+</span></span><span style="display:flex;"><span>                      hostname (second (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;deploy--([^-]+(?:-[^-]+)*)--.+&#34;</span> keyname))]
+</span></span><span style="display:flex;"><span>                  (println (str <span style="color:#e6db74">&#34;  &#34;</span> keyname))
+</span></span><span style="display:flex;"><span>                  (when hostname (println (str <span style="color:#e6db74">&#34;    Host: &#34;</span> hostname)))
+</span></span><span style="display:flex;"><span>                  (println (str <span style="color:#e6db74">&#34;    Key:  &#34;</span> key-file))
+</span></span><span style="display:flex;"><span>                  (when (<span style="color:#a6e22e">fs/exists?</span> pub-file)
+</span></span><span style="display:flex;"><span>                    (<span style="color:#66d9ef">let </span>[result (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                                            <span style="color:#e6db74">&#34;ssh-keygen&#34;</span> <span style="color:#e6db74">&#34;-lf&#34;</span> pub-file)]
+</span></span><span style="display:flex;"><span>                      (when (zero? (<span style="color:#e6db74">:exit</span> result))
+</span></span><span style="display:flex;"><span>                        (<span style="color:#66d9ef">let </span>[fingerprint (second (<span style="color:#a6e22e">str/split</span> (<span style="color:#a6e22e">str/trim</span> (<span style="color:#e6db74">:out</span> result)) <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\s+&#34;</span>))]
+</span></span><span style="display:flex;"><span>                          (when fingerprint
+</span></span><span style="display:flex;"><span>                            (println (str <span style="color:#e6db74">&#34;    Fingerprint: &#34;</span> fingerprint)))))))
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">println</span>)))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-show [keyname]
+</span></span><span style="display:flex;"><span>  (when (<span style="color:#a6e22e">str/blank?</span> keyname)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Missing key name argument&#34;</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[pub-file (str home <span style="color:#e6db74">&#34;/.ssh/deploy-keys/&#34;</span> keyname <span style="color:#e6db74">&#34;.pub&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (when-not (<span style="color:#a6e22e">fs/exists?</span> pub-file)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Deploy key not found: &#34;</span> keyname)))
+</span></span><span style="display:flex;"><span>    (println (str <span style="color:#e6db74">&#34;Public key for &#34;</span> keyname <span style="color:#e6db74">&#34;:&#34;</span>))
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>    (print (slurp pub-file))
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">println</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-remove [keyname]
+</span></span><span style="display:flex;"><span>  (when (<span style="color:#a6e22e">str/blank?</span> keyname)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Missing key name argument&#34;</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[keys-dir (str home <span style="color:#e6db74">&#34;/.ssh/deploy-keys&#34;</span>)
+</span></span><span style="display:flex;"><span>        key-file (str keys-dir <span style="color:#e6db74">&#34;/&#34;</span> keyname)
+</span></span><span style="display:flex;"><span>        pub-file (str key-file <span style="color:#e6db74">&#34;.pub&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[found (<span style="color:#a6e22e">atom</span> false)]
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">;; Remove key files</span>
+</span></span><span style="display:flex;"><span>      (when (<span style="color:#a6e22e">fs/exists?</span> key-file)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fs/delete</span> key-file)
+</span></span><span style="display:flex;"><span>        (println (str <span style="color:#e6db74">&#34;Removed private key: &#34;</span> key-file))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">reset!</span> found true))
+</span></span><span style="display:flex;"><span>      (when (<span style="color:#a6e22e">fs/exists?</span> pub-file)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fs/delete</span> pub-file)
+</span></span><span style="display:flex;"><span>        (println (str <span style="color:#e6db74">&#34;Removed public key: &#34;</span> pub-file))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">reset!</span> found true))
+</span></span><span style="display:flex;"><span>      (when-not <span style="color:#f92672">@</span>found
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Deploy key not found: &#34;</span> keyname)))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>      (println (str <span style="color:#e6db74">&#34;Deploy key &#39;&#34;</span> keyname <span style="color:#e6db74">&#34;&#39; removed successfully.&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>      (println <span style="color:#e6db74">&#34;Note: Any repository still using this key has it set in its local&#34;</span>)
+</span></span><span style="display:flex;"><span>      (println <span style="color:#e6db74">&#34;core.sshCommand (git config --unset core.sshCommand to clear it).&#34;</span>))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>deploy-key-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## git deploy-key - Manage deploy keys
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git deploy-key &lt;command&gt; [args]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Commands:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    list              List all deploy keys
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    show &lt;name&gt;       Show the public key for a key name
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    remove &lt;name&gt;     Remove a deploy key (private + public key files)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    -h, --help        Show this help message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy-key list
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy-key show deploy--github.com--user-repo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git deploy-key remove deploy--github.com--user-repo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Files:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Keys:   ~/.ssh/deploy-keys/
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Repositories bind to a key via their local core.sshCommand git config, not
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">~/.ssh/config. The remote URL stays canonical (git@host:org/repo.git).&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>deploy-key-main [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[[subcommand <span style="color:#f92672">&amp;</span> rest-args] args]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">case</span> subcommand
+</span></span><span style="display:flex;"><span>      (<span style="color:#e6db74">&#34;list&#34;</span> <span style="color:#e6db74">&#34;ls&#34;</span>) (<span style="color:#a6e22e">deploy-key-list</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#e6db74">&#34;show&#34;</span> <span style="color:#e6db74">&#34;cat&#34;</span>) (<span style="color:#a6e22e">deploy-key-show</span> (first rest-args))
+</span></span><span style="display:flex;"><span>      (<span style="color:#e6db74">&#34;remove&#34;</span> <span style="color:#e6db74">&#34;rm&#34;</span> <span style="color:#e6db74">&#34;delete&#34;</span>) (<span style="color:#a6e22e">deploy-key-remove</span> (first rest-args))
+</span></span><span style="display:flex;"><span>      (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span> <span style="color:#e6db74">&#34;help&#34;</span> nil) (<span style="color:#66d9ef">do </span>(println deploy-key-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown command:&#34;</span> subcommand)
+</span></span><span style="display:flex;"><span>          (println deploy-key-help-text)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Vendor Extension</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>vendor-default-domain <span style="color:#e6db74">&#34;github.com&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>vendor-parse-ref
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Parse a git repository reference into {:domain :org :repo :ssh? :ssh-port}.&#34;</span>
+</span></span><span style="display:flex;"><span>  [input]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[input (<span style="color:#a6e22e">str/replace</span> input <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;/$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">or</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">;; https://domain/org/repo</span>
+</span></span><span style="display:flex;"><span>     (when-let [[_ domain org repo] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;https?://([^/]+)/([^/]+)/([^/]+)/?&#34;</span> input)]
+</span></span><span style="display:flex;"><span>       {<span style="color:#e6db74">:domain</span> domain <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:ssh?</span> false})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">;; ssh://[git@]domain[:port]/org/repo</span>
+</span></span><span style="display:flex;"><span>     (when-let [[_ _ domain _ port org repo]
+</span></span><span style="display:flex;"><span>                (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;ssh://(git@)?([^/:]+)(:([0-9]+))?/([^/]+)/(.+)&#34;</span> input)]
+</span></span><span style="display:flex;"><span>       {<span style="color:#e6db74">:domain</span> domain <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:ssh?</span> true <span style="color:#e6db74">:ssh-port</span> port})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">;; git@domain:org/repo</span>
+</span></span><span style="display:flex;"><span>     (when-let [[_ domain org repo] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;git@([^:]+):([^/]+)/(.+)&#34;</span> input)]
+</span></span><span style="display:flex;"><span>       {<span style="color:#e6db74">:domain</span> domain <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:ssh?</span> true})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">;; domain/org/repo (three parts, first has dots)</span>
+</span></span><span style="display:flex;"><span>     (when-let [[_ domain org repo]
+</span></span><span style="display:flex;"><span>                (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;([a-zA-Z0-9.-]+\.[a-zA-Z]+)/([^/]+)/([^/]+)&#34;</span> input)]
+</span></span><span style="display:flex;"><span>       {<span style="color:#e6db74">:domain</span> domain <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:ssh?</span> false})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">;; org/repo (two parts, default domain)</span>
+</span></span><span style="display:flex;"><span>     (when-let [[_ org repo] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;([^/]+)/([^/]+)&#34;</span> input)]
+</span></span><span style="display:flex;"><span>       {<span style="color:#e6db74">:domain</span> vendor-default-domain <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:ssh?</span> false}))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>vendor-normalize [{<span style="color:#e6db74">:keys</span> [repo org] <span style="color:#e6db74">:as</span> parsed}]
+</span></span><span style="display:flex;"><span>  (-&gt; parsed
+</span></span><span style="display:flex;"><span>      (assoc <span style="color:#e6db74">:repo</span> (<span style="color:#a6e22e">str/replace</span> repo <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\.git$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>))
+</span></span><span style="display:flex;"><span>      (assoc <span style="color:#e6db74">:org</span> (<span style="color:#a6e22e">str/lower-case</span> org))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>vendor-build-url [{<span style="color:#e6db74">:keys</span> [domain org repo ssh? ssh-port]}]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">if </span>ssh?
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>ssh-port
+</span></span><span style="display:flex;"><span>      (str <span style="color:#e6db74">&#34;ssh://git@&#34;</span> domain <span style="color:#e6db74">&#34;:&#34;</span> ssh-port <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>      (str <span style="color:#e6db74">&#34;git@&#34;</span> domain <span style="color:#e6db74">&#34;:&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>))
+</span></span><span style="display:flex;"><span>    (str <span style="color:#e6db74">&#34;https://&#34;</span> domain <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>vendor-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## git vendor - Clone repositories to ~/git/vendor/{org}/{repo}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git vendor &lt;repository&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Arguments:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    repository      Repository reference in any supported format
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Supported Formats:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    org/repo                          Uses github.com by default
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    github.com/org/repo               Domain with path
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    https://github.com/org/repo       HTTPS URL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git@github.com:org/repo.git       SSH URL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ssh://git@host:port/org/repo      SSH URL with custom port
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    -h, --help      Show this help message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Clones a repository to ~/git/vendor/{org}/{repo}.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    The org name is lowercased for consistent directory structure.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    If the repository already exists, reports the location and exits.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git vendor enigmacurry/sway-home
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git vendor github.com/enigmacurry/sway-home
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git vendor https://github.com/EnigmaCurry/sway-home.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git vendor git@github.com:EnigmaCurry/sway-home.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git vendor ssh://git@github.com:22/EnigmaCurry/sway-home.git&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>vendor-main [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">check-deps</span> <span style="color:#e6db74">&#34;git&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[repo-ref (<span style="color:#66d9ef">loop </span>[[arg <span style="color:#f92672">&amp;</span> more] args ref nil]
+</span></span><span style="display:flex;"><span>                   (<span style="color:#66d9ef">if </span>(nil? arg)
+</span></span><span style="display:flex;"><span>                     ref
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">case</span> arg
+</span></span><span style="display:flex;"><span>                       (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span>) (<span style="color:#66d9ef">do </span>(println vendor-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/starts-with?</span> arg <span style="color:#e6db74">&#34;-&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown option:&#34;</span> arg)
+</span></span><span style="display:flex;"><span>                             (println vendor-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>                         (<span style="color:#66d9ef">if </span>(nil? ref)
+</span></span><span style="display:flex;"><span>                           (<span style="color:#a6e22e">recur</span> more arg)
+</span></span><span style="display:flex;"><span>                           (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Too many arguments&#34;</span>)
+</span></span><span style="display:flex;"><span>                               (println vendor-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>)))))))]
+</span></span><span style="display:flex;"><span>    (when (<span style="color:#a6e22e">str/blank?</span> repo-ref)
+</span></span><span style="display:flex;"><span>      (println vendor-help-text)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[parsed (<span style="color:#a6e22e">vendor-parse-ref</span> repo-ref)]
+</span></span><span style="display:flex;"><span>      (when-not parsed
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Invalid repository format:&#34;</span> repo-ref)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;Supported formats:&#34;</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;  org/repo&#34;</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;  github.com/org/repo&#34;</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;  https://github.com/org/repo&#34;</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;  git@github.com:org/repo.git&#34;</span>)
+</span></span><span style="display:flex;"><span>        (println <span style="color:#e6db74">&#34;  ssh://git@host:port/org/repo&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[{<span style="color:#e6db74">:keys</span> [org repo] <span style="color:#e6db74">:as</span> parsed} (<span style="color:#a6e22e">vendor-normalize</span> parsed)
+</span></span><span style="display:flex;"><span>            clone-url (<span style="color:#a6e22e">vendor-build-url</span> parsed)
+</span></span><span style="display:flex;"><span>            vendor-dir (str home <span style="color:#e6db74">&#34;/git/vendor&#34;</span>)
+</span></span><span style="display:flex;"><span>            target-dir (str vendor-dir <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo)]
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">fs/directory?</span> target-dir)
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">do </span>(println (str <span style="color:#e6db74">&#34;Repository already exists: &#34;</span> target-dir))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">fs/create-dirs</span> (str vendor-dir <span style="color:#e6db74">&#34;/&#34;</span> org))
+</span></span><span style="display:flex;"><span>              (println (str <span style="color:#e6db74">&#34;Cloning &#34;</span> clone-url))
+</span></span><span style="display:flex;"><span>              (println (str <span style="color:#e6db74">&#34;     to &#34;</span> target-dir))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>              (<span style="color:#66d9ef">if </span>(zero? (<span style="color:#e6db74">:exit</span> (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;clone&#34;</span> clone-url target-dir)))
+</span></span><span style="display:flex;"><span>                (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">println</span>)
+</span></span><span style="display:flex;"><span>                    (println (str <span style="color:#e6db74">&#34;Repository cloned: &#34;</span> target-dir)))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">fault</span> <span style="color:#e6db74">&#34;Clone failed&#34;</span>))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Remote-Proto Extension</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>remote-proto-parse-url
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Parse a git remote URL into {:host :org :repo :port}.&#34;</span>
+</span></span><span style="display:flex;"><span>  [url]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[url (<span style="color:#a6e22e">str/replace</span> url <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\.git$&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (or (when-let [[_ host org repo] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;https?://([^/]+)/([^/]+)/([^/]+)/?&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo})
+</span></span><span style="display:flex;"><span>        (when-let [[_ _ host _ port org repo]
+</span></span><span style="display:flex;"><span>                   (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;ssh://(git@)?([^/:]+)(:([0-9]+))?/([^/]+)/([^/]+)/?&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo <span style="color:#e6db74">:port</span> port})
+</span></span><span style="display:flex;"><span>        (when-let [[_ host org repo] (re-matches <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;git@([^:]+):([^/]+)/([^/]+)&#34;</span> url)]
+</span></span><span style="display:flex;"><span>          {<span style="color:#e6db74">:host</span> host <span style="color:#e6db74">:org</span> org <span style="color:#e6db74">:repo</span> repo}))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>remote-proto-build-url [{<span style="color:#e6db74">:keys</span> [host org repo port]} protocol]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">case</span> protocol
+</span></span><span style="display:flex;"><span>    (<span style="color:#e6db74">&#34;http&#34;</span> <span style="color:#e6db74">&#34;https&#34;</span>) (str <span style="color:#e6db74">&#34;https://&#34;</span> host <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;git&#34;</span>            (str <span style="color:#e6db74">&#34;git@&#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;ssh&#34;</span>            (<span style="color:#66d9ef">if </span>port
+</span></span><span style="display:flex;"><span>                       (str <span style="color:#e6db74">&#34;ssh://git@&#34;</span> host <span style="color:#e6db74">&#34;:&#34;</span> port <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>)
+</span></span><span style="display:flex;"><span>                       (str <span style="color:#e6db74">&#34;ssh://git@&#34;</span> host <span style="color:#e6db74">&#34;/&#34;</span> org <span style="color:#e6db74">&#34;/&#34;</span> repo <span style="color:#e6db74">&#34;.git&#34;</span>))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>remote-proto-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## git remote-proto - Convert remote URL protocol
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git remote-proto &lt;protocol&gt; [options]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Arguments:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    protocol        Target protocol: http, https, git, or ssh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Protocols:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    http, https     https://{host}/{org}/{repo}.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git             git@{host}:{org}/{repo}.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ssh             ssh://git@{host}[:port]/{org}/{repo}.git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --remote &lt;name&gt;    Remote name (default: origin)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --port &lt;port&gt;      SSH port (only used with ssh protocol)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    -h, --help         Show this help message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Converts the remote URL to use a different protocol while
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    preserving the host, organization, and repository.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git remote-proto git
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git remote-proto https
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git remote-proto ssh --port 2222
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git remote-proto ssh --remote upstream&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>remote-proto-main [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">check-deps</span> <span style="color:#e6db74">&#34;git&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[parsed (<span style="color:#66d9ef">loop </span>[[arg <span style="color:#f92672">&amp;</span> more] args
+</span></span><span style="display:flex;"><span>                      opts {<span style="color:#e6db74">:protocol</span> nil <span style="color:#e6db74">:remote</span> <span style="color:#e6db74">&#34;origin&#34;</span> <span style="color:#e6db74">:port</span> nil}]
+</span></span><span style="display:flex;"><span>                 (<span style="color:#66d9ef">if </span>(nil? arg)
+</span></span><span style="display:flex;"><span>                   opts
+</span></span><span style="display:flex;"><span>                   (<span style="color:#a6e22e">case</span> arg
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;--remote&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:remote</span> (first more)))
+</span></span><span style="display:flex;"><span>                     <span style="color:#e6db74">&#34;--port&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:port</span> (first more)))
+</span></span><span style="display:flex;"><span>                     (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span>) (<span style="color:#66d9ef">do </span>(println remote-proto-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>                     (<span style="color:#66d9ef">if </span>(<span style="color:#a6e22e">str/starts-with?</span> arg <span style="color:#e6db74">&#34;-&#34;</span>)
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown option:&#34;</span> arg)
+</span></span><span style="display:flex;"><span>                           (println remote-proto-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))
+</span></span><span style="display:flex;"><span>                       (<span style="color:#66d9ef">if </span>(nil? (<span style="color:#e6db74">:protocol</span> opts))
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">recur</span> more (assoc opts <span style="color:#e6db74">:protocol</span> arg))
+</span></span><span style="display:flex;"><span>                         (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Too many arguments&#34;</span>)
+</span></span><span style="display:flex;"><span>                             (println remote-proto-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>)))))))
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">:keys</span> [protocol remote port]} parsed]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    (when (<span style="color:#a6e22e">str/blank?</span> protocol)
+</span></span><span style="display:flex;"><span>      (println remote-proto-help-text)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    (when-not (<span style="color:#f92672">#</span>{<span style="color:#e6db74">&#34;http&#34;</span> <span style="color:#e6db74">&#34;https&#34;</span> <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;ssh&#34;</span>} protocol)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Invalid protocol: &#34;</span> protocol <span style="color:#e6db74">&#34; (must be http, https, git, or ssh)&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    (when (and port (not= protocol <span style="color:#e6db74">&#34;ssh&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;Warning: --port is only used with ssh protocol, ignoring&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[cwd (<span style="color:#a6e22e">System/getProperty</span> <span style="color:#e6db74">&#34;user.dir&#34;</span>)]
+</span></span><span style="display:flex;"><span>      (when-not (<span style="color:#a6e22e">git-ok?</span> cwd <span style="color:#e6db74">&#34;rev-parse&#34;</span> <span style="color:#e6db74">&#34;--git-dir&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fault</span> <span style="color:#e6db74">&#34;Not a git repository&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[current-url (or (<span style="color:#a6e22e">git-out</span> cwd <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;get-url&#34;</span> remote)
+</span></span><span style="display:flex;"><span>                            (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Remote &#39;&#34;</span> remote <span style="color:#e6db74">&#34;&#39; not found&#34;</span>)))]
+</span></span><span style="display:flex;"><span>        (println (str <span style="color:#e6db74">&#34;Current: &#34;</span> current-url))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[parsed (or (<span style="color:#a6e22e">remote-proto-parse-url</span> current-url)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Cannot parse remote URL: &#34;</span> current-url)))
+</span></span><span style="display:flex;"><span>              parsed (<span style="color:#66d9ef">if </span>(and (= protocol <span style="color:#e6db74">&#34;ssh&#34;</span>) port)
+</span></span><span style="display:flex;"><span>                       (assoc parsed <span style="color:#e6db74">:port</span> port)
+</span></span><span style="display:flex;"><span>                       parsed)
+</span></span><span style="display:flex;"><span>              new-url (<span style="color:#a6e22e">remote-proto-build-url</span> parsed protocol)]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">if </span>(= current-url new-url)
+</span></span><span style="display:flex;"><span>            (println (str <span style="color:#e6db74">&#34;Already using &#34;</span> protocol <span style="color:#e6db74">&#34; protocol&#34;</span>))
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">git!</span> cwd <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;set-url&#34;</span> remote new-url)
+</span></span><span style="display:flex;"><span>                (println (str <span style="color:#e6db74">&#34;Updated: &#34;</span> new-url)))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Autopull Extension</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Runs `gh webhook forward` for the current GitHub repo and a small local</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; HTTP server. On each forwarded push event, runs `git pull --ff-only`.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Intended for local dev preview, paired with a live-reload static server.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>autopull-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## git autopull - Pull this repository when GitHub receives a push
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git autopull [options]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --remote &lt;name&gt;      Remote to pull from (default: origin)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --branch &lt;name&gt;      Branch to watch/pull (default: current branch)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --port &lt;port&gt;        Local webhook receiver port (default: 3000)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --path &lt;path&gt;        Local webhook receiver path (default: /webhook)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --events &lt;events&gt;    Events for gh webhook forward (default: push)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --no-initial-pull    Do not run git pull once before watching
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    -h, --help           Show this help message
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Runs `gh webhook forward` for the current GitHub repository and blocks.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    When a push event for the watched branch is received, runs:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git pull --ff-only &lt;remote&gt; &lt;branch&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    This is intended for local/dev use. Pair it with a live-reload static
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    server such as:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        npx browser-sync start --server . --files .
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Requirements:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    gh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    gh extension install cli/gh-webhook
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git autopull
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git autopull --branch main
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git autopull --remote upstream --branch master
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    git autopull --port 3456&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-parse-args [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">loop </span>[[arg <span style="color:#f92672">&amp;</span> more] args
+</span></span><span style="display:flex;"><span>         opts {<span style="color:#e6db74">:remote</span> <span style="color:#e6db74">&#34;origin&#34;</span>
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">:branch</span> nil
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">:port</span> <span style="color:#e6db74">&#34;3000&#34;</span>
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">:path</span> <span style="color:#e6db74">&#34;/webhook&#34;</span>
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">:events</span> <span style="color:#e6db74">&#34;push&#34;</span>
+</span></span><span style="display:flex;"><span>               <span style="color:#e6db74">:initial-pull?</span> true}]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(nil? arg)
+</span></span><span style="display:flex;"><span>      opts
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">case</span> arg
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--remote&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:remote</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--branch&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:branch</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--port&#34;</span>   (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:port</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--path&#34;</span>   (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:path</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--events&#34;</span> (<span style="color:#a6e22e">recur</span> (rest more) (assoc opts <span style="color:#e6db74">:events</span> (first more)))
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--no-initial-pull&#34;</span> (<span style="color:#a6e22e">recur</span> more (assoc opts <span style="color:#e6db74">:initial-pull?</span> false))
+</span></span><span style="display:flex;"><span>        (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span>) (<span style="color:#66d9ef">do </span>(println autopull-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown option:&#34;</span> arg)
+</span></span><span style="display:flex;"><span>            (println autopull-help-text)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-current-branch [dir]
+</span></span><span style="display:flex;"><span>  (or (<span style="color:#a6e22e">not-empty</span> (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;branch&#34;</span> <span style="color:#e6db74">&#34;--show-current&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> <span style="color:#e6db74">&#34;Could not determine current branch; pass --branch explicitly&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-github-repo-from-remote
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Return the OWNER/REPO slug for dir&#39;s remote, requiring a github.com host.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir remote]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[url (or (<span style="color:#a6e22e">git-out</span> dir <span style="color:#e6db74">&#34;remote&#34;</span> <span style="color:#e6db74">&#34;get-url&#34;</span> remote)
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Remote &#39;&#34;</span> remote <span style="color:#e6db74">&#34;&#39; not found&#34;</span>)))
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">:keys</span> [host path]} (or (<span style="color:#a6e22e">parse-remote-url</span> url)
+</span></span><span style="display:flex;"><span>                                (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Cannot parse remote URL: &#34;</span> url)))]
+</span></span><span style="display:flex;"><span>    (when-not (= host <span style="color:#e6db74">&#34;github.com&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;git autopull expects a GitHub remote; got host: &#34;</span> host)))
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">str/replace</span> path <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;^/&#34;</span> <span style="color:#e6db74">&#34;&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-pull!
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Run git pull --ff-only without exiting on failure (keeps the watcher alive).&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir remote branch]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[r (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:dir</span> dir <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;pull&#34;</span> <span style="color:#e6db74">&#34;--ff-only&#34;</span> remote branch)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(zero? (<span style="color:#e6db74">:exit</span> r))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Pull complete.&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Pull failed (git exited &#34;</span> (<span style="color:#e6db74">:exit</span> r) <span style="color:#e6db74">&#34;).&#34;</span>)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-handle-push!
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Pull if the push ref matches the watched branch. Serialized via pull-lock.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir remote branch pull-lock ref]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[wanted (str <span style="color:#e6db74">&#34;refs/heads/&#34;</span> branch)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">if </span>(not= ref wanted)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Ignoring push to &#34;</span> ref <span style="color:#e6db74">&#34;; watching &#34;</span> wanted))
+</span></span><span style="display:flex;"><span>      (locking pull-lock
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Push received for &#34;</span> branch <span style="color:#e6db74">&#34;; pulling...&#34;</span>))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">autopull-pull!</span> dir remote branch)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-handler
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Ring handler for forwarded GitHub webhooks. Responds immediately and pulls
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   asynchronously so the webhook delivery is not blocked by git.&#34;</span>
+</span></span><span style="display:flex;"><span>  [dir remote branch pull-lock]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">fn </span>[req]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">try</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">if </span>(not= <span style="color:#e6db74">:post</span> (<span style="color:#e6db74">:request-method</span> req))
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">:status</span> <span style="color:#ae81ff">405</span> <span style="color:#e6db74">:body</span> <span style="color:#e6db74">&#34;method not allowed\n&#34;</span>}
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[event (<span style="color:#a6e22e">get-in</span> req [<span style="color:#e6db74">:headers</span> <span style="color:#e6db74">&#34;x-github-event&#34;</span>])
+</span></span><span style="display:flex;"><span>              body  (when-let [b (<span style="color:#e6db74">:body</span> req)] (slurp b))]
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">cond</span>
+</span></span><span style="display:flex;"><span>            (= event <span style="color:#e6db74">&#34;ping&#34;</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Received ping event&#34;</span>)
+</span></span><span style="display:flex;"><span>                {<span style="color:#e6db74">:status</span> <span style="color:#ae81ff">202</span> <span style="color:#e6db74">:body</span> <span style="color:#e6db74">&#34;pong\n&#34;</span>})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            (not= event <span style="color:#e6db74">&#34;push&#34;</span>)
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Ignoring event: &#34;</span> event))
+</span></span><span style="display:flex;"><span>                {<span style="color:#e6db74">:status</span> <span style="color:#ae81ff">202</span> <span style="color:#e6db74">:body</span> <span style="color:#e6db74">&#34;ignored\n&#34;</span>})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">:else</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">let </span>[ref (<span style="color:#e6db74">:ref</span> (<span style="color:#a6e22e">json/parse-string</span> body true))]
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Received push: &#34;</span> ref))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">future</span> (<span style="color:#a6e22e">autopull-handle-push!</span> dir remote branch pull-lock ref))
+</span></span><span style="display:flex;"><span>              {<span style="color:#e6db74">:status</span> <span style="color:#ae81ff">202</span> <span style="color:#e6db74">:body</span> <span style="color:#e6db74">&#34;pull queued\n&#34;</span>}))))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">catch</span> Exception e
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Handler error: &#34;</span> (<span style="color:#a6e22e">.getMessage</span> e)))
+</span></span><span style="display:flex;"><span>        {<span style="color:#e6db74">:status</span> <span style="color:#ae81ff">500</span> <span style="color:#e6db74">:body</span> <span style="color:#e6db74">&#34;error\n&#34;</span>}))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-check-gh-webhook! []
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">check-deps</span> <span style="color:#e6db74">&#34;git&#34;</span> <span style="color:#e6db74">&#34;gh&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[r (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true} <span style="color:#e6db74">&#34;gh&#34;</span> <span style="color:#e6db74">&#34;webhook&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span>)]
+</span></span><span style="display:flex;"><span>    (when-not (zero? (<span style="color:#e6db74">:exit</span> r))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;The gh webhook extension does not appear to be installed.&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;Install it with:&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;  gh extension install cli/gh-webhook&#34;</span>)
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-clear-stale-hooks!
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Delete any leftover `gh webhook forward` relay hooks on repo.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   gh-webhook registers its server-side relay with name \&#34;cli\&#34; (normal
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   webhooks use name \&#34;web\&#34;), and starting a new forward fails with HTTP 422
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   if a prior session didn&#39;t clean up. Remove those orphans so autopull is
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   idempotent. Best-effort: warns but does not abort on failure.&#34;</span>
+</span></span><span style="display:flex;"><span>  [repo]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[r (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                      <span style="color:#e6db74">&#34;gh&#34;</span> <span style="color:#e6db74">&#34;api&#34;</span> (str <span style="color:#e6db74">&#34;repos/&#34;</span> repo <span style="color:#e6db74">&#34;/hooks&#34;</span>))]
+</span></span><span style="display:flex;"><span>    (if-not (zero? (<span style="color:#e6db74">:exit</span> r))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Warning: could not list webhooks (gh exited &#34;</span>
+</span></span><span style="display:flex;"><span>                   (<span style="color:#e6db74">:exit</span> r) <span style="color:#e6db74">&#34;); continuing.&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[hooks (<span style="color:#a6e22e">try</span> (<span style="color:#a6e22e">json/parse-string</span> (<span style="color:#e6db74">:out</span> r))
+</span></span><span style="display:flex;"><span>                       (<span style="color:#a6e22e">catch</span> Exception _ nil))
+</span></span><span style="display:flex;"><span>            stale (filter <span style="color:#f92672">#</span>(= <span style="color:#e6db74">&#34;cli&#34;</span> (get % <span style="color:#e6db74">&#34;name&#34;</span>)) hooks)]
+</span></span><span style="display:flex;"><span>        (doseq [h stale]
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">let </span>[id (get h <span style="color:#e6db74">&#34;id&#34;</span>)
+</span></span><span style="display:flex;"><span>                d  (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;gh&#34;</span> <span style="color:#e6db74">&#34;api&#34;</span> <span style="color:#e6db74">&#34;-X&#34;</span> <span style="color:#e6db74">&#34;DELETE&#34;</span>
+</span></span><span style="display:flex;"><span>                               (str <span style="color:#e6db74">&#34;repos/&#34;</span> repo <span style="color:#e6db74">&#34;/hooks/&#34;</span> id))]
+</span></span><span style="display:flex;"><span>            (<span style="color:#66d9ef">if </span>(zero? (<span style="color:#e6db74">:exit</span> d))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Removed stale gh-webhook relay hook &#34;</span> id <span style="color:#e6db74">&#34;.&#34;</span>))
+</span></span><span style="display:flex;"><span>              (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Warning: failed to remove stale hook &#34;</span> id <span style="color:#e6db74">&#34;.&#34;</span>)))))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>autopull-main [args]
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[{<span style="color:#e6db74">:keys</span> [remote branch port path events initial-pull?]} (<span style="color:#a6e22e">autopull-parse-args</span> args)]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">autopull-check-gh-webhook!</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">let </span>[dir (<span style="color:#a6e22e">System/getProperty</span> <span style="color:#e6db74">&#34;user.dir&#34;</span>)]
+</span></span><span style="display:flex;"><span>      (when-not (<span style="color:#a6e22e">git-ok?</span> dir <span style="color:#e6db74">&#34;rev-parse&#34;</span> <span style="color:#e6db74">&#34;--git-dir&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">fault</span> <span style="color:#e6db74">&#34;Not a git repository&#34;</span>))
+</span></span><span style="display:flex;"><span>      (<span style="color:#66d9ef">let </span>[branch    (or branch (<span style="color:#a6e22e">autopull-current-branch</span> dir))
+</span></span><span style="display:flex;"><span>            repo      (<span style="color:#a6e22e">autopull-github-repo-from-remote</span> dir remote)
+</span></span><span style="display:flex;"><span>            port-num  (or (<span style="color:#a6e22e">parse-long</span> port) (<span style="color:#a6e22e">fault</span> (str <span style="color:#e6db74">&#34;Invalid port: &#34;</span> port)))
+</span></span><span style="display:flex;"><span>            url       (str <span style="color:#e6db74">&#34;http://127.0.0.1:&#34;</span> port-num path)
+</span></span><span style="display:flex;"><span>            pull-lock (<span style="color:#a6e22e">Object.</span>)
+</span></span><span style="display:flex;"><span>            stop-srv  (<span style="color:#a6e22e">atom</span> nil)
+</span></span><span style="display:flex;"><span>            gh-proc   (<span style="color:#a6e22e">atom</span> nil)
+</span></span><span style="display:flex;"><span>            cleanup!  (<span style="color:#66d9ef">fn </span>[]
+</span></span><span style="display:flex;"><span>                        (when-let [p <span style="color:#f92672">@</span>gh-proc]
+</span></span><span style="display:flex;"><span>                          (<span style="color:#a6e22e">try</span> (<span style="color:#a6e22e">proc/destroy-tree</span> p) (<span style="color:#a6e22e">catch</span> Exception _ nil)))
+</span></span><span style="display:flex;"><span>                        (when-let [stop <span style="color:#f92672">@</span>stop-srv]
+</span></span><span style="display:flex;"><span>                          (<span style="color:#a6e22e">try</span> (<span style="color:#a6e22e">stop</span>) (<span style="color:#a6e22e">catch</span> Exception _ nil))))]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">.addShutdownHook</span> (<span style="color:#a6e22e">Runtime/getRuntime</span>) (<span style="color:#a6e22e">Thread.</span> cleanup!))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Repository: &#34;</span> repo))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Directory:  &#34;</span> dir))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Remote:     &#34;</span> remote))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Branch:     &#34;</span> branch))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## URL:        &#34;</span> url))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (when initial-pull?
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Initial pull...&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">autopull-pull!</span> dir remote branch)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">reset!</span> stop-srv
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">http/run-server</span> (<span style="color:#a6e22e">autopull-handler</span> dir remote branch pull-lock)
+</span></span><span style="display:flex;"><span>                                 {<span style="color:#e6db74">:ip</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span> <span style="color:#e6db74">:port</span> port-num}))
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">stderr</span> (str <span style="color:#e6db74">&#34;## Listening on &#34;</span> url))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">autopull-clear-stale-hooks!</span> repo)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#66d9ef">let </span>[p (<span style="color:#a6e22e">proc/process</span> [<span style="color:#e6db74">&#34;gh&#34;</span> <span style="color:#e6db74">&#34;webhook&#34;</span> <span style="color:#e6db74">&#34;forward&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;--repo&#34;</span> repo
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;--events&#34;</span> events
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;--url&#34;</span> url]
+</span></span><span style="display:flex;"><span>                              {<span style="color:#e6db74">:inherit</span> true})]
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">reset!</span> gh-proc p)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Started gh webhook forward.&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## Press Ctrl-C to stop.&#34;</span>)
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">@</span>p
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">stderr</span> <span style="color:#e6db74">&#34;## gh webhook forward exited.&#34;</span>)
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">cleanup!</span>))))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; Main Dispatcher</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">;;; ============================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">def </span>main-help-text
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;## Git Extensions Framework
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: git &lt;extension&gt; [args...]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   or: git-&lt;extension&gt; [args...]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Available extensions:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    vendor        Clone repositories to ~/git/vendor/{org}/{repo}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    deploy        Clone repositories using deploy key authentication
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    deploy-key    Manage deploy keys (list, show, remove)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    remote-proto  Convert remote URL protocol (https, git, ssh)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    autopull      Pull this repo when GitHub receives a push
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Run &#39;git &lt;extension&gt; --help&#39; for extension-specific help.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Setup:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Create symlinks in your PATH:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ln -s /path/to/git_extensions.bb ~/.local/bin/git-vendor
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ln -s /path/to/git_extensions.bb ~/.local/bin/git-deploy
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ln -s /path/to/git_extensions.bb ~/.local/bin/git-deploy-key
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ln -s /path/to/git_extensions.bb ~/.local/bin/git-remote-proto
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ln -s /path/to/git_extensions.bb ~/.local/bin/git-autopull
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Then use as:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git vendor org/repo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git deploy &lt;repo-url&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git deploy-key list
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git remote-proto ssh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        git autopull&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn- </span>find-git-cmd
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Scan a sequence of argv strings for one starting with &#39;git-&#39;.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   Returns the extension name (e.g. &#39;deploy&#39;) or nil.&#34;</span>
+</span></span><span style="display:flex;"><span>  [parts]
+</span></span><span style="display:flex;"><span>  (some (<span style="color:#66d9ef">fn </span>[part]
+</span></span><span style="display:flex;"><span>          (<span style="color:#66d9ef">let </span>[base (str (<span style="color:#a6e22e">fs/file-name</span> part))]
+</span></span><span style="display:flex;"><span>            (when (<span style="color:#a6e22e">str/starts-with?</span> base <span style="color:#e6db74">&#34;git-&#34;</span>)
+</span></span><span style="display:flex;"><span>              (subs base <span style="color:#ae81ff">4</span>))))
+</span></span><span style="display:flex;"><span>        parts))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn- </span>detect-from-procfs
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Linux: read /proc/self/cmdline (null-separated argv).&#34;</span>
+</span></span><span style="display:flex;"><span>  []
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[bytes (<span style="color:#a6e22e">java.nio.file.Files/readAllBytes</span>
+</span></span><span style="display:flex;"><span>               (<span style="color:#a6e22e">java.nio.file.Paths/get</span> <span style="color:#e6db74">&#34;/proc/self/cmdline&#34;</span> (into-array String [])))
+</span></span><span style="display:flex;"><span>        parts (<span style="color:#66d9ef">loop </span>[i <span style="color:#ae81ff">0</span> start <span style="color:#ae81ff">0</span> result []]
+</span></span><span style="display:flex;"><span>                (<span style="color:#66d9ef">if </span>(&gt;= i (alength bytes))
+</span></span><span style="display:flex;"><span>                  (<span style="color:#66d9ef">if </span>(&gt; i start)
+</span></span><span style="display:flex;"><span>                    (conj result (<span style="color:#a6e22e">String.</span> bytes (int start) (int (- i start))))
+</span></span><span style="display:flex;"><span>                    result)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#66d9ef">if </span>(zero? (aget bytes i))
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">recur</span> (inc i) (inc i)
+</span></span><span style="display:flex;"><span>                           (<span style="color:#66d9ef">if </span>(&gt; i start)
+</span></span><span style="display:flex;"><span>                             (conj result (<span style="color:#a6e22e">String.</span> bytes (int start) (int (- i start))))
+</span></span><span style="display:flex;"><span>                             result))
+</span></span><span style="display:flex;"><span>                    (<span style="color:#a6e22e">recur</span> (inc i) start result))))]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">find-git-cmd</span> parts)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn- </span>detect-from-ps
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;macOS/BSD: use ps to read the command line for the current process.&#34;</span>
+</span></span><span style="display:flex;"><span>  []
+</span></span><span style="display:flex;"><span>  (<span style="color:#66d9ef">let </span>[pid (<span style="color:#a6e22e">.pid</span> (<span style="color:#a6e22e">java.lang.ProcessHandle/current</span>))
+</span></span><span style="display:flex;"><span>        result (<span style="color:#a6e22e">proc/shell</span> {<span style="color:#e6db74">:out</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:err</span> <span style="color:#e6db74">:string</span> <span style="color:#e6db74">:continue</span> true}
+</span></span><span style="display:flex;"><span>                           <span style="color:#e6db74">&#34;ps&#34;</span> <span style="color:#e6db74">&#34;-p&#34;</span> (str pid) <span style="color:#e6db74">&#34;-o&#34;</span> <span style="color:#e6db74">&#34;args=&#34;</span>)
+</span></span><span style="display:flex;"><span>        parts (when (zero? (<span style="color:#e6db74">:exit</span> result))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">str/split</span> (<span style="color:#a6e22e">str/trim</span> (<span style="color:#e6db74">:out</span> result)) <span style="color:#f92672">#</span><span style="color:#e6db74">&#34;\s+&#34;</span>))]
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">find-git-cmd</span> parts)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">defn </span>detect-extension-cmd
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;Detect the extension command from the invoked symlink name.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   Tries /proc/self/cmdline (Linux), then ps (macOS/BSD).&#34;</span>
+</span></span><span style="display:flex;"><span>  []
+</span></span><span style="display:flex;"><span>  (or (<span style="color:#a6e22e">try</span> (<span style="color:#a6e22e">detect-from-procfs</span>) (<span style="color:#a6e22e">catch</span> Exception _ nil))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">try</span> (<span style="color:#a6e22e">detect-from-ps</span>) (<span style="color:#a6e22e">catch</span> Exception _ nil))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#66d9ef">let </span>[symlink-cmd (<span style="color:#a6e22e">detect-extension-cmd</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">;; If invoked via symlink (git-deploy), use that command and all CLI args</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">;; If invoked directly (bb git_extensions.bb deploy ...), first arg is the command</span>
+</span></span><span style="display:flex;"><span>      extension-cmd (or symlink-cmd (first *command-line-args*))
+</span></span><span style="display:flex;"><span>      args (<span style="color:#66d9ef">if </span>symlink-cmd
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">vec</span> *command-line-args*)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">vec</span> (rest *command-line-args*)))]
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">case</span> extension-cmd
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;vendor&#34;</span>       (<span style="color:#a6e22e">vendor-main</span> args)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;deploy&#34;</span>       (<span style="color:#a6e22e">deploy-main</span> args)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;deploy-key&#34;</span>   (<span style="color:#a6e22e">deploy-key-main</span> args)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;remote-proto&#34;</span> (<span style="color:#a6e22e">remote-proto-main</span> args)
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;autopull&#34;</span>     (<span style="color:#a6e22e">autopull-main</span> args)
+</span></span><span style="display:flex;"><span>    (<span style="color:#e6db74">&#34;-h&#34;</span> <span style="color:#e6db74">&#34;--help&#34;</span> <span style="color:#e6db74">&#34;help&#34;</span> nil) (<span style="color:#66d9ef">do </span>(println main-help-text) (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">0</span>))
+</span></span><span style="display:flex;"><span>    (<span style="color:#66d9ef">do </span>(<span style="color:#a6e22e">error</span> <span style="color:#e6db74">&#34;Unknown extension:&#34;</span> extension-cmd)
+</span></span><span style="display:flex;"><span>        (println main-help-text)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">System/exit</span> <span style="color:#ae81ff">1</span>))))
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

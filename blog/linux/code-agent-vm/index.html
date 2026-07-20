@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>NixOS VMs part 1: Running code agents in an immutable NixOS VM · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/nixos-proxmox-vm/" aria-label="Previous: nixos-proxmox-vm" title="prev: nixos-proxmox-vm"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/rclone_webdav/" aria-label="Next: rclone_webdav" title="next: rclone_webdav"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">code-agent-vm</a></li><li class="lvl2"><a href="#why-bother-with-a-vm">Why bother with a VM?</a></li><li class="lvl2"><a href="#install-the-prerequisites">Install the prerequisites</a></li><li class="lvl2"><a href="#clone-and-build">Clone and build</a></li><li class="lvl2"><a href="#first-boot">First boot</a></li><li class="lvl2"><a href="#create-a-project-repository">Create a project repository</a></li><li class="lvl2"><a href="#editing-files-with-tramp">Editing files with TRAMP</a></li><li class="lvl2"><a href="#ssh-remote-forwarding">SSH remote forwarding</a></li><li class="lvl2"><a href="#the-git-workflow">The git workflow</a></li><li class="lvl3"><a href="#setup">Setup</a></li><li class="lvl3"><a href="#agent-directives">Agent directives</a></li><li class="lvl3"><a href="#testing-on-other-machines">Testing on other machines</a></li><li class="lvl2"><a href="#snapshots">Snapshots</a></li><li class="lvl2"><a href="#upgrades-and-profiles">Upgrades and profiles</a></li><li class="lvl2"><a href="#multiple-vms">Multiple VMs</a></li><li class="lvl2"><a href="#bridged-networking">Bridged networking</a></li><li class="lvl2"><a href="#conclusion">Conclusion</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="active" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/code-agent-vm/">/code-agent-vm</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-01-22">2026-01-22</time></span>
+  <span>updated <time datetime="2026-01-31">2026-01-31</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/nixos/">nixos</a>
+      <a href="/tags/libvirt/">libvirt</a>
+      <a href="/tags/nixos-vm-template/">nixos-vm-template</a>
+  </span>
+</div>
+
+<p><em>This is part 1 of a series on <a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>:</em></p>
+<ol>
+<li><em>Running code agents in an immutable NixOS VM (this post)</em></li>
+<li><em><a href="/blog/linux/nixos-proxmox-vm/">Bootstrapping a Docker server with immutable NixOS on Proxmox</a></em></li>
+<li><em><a href="/blog/linux/mutable-vms/">Mutable VMs are cool too</a></em></li>
+<li><em><a href="/blog/linux/nixos-vm-home-manager/">Managing VMs with home-manager and sway-home</a></em></li>
+<li><em><a href="/blog/linux/nixos-lxc-nas/">A NixOS NAS in a Proxmox LXC container</a></em></li>
+</ol>
+<hr>
+<p>AI coding agents like <a href="https://docs.anthropic.com/en/docs/claude-code">Claude
+Code</a> and <a href="https://github.com/sst/opencode">Open
+Code</a> run in your terminal, read and
+write files, execute commands, and generally do whatever you tell them
+to. Claude Code is Anthropic&rsquo;s official CLI agent; Open Code is an
+open-source alternative that supports multiple model providers
+(including Anthropic). Both are powerful, and both have full shell
+access to whatever machine they&rsquo;re running on — which is a bit
+concerning if that machine is your daily driver laptop.</p>
+<p>This post walks through setting up a code agent inside an immutable
+NixOS VM on a Fedora host, editing files remotely with Emacs TRAMP,
+and using git branches so that the agent&rsquo;s work is immediately
+testable on other machines.</p>
+<h2 id="why-bother-with-a-vm"><a class="heading-anchor" href="#why-bother-with-a-vm">Why bother with a VM?</a></h2>
+<p>A code agent has shell access to whatever machine it&rsquo;s running on. It
+can modify files and run any program. If you point it at your laptop&rsquo;s
+home directory and say &ldquo;refactor this project,&rdquo; it will happily do so,
+and if something goes wrong, it went wrong on <em>your</em> machine.</p>
+<p>A VM gives the agent its own filesystem to work with. The
+<a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>
+project builds immutable NixOS images with a read-only root filesystem
+and a separate data disk. If the environment gets weird, you can blow
+it away and recreate it in two commands. Your laptop stays clean.</p>
+<p>The tradeoff is that you&rsquo;re SSH&rsquo;ing into a VM instead of running
+locally. With TRAMP this is basically invisible to Emacs, so it hasn&rsquo;t
+bothered me.</p>
+<h2 id="install-the-prerequisites"><a class="heading-anchor" href="#install-the-prerequisites">Install the prerequisites</a></h2>
+<p>This example uses a Fedora laptop, but Debian, Arch, or pretty much
+any other Linux distro with KVM support will work. The only software
+dependencies you need are libvirt and the Nix package manager:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Fedora
+sudo dnf install nix just git libvirt qemu-kvm virt-manager guestfs-tools edk2-ovmf
+sudo systemctl enable --now nix-daemon libvirtd
+</pre></div>
+</div>
+
+
+<p>Enable Nix flakes for this user:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkdir -p ~/.config/nix
+echo &#34;experimental-features = nix-command flakes&#34; &gt;&gt; ~/.config/nix/nix.conf
+</pre></div>
+</div>
+
+
+<h2 id="clone-and-build"><a class="heading-anchor" href="#clone-and-build">Clone and build</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone https://github.com/EnigmaCurry/nixos-vm-template \
+   ~/nixos-vm-template
+cd ~/nixos-vm-template
+</pre></div>
+</div>
+
+
+<p>The template ships with composable profiles that you combine as needed.
+For a full development environment with a code agent, combine the
+<code>claude</code> (or <code>open-code</code>) profile with <code>dev</code>, <code>docker</code>, and <code>podman</code>.
+The agent itself gets installed via npm on first login. Pick the one
+you want and create a VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# For Claude Code with full dev environment:
+just create
+
+# When prompted, enter the VM name (e.g., &#34;claude-dev&#34;)
+# Select profiles: claude, dev, docker, podman
+# Configure memory (8192), CPUs (4), and other settings
+</pre></div>
+</div>
+
+
+<p>The <code>just create</code> command runs an interactive configuration wizard
+that guides you through all the options, then builds the image,
+creates the VM, and starts it automatically. The root filesystem is
+read-only (immutable), and all mutable state lives on a separate
+<code>/var</code> disk. Home directories are bind-mounted from <code>/var/home</code>.</p>
+<h2 id="first-boot"><a class="heading-anchor" href="#first-boot">First boot</a></h2>
+<p>The VM starts automatically after <code>just create</code> completes. Check its
+status and connect:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just status claude-dev      # prints the IP address
+just ssh claude-dev         # SSH into the VM with the &#39;user&#39; account
+</pre></div>
+</div>
+
+
+<p>On first login, the shell profile detects that the agent isn&rsquo;t
+installed yet and runs the appropriate npm install automatically
+(<code>@anthropic-ai/claude-code</code> or <code>opencode-ai</code>). Both agents need an
+API key for your service of choice. Here&rsquo;s an example for Anthropic:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#39;export ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;&#39; &gt;&gt; ~/.bashrc
+source ~/.bashrc
+</pre></div>
+</div>
+
+
+<p>The Open Code profile also creates a default config at
+<code>~/.config/opencode/config.json</code> pointing at Claude Opus 4.5. You can
+edit that file to switch models or providers.</p>
+<p>Set your git user profile and preferences:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git config --global user.email &#34;you@example.com&#34;
+git config --global user.name &#34;Your Name&#34;
+git config --global init.defaultBranch master
+</pre></div>
+</div>
+
+
+<h2 id="create-a-project-repository"><a class="heading-anchor" href="#create-a-project-repository">Create a project repository</a></h2>
+<p>Create a fresh repository on GitHub for the agent to work in. This
+will be the project it has full control over, committing and pushing
+on your behalf. Go to GitHub and create a new repository (public or
+private, your choice), then come back here.</p>
+<p>Next, generate an SSH key on the VM so it can push to that repo:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-keygen -t ed25519 -C &#34;claude-dev-vm&#34; -f ~/.ssh/id_ed25519 -N &#34;&#34;
+cat ~/.ssh/id_ed25519.pub
+</pre></div>
+</div>
+
+
+<p>Copy the public key and add it as a deploy key on the repository:</p>
+<ol>
+<li>Go to your repository on GitHub.</li>
+<li>Navigate to <strong>Settings &gt; Deploy keys &gt; Add deploy key</strong>.</li>
+<li>Paste the public key, give it a name like &ldquo;claude-dev VM&rdquo;, and check
+<strong>Allow write access</strong>.</li>
+<li>Click <strong>Add key</strong>.</li>
+</ol>
+<p>Deploy keys are scoped to a single repository, which is a good fit
+here. The VM only needs push access to the project it&rsquo;s working on,
+not your entire GitHub account. If the agent is working on multiple
+repos, generate a separate key per repo.</p>
+<p>Verify the key works:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh -T git@github.com
+</pre></div>
+</div>
+
+
+<p>You should see a message confirming authentication. Now clone the repo
+on the VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cd ~
+git clone git@github.com:you/your-project.git project
+cd project
+</pre></div>
+</div>
+
+
+<p>Run <code>claude</code> or <code>opencode</code> in the project directory.</p>
+<h2 id="editing-files-with-tramp"><a class="heading-anchor" href="#editing-files-with-tramp">Editing files with TRAMP</a></h2>
+<p>TRAMP (Transparent Remote Access, Multiple Protocols) is Emacs&rsquo;s
+built-in facility for editing remote files over SSH. You open a file
+with a special path syntax and Emacs handles the rest, no FUSE mounts
+or sync tools involved.</p>
+<p>You can read more about how to configure emacs <a href="https://emacs.rymcg.tech">with my emacs
+config</a>.</p>
+<p>(If you don&rsquo;t want to use Emacs, you can do something pretty similar
+in VS Code with the <a href="https://code.visualstudio.com/docs/remote/remote-overview">Remote Development
+Extension</a>).</p>
+<p>First, add an SSH config entry so you don&rsquo;t have to remember the IP:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># ~/.ssh/config
+</span></span><span style="display:flex;"><span>Host claude-dev
+</span></span><span style="display:flex;"><span>    HostName &lt;ip&gt;
+</span></span><span style="display:flex;"><span>    User user
+</span></span><span style="display:flex;"><span>    ControlMaster auto
+</span></span><span style="display:flex;"><span>    ControlPersist yes
+</span></span><span style="display:flex;"><span>    ControlPath /tmp/ssh-%u-%r@%h:%p
+</span></span></code></pre></div><p>(The ControlMaster settings are optional, they enable SSH connection
+sharing so you won&rsquo;t have to authenticate as often.)</p>
+<p>Now you can open files on the VM directly:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>C-x C-f /ssh:claude-dev:/home/user/project/src/main.rs
+</span></span></code></pre></div><p>To get a shell running inside the VM, open a remote shell buffer:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>M-x shell RET
+</span></span></code></pre></div><p>When prompted for a directory, enter <code>/ssh:claude-dev:/home/user/</code>.
+(Or use <code>vterm</code> if you prefer a proper terminal emulator in a buffer.)
+Run your agent in that shell. Now you have it running in the VM, and
+your Emacs buffers pointing at the same files it&rsquo;s modifying. When the
+agent writes to a file you have open. In Emacs enable <code>M-x auto-revert-mode</code> and the fill will automatically detect changes and
+reload the file.</p>
+<h2 id="ssh-remote-forwarding"><a class="heading-anchor" href="#ssh-remote-forwarding">SSH remote forwarding</a></h2>
+<p>Sometimes the agent needs access to a service running on your laptop.
+For example, if you have a Traefik dashboard listening on
+<code>127.0.0.1:8080</code>, you can expose it to the VM with SSH remote
+forwarding:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh -R 8080:127.0.0.1:8080 user@claude-dev
+</pre></div>
+</div>
+
+
+<p>This binds port 8080 on the VM to port 8080 on your laptop. Inside the
+VM, the agent can now reach the Traefik dashboard at <code>127.0.0.1:8080</code>
+as if it were local. You can add this to your SSH config to make it
+persistent:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># ~/.ssh/config
+</span></span><span style="display:flex;"><span>Host claude-dev
+</span></span><span style="display:flex;"><span>    ...
+</span></span><span style="display:flex;"><span>    RemoteForward 8080 127.0.0.1:8080
+</span></span></code></pre></div><p>This is useful for giving the agent access to local dev servers, API
+endpoints, or dashboards without exposing them to your network.
+Furthermore, the <code>claude</code> and <code>open-code</code> profiles explicitly block
+access to <a href="https://www.rfc-editor.org/rfc/rfc1918">RFC 1918</a> networks,
+so if you need the agent to access some service on your LAN, this is
+the only way.</p>
+<h2 id="the-git-workflow"><a class="heading-anchor" href="#the-git-workflow">The git workflow</a></h2>
+<p>The real utility of this setup is the git branching workflow. You work
+on a dev branch, the agent commits and pushes to it, and you can pull
+those changes on any other machine to test.</p>
+<h3 id="setup"><a class="heading-anchor" href="#setup">Setup</a></h3>
+<p>In the project you cloned earlier, check out a dev branch:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cd ~/project
+git checkout -b dev/claude-work
+</pre></div>
+</div>
+
+
+<h3 id="agent-directives"><a class="heading-anchor" href="#agent-directives">Agent directives</a></h3>
+<p>Both Claude Code and Open Code support project-level instruction
+files. Claude Code reads <code>CLAUDE.md</code>; Open Code reads
+<code>AGENTS.md</code>. Add one (or both) to the project root:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-markdown" data-lang="markdown"><span style="display:flex;"><span><span style="color:#66d9ef">-</span> Always run <span style="color:#e6db74">`git pull`</span> before making any changes.
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">-</span> When working on a branch other than <span style="color:#e6db74">`master`</span> or <span style="color:#e6db74">`main`</span>, automatically commit
+</span></span><span style="display:flex;"><span>  and push changes when done with a task.
+</span></span></code></pre></div><p>The agent reads this file and follows the directives. When you give it
+a task (&ldquo;add input validation to the login handler&rdquo;), it will pull,
+make the changes, commit with a message describing what it did, and
+push.</p>
+<h3 id="testing-on-other-machines"><a class="heading-anchor" href="#testing-on-other-machines">Testing on other machines</a></h3>
+<p>On your desktop, or wherever you want to test:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git fetch origin
+git checkout dev/claude-work
+git pull
+# run tests, build, review the diff, whatever
+</pre></div>
+</div>
+
+
+<p>If the tests fail, go back to the Emacs shell buffer and tell the
+agent what went wrong. It pulls, fixes, commits, pushes. You pull
+again. This loop works the same way it would with any remote
+collaborator, except the collaborator happens to be an AI running in a
+VM on your laptop.</p>
+<p>When you&rsquo;re happy with the branch, merge it however you normally
+merge branches.</p>
+<h2 id="snapshots"><a class="heading-anchor" href="#snapshots">Snapshots</a></h2>
+<p>One of the nice things about running in a VM is that you can snapshot
+the state disk before asking the agent to do anything particularly
+adventurous:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just snapshot claude-dev before-refactor
+</pre></div>
+</div>
+
+
+<p>If things go sideways:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just restore-snapshot claude-dev before-refactor
+</pre></div>
+</div>
+
+
+<p>This only snapshots the <code>/var</code> disk (which contains home directories,
+git repos, and all mutable state). The root filesystem is immutable so
+there&rsquo;s nothing to snapshot there.</p>
+<h2 id="upgrades-and-profiles"><a class="heading-anchor" href="#upgrades-and-profiles">Upgrades and profiles</a></h2>
+<p>The template uses composable mixin profiles. Instead of a deep
+inheritance hierarchy, you combine profiles as needed:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>core         → SSH daemon, user accounts, firewall (always included)
+</span></span><span style="display:flex;"><span>docker       → Docker daemon + user access
+</span></span><span style="display:flex;"><span>podman       → Podman + distrobox/buildah/skopeo
+</span></span><span style="display:flex;"><span>nvidia       → NVIDIA GPU support (requires docker)
+</span></span><span style="display:flex;"><span>python       → Python/uv development
+</span></span><span style="display:flex;"><span>rust         → Rust/rustup development
+</span></span><span style="display:flex;"><span>dev          → Development tools (neovim, tmux, etc.)
+</span></span><span style="display:flex;"><span>home-manager → Home-manager with sway-home modules (emacs, shell config, etc.)
+</span></span><span style="display:flex;"><span>claude       → Claude Code CLI
+</span></span><span style="display:flex;"><span>open-code    → OpenCode CLI
+</span></span></code></pre></div><p>Profiles are specified as comma-separated lists. For example,
+<code>claude,dev,docker,podman</code> gives you Claude Code with the full
+development environment, Docker, and Podman. Each VM&rsquo;s selected
+profiles are stored in <code>machines/&lt;name&gt;/profile</code>, which is set during
+<code>just create</code> and read by <code>just upgrade</code> to know which image to
+rebuild. To change a VM&rsquo;s profiles, edit that file and put the
+comma-separated list you want, then run <code>just upgrade &lt;name&gt;</code>.</p>
+<p>To add packages, edit the relevant profile file in <code>profiles/</code>, or
+create your own. For example, to add <code>go</code> to the dev profile:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span><span style="color:#75715e"># profiles/dev.nix</span>
+</span></span><span style="display:flex;"><span>{ pkgs<span style="color:#f92672">,</span> <span style="color:#f92672">...</span> }:
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  environment<span style="color:#f92672">.</span>systemPackages <span style="color:#f92672">=</span> <span style="color:#66d9ef">with</span> pkgs; [
+</span></span><span style="display:flex;"><span>    neovim
+</span></span><span style="display:flex;"><span>    tmux
+</span></span><span style="display:flex;"><span>    go  <span style="color:#75715e"># add new packages here</span>
+</span></span><span style="display:flex;"><span>  ];
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>After editing, rebuild and upgrade:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just upgrade claude-dev    # build and install new image, preserving /var
+</pre></div>
+</div>
+
+
+<p>Your home directory, git repos, npm globals (including the agent
+itself), and everything else on <code>/var</code> survives the upgrade. Only the
+read-only root filesystem gets replaced.</p>
+<h2 id="multiple-vms"><a class="heading-anchor" href="#multiple-vms">Multiple VMs</a></h2>
+<p>VMs created from the same base image are thin-provisioned (QCOW2
+backing files), so they only store deltas from the shared image. You
+can spin up multiple VMs — one per project or task — each with their
+own repos and contexts, without duplicating the full OS image for each
+one.</p>
+<h2 id="bridged-networking"><a class="heading-anchor" href="#bridged-networking">Bridged networking</a></h2>
+<p>By default VMs use NAT, which means they&rsquo;re accessible from the host
+but not from other machines on your LAN. If you want to pull the
+agent&rsquo;s commits from a desktop on the same network without going
+through GitHub, you can use bridged networking. When running <code>just create</code>, select &ldquo;bridge&rdquo; for the network mode when prompted.</p>
+<p>The VM will get an IP from your LAN&rsquo;s DHCP server and be directly
+reachable from other machines.</p>
+<p>See more information in the nixos-vm-template
+<a href="https://github.com/EnigmaCurry/nixos-vm-template?tab=readme-ov-file#bridged-networking">README.md</a></p>
+<h2 id="conclusion"><a class="heading-anchor" href="#conclusion">Conclusion</a></h2>
+<p>Putting a code agent in an immutable NixOS VM keeps your laptop safe:
+the OS is read-only, mutable state is isolated on <code>/var</code>, and snapshots
+make rollback trivial. With TRAMP and a branch-based git loop, it
+still feels local—and the agent’s work is easy to test anywhere.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

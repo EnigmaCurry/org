@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 3: Notifications · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/04-containers/" aria-label="Previous: containers" title="prev: containers"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/02-networking/" aria-label="Next: networking" title="next: networking"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">notifications</a></li><li class="lvl2"><a href="#requirements">Requirements</a></li><li class="lvl2"><a href="#upgrade-to-at-least-proxmox-81">Upgrade to at least Proxmox 8.1</a></li><li class="lvl2"><a href="#verify-the-root-users-email-address-setting">Verify the root user&amp;rsquo;s email address setting</a></li><li class="lvl2"><a href="#configure-a-new-smtp-notification-target">Configure a new SMTP notification target</a></li><li class="lvl3"><a href="#test-the-new-smtp-notification-target">Test the new SMTP notification target</a></li><li class="lvl3"><a href="#disable-the-builtin-mail-to-root-notification-target">Disable the builtin mail-to-root notification target</a></li><li class="lvl2"><a href="#configure-the-default-notification-matcher">Configure the default notification matcher</a></li><li class="lvl2"><a href="#configure-gotify-optional">Configure Gotify (optional)</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="active" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/03-notifications/">/notifications</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 3: Notifications</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-04">2022-05-04</time></span>
+  <span>updated <time datetime="2023-11-25">2023-11-25</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>Now that you have installed Proxmox, created a storage pool, and
+configured the networking, you&rsquo;ll want to setup notifications in case
+a hardware error occurs, or in the case of a backup job failing. Let&rsquo;s
+setup email notifications, and test that they are working.</p>
+<p>Prior to Proxmox 8.1, to do this you had to configure postfix by hand,
+and setup your outgoing SMTP server and credentials. If you upgrade to
+Proxmox 8.1, this is now much nicer: there is a new dashboard menu to
+setup the authenticated SMTP relay.</p>
+<h2 id="requirements"><a class="heading-anchor" href="#requirements">Requirements</a></h2>
+<ul>
+<li>A Proxmox server (<a href="/blog/proxmox/01-install/">start with step 1</a> if
+you haven&rsquo;t already.)</li>
+<li>An external SMTP relay service.</li>
+</ul>
+<p>Sending email in 2023 is near impossible unless you use a provider
+that makes it their full time job to ensure that their servers are not
+blacklisted nor sent to spam. Its not feasable to reliably self-host
+your own general outgoing SMTP relay, you&rsquo;re going to need to use a
+third party email account/service for that. (On the other hand, you
+could self-host an entire <a href="https://mailu.io/">email server</a>, and as
+long as both the sending account and the recipient account are on the
+same host, then this is not a problem.)</p>
+<p>For security purposes, and by following the rule of least privilege, I
+recommend that you use a kind of SMTP service that is designed for
+sending only (eg. mailgun). You should not use the same SMTP account
+credentials as you use for your personal mail. You should use an
+email/smtp account that is dedicated to the Proxmox user, and should
+not have any other purpose.</p>
+<h2 id="upgrade-to-at-least-proxmox-81"><a class="heading-anchor" href="#upgrade-to-at-least-proxmox-81">Upgrade to at least Proxmox 8.1</a></h2>
+<ul>
+<li>Click on your pve host under the <code>Datacenter</code> list.</li>
+<li>Click <code>Updates</code>.</li>
+<li>Click <code>Upgrade</code>.</li>
+<li>This will open a shell and do any pending upgrades.</li>
+<li>Reboot if prompted to do so.</li>
+<li>Verify the version is now 8.1+, printed in the top left of the
+dashboard.</li>
+</ul>
+<h2 id="verify-the-root-users-email-address-setting"><a class="heading-anchor" href="#verify-the-root-users-email-address-setting">Verify the root user&rsquo;s email address setting</a></h2>
+<ul>
+<li>Click <code>Datacenter</code>.</li>
+<li>Under <code>Permissions</code>, click <code>Users</code>.</li>
+<li>Click the <code>root</code> user.</li>
+<li>Click <code>Edit</code>.</li>
+<li>Verify the <code>E-Mail</code> address is correct. You should put your own
+email address here, so that you receive all the mail that the root
+Proxmox user should receive.</li>
+</ul>
+<h2 id="configure-a-new-smtp-notification-target"><a class="heading-anchor" href="#configure-a-new-smtp-notification-target">Configure a new SMTP notification target</a></h2>
+<ul>
+<li>Click <code>Datacenter</code>.</li>
+<li>Click <code>Notifications</code>.</li>
+<li>Under <code>Notification targets</code>, click <code>Add</code>, then choose <code>SMTP</code>.</li>
+<li>Fill in all the details of your external SMTP account:
+<ul>
+<li>Enter the endpoint name, like: <code>My external SMTP relay</code>.</li>
+<li>Enter your provider&rsquo;s SMTP <code>Server</code> domain name: <code>mail.example.com</code>.</li>
+<li>Choose the <code>Encryption</code> (usually <code>TLS</code>, check with your provider).</li>
+<li>Enter the <code>Port</code> number (usually <code>465</code> or <code>587</code>, check with your provider).</li>
+<li>Enter the <code>Username</code> and <code>Password</code> for your provided SMTP account.</li>
+<li>Enter the <code>From</code> Address, this can usually be whatever you like,
+eg. <code>root@pve.example.com</code></li>
+<li>Select the <code>Recipient(s)</code> - choose <code>root@pam</code> - unless you use a
+different Proxmox account than root, choose <code>root@pam</code>.</li>
+<li>You should not need to fill in the <code>Additional Recipient(s)</code>,
+because the forwarding address is already defined on the root
+account instead, but you can if you want.</li>
+<li>Click <code>Add</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="test-the-new-smtp-notification-target"><a class="heading-anchor" href="#test-the-new-smtp-notification-target">Test the new SMTP notification target</a></h3>
+<ul>
+<li>Click on the new notification target in the list.</li>
+<li>Click the <code>Test</code> button.</li>
+<li>Click <code>Yes</code>, to confirm that you would like to send the test email.</li>
+<li>Verify that you do recieve the test email.</li>
+</ul>
+<h3 id="disable-the-builtin-mail-to-root-notification-target"><a class="heading-anchor" href="#disable-the-builtin-mail-to-root-notification-target">Disable the builtin <code>mail-to-root</code> notification target</a></h3>
+<p>You should now see two <code>Notifications Targets</code> listed: 1) mail-to-root
+and 2) your external SMTP server. You should disable the first one,
+<code>mail-to-root</code>, as the new one will serve that role instead:</p>
+<ul>
+<li>Click the <code>mail-to-root</code> entry.</li>
+<li>Click <code>Modify</code>.</li>
+<li>Uncheck the <code>Enable</code> flag.</li>
+<li>Click <code>OK</code>.</li>
+<li>Verify the builtin <code>mail-to-root</code> is now disabled (shows an icon
+like <code>—</code> instead of <code>✔</code>). (You can&rsquo;t remove it, because its
+builtin, you can only disable it.)</li>
+</ul>
+<h2 id="configure-the-default-notification-matcher"><a class="heading-anchor" href="#configure-the-default-notification-matcher">Configure the default notification matcher</a></h2>
+<p>You want <em>all</em> notifications to go to the root user, via your new SMTP
+notification target, so you need to edit the <code>default-matcher</code>
+notification target:</p>
+<ul>
+<li>Click the <code>default-matcher</code> notification target.</li>
+<li>Click <code>Modify</code>.</li>
+<li>Click <code>Targets to notify</code>.</li>
+<li>Uncheck <code>mail-to-root</code>.</li>
+<li>Check the new SMTP target.</li>
+<li>Click <code>OK</code>.</li>
+</ul>
+<h2 id="configure-gotify-optional"><a class="heading-anchor" href="#configure-gotify-optional">Configure Gotify (optional)</a></h2>
+<p>As an alternative to Email, or in addition to, you can send
+notifications via <a href="https://gotify.net/">Gotify</a> which supports <a href="https://f-droid.org/de/packages/com.github.gotify/">an
+android app</a> to
+receive mobile push notitfications. The advantage here is that a
+gotify server is much easier to setup than an email server, and you
+don&rsquo;t have to worry about messages going to spam.</p>
+<p>I am not too interested in having yet another app on my phone
+maintaining a connection 24/7, just to receive the occasional
+emergency notification. So I would want to receive the notification in
+Matrix (Element), so I have my eye on
+<a href="https://github.com/Ondolin/gotify-matrix-bot">Ondolin/gotify-matrix-bot</a>
+but I have not tested it yet.</p>
+<p>I feel like it was a missed opportunity for Proxmox to support gotify,
+but not <a href="https://ntfy.sh/">ntfy</a> which better handles the multiple
+connection problem, on android at least.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

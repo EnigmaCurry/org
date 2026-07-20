@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Retrogrid · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/noise/" aria-label="Previous: noise" title="prev: noise"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/synthwave-trip/" aria-label="Next: synthwave-trip" title="next: synthwave-trip"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">retrogrid</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="open">
+                  <a class="active" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/retrogrid/">/retrogrid</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Retrogrid</a></h1>
+
+
+<p>Three layers stack on top of each other:</p>
+<ul>
+<li>a perspective ground plane raymarched from a <code>rayDir</code> vector — the
+classic outrun grid, colored per cell from the four-color palette;</li>
+<li>a slowly-drifting <strong>epicycle</strong> system — nine nested rotating circles
+whose combined tip traces a Spirograph curve, painted with a heavy
+phosphor bloom;</li>
+<li>an <strong>Oort cloud</strong> — three concentric rings of 24 tiny particles at
+slightly different radii, each twinkling on its own hashed clock,
+meant to read as a distant shell of icy bodies.</li>
+</ul>
+<p>The panel exposes <code>pitch</code>, <code>zoom</code>, and <code>fisheye</code> as sliders. <code>pitch</code>
+tilts the camera about the horizon (0 = looking straight ahead, 90 =
+straight down). <code>fisheye</code> blends between a perspective projection
+(<code>atan(r, 1)</code>) and a barrel-distorted one (<code>r * PI * 0.8</code>), so at <code>1</code>
+the ground plane bulges into a hemisphere.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Perspective grid + phosphor epicycle + Oort cloud shell.
+// @slider tempo   0.1  3.0  1.0  0.05
+// @slider pitch   0.0 90.0 65.0  1.0
+// @slider zoom    0.5  2.0  1.0  0.05
+// @slider fisheye 0.0  1.0  0.5  0.05
+uniform float tempo;
+uniform float pitch;
+uniform float zoom;
+uniform float fisheye;
+
+#define PI  3.14159265
+#define TAU 6.28318530
+
+float hash(float p){
+  p = fract(p * 0.1031);
+  p *= p + 33.33;
+  p *= p + p;
+  return fract(p);
+}
+
+// nine nested rotating circles: sum of orbits at hash-derived periods
+vec2 epicyclePos(float t, float seed){
+  vec2 pos = vec2(0.0);
+  for(int i = 0; i < 9; i++){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 + fi * 0.55);
+    float period = 1.0 + floor(hash(seed + fi * 7.13) * 7.0);
+    float phase  = hash(seed + fi * 3.71 + 10.0) * TAU;
+    float dir    = hash(seed + fi * 5.37 + 20.0) > 0.5 ? 1.0 : -1.0;
+    pos += vec2(cos(dir * t * period + phase),
+                sin(dir * t * period + phase)) * radius;
+  }
+  return pos;
+}
+
+// phosphor bloom: hot white core + colored inner glow + wide halo
+vec3 phosphor(float d, vec3 color){
+  float core  = smoothstep(0.005, 0.001, d);
+  float inner = exp(-d * 220.0);
+  float outer = exp(-d *  60.0);
+  return vec3(1.0) * core * 1.5 + color * inner * 1.8 + color * outer * 0.5;
+}
+
+// draw one epicycle system with a phosphor-persistence trail
+vec3 drawEpicycle(vec2 uv, float time, vec2 center, float seed, vec3 color){
+  vec2 local = uv - center;
+  vec3 result = vec3(0.0);
+  float speed = 0.06 + hash(seed + 50.0) * 0.04;
+  float t0 = time * speed;
+
+  // orbit ring visualisation: node at every pivot, ring around every orbit
+  vec2 pivot = vec2(0.0);
+  for(int i = 0; i < 9; i++){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 + fi * 0.55);
+    float period = 1.0 + floor(hash(seed + fi * 7.13) * 7.0);
+    float phase  = hash(seed + fi * 3.71 + 10.0) * TAU;
+    float dir    = hash(seed + fi * 5.37 + 20.0) > 0.5 ? 1.0 : -1.0;
+    float angle  = dir * t0 * period + phase;
+
+    float nodeDist = length(local - pivot);
+    float dimmer   = 1.0 / (1.0 + fi * 0.3);
+    result += phosphor(nodeDist, color) * 0.3 * dimmer;
+
+    float ringDist  = abs(length(local - pivot) - radius);
+    float ringLine  = smoothstep(0.003, 0.0005, ringDist);
+    float ringBloom = exp(-ringDist * 120.0);
+    result += color * ringLine * 0.2 * dimmer + color * ringBloom * 0.06 * dimmer;
+
+    pivot += vec2(cos(angle), sin(angle)) * radius;
+  }
+
+  // phosphor-persistence trail: 100 backwards steps of exponentially decayed glow
+  float trailSpan = TAU * 4.0;
+  for(int i = 0; i < 100; i++){
+    float fi = float(i);
+    float tt = t0 - fi / 100.0 * trailSpan;
+    vec2 pos = epicyclePos(tt, seed);
+    float d = length(local - pos);
+    float fade = exp(-fi * 0.025);
+    float core = smoothstep(0.004, 0.0008, d);
+    float glow = exp(-d * 180.0);
+    result += color * (core * 0.6 + glow * 0.3) * fade;
+  }
+
+  // tip: full phosphor bloom
+  vec2 tipPos = epicyclePos(t0, seed);
+  float d = length(local - tipPos);
+  result += phosphor(d, color);
+  return result;
+}
+
+// three concentric rings of icy specks with orbital drift + twinkle
+vec3 drawOortCloud(vec2 uv, float time){
+  vec3 result = vec3(0.0);
+  for(int layer = 0; layer < 3; layer++){
+    float fl = float(layer);
+    float ringRadius = 0.33 + fl * 0.055;
+    for(int i = 0; i < 24; i++){
+      float fi = float(i);
+      float seed = fi + fl * 100.0;
+      float baseAngle  = fi / 24.0 * TAU + hash(seed) * 0.4;
+      float orbitSpeed = 0.012 + hash(seed + 1.0) * 0.02;
+      float dir = hash(seed + 2.0) > 0.5 ? 1.0 : -1.0;
+      float a = baseAngle + time * orbitSpeed * dir;
+      float r = ringRadius + (hash(seed + 3.0) - 0.5) * 0.045;
+      vec2 pos = vec2(cos(a), sin(a)) * r;
+      float d = length(uv - pos);
+      float size    = 0.0008 + hash(seed + 4.0) * 0.0014;
+      float twinkle = 0.35 + 0.65 * sin(time * (0.3 + hash(seed + 5.0) * 1.5)
+                                        + hash(seed + 6.0) * TAU);
+      vec3 iceColor = vec3(0.55, 0.72, 0.92) + vec3(
+        (hash(seed + 7.0) - 0.5) * 0.12,
+        (hash(seed + 8.0) - 0.5) * 0.08,
+         hash(seed + 9.0) * 0.08);
+      float core  = smoothstep(size * 3.0, size * 0.2, d) * twinkle;
+      float halo  = exp(-d * 300.0) * twinkle;
+      float bloom = exp(-d *  80.0) * twinkle;
+      result += iceColor * core * 0.9 + iceColor * halo * 0.4 + iceColor * bloom * 0.12;
+    }
+  }
+  // diffuse haze at the shell distance
+  float dist = length(uv);
+  float haze = exp(-pow((dist - 0.36) / 0.09, 2.0)) * 0.06;
+  result += vec3(0.4, 0.55, 0.8) * haze;
+  return result;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  vec2 centered = uv - 0.5;
+  float aspect = iResolution.x / iResolution.y;
+  centered.x *= aspect;
+  centered *= zoom;
+
+  float r = length(centered);
+  float maxR = 0.8 * zoom;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  vec3 baseColor = vec3(0.0);
+
+  if(r < maxR){
+    // blend perspective and fisheye projections
+    float phi_fisheye = r * PI * 0.8;
+    float phi_persp   = atan(r, 1.0);
+    float phi = mix(phi_persp, phi_fisheye, fisheye);
+    float theta = atan(centered.y, centered.x);
+
+    // rayDir points into the scene. At the projection origin (r=0) it
+    // looks straight up; larger r tilts it toward horizontal. The z sign
+    // is negated so screen +y (top of screen) maps to -z (behind camera
+    // after pitch), which puts the ground plane in the LOWER half of
+    // the screen — the standard outrun-grid look.
+    vec3 rayDir;
+    rayDir.x =  sin(phi) * cos(theta);
+    rayDir.y =  cos(phi);
+    rayDir.z = -sin(phi) * sin(theta);
+
+    // pitch the camera by the slider (0 = looking straight up,
+    // 90 = looking horizontally forward)
+    float pitchAngle = pitch * PI / 180.0;
+    float cy = cos(pitchAngle);
+    float sy = sin(pitchAngle);
+    vec3 tilted = vec3(
+      rayDir.x,
+      rayDir.y * cy - rayDir.z * sy,
+      rayDir.y * sy + rayDir.z * cy);
+
+    // hit-test against the ground plane (y = 0)
+    if(tilted.y < -0.001){
+      float tParam = -1.0 / tilted.y;
+      float x = tilted.x * tParam;
+      float z = tilted.z * tParam;
+
+      float movement = iTime * tempo * 5.0;
+      z += movement;
+
+      float gridSize  = 1.0;
+      float lineWidth = 0.03;
+      float xGrid = mod(x, gridSize);
+      float zGrid = mod(z, gridSize);
+      float xAA = fwidth(x) * 1.5;
+      float zAA = fwidth(z) * 1.5;
+      float hLine = smoothstep(lineWidth + zAA, lineWidth, zGrid)
+                  + smoothstep(gridSize - lineWidth - zAA, gridSize - lineWidth, zGrid);
+      float vLine = smoothstep(lineWidth + xAA, lineWidth, xGrid)
+                  + smoothstep(gridSize - lineWidth - xAA, gridSize - lineWidth, xGrid);
+
+      float cellX = floor(x);
+      float cellZ = floor(z);
+      int colorIdx = int(mod(cellX + cellZ, 4.0));
+      vec3 lineColor;
+      if(colorIdx == 0)      lineColor = c1;
+      else if(colorIdx == 1) lineColor = c2;
+      else if(colorIdx == 2) lineColor = c3;
+      else                   lineColor = c4;
+
+      float grid = min(1.0, hLine + vLine);
+      float dist = length(vec2(x, z - movement));
+      float fade = 1.0 - smoothstep(5.0, 30.0, dist);
+      grid *= fade;
+      baseColor = lineColor * grid * 0.3;
+    }
+  }
+
+  // overlays in screen space, aspect-corrected and zoom-independent
+  vec2 overlayUV = (uv - 0.5) * vec2(aspect, 1.0);
+  float dt = iTime * 0.04;
+  vec2 epiCenter = vec2(sin(dt * 0.7) * 0.05, cos(dt * 0.5) * 0.04);
+  vec3 epicycles = drawEpicycle(overlayUV, iTime, epiCenter, 1.0, c1);
+  vec3 oort = drawOortCloud(overlayUV, iTime);
+
+  fragColor = vec4(baseColor + epicycles + oort, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Perspective grid &#43; phosphor epicycle &#43; Oort cloud shell.
+// @slider tempo   0.1  3.0  1.0  0.05
+// @slider pitch   0.0 90.0 65.0  1.0
+// @slider zoom    0.5  2.0  1.0  0.05
+// @slider fisheye 0.0  1.0  0.5  0.05
+uniform float tempo;
+uniform float pitch;
+uniform float zoom;
+uniform float fisheye;
+
+#define PI  3.14159265
+#define TAU 6.28318530
+
+float hash(float p){
+  p = fract(p * 0.1031);
+  p *= p &#43; 33.33;
+  p *= p &#43; p;
+  return fract(p);
+}
+
+// nine nested rotating circles: sum of orbits at hash-derived periods
+vec2 epicyclePos(float t, float seed){
+  vec2 pos = vec2(0.0);
+  for(int i = 0; i &lt; 9; i&#43;&#43;){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 &#43; fi * 0.55);
+    float period = 1.0 &#43; floor(hash(seed &#43; fi * 7.13) * 7.0);
+    float phase  = hash(seed &#43; fi * 3.71 &#43; 10.0) * TAU;
+    float dir    = hash(seed &#43; fi * 5.37 &#43; 20.0) &gt; 0.5 ? 1.0 : -1.0;
+    pos &#43;= vec2(cos(dir * t * period &#43; phase),
+                sin(dir * t * period &#43; phase)) * radius;
+  }
+  return pos;
+}
+
+// phosphor bloom: hot white core &#43; colored inner glow &#43; wide halo
+vec3 phosphor(float d, vec3 color){
+  float core  = smoothstep(0.005, 0.001, d);
+  float inner = exp(-d * 220.0);
+  float outer = exp(-d *  60.0);
+  return vec3(1.0) * core * 1.5 &#43; color * inner * 1.8 &#43; color * outer * 0.5;
+}
+
+// draw one epicycle system with a phosphor-persistence trail
+vec3 drawEpicycle(vec2 uv, float time, vec2 center, float seed, vec3 color){
+  vec2 local = uv - center;
+  vec3 result = vec3(0.0);
+  float speed = 0.06 &#43; hash(seed &#43; 50.0) * 0.04;
+  float t0 = time * speed;
+
+  // orbit ring visualisation: node at every pivot, ring around every orbit
+  vec2 pivot = vec2(0.0);
+  for(int i = 0; i &lt; 9; i&#43;&#43;){
+    float fi = float(i);
+    float radius = 0.12 / (1.0 &#43; fi * 0.55);
+    float period = 1.0 &#43; floor(hash(seed &#43; fi * 7.13) * 7.0);
+    float phase  = hash(seed &#43; fi * 3.71 &#43; 10.0) * TAU;
+    float dir    = hash(seed &#43; fi * 5.37 &#43; 20.0) &gt; 0.5 ? 1.0 : -1.0;
+    float angle  = dir * t0 * period &#43; phase;
+
+    float nodeDist = length(local - pivot);
+    float dimmer   = 1.0 / (1.0 &#43; fi * 0.3);
+    result &#43;= phosphor(nodeDist, color) * 0.3 * dimmer;
+
+    float ringDist  = abs(length(local - pivot) - radius);
+    float ringLine  = smoothstep(0.003, 0.0005, ringDist);
+    float ringBloom = exp(-ringDist * 120.0);
+    result &#43;= color * ringLine * 0.2 * dimmer &#43; color * ringBloom * 0.06 * dimmer;
+
+    pivot &#43;= vec2(cos(angle), sin(angle)) * radius;
+  }
+
+  // phosphor-persistence trail: 100 backwards steps of exponentially decayed glow
+  float trailSpan = TAU * 4.0;
+  for(int i = 0; i &lt; 100; i&#43;&#43;){
+    float fi = float(i);
+    float tt = t0 - fi / 100.0 * trailSpan;
+    vec2 pos = epicyclePos(tt, seed);
+    float d = length(local - pos);
+    float fade = exp(-fi * 0.025);
+    float core = smoothstep(0.004, 0.0008, d);
+    float glow = exp(-d * 180.0);
+    result &#43;= color * (core * 0.6 &#43; glow * 0.3) * fade;
+  }
+
+  // tip: full phosphor bloom
+  vec2 tipPos = epicyclePos(t0, seed);
+  float d = length(local - tipPos);
+  result &#43;= phosphor(d, color);
+  return result;
+}
+
+// three concentric rings of icy specks with orbital drift &#43; twinkle
+vec3 drawOortCloud(vec2 uv, float time){
+  vec3 result = vec3(0.0);
+  for(int layer = 0; layer &lt; 3; layer&#43;&#43;){
+    float fl = float(layer);
+    float ringRadius = 0.33 &#43; fl * 0.055;
+    for(int i = 0; i &lt; 24; i&#43;&#43;){
+      float fi = float(i);
+      float seed = fi &#43; fl * 100.0;
+      float baseAngle  = fi / 24.0 * TAU &#43; hash(seed) * 0.4;
+      float orbitSpeed = 0.012 &#43; hash(seed &#43; 1.0) * 0.02;
+      float dir = hash(seed &#43; 2.0) &gt; 0.5 ? 1.0 : -1.0;
+      float a = baseAngle &#43; time * orbitSpeed * dir;
+      float r = ringRadius &#43; (hash(seed &#43; 3.0) - 0.5) * 0.045;
+      vec2 pos = vec2(cos(a), sin(a)) * r;
+      float d = length(uv - pos);
+      float size    = 0.0008 &#43; hash(seed &#43; 4.0) * 0.0014;
+      float twinkle = 0.35 &#43; 0.65 * sin(time * (0.3 &#43; hash(seed &#43; 5.0) * 1.5)
+                                        &#43; hash(seed &#43; 6.0) * TAU);
+      vec3 iceColor = vec3(0.55, 0.72, 0.92) &#43; vec3(
+        (hash(seed &#43; 7.0) - 0.5) * 0.12,
+        (hash(seed &#43; 8.0) - 0.5) * 0.08,
+         hash(seed &#43; 9.0) * 0.08);
+      float core  = smoothstep(size * 3.0, size * 0.2, d) * twinkle;
+      float halo  = exp(-d * 300.0) * twinkle;
+      float bloom = exp(-d *  80.0) * twinkle;
+      result &#43;= iceColor * core * 0.9 &#43; iceColor * halo * 0.4 &#43; iceColor * bloom * 0.12;
+    }
+  }
+  // diffuse haze at the shell distance
+  float dist = length(uv);
+  float haze = exp(-pow((dist - 0.36) / 0.09, 2.0)) * 0.06;
+  result &#43;= vec3(0.4, 0.55, 0.8) * haze;
+  return result;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  vec2 centered = uv - 0.5;
+  float aspect = iResolution.x / iResolution.y;
+  centered.x *= aspect;
+  centered *= zoom;
+
+  float r = length(centered);
+  float maxR = 0.8 * zoom;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+  vec3 baseColor = vec3(0.0);
+
+  if(r &lt; maxR){
+    // blend perspective and fisheye projections
+    float phi_fisheye = r * PI * 0.8;
+    float phi_persp   = atan(r, 1.0);
+    float phi = mix(phi_persp, phi_fisheye, fisheye);
+    float theta = atan(centered.y, centered.x);
+
+    // rayDir points into the scene. At the projection origin (r=0) it
+    // looks straight up; larger r tilts it toward horizontal. The z sign
+    // is negated so screen &#43;y (top of screen) maps to -z (behind camera
+    // after pitch), which puts the ground plane in the LOWER half of
+    // the screen — the standard outrun-grid look.
+    vec3 rayDir;
+    rayDir.x =  sin(phi) * cos(theta);
+    rayDir.y =  cos(phi);
+    rayDir.z = -sin(phi) * sin(theta);
+
+    // pitch the camera by the slider (0 = looking straight up,
+    // 90 = looking horizontally forward)
+    float pitchAngle = pitch * PI / 180.0;
+    float cy = cos(pitchAngle);
+    float sy = sin(pitchAngle);
+    vec3 tilted = vec3(
+      rayDir.x,
+      rayDir.y * cy - rayDir.z * sy,
+      rayDir.y * sy &#43; rayDir.z * cy);
+
+    // hit-test against the ground plane (y = 0)
+    if(tilted.y &lt; -0.001){
+      float tParam = -1.0 / tilted.y;
+      float x = tilted.x * tParam;
+      float z = tilted.z * tParam;
+
+      float movement = iTime * tempo * 5.0;
+      z &#43;= movement;
+
+      float gridSize  = 1.0;
+      float lineWidth = 0.03;
+      float xGrid = mod(x, gridSize);
+      float zGrid = mod(z, gridSize);
+      float xAA = fwidth(x) * 1.5;
+      float zAA = fwidth(z) * 1.5;
+      float hLine = smoothstep(lineWidth &#43; zAA, lineWidth, zGrid)
+                  &#43; smoothstep(gridSize - lineWidth - zAA, gridSize - lineWidth, zGrid);
+      float vLine = smoothstep(lineWidth &#43; xAA, lineWidth, xGrid)
+                  &#43; smoothstep(gridSize - lineWidth - xAA, gridSize - lineWidth, xGrid);
+
+      float cellX = floor(x);
+      float cellZ = floor(z);
+      int colorIdx = int(mod(cellX &#43; cellZ, 4.0));
+      vec3 lineColor;
+      if(colorIdx == 0)      lineColor = c1;
+      else if(colorIdx == 1) lineColor = c2;
+      else if(colorIdx == 2) lineColor = c3;
+      else                   lineColor = c4;
+
+      float grid = min(1.0, hLine &#43; vLine);
+      float dist = length(vec2(x, z - movement));
+      float fade = 1.0 - smoothstep(5.0, 30.0, dist);
+      grid *= fade;
+      baseColor = lineColor * grid * 0.3;
+    }
+  }
+
+  // overlays in screen space, aspect-corrected and zoom-independent
+  vec2 overlayUV = (uv - 0.5) * vec2(aspect, 1.0);
+  float dt = iTime * 0.04;
+  vec2 epiCenter = vec2(sin(dt * 0.7) * 0.05, cos(dt * 0.5) * 0.04);
+  vec3 epicycles = drawEpicycle(overlayUV, iTime, epiCenter, 1.0, c1);
+  vec3 oort = drawOortCloud(overlayUV, iTime);
+
+  fragColor = vec4(baseColor &#43; epicycles &#43; oort, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>NixOS VMs part 4: Managing VMs with home-manager and sway-home · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/git-extensions/" aria-label="Previous: git-extensions" title="prev: git-extensions"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/mutable-vms/" aria-label="Next: mutable-vms" title="next: mutable-vms"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">nixos-vm-home-manager</a></li><li class="lvl2"><a href="#what-is-home-manager">What is home-manager?</a></li><li class="lvl2"><a href="#what-is-sway-home">What is sway-home?</a></li><li class="lvl2"><a href="#the-hm--commands">The hm-* commands</a></li><li class="lvl2"><a href="#the-nixos-vm-template-module">The nixos-vm-template module</a></li><li class="lvl3"><a href="#the-nix-store-binding">The nix store binding</a></li><li class="lvl3"><a href="#where-things-live">Where things live</a></li><li class="lvl2"><a href="#updating-nixos-vm-template">Updating nixos-vm-template</a></li><li class="lvl2"><a href="#home-manager-inside-the-vm">Home-manager inside the VM</a></li><li class="lvl2"><a href="#creating-a-proxmox-alias">Creating a Proxmox alias</a></li><li class="lvl2"><a href="#disk-space-and-garbage-collection">Disk space and garbage collection</a></li><li class="lvl2"><a href="#the-full-workflow">The full workflow</a></li><li class="lvl2"><a href="#conclusion">Conclusion</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="active" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/nixos-vm-home-manager/">/nixos-vm-home-manager</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-01-29">2026-01-29</time></span>
+  <span>updated <time datetime="2026-01-31">2026-01-31</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/nixos/">nixos</a>
+      <a href="/tags/libvirt/">libvirt</a>
+      <a href="/tags/home-manager/">home-manager</a>
+      <a href="/tags/nixos-vm-template/">nixos-vm-template</a>
+  </span>
+</div>
+
+<p><em>This is part 4 of a series on <a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>:</em></p>
+<ol>
+<li><em><a href="/blog/linux/code-agent-vm/">Running code agents in an immutable NixOS VM</a></em></li>
+<li><em><a href="/blog/linux/nixos-proxmox-vm/">Bootstrapping a Docker server with immutable NixOS on Proxmox</a></em></li>
+<li><em><a href="/blog/linux/mutable-vms/">Mutable VMs are cool too</a></em></li>
+<li><em>Managing VMs with home-manager and sway-home (this post)</em></li>
+<li><em><a href="/blog/linux/nixos-lxc-nas/">A NixOS NAS in a Proxmox LXC container</a></em></li>
+</ol>
+<hr>
+<p>The previous posts covered creating and managing VMs with
+<a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a>. But
+how do you actually integrate it into your daily workflow on your
+workstation? This post covers using
+<a href="https://github.com/nix-community/home-manager">home-manager</a> to set up
+the VM tooling, create shell aliases with tab completion, and manage
+updates through the Nix ecosystem.</p>
+<h2 id="what-is-home-manager"><a class="heading-anchor" href="#what-is-home-manager">What is home-manager?</a></h2>
+<p><a href="https://github.com/nix-community/home-manager">Home Manager</a> is a tool
+for managing user environments using the Nix package manager. Instead of
+manually installing programs and editing dotfiles, you declare what you
+want in a Nix configuration file, and home-manager builds and activates
+that environment.</p>
+<p>The key benefits:</p>
+<ul>
+<li><strong>Declarative</strong>: Your entire user environment is defined in code</li>
+<li><strong>Reproducible</strong>: The same configuration produces the same result on
+any machine</li>
+<li><strong>Rollback</strong>: Every configuration change creates a new &ldquo;generation&rdquo;
+you can switch back to</li>
+<li><strong>Isolated</strong>: Packages are installed in the Nix store, not globally</li>
+</ul>
+<p>Home-manager works on any Linux distribution - you don&rsquo;t need NixOS. You
+just need the Nix package manager installed.</p>
+<h2 id="what-is-sway-home"><a class="heading-anchor" href="#what-is-sway-home">What is sway-home?</a></h2>
+<p><a href="https://github.com/EnigmaCurry/sway-home">sway-home</a> is a home-manager
+configuration that sets up a complete development environment. It
+includes:</p>
+<ul>
+<li>Shell configuration (bash, with aliases and completions)</li>
+<li>Editor setup (Emacs)</li>
+<li>Development tools (git, ripgrep, just, etc.)</li>
+<li>Window manager config (Sway, if you&rsquo;re on Wayland)</li>
+<li>And relevantly: nixos-vm-template integration</li>
+</ul>
+<p>When you activate sway-home with home-manager, you get all of this
+configured and ready to use. The configuration is modular - you can
+enable or disable components as needed.</p>
+<h2 id="the-hm--commands"><a class="heading-anchor" href="#the-hm--commands">The hm-* commands</a></h2>
+<p>Sway-home provides shell aliases for common home-manager operations. These
+are the commands you&rsquo;ll use to manage your environment:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hm-switch</code></td>
+<td>Rebuild and activate your home-manager configuration</td>
+</tr>
+<tr>
+<td><code>hm-update</code></td>
+<td>Update flake.lock to fetch latest versions of all inputs</td>
+</tr>
+<tr>
+<td><code>hm-upgrade</code></td>
+<td>Update + switch in one step</td>
+</tr>
+<tr>
+<td><code>hm-generations</code></td>
+<td>List your configuration history (each activation is a &ldquo;generation&rdquo;)</td>
+</tr>
+<tr>
+<td><code>hm-rollback</code></td>
+<td>Revert to the previous generation if something breaks</td>
+</tr>
+<tr>
+<td><code>hm-metadata</code></td>
+<td>Show the git revisions of all flake inputs</td>
+</tr>
+<tr>
+<td><code>hm-pull</code></td>
+<td>Git pull the sway-home repository</td>
+</tr>
+</tbody>
+</table>
+<p>The typical workflow: edit your configuration, run <code>hm-switch</code> to apply
+it. If you want the latest upstream changes from sway-home and its
+dependencies (including nixos-vm-template), run <code>hm-upgrade</code>.</p>
+<h2 id="the-nixos-vm-template-module"><a class="heading-anchor" href="#the-nixos-vm-template-module">The nixos-vm-template module</a></h2>
+<p>One of sway-home&rsquo;s modules, <code>nixos-vm-template.nix</code>, integrates the VM
+tooling directly into your shell. It does three things:</p>
+<ol>
+<li>Symlinks the nixos-vm-template repository into <code>~/nixos-vm-template</code>
+(bound to the nix store, so it&rsquo;s read-only but versioned)</li>
+<li>Creates a default environment file at
+<code>~/.config/nixos-vm-template/env</code> with XDG-compliant paths</li>
+<li>Sets up the <code>vm</code> shell alias with tab completion</li>
+</ol>
+<p>After activating home-manager, you get a <code>vm</code> command that works like
+this:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm list                    # List all VMs
+vm create                  # Create a VM (interactive wizard)
+vm ssh myvm                # SSH in
+vm upgrade myvm            # Upgrade to new image
+</pre></div>
+</div>
+
+
+<p>The <code>vm create</code> command runs an interactive configuration wizard that
+prompts for the VM name, profiles, memory, CPUs, disk size, and
+network mode. After configuration, it builds the image, creates the
+VM, and starts it automatically.</p>
+<p>The <code>vm</code> command operates on the local machine&rsquo;s libvirt backend.</p>
+<p>The alias is defined using the <code>_justfile_alias</code> function, which wraps
+<code>just</code> with a specific Justfile and environment file:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+_justfile_alias vm \
+  &#34;$HOME/nixos-vm-template/Justfile&#34; \
+  &#34;$HOME/.config/nixos-vm-template/env&#34;
+</pre></div>
+</div>
+
+
+<p>This gives you full tab completion for recipes and machine names.
+Tab completion works for commands like <code>vm ssh</code>, <code>vm status</code>, and
+<code>vm upgrade</code> that take a VM name as an argument.</p>
+<h3 id="the-nix-store-binding"><a class="heading-anchor" href="#the-nix-store-binding">The nix store binding</a></h3>
+<p>Here&rsquo;s an important detail: <code>~/nixos-vm-template</code> is a symlink into the
+nix store, not a regular git clone. The module declares:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span>home<span style="color:#f92672">.</span>file<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;nixos-vm-template&#34;</span><span style="color:#f92672">.</span>source <span style="color:#960050;background-color:#1e0010">=</span> inputs<span style="color:#f92672">.</span>nixos-vm-template;
+</span></span></code></pre></div><p>This means the repository is read-only. You can&rsquo;t edit files there
+directly. The benefit is reproducibility - your VM tooling version is
+pinned to a specific commit in the sway-home flake.lock.</p>
+<p>The downside is that changes to nixos-vm-template upstream won&rsquo;t appear
+until you update and rebuild. More on that below.</p>
+<h3 id="where-things-live"><a class="heading-anchor" href="#where-things-live">Where things live</a></h3>
+<p>The environment file sets up XDG-compliant paths:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/.config/nixos-vm-template/machines/</code></td>
+<td>Machine configs (identity files, profiles)</td>
+</tr>
+<tr>
+<td><code>~/.config/nixos-vm-template/libvirt/</code></td>
+<td>Libvirt XML templates</td>
+</tr>
+<tr>
+<td><code>~/.config/nixos-vm-template/env</code></td>
+<td>Backend configuration</td>
+</tr>
+<tr>
+<td><code>~/.local/share/nixos-vm-template/</code></td>
+<td>Built images and VM disks</td>
+</tr>
+</tbody>
+</table>
+<p>Your machine configs are in <code>~/.config</code>, so they&rsquo;re easy to back up and
+track. The large image files go in <code>~/.local/share</code> where they won&rsquo;t
+clutter your config backups.</p>
+<h2 id="updating-nixos-vm-template"><a class="heading-anchor" href="#updating-nixos-vm-template">Updating nixos-vm-template</a></h2>
+<p>Since <code>~/nixos-vm-template</code> is bound to the nix store, you need to update
+home-manager to get new versions:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+hm-update    # Update flake.lock (fetches latest nixos-vm-template)
+hm-switch    # Rebuild and activate
+</pre></div>
+</div>
+
+
+<p>After this, <code>~/nixos-vm-template</code> points to the new version and all <code>vm</code>
+commands use the updated code.</p>
+<p>To see what version you&rsquo;re running:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+hm-metadata
+</pre></div>
+</div>
+
+
+<p>This shows the git revisions of all flake inputs, including
+nixos-vm-template.</p>
+<h2 id="home-manager-inside-the-vm"><a class="heading-anchor" href="#home-manager-inside-the-vm">Home-manager inside the VM</a></h2>
+<p>So far we&rsquo;ve talked about home-manager on your <strong>host workstation</strong> -
+managing your shell, your tools, and the nixos-vm-template integration.
+But you can also run home-manager <strong>inside the VM</strong> to manage the user
+environment there.</p>
+<p>To get home-manager inside a VM, include the <code>home-manager</code> profile when
+creating it. Run <code>vm create</code> and select the <code>home-manager</code> profile
+along with your other desired profiles (e.g., <code>dev</code>, <code>docker</code>).</p>
+<p>The <code>home-manager</code> profile installs sway-home&rsquo;s configuration inside the
+VM, giving you the same shell setup, editor config, and tools. This is
+useful for development VMs where you want a consistent environment.</p>
+<p>The profile works in both immutable and mutable VMs, but with slightly
+different behavior:</p>
+<ul>
+<li>
+<p>In <strong>immutable VMs</strong>, a custom activation service creates symlinks from
+<code>/home/&lt;user&gt;</code> to the nix store. This handles the complexity of the
+read-only root and bind-mounted home directories.</p>
+</li>
+<li>
+<p>In <strong>mutable VMs</strong>, standard home-manager activation runs. The
+filesystem is writable, so home-manager just does its normal thing.</p>
+</li>
+</ul>
+<p>Note that the <code>dev</code> profile includes basic development tools (neovim,
+tmux, etc.) but does <strong>not</strong> include home-manager. If you want the full
+sway-home experience inside the VM, add the <code>home-manager</code> profile
+explicitly.</p>
+<h2 id="creating-a-proxmox-alias"><a class="heading-anchor" href="#creating-a-proxmox-alias">Creating a Proxmox alias</a></h2>
+<p>The <code>vm</code> alias points at libvirt by default. If you also have a Proxmox
+server, you can create a separate alias for it.</p>
+<p>First, create an environment file for your Proxmox backend:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &gt; ~/.config/nixos-vm-template/env-pve &lt;&lt; &#39;EOF&#39;
+BACKEND=proxmox
+PVE_HOST=pve
+PVE_NODE=pve
+PVE_STORAGE=local-zfs
+PVE_DISK_FORMAT=raw
+PVE_BRIDGE=vmbr0
+OUTPUT_DIR=$HOME/.local/share/nixos-vm-template
+MACHINES_DIR=$HOME/.config/nixos-vm-template/machines-pve
+LIBVIRT_DIR=$HOME/.config/nixos-vm-template/libvirt
+EOF
+</pre></div>
+</div>
+
+
+<p>Note the separate <code>MACHINES_DIR</code> - this keeps Proxmox machine configs
+separate from libvirt ones, avoiding confusion.</p>
+<p>Then add the alias to your shell config (e.g., <code>~/.bashrc</code> or the
+sway-home <code>config/bash/alias.sh</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+_justfile_alias pve \
+  &#34;$HOME/nixos-vm-template/Justfile&#34; \
+  &#34;$HOME/.config/nixos-vm-template/env-pve&#34;
+</pre></div>
+</div>
+
+
+<p>Now you have two aliases:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm create       # Creates on local libvirt (interactive)
+pve create      # Creates on Proxmox server (interactive)
+</pre></div>
+</div>
+
+
+<p>Both use the same nixos-vm-template codebase and run the same
+interactive configuration wizard, but target different backends with
+different configurations.</p>
+<h2 id="disk-space-and-garbage-collection"><a class="heading-anchor" href="#disk-space-and-garbage-collection">Disk space and garbage collection</a></h2>
+<p>VM images accumulate in <code>~/.local/share/nixos-vm-template/</code>. Each profile
+combination produces an image (typically 3-4 GB), and each VM has its own
+<code>/var</code> disk.</p>
+<p>To see disk usage:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+du -sh ~/.local/share/nixos-vm-template/
+</pre></div>
+</div>
+
+
+<p>To clean up old images (keeping currently-used ones):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm clean
+</pre></div>
+</div>
+
+
+<p>For the nix store itself, home-manager profiles accumulate over time. To
+reclaim space:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+nix-collect-garbage --delete-older-than 30d
+</pre></div>
+</div>
+
+
+<p>This removes store paths that aren&rsquo;t referenced by any generation newer
+than 30 days. Be careful - this includes home-manager generations, so
+you&rsquo;ll lose the ability to roll back to older configs.</p>
+<p>To see how much space you&rsquo;d reclaim:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+nix-store --gc --print-dead
+</pre></div>
+</div>
+
+
+<h2 id="the-full-workflow"><a class="heading-anchor" href="#the-full-workflow">The full workflow</a></h2>
+<p>Here&rsquo;s what a typical session looks like:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Update everything
+hm-pull &amp;&amp; hm-upgrade
+
+# Check what version of nixos-vm-template you&#39;re running
+hm-metadata | grep nixos-vm-template
+
+# Create a VM for a new project (interactive wizard)
+vm create
+# Enter: project-foo, claude/dev/docker/home-manager, 8192, 4, etc.
+# The VM starts automatically after creation
+
+# Work on the project...
+vm ssh user@project-foo
+# ... do things ...
+
+# Later, upgrade the VM to pick up profile changes
+vm upgrade project-foo
+
+# Deploy to production on Proxmox (interactive wizard)
+pve create
+# Enter: project-foo, docker, etc.
+# The VM starts automatically
+
+# Clean up old images
+vm clean
+nix-collect-garbage --delete-older-than 7d
+</pre></div>
+</div>
+
+
+<h2 id="conclusion"><a class="heading-anchor" href="#conclusion">Conclusion</a></h2>
+<p>The sway-home integration turns nixos-vm-template into a first-class shell
+tool. The <code>vm</code> alias gives you quick access to all VM operations with tab
+completion, and the home-manager binding ensures reproducible tooling
+versions across machines. Adding backend-specific aliases like <code>pve</code> lets
+you manage VMs across multiple hypervisors from a single workflow.</p>
+<p>The key things to remember:</p>
+<ul>
+<li><code>~/nixos-vm-template</code> is read-only; run <code>hm-upgrade</code> to get updates</li>
+<li>Machine configs live in <code>~/.config/nixos-vm-template/machines/</code></li>
+<li>Use <code>nix-collect-garbage</code> periodically to reclaim disk space</li>
+<li>Create separate aliases and machine directories for each backend</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

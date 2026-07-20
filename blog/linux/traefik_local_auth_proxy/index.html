@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Traefik Local Auth Proxy · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/mutable-vms/" aria-label="Previous: mutable-vms" title="prev: mutable-vms"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/just-tab-completion/" aria-label="Next: just-tab-completion" title="next: just-tab-completion"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">traefik_local_auth_proxy</a></li><li class="lvl2"><a href="#get-the-script">Get the script</a></li><li class="lvl2"><a href="#install-traefik">Install Traefik</a></li><li class="lvl2"><a href="#examples">Examples</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="active" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/traefik_local_auth_proxy/">/traefik_local_auth_proxy</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Traefik Local Auth Proxy</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-01-28">2026-01-28</time></span>
+  <span>updated <time datetime="2026-01-28">2026-01-28</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/traefik/">traefik</a>
+  </span>
+</div>
+
+<p>If you need to access an HTTP service that requires authentication
+(<code>Bearer</code> or <code>Basic</code> auth), but you don&rsquo;t want to put the API token
+anywhere near your code, you can use this script to create a
+localhost-only proxy for that service. The proxy accepts
+unauthenticated requests originating only from <code>127.0.0.1</code>, and it
+will inject the API token into your requests, and forward them to the
+upstream server.</p>
+<p>This kind of thing might also be useful for integration with third
+party software that doesn&rsquo;t support authentication. As a pilot case,
+this script was designed for the integration of Ollama with Home
+Assistant, but HA doesn&rsquo;t have an option to add a Bearer auth token
+for Ollama. HA can now talk to the local proxy and the proxy injects
+the API token into the request.</p>
+<h2 id="get-the-script"><a class="heading-anchor" href="#get-the-script">Get the script</a></h2>
+<p>Download the script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/traefik/traefik_local_auth_proxy.sh
+</pre></div>
+</div>
+
+
+<p>Make the script executable:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+chmod a&#43;x traefik_local_auth_proxy.sh
+</pre></div>
+</div>
+
+
+<h2 id="install-traefik"><a class="heading-anchor" href="#install-traefik">Install Traefik</a></h2>
+<p>If you have <a href="https://nixos.org/download/">Nix</a> installed, Traefik will
+be installed automatically by the script. If not, <a href="https://github.com/traefik/traefik/releases">you can download
+the latest binary of
+Traefik</a>, and install it
+in your PATH (e.g., <code>/usr/local/bin/traefik</code>).</p>
+<h2 id="examples"><a class="heading-anchor" href="#examples">Examples</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+  # Run in foreground
+  ./traefik_local_auth_proxy.sh \
+    --upstream https://api.example.com \
+    --token &#39;abc123&#39;
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+  # Install &amp; enable as user service
+  ./traefik_local_auth_proxy.sh \
+    --upstream https://api.example.com \
+    --token &#39;abc123&#39; \
+    --install-user-service
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+  # Basic auth style header (example)
+  ./traefik_local_auth_proxy.sh \
+    --upstream https://api.example.com \
+    --token &#39;dXNlcjpwYXNz&#39; \
+    --auth-header Authorization \
+    --auth-prefix &#39;Basic&#39; \
+    --install-user-service
+</pre></div>
+</div>
+
+
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/traefik/traefik_local_auth_proxy.sh">You can download the script from this direct
+link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>set -euo pipefail
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># traefik_local_auth_proxy.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Localhost-only Traefik proxy that forwards to a remote upstream endpoint,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># injecting an Authorization header on the forwarded request.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># This is useful when your upstream requires an HTTP Authorization token but</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># your local client (e.g. Home Assistant integration) cannot set headers.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Traefik resolution:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   1) If `traefik` is in PATH, use it.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   2) Else, if `nix` is in PATH, run Traefik via `nix run`.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   3) Else, error.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Also supports installing/enabling a systemd *user* service:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   --install-user-service installs unit + config under ~/.config and enables it</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   --uninstall-user-service removes them (and disables)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># SECURITY NOTE:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   Your token is written into a config file on disk (permissions restricted).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   Anyone who can read your user files could potentially recover it.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default listen: 127.0.0.1:11435</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default auth scheme: Bearer</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default TLS verify: ON (use --insecure-skip-verify for self-signed upstreams)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>usage<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  cat <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  traefik_local_auth_proxy.sh [options] [--install-user-service|--uninstall-user-service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Options:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --upstream URL              Remote upstream base URL (e.g. https://host:port) (or env AUTH_PROXY_UPSTREAM)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --token TOKEN               Token to inject (or env AUTH_PROXY_TOKEN)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --auth-header NAME          Header name to inject (default: Authorization)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --auth-prefix STR           Prefix before token (default: &#34;Bearer&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --listen ADDR:PORT          Local listen address (default: 127.0.0.1:11435)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --log-level LEVEL           Traefik log level (default: INFO)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --insecure-skip-verify      Skip TLS cert verification to upstream (self-signed). Default: OFF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --nix-traefik-ref REF       Nix ref to run Traefik (default: nixpkgs#traefik)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Service actions (systemd --user):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --install-user-service      Install + enable + start user service (name: traefik-local-auth-proxy)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --uninstall-user-service    Disable + stop + remove user service files
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Other:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -h, --help                  Show help
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Examples:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Run in foreground
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  ./traefik_local_auth_proxy.sh \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --upstream https://api.example.com \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --token &#39;abc123&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Install &amp; enable as user service
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  ./traefik_local_auth_proxy.sh \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --upstream https://api.example.com \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --token &#39;abc123&#39; \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --install-user-service
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  # Basic auth style header (example)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  ./traefik_local_auth_proxy.sh \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --upstream https://api.example.com \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --token &#39;dXNlcjpwYXNz&#39; \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --auth-header Authorization \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --auth-prefix &#39;Basic&#39; \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --install-user-service
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Notes:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - The local proxy does NOT require auth; it injects the auth header to the upstream.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - Listens on 127.0.0.1 by default (not accessible remotely).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Defaults</span>
+</span></span><span style="display:flex;"><span>LISTEN_ADDR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;127.0.0.1:11435&#34;</span>
+</span></span><span style="display:flex;"><span>LOG_LEVEL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;INFO&#34;</span>
+</span></span><span style="display:flex;"><span>INSECURE_SKIP_VERIFY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
+</span></span><span style="display:flex;"><span>AUTH_HEADER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Authorization&#34;</span>
+</span></span><span style="display:flex;"><span>AUTH_PREFIX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Bearer&#34;</span>
+</span></span><span style="display:flex;"><span>NIX_TRAEFIK_REF<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;nixpkgs#traefik&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Inputs (can come from env)</span>
+</span></span><span style="display:flex;"><span>UPSTREAM<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>AUTH_PROXY_UPSTREAM<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>AUTH_PROXY_TOKEN<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Service actions</span>
+</span></span><span style="display:flex;"><span>DO_INSTALL_USER_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
+</span></span><span style="display:flex;"><span>DO_UNINSTALL_USER_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Parse args</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#f92672">[[</span> $# -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    --upstream<span style="color:#f92672">)</span> UPSTREAM<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --token<span style="color:#f92672">)</span> TOKEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --auth-header<span style="color:#f92672">)</span> AUTH_HEADER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --auth-prefix<span style="color:#f92672">)</span> AUTH_PREFIX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --listen<span style="color:#f92672">)</span> LISTEN_ADDR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --log-level<span style="color:#f92672">)</span> LOG_LEVEL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --insecure-skip-verify<span style="color:#f92672">)</span> INSECURE_SKIP_VERIFY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>; shift 1;;
+</span></span><span style="display:flex;"><span>    --nix-traefik-ref<span style="color:#f92672">)</span> NIX_TRAEFIK_REF<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; shift 2;;
+</span></span><span style="display:flex;"><span>    --install-user-service<span style="color:#f92672">)</span> DO_INSTALL_USER_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>; shift 1;;
+</span></span><span style="display:flex;"><span>    --uninstall-user-service<span style="color:#f92672">)</span> DO_UNINSTALL_USER_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>; shift 1;;
+</span></span><span style="display:flex;"><span>    -h|--help<span style="color:#f92672">)</span> usage; exit 0;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Unknown argument: </span>$1<span style="color:#e6db74">&#34;</span> &gt;&amp;2; usage; exit 2;;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$DO_INSTALL_USER_SERVICE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#e6db74">&#34;</span>$DO_UNINSTALL_USER_SERVICE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;ERROR: Choose only one of --install-user-service or --uninstall-user-service&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>need_inputs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;true&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$DO_UNINSTALL_USER_SERVICE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  need_inputs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;false&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$need_inputs<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$UPSTREAM<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;ERROR: --upstream (or env AUTH_PROXY_UPSTREAM) is required&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    usage
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$TOKEN<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;ERROR: --token (or env AUTH_PROXY_TOKEN) is required&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    usage
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Decide how to run Traefik</span>
+</span></span><span style="display:flex;"><span>TRAEFIK_MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> command -v traefik &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  TRAEFIK_MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;path&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> command -v nix &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  TRAEFIK_MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;nix&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;ERROR: traefik not found in PATH, and nix not found either.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Install traefik, or install nix so the script can run Traefik via nix.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">127</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Service install paths (systemd --user)</span>
+</span></span><span style="display:flex;"><span>SERVICE_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;traefik-local-auth-proxy&#34;</span>
+</span></span><span style="display:flex;"><span>USER_SYSTEMD_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>XDG_CONFIG_HOME<span style="color:#66d9ef">:-</span>$HOME/.config<span style="color:#e6db74">}</span><span style="color:#e6db74">/systemd/user&#34;</span>
+</span></span><span style="display:flex;"><span>USER_CFG_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>XDG_CONFIG_HOME<span style="color:#66d9ef">:-</span>$HOME/.config<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>USER_CFG_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>USER_CFG_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/dynamic.yml&#34;</span>
+</span></span><span style="display:flex;"><span>USER_ENV_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>USER_CFG_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/env&#34;</span>
+</span></span><span style="display:flex;"><span>USER_UNIT_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>USER_SYSTEMD_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>write_dynamic_config_file<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local cfg_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  umask <span style="color:#ae81ff">077</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">http:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  routers:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    local_auth_proxy:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      rule: &#34;PathPrefix(\`/\`)&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      entryPoints: [&#34;local&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      service: &#34;upstream&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      middlewares: [&#34;inject-auth&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  middlewares:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    inject-auth:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      headers:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        customRequestHeaders:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ${AUTH_HEADER}: &#34;${AUTH_PREFIX} ${TOKEN}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$INSECURE_SKIP_VERIFY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    cat &gt;&gt; <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  serversTransports:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    upstream-transport:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      insecureSkipVerify: true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  cat &gt;&gt; <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  services:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    upstream:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      loadBalancer:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        passHostHeader: false
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$INSECURE_SKIP_VERIFY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    cat &gt;&gt; <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        serversTransport: &#34;upstream-transport&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  cat &gt;&gt; <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        servers:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          - url: &#34;${UPSTREAM}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>  chmod <span style="color:#ae81ff">600</span> <span style="color:#e6db74">&#34;</span>$cfg_path<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>install_user_service<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ! command -v systemctl &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;ERROR: systemctl not found. Is systemd available?&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">127</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  mkdir -p <span style="color:#e6db74">&#34;</span>$USER_SYSTEMD_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$USER_CFG_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  chmod <span style="color:#ae81ff">700</span> <span style="color:#e6db74">&#34;</span>$USER_CFG_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Write env file (still stores secret on disk; permissions restricted)</span>
+</span></span><span style="display:flex;"><span>  umask <span style="color:#ae81ff">077</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$USER_ENV_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">AUTH_PROXY_UPSTREAM=${UPSTREAM}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">AUTH_PROXY_TOKEN=${TOKEN}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">AUTH_HEADER=${AUTH_HEADER}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">AUTH_PREFIX=${AUTH_PREFIX}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">INSECURE_SKIP_VERIFY=${INSECURE_SKIP_VERIFY}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">LISTEN_ADDR=${LISTEN_ADDR}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">LOG_LEVEL=${LOG_LEVEL}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">NIX_TRAEFIK_REF=${NIX_TRAEFIK_REF}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>  chmod <span style="color:#ae81ff">600</span> <span style="color:#e6db74">&#34;</span>$USER_ENV_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Write dynamic config (bakes in header value)</span>
+</span></span><span style="display:flex;"><span>  write_dynamic_config_file <span style="color:#e6db74">&#34;</span>$USER_CFG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># ExecStart: pin absolute traefik path if present; else use nix run</span>
+</span></span><span style="display:flex;"><span>  local execstart<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> command -v traefik &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    execstart<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>command -v traefik<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    execstart<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>command -v nix<span style="color:#66d9ef">)</span><span style="color:#e6db74"> run </span><span style="color:#e6db74">${</span>NIX_TRAEFIK_REF<span style="color:#e6db74">}</span><span style="color:#e6db74"> --&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  umask <span style="color:#ae81ff">077</span>
+</span></span><span style="display:flex;"><span>  cat &gt; <span style="color:#e6db74">&#34;</span>$USER_UNIT_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=Traefik localhost auth-injecting proxy
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">After=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Wants=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Type=simple
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EnvironmentFile=%h/.config/${SERVICE_NAME}/env
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=${execstart} \\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --log.level=\${LOG_LEVEL} \\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --entrypoints.local.address=\${LISTEN_ADDR} \\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --providers.file.filename=%h/.config/${SERVICE_NAME}/dynamic.yml \\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  --providers.file.watch=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Restart=on-failure
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RestartSec=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Basic hardening (user service)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">NoNewPrivileges=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PrivateTmp=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ProtectSystem=strict
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ProtectHome=read-only
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ProtectControlGroups=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ProtectKernelModules=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ProtectKernelTunables=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">LockPersonality=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">MemoryDenyWriteExecute=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RestrictRealtime=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RestrictSUIDSGID=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ReadWritePaths=%h/.config/${SERVICE_NAME}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ReadWritePaths=%h/.cache/nix
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ReadWritePaths=%h/.local/state/nix
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=default.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>  chmod <span style="color:#ae81ff">600</span> <span style="color:#e6db74">&#34;</span>$USER_UNIT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>  systemctl --user enable --now <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Installed and started user service: </span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Local endpoint: http://</span><span style="color:#e6db74">${</span>LISTEN_ADDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Test: curl -s http://</span><span style="color:#e6db74">${</span>LISTEN_ADDR<span style="color:#e6db74">}</span><span style="color:#e6db74">/&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Logs: journalctl --user -u </span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>uninstall_user_service<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ! command -v systemctl &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;ERROR: systemctl not found. Is systemd available?&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">127</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  systemctl --user disable --now <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>  rm -f <span style="color:#e6db74">&#34;</span>$USER_UNIT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  rm -rf <span style="color:#e6db74">&#34;</span>$USER_CFG_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Uninstalled user service: </span><span style="color:#e6db74">${</span>SERVICE_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$DO_UNINSTALL_USER_SERVICE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  uninstall_user_service
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$DO_INSTALL_USER_SERVICE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;true&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  install_user_service
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Foreground run mode: write temp config and exec Traefik (or nix run traefik)</span>
+</span></span><span style="display:flex;"><span>umask <span style="color:#ae81ff">077</span>
+</span></span><span style="display:flex;"><span>CFG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>mktemp -t traefik-local-auth-proxy.XXXXXX.yml<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>cleanup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> rm -f <span style="color:#e6db74">&#34;</span>$CFG<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>trap cleanup EXIT INT TERM
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>write_dynamic_config_file <span style="color:#e6db74">&#34;</span>$CFG<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Starting Traefik localhost auth proxy:&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Listen : http://</span><span style="color:#e6db74">${</span>LISTEN_ADDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Upstream: </span><span style="color:#e6db74">${</span>UPSTREAM<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Inject : </span><span style="color:#e6db74">${</span>AUTH_HEADER<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">${</span>AUTH_PREFIX<span style="color:#e6db74">}</span><span style="color:#e6db74"> &lt;redacted&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  TLS skip-verify: </span><span style="color:#e6db74">${</span>INSECURE_SKIP_VERIFY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Config: </span><span style="color:#e6db74">${</span>CFG<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Test:&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  curl -s http://</span><span style="color:#e6db74">${</span>LISTEN_ADDR<span style="color:#e6db74">}</span><span style="color:#e6db74">/&#34;</span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$TRAEFIK_MODE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;path&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  exec traefik <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --log.level<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$LOG_LEVEL<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --entrypoints.local.address<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$LISTEN_ADDR<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --providers.file.filename<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$CFG<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --providers.file.watch<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  exec nix run <span style="color:#e6db74">&#34;</span>$NIX_TRAEFIK_REF<span style="color:#e6db74">&#34;</span> -- <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --log.level<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$LOG_LEVEL<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --entrypoints.local.address<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$LISTEN_ADDR<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --providers.file.filename<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$CFG<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    --providers.file.watch<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

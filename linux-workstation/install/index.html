@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Install Linux (Fedora Atomic) · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/introduction/requirements/" aria-label="Previous: requirements" title="prev: requirements"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/upgrading/" aria-label="Next: upgrading" title="next: upgrading"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/">linux-workstation</a><ul><li class="lvl1"><a href="#">install</a></li><li class="lvl2"><a href="#create-usb-installation-media">Create USB installation media</a></li><li class="lvl2"><a href="#boot-the-installer">Boot the installer</a></li><li class="lvl2"><a href="#login-and-initial-config">Login and initial config</a></li><li class="lvl3"><a href="#network-manager">Network Manager</a></li><li class="lvl3"><a href="#open-a-terminal">Open a terminal</a></li><li class="lvl3"><a href="#set-hostname">Set Hostname</a></li><li class="lvl3"><a href="#open-other-apps-like-web-browsers">Open other apps like web browsers</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="open">
+                  <a class="active" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/config/">config</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg pcur" href="/linux-workstation/install/">/install</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Install Linux (Fedora Atomic)</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<h2 id="create-usb-installation-media"><a class="heading-anchor" href="#create-usb-installation-media">Create USB installation media</a></h2>
+<a class="button-link button-primary" href="https://fedoraproject.org/atomic-desktops/sway/download">
+Download Fedora Sway Atomic.iso
+</a>
+
+<p>Temporarily using another Linux workstation, write the .iso image to a
+USB drive:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the computer that will write the USB</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo dd if=~/Downloads/Fedora-Sericea-ostree-x86_64-40-1.14.iso \
+        of=/dev/sdX bs=10M status=progress conv=sync
+</pre></div>
+</div>
+
+
+<div class="box notice notice-info"><div class="label">info</div>
+  <div class="body">
+<p>Replace <code>/dev/sdX</code> with your actual device name. If you don&rsquo;t know the
+device name, run this:</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+lsblk | grep disk
+</pre></div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+NAME    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda       8:0    0  1.8T  0 disk
+sdb       8:16   0   64G  0 disk
+</pre></div>
+</div>
+<p>You can probably make the identification of the device based upon the
+reported size, but if not, you can compare the list with the device
+plugged in, and again after unplugging it, and see which device is
+missing.</p>
+<p>Double check the filename of the <code>.iso</code> file that you downloaded, it
+may have changed.</p>
+  </div>
+</div>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>If you are borrowing a Windows computer, then download a program like
+<a href="https://unetbootin.github.io/">unetbootin</a> to write the .iso to the USB.</p>
+  </div>
+</div>
+<h2 id="boot-the-installer"><a class="heading-anchor" href="#boot-the-installer">Boot the installer</a></h2>
+<p>Boot the target workstation computer using the USB drive. It will boot
+into the <a href="https://fedoraproject.org/wiki/Anaconda/Introduction">Anaconda</a> install wizard. Just follow the prompts to install
+it, it should be straight forward, and it is exactly the same as any
+other Fedora / Redhat install.</p>
+<p>Tips:</p>
+<ul>
+<li>Buttons may be in an unexpected position. Sometimes they are found
+in the bottom right corner, other times in the upper left corner.</li>
+<li>The installation summary page marks all the installaton items that
+you still need to configure. You can visit them in any order. Click
+the items that show an orange alert text, and do what it says.</li>
+<li>Choosing installation destination:
+<ul>
+<li>Use the <em>entire disk</em> for the OS install (ie. choose Delete All
+partitions / Reclaim Space). On a secure workstation, it is
+considered unsafe to dual boot any another operating system. If
+you want to run Windows, or play games, use a separate computer
+for that.</li>
+<li>Enable whole disk encryption and choose a secure passphrase.
+Especially for laptop computers that you may travel with, this an
+important thing to do to keep your files safe at rest.</li>
+</ul>
+</li>
+<li>Create a user account, and check the box <code>Add administrative privileges to this user account (wheel group membership)</code>.</li>
+<li>Disable the root account. You will use a normal user account and
+<code>sudo</code>.</li>
+<li>Once all options are configured, click <code>Begin Installation</code>.</li>
+</ul>
+<p>Once the installer finishes, click <code>Finish Installation</code>. Reboot,
+remove the USB, enter your encryption passphrase to boot, and then log
+in to your new system.</p>
+<h2 id="login-and-initial-config"><a class="heading-anchor" href="#login-and-initial-config">Login and initial config</a></h2>
+<p>Once you&rsquo;re logged in, you need to perform these initial steps.</p>
+<h3 id="network-manager"><a class="heading-anchor" href="#network-manager">Network Manager</a></h3>
+<p>If you are connected to wired ethernet, likely your network is already
+active due to DHCP.</p>
+<p>If you need to configure WiFi, find the NetworkManager applet in the
+top right corner of the default Sway desktop. Click on it, and drop
+down into the menu called <code>Available networks</code> and choose your WiFi
+access point.</p>
+<h3 id="open-a-terminal"><a class="heading-anchor" href="#open-a-terminal">Open a terminal</a></h3>
+<p>Press <code>Win+Enter</code> to open a terminal window.</p>
+<h3 id="set-hostname"><a class="heading-anchor" href="#set-hostname">Set Hostname</a></h3>
+<p>By default, the hostname of the new workstation is <code>fedora</code>. If you
+want to change it, now is a good time:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+HOST=foo
+sudo hostnamectl set-hostname ${HOST}
+</pre></div>
+</div>
+
+
+<p>Close the terminal, press <code>Ctrl+D</code>. Open a new terminal, press
+<code>Win+Enter</code>. The new hostname should be reflected in the Bash prompt.</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+[ryan@foo ~]$
+</pre></div>
+</div>
+
+<h3 id="open-other-apps-like-web-browsers"><a class="heading-anchor" href="#open-other-apps-like-web-browsers">Open other apps like web browsers</a></h3>
+<ul>
+<li>Press <code>Win+D</code> to open the <code>drun</code> menu.</li>
+<li>Type <code>firefox</code> and press <code>Enter</code>.</li>
+<li>To close a window, press <code>Win+Shift+Q</code>.</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

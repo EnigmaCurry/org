@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Arch Linux ARM on Thinkpad X13S · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/pfsense/router-vlans/" aria-label="Previous: pfsense" title="prev: pfsense"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/zram/" aria-label="Next: zram" title="next: zram"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">thinkpad-X13s</a></li><li class="lvl2"><a href="#mini-review-of-the-x13s">Mini review of the X13s</a></li><li class="lvl2"><a href="#requirements">Requirements</a></li><li class="lvl2"><a href="#create-uefi-shell-on-a-usb-drive">Create UEFI shell on a USB drive</a></li><li class="lvl2"><a href="#create-the-x13s-derrived-archiso-usb-disk">Create the X13s derrived archiso USB disk</a></li><li class="lvl2"><a href="#boot-into-the-archiso-environment">Boot into the archiso environment</a></li><li class="lvl2"><a href="#create-a-network-connection">Create a network connection</a></li><li class="lvl2"><a href="#prepare-drive-partitions">Prepare drive partitions</a></li><li class="lvl2"><a href="#use-the-uefi-shell-to-set-the-boot-entry">Use the UEFI shell to set the boot entry</a></li><li class="lvl2"><a href="#add-the-uefi-shell-to-efi-partition-permanently">Add the UEFI shell to EFI partition permanently</a></li><li class="lvl2"><a href="#post-install">Post-install</a></li><li class="lvl3"><a href="#recompile-the-kernel-to-get-the-gpu-to-work">Recompile the Kernel to get the GPU to work</a></li><li class="lvl3"><a href="#generate-locale">Generate Locale</a></li><li class="lvl2"><a href="#issues">Issues</a></li><li class="lvl3"><a href="#screen-flickering">Screen Flickering</a></li><li class="lvl3"><a href="#crash-when-switching-between-virtual-consoles">Crash when switching between virtual consoles</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="active" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/thinkpad-x13s/">/thinkpad-X13s</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Arch Linux ARM on Thinkpad X13S</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2023-03-20">2023-03-20</time></span>
+  <span>updated <time datetime="2023-03-24">2023-03-24</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+  </span>
+</div>
+
+<figure>
+    <img
+        srcset="/img/x13s_hu00d8fd3e103407a3b5e194cd8b789a18_3311600_480x0_resize_q75_box.jpg 480w,/img/x13s_hu00d8fd3e103407a3b5e194cd8b789a18_3311600_768x0_resize_q75_box.jpg 768w,/img/x13s_hu00d8fd3e103407a3b5e194cd8b789a18_3311600_1366x0_resize_q75_box.jpg 1366w,/img/x13s_hu00d8fd3e103407a3b5e194cd8b789a18_3311600_1920x0_resize_q75_box.jpg 1920w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/x13s.jpg"
+        alt="Thinkpad X13S running Arch Linux ARM"
+        width="100%"
+        height="auto"/>
+    <figcaption>Thinkpad X13S running Arch Linux ARM</figcaption>
+</figure>
+
+<p>The Thinkpad X13s is the first Lenovo Thinkpad with an ARM processor
+(Qualcomm Snapdragon 8cx Gen 3). This laptop is designed to run
+Microsoft Windows 11 (ARM), but the processor has initial support from
+the Linux kernel.</p>
+<p>This tutorial will install <a href="https://archlinuxarm.org/">Arch Linux ARM</a>
+(&ldquo;alarm&rdquo;) on the Thinkpad X13s, however as of March 2023 this is not
+yet officially supported. This tutorial will use the <a href="https://archlinuxarm.org/platforms/armv8/generic">Generic AArch64
+installation</a> and a
+custom kernel package from
+<a href="https://github.com/ironrobin/x13s-alarm">ironrobin/x13s-alarm</a> and
+the bootable archiso (.iso) image from
+<a href="https://github.com/ironrobin/archiso-x13s#readme">ironrobin/archiso-x13s</a>.</p>
+<p>I have only finished the install, and have not tested a lot of things
+on the X13s yet, but I am encouraged by the <a href="https://github.com/ironrobin/archiso-x13s/wiki/Feature-Support">reported features from
+the x13s-alarm
+project</a>.</p>
+<p>At some point, the custom kernel should no longer be necessary, once
+enough development time has been given to merge the changes into the
+Arch Linux ARM default kernel.</p>
+<h2 id="mini-review-of-the-x13s"><a class="heading-anchor" href="#mini-review-of-the-x13s">Mini review of the X13s</a></h2>
+<p>The Thinkpad X13s is replacing my aging Thinkpad T440s.</p>
+<ul>
+<li>The X13s is thinner, smaller, lighter than the T440s while
+retaining the same basic layout.</li>
+<li>The X13s keyboard is a significant downgrade from the T440s
+keyboard. The very minimal key travel will take some getting used
+to.</li>
+<li>The T440s is usually quite silent, but the fan kicks on under
+load. The X13s has no fan, so it should stay completly silent.</li>
+<li>Because of the fan in the T440s, it almost never gets hot. I wonder
+if the X13s will get hot under load? We&rsquo;ll see.. (update: yes, it
+does get quite hot while compiling the kernel, using all cores; way
+hotter than you would want on your lap.)</li>
+<li>I don&rsquo;t have any idea of the performance, but I also don&rsquo;t care, as
+I predominantly only use laptops for development on remote servers.
+Some benchmarks I&rsquo;ve seen place this at 75% of the speed of an
+Apple M1, if thats true, it should be pretty decent.</li>
+<li>The X13s screen <em>does not</em> unfold 180 degrees like a true thinkpad,
+its more like 135 degrees fully opened.</li>
+</ul>
+<h2 id="requirements"><a class="heading-anchor" href="#requirements">Requirements</a></h2>
+<ul>
+<li>A Thinkpad X13s.</li>
+<li>Two USB thumb drives. (One for the archiso, and another for the
+UEFI shell. You really only need one USB drive if you just
+overwrite the drive again, but having two drives lets you boot
+either tool, which you might need to do several times if you make
+any mistakes. Sidenote: the official X86 Arch Linux iso has UEFI
+shell, but for some reason it was left out of ironrobin&rsquo;s iso.)</li>
+<li>Another computer to prepare the thumb drives.</li>
+<li>Wireless internet access.</li>
+</ul>
+<h2 id="create-uefi-shell-on-a-usb-drive"><a class="heading-anchor" href="#create-uefi-shell-on-a-usb-drive">Create UEFI shell on a USB drive</a></h2>
+<p>The UEFI shell is required in order to edit the system NVRAM to
+create/edit the EFI boot entries. Tools like <code>efibootmgr</code>, <code>bootctl</code>,
+or <code>grub-install</code> all fail to create the EFI entries from userspace on
+the X13s. However, the UEFI shell is a separate low level bootable
+program that can (successfully) edit the UEFI variables (NVRAM).</p>
+<p>On one of the USB thumb drives, create a FAT32 partition (replace
+<code>sdX</code> with your drive name):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>gdisk /dev/sdX
+</span></span></code></pre></div><ul>
+<li>Press <code>o</code> to create a new (GPT) partition table.</li>
+<li>Press <code>n</code> to create a new partition.</li>
+<li>Choose the default start and end size.</li>
+<li>Choose the filesystem type by hex id, <code>ef00</code> (EFI system partition)</li>
+<li>Press <code>w</code> to write the changes</li>
+</ul>
+<p>Format the drive, and download and extract the UEFI shell onto the
+drive:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mkfs.vfat /dev/sdX1
+</span></span><span style="display:flex;"><span>mount /dev/sdX1 /mnt
+</span></span><span style="display:flex;"><span>cd /mnt
+</span></span><span style="display:flex;"><span>wget https://github.com/pbatard/UEFI-Shell/releases/download/22H2/UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>7z x UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>rm UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>cd /
+</span></span><span style="display:flex;"><span>umount /mnt
+</span></span></code></pre></div><p>This USB drive is now bootable in any UEFI machine.</p>
+<h2 id="create-the-x13s-derrived-archiso-usb-disk"><a class="heading-anchor" href="#create-the-x13s-derrived-archiso-usb-disk">Create the X13s derrived archiso USB disk</a></h2>
+<p>See <a href="https://github.com/ironrobin/archiso-x13s#readme">ironrobin/archiso-x13s</a></p>
+<p>Download latest .iso file: <a href="https://ironrobin.net/linux-x13s/alpha/archlinuxarm-2022.09.11-aarch64.iso">https://ironrobin.net/linux-x13s/alpha/archlinuxarm-2022.09.11-aarch64.iso</a></p>
+<p>Write the .iso file to a USB drive with <code>dd</code> (replace <code>sdX</code> with your thumb drive name):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>dd if=archlinuxarm-2022.09.11-aarch64.iso of=/dev/sdX
+</span></span></code></pre></div><h2 id="boot-into-the-archiso-environment"><a class="heading-anchor" href="#boot-into-the-archiso-environment">Boot into the archiso environment</a></h2>
+<ul>
+<li>
+<p>Attach the archiso USB drive to the X13s, and turn the machine on.</p>
+</li>
+<li>
+<p>Press F1 during POST to get into the UEFI setup.</p>
+</li>
+<li>
+<p>Disable Secure Boot, and then save the settings, and reboot again.</p>
+</li>
+<li>
+<p>Press F12 during POST to choose an alternate boot device, and
+choose the USB drive to boot from.</p>
+</li>
+<li>
+<p>The boot menu of the USB drive has two options, one to boot
+straight from the USB drive, and the other to copy the contents to
+RAM. The only one that worked was the one that copies itself into
+RAM.</p>
+</li>
+</ul>
+<p>The system should now be booted and logged into the Bash terminal as
+root.</p>
+<h2 id="create-a-network-connection"><a class="heading-anchor" href="#create-a-network-connection">Create a network connection</a></h2>
+<p>Setup a wireless network connection with <code>wpa_supplicant</code>. Supply your
+own WiFi AP SSID and passphrase:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>wpa_supplicant -B -i wlan0 -c &lt;(wpa_passphrase &#34;My Wireless AP&#34; &#34;My Wifi Passphrase&#34;)
+</span></span></code></pre></div><p>If you want to finish the rest of the installation from a remote
+machine, you may now connect to the SSH server, which is already
+running. You must first set the root password before connecting, and
+find the right IP address to connect to:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>passwd root
+</span></span><span style="display:flex;"><span>ip addr show dev wlan0
+</span></span></code></pre></div><h2 id="prepare-drive-partitions"><a class="heading-anchor" href="#prepare-drive-partitions">Prepare drive partitions</a></h2>
+<p>Use <code>gdisk</code> to create new partitions on the internal NVME drive:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>gdisk /dev/nvme0n1
+</span></span></code></pre></div><p>In the <code>gdisk</code> program, enter the following commands:</p>
+<ul>
+<li><code>p</code> to verify you are configuring the correct device.</li>
+<li><code>o</code> to clear the existing partition table and create a new GPT table.</li>
+<li><code>n</code> to create a new EFI partition.
+<ul>
+<li>Choose partition <code>1</code>.</li>
+<li>Choose the first sector by simply pressing Enter to choose the default.</li>
+<li>Choose the last sector by adding a size: <code>+512M</code></li>
+<li>Choose the filesystem type by hex id, <code>ef00</code> (EFI system partition)</li>
+</ul>
+</li>
+<li><code>n</code> again to create the root partition.
+<ul>
+<li>Choose partition <code>2</code>.</li>
+<li>Choose the first sector by simply pressing Enter to choose the default.</li>
+<li>Choose the last sector by simply pressing Enter to use all the rest of the space.</li>
+<li>Choose the filesystem type by hex id, simply press Enter to use the default type (<code>8300</code> Linux filesystem)</li>
+</ul>
+</li>
+<li><code>p</code> to review the changes you&rsquo;ve made.</li>
+<li><code>w</code> to write the changes to the disk.</li>
+</ul>
+<p>Create the two filesystems:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mkfs.fat -F 32 /dev/nvme0n1p1
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/nvme0n1p2
+</span></span></code></pre></div><p>Temporarily mount the two filesystems to <code>/mnt</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mount /dev/nvme0n1p2 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot
+</span></span><span style="display:flex;"><span>mount /dev/nvme0n1p1 /mnt/boot
+</span></span></code></pre></div><p>Verify they are mounted correctly as shown:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## mount | grep /mnt
+</span></span><span style="display:flex;"><span>/dev/nvme0n1p2 on /mnt type ext4 (rw,relatime)
+</span></span><span style="display:flex;"><span>/dev/nvme0n1p1 on /mnt/boot type vfat (rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,utf8,errors=remount-ro)
+</span></span></code></pre></div><p>Loosely following the <a href="https://archlinuxarm.org/platforms/armv8/generic">Generic Arch Linux ARM
+guide</a>, download the
+latest generic Arch Linux ARM tarball:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>cd /mnt
+</span></span><span style="display:flex;"><span>curl -L http://os.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz &gt; ArchLinuxARM-aarch64-latest.tar.gz
+</span></span><span style="display:flex;"><span>md5sum ArchLinuxARM-aarch64-latest.tar.gz
+</span></span></code></pre></div><p>Verify the MD5sum of the tarball <a href="https://fl.us.mirror.archlinuxarm.org/os/ArchLinuxARM-aarch64-latest.tar.gz.md5">against the published one
+here</a>.</p>
+<p>Set the current date and time, it does not need to be exact, but
+should at least be approximately correct (this is used so <code>tar</code> does
+not complain about extracting files with future dates, in the next
+step. Later on you can install
+<a href="https://wiki.archlinux.org/title/Network_Time_Protocol_daemon">ntp</a>
+to set a more exact time.):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Use todays date instead of this date:
+</span></span><span style="display:flex;"><span>timedatectl set-time &#34;2023-03-20 12:00:00&#34;
+</span></span></code></pre></div><p>Extract the contents of the root filesystem:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tar xpf ArchLinuxARM-aarch64-latest.tar.gz
+</span></span></code></pre></div><p>Mount the system <code>/proc</code>, <code>/sys</code>, <code>/dev</code>, and <code>/run</code> filesystems into
+the new root:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mount -t proc /proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount -t sysfs /sys /mnt/sys
+</span></span><span style="display:flex;"><span>mount -o bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount -o bind /run /mnt/run
+</span></span><span style="display:flex;"><span>mount -o bind /sys/firmware/efi/efivars /mnt/sys/firmware/efi/efivars
+</span></span></code></pre></div><p>Now <code>chroot</code> into the new root filesystem:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>chroot /mnt /bin/bash
+</span></span></code></pre></div><p>Update the chroot system:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>pacman-key --init
+</span></span><span style="display:flex;"><span>pacman-key --populate archlinuxarm
+</span></span><span style="display:flex;"><span>pacman -Syu
+</span></span></code></pre></div><p>Add the filesystems to the /etc/fstab:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>echo &#34;/dev/nvme0n1p2 / ext4 defaults 0 1&#34; &gt;&gt; /etc/fstab
+</span></span><span style="display:flex;"><span>echo &#34;/dev/nvme0n1p1 /boot vfat defaults 0 1&#34; &gt;&gt; /etc/fstab
+</span></span></code></pre></div><p>Add the package repository containing the <a href="https://github.com/ironrobin/x13s-alarm">custom x13s
+kernel</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>cat &lt;&lt;EOF &gt; /etc/pacman.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[x13s]
+</span></span><span style="display:flex;"><span>Server = https://lecs.dev/repo
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>curl -O https://lecs.dev/repo/public.asc
+</span></span><span style="display:flex;"><span>pacman-key --add public.asc
+</span></span><span style="display:flex;"><span>pacman-key --lsign 9FD0B48BBBD974B80A3310AB6462EE0B8E382F3F
+</span></span></code></pre></div><p>(Note: this repositry seems to be out of date, but it is only required
+temporarily, in order to get the intial kernel installed. You will
+most likely want to compile your own kernel and other packages to get
+new updates, at which point you can then remove this repository. See
+<a href="#post-install">Post Install</a>.)</p>
+<p>Remove the default kernel, and install the custom one from the <code>x13s</code>
+repository:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>pacman -Sy
+</span></span><span style="display:flex;"><span>pacman -R linux-firmware linux-aarch64
+</span></span><span style="display:flex;"><span>pacman -S linux-x13s
+</span></span></code></pre></div><p>Install the <code>systemd-boot</code> EFI files:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bootctl install
+</span></span></code></pre></div><p>This will ultimately fail to create the boot entry in the EFI nvram,
+however it still should install the systemd-boot EFI program in
+<code>/boot/EFI/systemd/systemd-bootaa64.efi</code>.</p>
+<p>Create the systemd boot entry files:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>cat &lt;&lt;EOF &gt; /boot/loader/loader.conf
+</span></span><span style="display:flex;"><span>timeout 3
+</span></span><span style="display:flex;"><span>default 01-arch-linux.conf
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat &lt;&lt;EOF &gt; /boot/loader/entries/01-arch-linux.conf
+</span></span><span style="display:flex;"><span>title    Arch Linux
+</span></span><span style="display:flex;"><span>linux    Image
+</span></span><span style="display:flex;"><span>initrd   initramfs-linux.img
+</span></span><span style="display:flex;"><span>options  root=/dev/nvme0n1p2 rw dtb=sc8280xp-lenovo-thinkpad-x13s.dtb efi=novamap,noruntime pd_ignore_unused clk_ignore_unused
+</span></span><span style="display:flex;"><span>EOF
+</span></span></code></pre></div><p>Install any additional programs you need, especially <code>wpa_supplicant</code>,
+to get wifi working again in the newly installed system:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>pacman -S wpa_supplicant
+</span></span></code></pre></div><h2 id="use-the-uefi-shell-to-set-the-boot-entry"><a class="heading-anchor" href="#use-the-uefi-shell-to-set-the-boot-entry">Use the UEFI shell to set the boot entry</a></h2>
+<p>Stick the UEFI shell USB drive into the X13s, exit the chroot, and reboot the machine.</p>
+<p>Press F12 during the POST, and choose to boot the USB drive. This
+should boot directly into the UEFI shell.</p>
+<p>The UEFI has access to many filesystems, some of which are defined in
+the firmware, and some are on disk. You need to find the right UEFI
+device name that holds your EFI (/boot) partition. For my system, this
+is called <code>FS13</code>, but it may be different on your system.</p>
+<p>List all the device names:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>map
+</span></span></code></pre></div><p>To find the right device name, manually iterate through all the
+filesystem names:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ls FS1:
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ls FS2:
+</span></span></code></pre></div><p>&hellip; go through them all until you find the one that has the right
+files. Look for the files <code>Image</code>, <code>initramfs-linux</code>, and
+<code>sc8280xp-lenovo-thinkpad-x13s.dtb</code> in the directory listings. For me,
+I found them on <code>FS13</code>.</p>
+<p>Now you have the information needed to can create a new boot entry.
+First, display all the current boot entries:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bcfg boot dump
+</span></span></code></pre></div><p>You can remove any boot entry number you don&rsquo;t want:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bcfg boot rm N
+</span></span></code></pre></div><p>Create the new entry as the first (<code>0</code>) entry. Replace <code>FS13:</code> with
+the EFI partition you found above:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bcfg boot add 0 FS13:\EFI\systemd\systemd-bootaa64.efi &#34;systemd-boot manager&#34;
+</span></span></code></pre></div><p>Remove the USB drive, and type <code>reset</code> to reboot.</p>
+<p>The machine should now reboot directly from the NVME drive, loading
+<code>systemd-boot</code>, and waiting 3 seconds before booting the freshly
+installed Arch Linux for the first time.</p>
+<h2 id="add-the-uefi-shell-to-efi-partition-permanently"><a class="heading-anchor" href="#add-the-uefi-shell-to-efi-partition-permanently">Add the UEFI shell to EFI partition permanently</a></h2>
+<p>If you want to be able to use the UEFI shell again, but without
+needing the USB drive, install the shell to the EFI partition:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mkdir /tmp/uefi-shell
+</span></span><span style="display:flex;"><span>cd /tmp/uefi-shell
+</span></span><span style="display:flex;"><span>wget https://github.com/pbatard/UEFI-Shell/releases/download/22H2/UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>7z x UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>rm UEFI-Shell-2.2-22H2-RELEASE.iso
+</span></span><span style="display:flex;"><span>cp efi/boot/bootaa64.efi /boot/shellaa64.efi
+</span></span></code></pre></div><p>You do not need to create a separate loader entry, <code>systemd-boot</code> will
+automatically detect it by convention of the filename being
+<code>shellaa64.efi</code>.</p>
+<h2 id="post-install"><a class="heading-anchor" href="#post-install">Post-install</a></h2>
+<h3 id="recompile-the-kernel-to-get-the-gpu-to-work"><a class="heading-anchor" href="#recompile-the-kernel-to-get-the-gpu-to-work">Recompile the Kernel to get the GPU to work</a></h3>
+<p>In order to install Wayland, you need the GPU driver to work. The
+<a href="https://github.com/ironrobin/x13s-alarm/tree/trunk/linux-x13s">latest working kernel I found for the X13s is
+here</a>
+but the package in the repository is old, and not based on this code.
+So you will need to compile the source code yourself.</p>
+<p>Clone the x13s-alarm PKGBUILD repository:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>git clone https://github.com/ironrobin/x13s-alarm.git ~/git/vendor/x13s-alarm
+</span></span></code></pre></div><p>Build and install the kernel:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>cd ~/git/vendor/x13s-alarm/linux-x13s
+</span></span><span style="display:flex;"><span>time makepkg -s
+</span></span><span style="display:flex;"><span>sudo pacman -U *.pkg.tar.xz
+</span></span></code></pre></div><p>Build and install the firmware (including wifi):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>cd ~/git/vendor/x13s-alarm/x13s-firmware
+</span></span><span style="display:flex;"><span>time makepkg -s
+</span></span><span style="display:flex;"><span>sudo pacman -U *.pkg.tar.xz
+</span></span></code></pre></div><p>Build and install the GPU driver / Mesa packages (Adreno A690):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>gpg --recv-key 4c95faab3eb073ec
+</span></span><span style="display:flex;"><span>cd ~/git/vendor/x13s-alarm/mesa-a690
+</span></span><span style="display:flex;"><span>time makepkg -s
+</span></span><span style="display:flex;"><span># After some time it will display a `Core options` screen, just press `q` to proceed.
+</span></span><span style="display:flex;"><span>sudo pacman -U *.pkg.tar.xz
+</span></span></code></pre></div><p>Reboot, and check that the kernel is updated and that your wifi works:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span># uname -r
+</span></span><span style="display:flex;"><span>6.3.0-rc2-3-x13s
+</span></span></code></pre></div><p>You can now remove the <code>x13s</code> pacman repository in <code>/etc/pacman.conf</code>,
+since you are now using your own compiled versions of the same
+packages.</p>
+<p>Now you can go ahead and install a graphical environment, like
+<a href="https://wiki.archlinux.org/title/Sway">Sway</a>.</p>
+<h3 id="generate-locale"><a class="heading-anchor" href="#generate-locale">Generate Locale</a></h3>
+<p><a href="https://wiki.archlinux.org/title/LOCALE">Generate your locale settings</a>, for example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>echo &#34;en_US.UTF-8 UTF-8&#34; &gt;&gt; /etc/locale.gen
+</span></span><span style="display:flex;"><span>locale-gen
+</span></span><span style="display:flex;"><span>localectl set-locale LANG=en_US.UTF-8
+</span></span></code></pre></div><h2 id="issues"><a class="heading-anchor" href="#issues">Issues</a></h2>
+<p>The x13s-alarm repository does not allow opening issues, so I will
+document and try to update any issues I find here:</p>
+<h3 id="screen-flickering"><a class="heading-anchor" href="#screen-flickering">Screen Flickering</a></h3>
+<p>I have observed brief, infrequent flickering of the screen in Wayland
+using wayland native applications (Firefox). There is also constant
+flickering in Emacs X11 using XWayland. For the time being, I have
+switched to using <code>emacs-nox</code> in the terminal console (using <code>foot</code>,
+which is wayland native terminal application) and <code>wl-clipboard</code> with
+this <a href="https://www.emacswiki.org/emacs/CopyAndPaste#h5o-4">emacs
+integration</a> for
+copy and paste functions. I could apparently <a href="https://aur.archlinux.org/packages/emacs-pgtk-native-comp-git">compile my own
+emacs</a>
+using GTK and it would become wayland native.</p>
+<p>(Self-compiled <a href="https://github.com/ironrobin/x13s-alarm/commit/d6248f4bf451736269881f784d0fb326b6683086"><code>linux-x13s-6.3-3-aarch64 and mesa-a690 SHA d6248f4bf</code></a>)</p>
+<h3 id="crash-when-switching-between-virtual-consoles"><a class="heading-anchor" href="#crash-when-switching-between-virtual-consoles">Crash when switching between virtual consoles</a></h3>
+<p>I have intermittently experienced a complete system lockup when
+switching from Wayland on console #1, to the tty console on tty2, and
+then switching back to Wayland on console #1. (Using <code>Ctrl-Alt-1</code> and
+<code>Ctrl-Alt-2</code>).</p>
+<p>(Self-compiled <a href="https://github.com/ironrobin/x13s-alarm/commit/d6248f4bf451736269881f784d0fb326b6683086"><code>linux-x13s-6.3-3-aarch64 SHA d6248f4bf</code></a>)</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Solokey v2 · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/sudo-2fa/get-your-solokey/" aria-label="Previous: get-your-solokey" title="prev: get-your-solokey"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/sudo-2fa/solo-v1/" aria-label="Next: solo-v1" title="next: solo-v1"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/sudo-2fa/">sudo-2FA</a><ul><li class="lvl1"><a href="#">solo-v2</a></li><li class="lvl2"><a href="#set-pin">Set PIN</a></li><li class="lvl2"><a href="#steps-to-update-the-solokey--v2">Steps to update the Solokey (v2)</a></li><li class="lvl3"><a href="#install-solo2-cli">Install solo2-cli</a></li><li class="lvl3"><a href="#identify-solokey">Identify solokey</a></li><li class="lvl3"><a href="#install-udev-rules">Install udev rules</a></li><li class="lvl3"><a href="#update-solokey">Update solokey</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/config/">config</a></li><li class="node open">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a><ul class="sections"><li><a class="" href="/linux-workstation/sudo-2fa/get-your-solokey/">get-your-solokey</a></li><li><a class="active" href="/linux-workstation/sudo-2fa/solo-v2/">solo-v2</a></li><li><a class="" href="/linux-workstation/sudo-2fa/solo-v1/">solo-v1</a></li><li><a class="" href="/linux-workstation/sudo-2fa/sudo-2fa/">sudo-2FA</a></li><li><a class="" href="/linux-workstation/sudo-2fa/ssh-2fa/">ssh-2FA</a></li></ul></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg" href="/linux-workstation/sudo-2fa/">/sudo-2FA</a><a class="pseg pcur" href="/linux-workstation/sudo-2fa/solo-v2/">/solo-v2</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Solokey v2</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<h2 id="set-pin"><a class="heading-anchor" href="#set-pin">Set PIN</a></h2>
+<p>You should set a device PIN for the solokey, so that it cannot be used
+if it is stolen.</p>
+<p>Identify the device name (<code>/dev/hidrawX</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+fido2-token -L
+</pre></div>
+</div>
+
+
+<p>This probably shows the device as <code>/dev/hidraw0</code>:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+/dev/hidraw0: ......
+</pre></div>
+</div>
+
+<p>Set the PIN for the device (<code>/dev/hidraw0</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+fido2-token -C /dev/hidraw0
+</pre></div>
+</div>
+
+
+<h2 id="steps-to-update-the-solokey--v2"><a class="heading-anchor" href="#steps-to-update-the-solokey--v2">Steps to update the Solokey (v2)</a></h2>
+<h3 id="install-solo2-cli"><a class="heading-anchor" href="#install-solo2-cli">Install solo2-cli</a></h3>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>solo2-cli is only required if you need to update your device.</p>
+  </div>
+</div>
+<p>Find the <a href="https://github.com/solokeys/solo2-cli/releases">latest version of solo2-cli</a></p>
+<div class="box notice env">
+    <div class="label">[bash]: Set env vars</div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+SOLO2_VERSION=0.2.2
+PLATFORM=x86_64-unknown-linux-gnu
+</pre></div>
+</div>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+(set -e
+curl -L -o solo2 \
+  https://github.com/solokeys/solo2-cli/releases/download/v${SOLO2_VERSION}/solo2-v${SOLO2_VERSION}-${PLATFORM}
+sudo install solo2 /usr/local/bin/
+rm -f solo2
+)
+</pre></div>
+</div>
+
+
+<h3 id="identify-solokey"><a class="heading-anchor" href="#identify-solokey">Identify solokey</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+solo2 list
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Solo 2 xxxxxxxxxxx (CTAP+PCSC, firmware 2:20220822.0, locked)
+</pre></div>
+</div>
+
+<h3 id="install-udev-rules"><a class="heading-anchor" href="#install-udev-rules">Install udev rules</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+curl https://raw.githubusercontent.com/solokeys/solo2-cli/main/70-solo2.rules | \
+  sudo tee /etc/udev/rules.d/solokey2.rules
+sudo udevadm trigger
+</pre></div>
+</div>
+
+
+<h3 id="update-solokey"><a class="heading-anchor" href="#update-solokey">Update solokey</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+solo2 update
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>You may need to run <code>sudo solo2 update</code> if the udev rules aren&rsquo;t
+working correctly.</p>
+  </div>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

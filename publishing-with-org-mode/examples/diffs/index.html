@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Diffs · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/publishing-with-org-mode/examples/org-blocks/" aria-label="Previous: org-blocks" title="prev: org-blocks"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/publishing-with-org-mode/examples/shortcodes/" aria-label="Next: shortcodes" title="next: shortcodes"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/publishing-with-org-mode/examples/">examples</a><ul><li class="lvl1"><a href="#">diffs</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book open">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a><ul class="chapters"><li class="">
+                  <a class="" href="/publishing-with-org-mode/dependencies/">dependencies</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/building-locally/">building-locally</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/publish-with-github-pages/">publish-with-github-pages</a></li><li class="">
+                  <a class="" href="/publishing-with-org-mode/publish-with-sftp/">publish-with-sftp</a></li><li class="node ">
+                  <a class="" href="/publishing-with-org-mode/org-mode-emacs/">org-mode-emacs</a></li><li class="node open">
+                  <a class="" href="/publishing-with-org-mode/examples/">examples</a><ul class="sections"><li><a class="" href="/publishing-with-org-mode/examples/org-blocks/">org-blocks</a></li><li><a class="active" href="/publishing-with-org-mode/examples/diffs/">diffs</a></li><li><a class="" href="/publishing-with-org-mode/examples/shortcodes/">shortcodes</a></li><li><a class="" href="/publishing-with-org-mode/examples/shaders/">shaders</a></li><li><a class="" href="/publishing-with-org-mode/examples/deeply/">deeply</a></li></ul></li></ul></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/publishing-with-org-mode/">/publishing-with-org-mode</a><a class="pseg" href="/publishing-with-org-mode/examples/">/examples</a><a class="pseg pcur" href="/publishing-with-org-mode/examples/diffs/">/diffs</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Diffs</a></h1>
+
+
+<p>When one block is an evolution of another, you don&rsquo;t have to paste the
+code twice and hand-maintain a changeset. Give each block a unique
+<code>#+NAME:</code> and add a <code>#+begin_diff</code> block that references them; on export
+the build replaces it with a box that toggles between a GitHub-style diff
+and the full source of the evolved block. Both views are syntax-highlighted
+and line-numbered; in the diff, added lines are blocked out in green and
+removed lines in red. Any named block works as a reference — <code>src</code>,
+<code>example</code>, or a special block like <code>shader</code> — and the two may live in
+different subtrees of the same file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-org" data-lang="org"><span style="display:flex;"><span><span style="color:#75715e">#+NAME</span><span style="color:#75715e">: greet-v1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+begin_src </span><span style="color:#75715e">sh</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+end_src</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+NAME</span><span style="color:#75715e">: greet-v2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+begin_src </span><span style="color:#75715e">sh</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;world&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+end_src</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+attr_diff</span><span style="color:#75715e">: :from greet-v1 :to greet-v2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+begin_diff</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+end_diff</span>
+</span></span></code></pre></div><p><code>#+attr_diff</code> takes <code>:from</code> and <code>:to</code> (the two block names) plus a few
+optional settings:</p>
+<ul>
+<li><code>:context N</code> — unchanged lines of context around each change (default
+3; use a large value to show the whole block as one changeset).</li>
+<li><code>:view diff|source</code> — which view renders by default (default <code>diff</code>).
+This is also the static view shown with JavaScript disabled.</li>
+<li><code>:lang LANG</code> — override the language used to highlight the source view
+(otherwise inferred from the <code>:to</code> block; <code>shader</code> blocks use <code>glsl</code>).</li>
+</ul>
+<p>The header reads <code>Diff: from → to</code> or <code>Source: to</code> to match the view, and
+a button in the top-right toggles between them (it folds away when
+JavaScript is off, leaving the static <code>:view</code>). The build <strong>fails loudly</strong>
+if either name is missing or cannot be resolved, so a typo never silently
+ships an empty diff. The example above renders:</p>
+<p><a id="code-snippet--greet-v1"></a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span>
+</span></span></code></pre></div><p><a id="code-snippet--greet-v2"></a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;world&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span>
+</span></span></code></pre></div><div class="box diffbox" data-view="diff" data-from="greet-v1" data-to="greet-v2">
+  <div class="label"><span class="lt" title="Diff: greet-v1 → greet-v2" data-title-diff="Diff: greet-v1 → greet-v2" data-title-source="Source: greet-v2">Diff: greet-v1 → greet-v2</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- greet-v1
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ greet-v2
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,4 +1,5 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> #!/bin/sh
+</span></span><span style="display:flex;"><span> echo &#34;starting up&#34;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-echo &#34;hello&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+name=&#34;world&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+echo &#34;hello, $name&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span> echo &#34;done&#34;
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;world&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></div></div>
+  </div>
+</div>
+
+<p>The same two blocks can be referenced again — a named block is not
+consumed by a diff. Here is the very same pair with <code>:view source</code>, so the
+box opens on the evolved source instead of the changeset:</p>
+<div class="box diffbox" data-view="source" data-from="greet-v1" data-to="greet-v2">
+  <div class="label"><span class="lt" title="Source: greet-v2" data-title-diff="Diff: greet-v1 → greet-v2" data-title-source="Source: greet-v2">Source: greet-v2</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Diff</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane" hidden>
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- greet-v1
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ greet-v2
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,4 +1,5 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> #!/bin/sh
+</span></span><span style="display:flex;"><span> echo &#34;starting up&#34;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-echo &#34;hello&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+name=&#34;world&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+echo &#34;hello, $name&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span> echo &#34;done&#34;
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane"><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;world&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></div></div>
+  </div>
+</div>
+
+<p>By default the diff shows only three lines of context around each change,
+so a longer file whose edits are far apart renders as separate <strong>hunks</strong>
+with the unchanged stretch between them collapsed behind a <code>@@ … @@</code>
+header. This pair edits a line near the top and another near the bottom:</p>
+<p><a id="code-snippet--srv-v1"></a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># greeting service v1</span>
+</span></span><span style="display:flex;"><span>greeting<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$greeting<span style="color:#e6db74">, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  log <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>log<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;&gt; guests.txt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p><a id="code-snippet--srv-v2"></a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># greeting service v2</span>
+</span></span><span style="display:flex;"><span>greeting<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hi&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$greeting<span style="color:#e6db74">, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  log <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>log<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;&gt; visitors.log
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><div class="box diffbox" data-view="diff" data-from="srv-v1" data-to="srv-v2">
+  <div class="label"><span class="lt" title="Diff: srv-v1 → srv-v2" data-title-diff="Diff: srv-v1 → srv-v2" data-title-source="Source: srv-v2">Diff: srv-v1 → srv-v2</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- srv-v1
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ srv-v2
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,6 +1,6 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> #!/bin/sh
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-# greeting service v1
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-greeting=&#34;hello&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+# greeting service v2
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+greeting=&#34;hi&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span> main() {
+</span></span><span style="display:flex;"><span>   name=&#34;$1&#34;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">@@ -9,7 +9,7 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> log() {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  printf &#39;%s\n&#39; &#34;$1&#34; &gt;&gt; guests.txt
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  printf &#39;%s\n&#39; &#34;$1&#34; &gt;&gt; visitors.log
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> main &#34;$@&#34;
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># greeting service v2</span>
+</span></span><span style="display:flex;"><span>greeting<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hi&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$greeting<span style="color:#e6db74">, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  log <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>log<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;&gt; visitors.log
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># greeting service v1</span>
+</span></span><span style="display:flex;"><span>greeting<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$greeting<span style="color:#e6db74">, </span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  log <span style="color:#e6db74">&#34;</span>$name<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>log<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;&gt; guests.txt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span></span></span></code></pre></div></div>
+  </div>
+</div>
+
+<p>To fill the gap and show the whole file as one changeset, pass a <code>:context</code>
+at least as large as the file — exactly what the whirlpool note below does
+with <code>:context 99</code>.</p>
+<p>You don&rsquo;t always need two named blocks. Reference a <strong>single</strong> block with
+<code>:from</code> (or <code>:to</code>) and write the change directly in the diff block&rsquo;s body;
+that body becomes the other side of the diff. This is handy for a one-off
+edit you don&rsquo;t want to give its own named block. <code>:label</code> names the inline
+side (default <code>edited</code>). For example, against <code>greet-v1</code> from above:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-org" data-lang="org"><span style="display:flex;"><span><span style="color:#75715e">#+attr_diff</span><span style="color:#75715e">: :from greet-v1 :label timestamped</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+begin_diff</span>
+</span></span><span style="display:flex;"><span>#!/bin/sh
+</span></span><span style="display:flex;"><span>echo &#34;starting up&#34;
+</span></span><span style="display:flex;"><span>echo &#34;$(date): hello&#34;
+</span></span><span style="display:flex;"><span>echo &#34;done&#34;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#+end_diff</span>
+</span></span></code></pre></div><p>which renders:</p>
+<div class="box diffbox" data-view="diff" data-from="greet-v1" data-to="timestamped">
+  <div class="label"><span class="lt" title="Diff: greet-v1 → timestamped" data-title-diff="Diff: greet-v1 → timestamped" data-title-source="Source: timestamped">Diff: greet-v1 → timestamped</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- greet-v1
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ timestamped
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,4 +1,4 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> #!/bin/sh
+</span></span><span style="display:flex;"><span> echo &#34;starting up&#34;
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-echo &#34;hello&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+echo &#34;$(date): hello&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span> echo &#34;done&#34;
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">: hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo <span style="color:#e6db74">&#34;starting up&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;done&#34;</span></span></span></code></pre></div></div>
+  </div>
+</div>
+
+<p>With <code>:from</code> the body is the new (right-hand) side; with <code>:to</code> it is the
+original instead. The same <code>:context</code>, <code>:view</code>, and <code>:lang</code> settings apply.</p>
+<p>A <code>#+begin_shader</code> block can carry the same <code>#+attr_diff: :from NAME</code> line:
+the shader still runs live, but its source box becomes a diffbox against
+<code>NAME</code>. The shader body is written once — run <strong>and</strong> diffed from a single
+block — so there is no duplicated copy to keep in sync. The
+<a href="/shaders/whirlpool/first-whirlpool/">whirlpool note</a> does exactly this.</p>
+<div class="box notice notice-primary"><div class="label">Info</div>
+  <div class="body">
+<p>The <code>diff</code> block is DRY: only the named blocks hold the source, so the
+changeset can never drift from the code it describes. See it used in the
+<a href="/shaders/whirlpool/first-whirlpool/">whirlpool shader note</a>, which shows the whole shader as a changeset
+from the step-function shader on the previous page.</p>
+  </div>
+</div>
+<div class="box notice notice-warning"><div class="label">Caveat</div>
+  <div class="body">
+<p>The diff and source are handed to the renderer verbatim, so the referenced
+code must not contain a literal Hugo shortcode opener — a <code>{{</code> immediately
+followed by <code>&lt;</code> (or by <code>%</code>). Ordinary <code>{{</code> braces on their own are fine.</p>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

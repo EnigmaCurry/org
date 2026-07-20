@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>KVM / libvirt · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/app-users/digitalocean/" aria-label="Previous: digitalocean" title="prev: digitalocean"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/firewall/" aria-label="Next: firewall" title="next: firewall"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/">linux-workstation</a><ul><li class="lvl1"><a href="#">kvm-libvirt</a></li><li class="lvl2"><a href="#nixos-vm-template">nixos-vm-template</a></li><li class="lvl2"><a href="#the-vm-alias">The vm alias</a></li><li class="lvl2"><a href="#available-vm-profiles">Available VM profiles</a></li><li class="lvl2"><a href="#creating-a-vm">Creating a VM</a></li><li class="lvl2"><a href="#starting-and-stopping-vms">Starting and stopping VMs</a></li><li class="lvl2"><a href="#connecting-to-a-vm">Connecting to a VM</a></li><li class="lvl2"><a href="#listing-vms">Listing VMs</a></li><li class="lvl2"><a href="#managing-vms">Managing VMs</a></li><li class="lvl2"><a href="#snapshots-and-backups">Snapshots and backups</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/config/">config</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="open">
+                  <a class="active" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg pcur" href="/linux-workstation/kvm-libvirt/">/kvm-libvirt</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">KVM / libvirt</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<p>Idealistically, the <a href="/linux-workstation/introduction/">introduction</a> declared a &ldquo;No Sworkstations&rdquo; rule
+(No Server-Workstations). Pragmatically, you can bend this rule a bit,
+by hosting some development servers inside of virtual machines (VM).
+Hosting VMs on your workstation is convenient for having a portable
+lab environment. By using virtual machines for all services, we get to
+maintain our core distinction between the roles of workstation and
+server.</p>
+<p>This paradigm is considerably more adhoc than a proper hypervisor
+operating system like <a href="https://blog.rymcg.tech/tags/proxmox">Proxmox</a>. For pure server installs, Proxmox
+should be preferred. But if you want to have a mixed-mode native
+workstation, with extra server VMs, in the same portable platform,
+this setup works really well.</p>
+<h2 id="nixos-vm-template"><a class="heading-anchor" href="#nixos-vm-template">nixos-vm-template</a></h2>
+<p><a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a> is a tool for building and managing NixOS virtual
+machines with an immutable (read-only) root filesystem design. If you
+installed <a href="/linux-workstation/config/sway/#install-home-manager">Home Manager</a> earlier, the <code>vm</code> alias is already
+configured for you.</p>
+<p>Read these extra pages about nixos-vm-template:</p>
+<ul>
+<li><a href="https://github.com/EnigmaCurry/nixos-vm-template">https://github.com/EnigmaCurry/nixos-vm-template</a></li>
+<li><a href="https://blog.rymcg.tech/blog/linux/code-agent-vm/">https://blog.rymcg.tech/blog/linux/code-agent-vm/</a></li>
+<li><a href="https://blog.rymcg.tech/blog/linux/nixos-proxmox-vm/">https://blog.rymcg.tech/blog/linux/nixos-proxmox-vm/</a></li>
+</ul>
+<h2 id="the-vm-alias"><a class="heading-anchor" href="#the-vm-alias">The <code>vm</code> alias</a></h2>
+<p>The <code>vm</code> alias is configured via Home Manager and points to the
+nixos-vm-template Justfile. Configuration is stored in
+<code>~/.config/nixos-vm-template/env</code>, which sets writable paths for VM
+output and machine configs.</p>
+<p>The <code>vm</code> alias has full tab completion for all commands, VM names,
+profiles, and other arguments. Press <code>Tab</code> to see available options at
+any point.</p>
+<p>To see all available commands:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm
+</pre></div>
+</div>
+
+
+<h2 id="available-vm-profiles"><a class="heading-anchor" href="#available-vm-profiles">Available VM profiles</a></h2>
+<p>List the available VM profiles (base images):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm list-profiles
+</pre></div>
+</div>
+
+
+<h2 id="creating-a-vm"><a class="heading-anchor" href="#creating-a-vm">Creating a VM</a></h2>
+<p>Create a new VM with a given name and profile:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm create myvm dev
+</pre></div>
+</div>
+
+
+<p>This will:</p>
+<ul>
+<li>Build the profile&rsquo;s base image (if not already built)</li>
+<li>Create machine identity files (hostname, SSH keys, etc.)</li>
+<li>Prompt for SSH public keys for admin and user accounts</li>
+<li>Create the boot and /var disks</li>
+<li>Define the VM in libvirt</li>
+</ul>
+<h2 id="starting-and-stopping-vms"><a class="heading-anchor" href="#starting-and-stopping-vms">Starting and stopping VMs</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm start myvm
+vm stop myvm
+vm force-stop myvm
+</pre></div>
+</div>
+
+
+<h2 id="connecting-to-a-vm"><a class="heading-anchor" href="#connecting-to-a-vm">Connecting to a VM</a></h2>
+<p>SSH into the VM (defaults to the <code>user</code> account):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm ssh myvm
+vm ssh admin@myvm
+</pre></div>
+</div>
+
+
+<p>Open the VM console:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm console myvm
+</pre></div>
+</div>
+
+
+<h2 id="listing-vms"><a class="heading-anchor" href="#listing-vms">Listing VMs</a></h2>
+<p>List all defined VMs:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm list
+</pre></div>
+</div>
+
+
+<p>List all machine configs:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm list-machines
+</pre></div>
+</div>
+
+
+<h2 id="managing-vms"><a class="heading-anchor" href="#managing-vms">Managing VMs</a></h2>
+<p>Destroy a VM (removes disks but keeps machine config):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm destroy myvm
+</pre></div>
+</div>
+
+
+<p>Completely remove a VM including its machine config:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm purge myvm
+</pre></div>
+</div>
+
+
+<p>Recreate a VM from its existing machine config:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm recreate myvm
+</pre></div>
+</div>
+
+
+<p>Upgrade a VM to a new base image (preserves /var data):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm upgrade myvm
+</pre></div>
+</div>
+
+
+<h2 id="snapshots-and-backups"><a class="heading-anchor" href="#snapshots-and-backups">Snapshots and backups</a></h2>
+<p>Create a snapshot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm snapshot myvm snapshot-name
+</pre></div>
+</div>
+
+
+<p>List snapshots:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm snapshots myvm
+</pre></div>
+</div>
+
+
+<p>Restore a snapshot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm restore-snapshot myvm snapshot-name
+</pre></div>
+</div>
+
+
+<p>Backup a VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm backup myvm
+</pre></div>
+</div>
+
+
+<p>List backups:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm backups
+</pre></div>
+</div>
+
+
+<p>Restore from backup:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+vm restore-backup myvm
+</pre></div>
+</div>
+
+
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

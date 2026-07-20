@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 2: Networking · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/03-notifications/" aria-label="Previous: notifications" title="prev: notifications"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/01-install/" aria-label="Next: install" title="next: install"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">networking</a></li><li class="lvl2"><a href="#use-bridge-networking-for-private-networks">Use bridge networking for private networks</a></li><li class="lvl2"><a href="#use-network-address-translation-nat-if-you-have-limited-ip-addresses">Use Network Address Translation (NAT) if you have limited IP addresses</a></li><li class="lvl2"><a href="#the-script">The script</a></li><li class="lvl2"><a href="#systemd-unit-to-manage-nat-rules">Systemd unit to manage NAT rules</a></li><li class="lvl2"><a href="#manage-bridges-from-the-dashboard">Manage bridges from the dashboard</a></li><li class="lvl2"><a href="#creating-vms-with-nat">Creating VMs with NAT</a></li><li class="lvl2"><a href="#adding-a-dhcp-server">Adding a DHCP server</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="active" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/02-networking/">/networking</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 2: Networking</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-04">2022-05-04</time></span>
+  <span>updated <time datetime="2023-11-23">2023-11-23</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>In <a href="/blog/proxmox/01-install">part 1</a>, we installed a fresh Proxmox
+server, configured SSH, updated repositories, and configured a basic
+node firewall.</p>
+<p>In this post, we will continue setting up our Proxmox server&rsquo;s
+network.</p>
+<h2 id="use-bridge-networking-for-private-networks"><a class="heading-anchor" href="#use-bridge-networking-for-private-networks">Use bridge networking for private networks</a></h2>
+<p>By default, Proxmox uses bridge networking, which is very simple to
+setup, assuming you already have a LAN and an existing DHCP server and
+gateway on it. With bridge networking, you can use a single network
+interface with all of the virtual machines accessible through it. Each
+VM will have a unique virtual MAC address, and each will receive a
+unique IP address from your DHCP server. All the VMs become
+discoverable on the network, just like any other machine on your LAN.</p>
+<p>By default, Proxmox creates a single bridge network, named <code>vmbr0</code>,
+and this is connected to the management interface, and it is assumed
+you will connect this to your LAN.</p>
+<figure>
+    <img
+        srcset="/img/proxmox/bridge-network_hu3e0dabd78823e3130548f80543f1f24d_31364_480x0_resize_box_3.png 480w,/img/proxmox/bridge-network_hu3e0dabd78823e3130548f80543f1f24d_31364_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/bridge-network.png"
+        alt="The default Bridge network, vmbr0"
+        width="100%"
+        height="auto"/>
+    <figcaption>The default Bridge network, vmbr0</figcaption>
+</figure>
+
+<p>If you are able to use bridge networking, great! Nothing more to do
+here. If you have run out of IP addresses though, read on!</p>
+<h2 id="use-network-address-translation-nat-if-you-have-limited-ip-addresses"><a class="heading-anchor" href="#use-network-address-translation-nat-if-you-have-limited-ip-addresses">Use Network Address Translation (NAT) if you have limited IP addresses</a></h2>
+<p>If you are deploying to the internet, you likely have only a finite
+number of IP addresses, or possibly, only one.</p>
+<p>When you have limited IP addresses, you can use Network Address
+Translation (NAT) to let several virtual machines access the network
+using the same IP address. Source NAT (SNAT) or IP Masquerading
+provides private VMs outbound/egress to the WAN/internet.
+Inbound/ingress &ldquo;port forwarding&rdquo; is called destintation NAT (DNAT),
+and with this you have multiple servers all on one IP address, but
+each using a unique port number from the host, forwarded directly to
+the private service.</p>
+<p>Proxmox has no builtin support, through the dashboard, for configuring
+either kinds of NAT. However, because Proxmox is based on Debian
+Linux, we can configure the NAT rules with <code>iptables</code> through the
+command line.</p>
+<p>If you want to enable NAT, here are the steps:</p>
+<ul>
+<li>Connect to the pve node through SSH, logging in as the <code>root</code> user.</li>
+<li>Download the <code>proxmox_nat.sh</code> configuraton script, and make it
+executable:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_nat.sh
+
+chmod &#43;x proxmox_nat.sh
+</pre></div>
+</div>
+
+
+<ul>
+<li>The script has a menu interface:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>NAT bridge tool:
+</span></span><span style="display:flex;"><span> * Type `i` or `interfaces` to list the bridge interfaces.
+</span></span><span style="display:flex;"><span> * Type `c` or `create` to create a new NAT bridge.
+</span></span><span style="display:flex;"><span> * Type `l` or `list` to list the NAT rules.
+</span></span><span style="display:flex;"><span> * Type `n` or `new` to create some new NAT rules.
+</span></span><span style="display:flex;"><span> * Type `d` or `delete` to delete some existing NAT rules.
+</span></span><span style="display:flex;"><span> * Type `?` or `help` to see this help message again.
+</span></span><span style="display:flex;"><span> * Type `q` or `quit` to quit.
+</span></span></code></pre></div><ul>
+<li>Type <code>i</code> (and press Enter) to list all the bridge interfaces (you
+can see I have created some additional NAT bridges already):</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: i
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Currently configured bridges:
+</span></span><span style="display:flex;"><span>BRIDGE  NETWORK         COMMENT
+</span></span><span style="display:flex;"><span>vmbr0   10.13.13.11/24
+</span></span><span style="display:flex;"><span>vmbr1   10.99.0.2/24
+</span></span><span style="display:flex;"><span>vmbr50  172.16.13.2/24  pfsense MGMT only
+</span></span><span style="display:flex;"><span>vmbr55  10.55.0.1/24    NAT 10.55.0.1/24 bridged to vmbr0
+</span></span></code></pre></div><ul>
+<li>Type <code>c</code> (and press Enter) to create a new interface:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Configuring new NAT bridge ...
+</span></span><span style="display:flex;"><span>Enter the existing bridge to NAT from
+</span></span><span style="display:flex;"><span>: vmbr0
+</span></span><span style="display:flex;"><span>Enter a unique number for the new bridge (dont write the vmbr prefix)
+</span></span><span style="display:flex;"><span>: 56
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Configuring new interface: vmbr56
+</span></span><span style="display:flex;"><span>Enter the static IP address and network prefix in CIDR notation for vmbr56:
+</span></span><span style="display:flex;"><span>: 10.56.0.1/24
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## DEBUG: IP_CIDR=10.56.0.1/24
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Enter the description/comment for this interface
+</span></span><span style="display:flex;"><span>: NAT 10.56.0.1/24 bridged to vmbr0
+</span></span><span style="display:flex;"><span>Wrote /etc/network/interfaces
+</span></span><span style="display:flex;"><span>Activated vmbr56
+</span></span></code></pre></div><ul>
+<li>Type <code>i</code> again and see the new interface <code>vmbr56</code> has been created:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span> Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: i
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Currently configured bridges:
+</span></span><span style="display:flex;"><span>BRIDGE  NETWORK         COMMENT
+</span></span><span style="display:flex;"><span>vmbr0   10.13.13.11/24
+</span></span><span style="display:flex;"><span>vmbr1   10.99.0.2/24
+</span></span><span style="display:flex;"><span>vmbr50  172.16.13.2/24  pfsense MGMT only
+</span></span><span style="display:flex;"><span>vmbr55  10.55.0.1/24    NAT 10.55.0.1/24 bridged to vmbr0
+</span></span><span style="display:flex;"><span>vmbr56   10.56.0.1/24   NAT 10.56.0.1/24 bridged to vmbr0
+</span></span></code></pre></div><ul>
+<li>Type <code>n</code> to create create a new NAT rule:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: n
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Defining new port forward rule:
+</span></span><span style="display:flex;"><span>Enter the inbound interface
+</span></span><span style="display:flex;"><span>: vmbr0
+</span></span><span style="display:flex;"><span>Enter the protocol (tcp, udp)
+</span></span><span style="display:flex;"><span>: tcp
+</span></span><span style="display:flex;"><span>Enter the inbound Port number
+</span></span><span style="display:flex;"><span>: 2222
+</span></span><span style="display:flex;"><span>Enter the destination IP address
+</span></span><span style="display:flex;"><span>: 10.56.0.2
+</span></span><span style="display:flex;"><span>Enter the destination Port number
+</span></span><span style="display:flex;"><span>: 22
+</span></span><span style="display:flex;"><span>INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+</span></span><span style="display:flex;"><span>vmbr0      tcp       2222     10.56.0.2  22
+</span></span><span style="display:flex;"><span>? Is this rule correct? (Y/n): y
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>? Would you like to define more port forwarding rules now? (y/N): n
+</span></span><span style="display:flex;"><span>Wrote /etc/network/my-iptables-rules.sh
+</span></span><span style="display:flex;"><span>Systemd unit already enabled: my-iptables-rules
+</span></span><span style="display:flex;"><span>NAT rules applied: /etc/network/my-iptables-rules.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## Existing inbound port forwarding (DNAT) rules:
+</span></span><span style="display:flex;"><span>INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+</span></span><span style="display:flex;"><span>vmbr0      tcp       2222     10.56.0.2  22
+</span></span></code></pre></div><ul>
+<li>Type <code>l</code> to list the current NAT rules, showing the rule you just
+added:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: l
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>## Existing inbound port forwarding (DNAT) rules:
+</span></span><span style="display:flex;"><span>INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+</span></span><span style="display:flex;"><span>vmbr0      tcp       2222     10.56.0.2  22
+</span></span></code></pre></div><ul>
+<li>Type <code>d</code> to delete an existing NAT rule:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: d
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LINE#  INTERFACE  PROTOCOL  IN_PORT  DEST_IP    DEST_PORT
+</span></span><span style="display:flex;"><span>1      vmbr0      tcp       2222     10.56.0.2  22
+</span></span><span style="display:flex;"><span>Enter the line number for the rule you wish to delete (type `q` or blank for none)
+</span></span><span style="display:flex;"><span>: 1
+</span></span><span style="display:flex;"><span>Wrote /etc/network/my-iptables-rules.sh
+</span></span><span style="display:flex;"><span>Systemd unit already enabled: my-iptables-rules
+</span></span><span style="display:flex;"><span>NAT rules applied: /etc/network/my-iptables-rules.sh
+</span></span><span style="display:flex;"><span>No inbound port forwarding (DNAT) rules have been created yet.
+</span></span></code></pre></div><ul>
+<li>Type <code>e</code> to enable or disable the systemd service that manages these rules:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Enter command (for help, enter `?`)
+</span></span><span style="display:flex;"><span>: e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>The systemd unit is named: my-iptables-rules
+</span></span><span style="display:flex;"><span>The systemd unit is currently: enabled
+</span></span><span style="display:flex;"><span>? Would you like to enable the systemd unit on boot? (Y/n): y
+</span></span><span style="display:flex;"><span>Systemd unit enabled: my-iptables-rules
+</span></span><span style="display:flex;"><span>NAT rules applied: /etc/network/my-iptables-rules.sh
+</span></span></code></pre></div><h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_nat.sh">You can download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Setup NAT (IP Masquerading egress + Port Forwarding ingress) on Proxmox</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## See https://blog.rymcg.tech/blog/proxmox/02-networking/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>SYSTEMD_UNIT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;my-iptables-rules&#34;</span>
+</span></span><span style="display:flex;"><span>SYSTEMD_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/systemd/system/</span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span>IPTABLES_RULES_SCRIPT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/network/</span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Default network address is for a /24 based on the the bridge number:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## (Change the prefix [10.10] per install, to create unique addresses):</span>
+</span></span><span style="display:flex;"><span>DEFAULT_NETWORK_PATTERN<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;10.10.BRIDGE.1/24&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -eo pipefail
+</span></span><span style="display:flex;"><span>stderr<span style="color:#f92672">(){</span> echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> &gt;/dev/stderr; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>error<span style="color:#f92672">(){</span> stderr <span style="color:#e6db74">&#34;Error: </span>$@<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>cancel<span style="color:#f92672">(){</span> stderr <span style="color:#e6db74">&#34;Canceled.&#34;</span>; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>fault<span style="color:#f92672">(){</span> test -n <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> error $1; stderr <span style="color:#e6db74">&#34;Exiting.&#34;</span>; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>print_array<span style="color:#f92672">(){</span> printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>trim_trailing_whitespace<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> sed -e <span style="color:#e6db74">&#39;s/[[:space:]]*$//&#39;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>trim_leading_whitespace<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> sed -e <span style="color:#e6db74">&#39;s/^[[:space:]]*//&#39;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>trim_whitespace<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> trim_leading_whitespace | trim_trailing_whitespace; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>confirm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Confirm with the user.</span>
+</span></span><span style="display:flex;"><span>    local default<span style="color:#f92672">=</span>$1; local prompt<span style="color:#f92672">=</span>$2; local question<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;. Proceed?&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ok&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -e -p <span style="color:#e6db74">$&#39;\e[32m?\e[0m &#39;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prompt<span style="color:#e6db74">}${</span>question<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>dflt<span style="color:#e6db74">}</span><span style="color:#e6db74">): &#34;</span> answer
+</span></span><span style="display:flex;"><span>    answer<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>answer<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>default<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ok&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ask<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local __prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __var<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        read -e -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__prompt<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$&#39;\x0a\e[32m:\e[0m &#39;</span> -i <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        export <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>!__var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> break
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ask_allow_blank<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local __prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __var<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    read -e -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__prompt<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$&#39;\x0a\e[32m:\e[0m &#39;</span> -i <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    export <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>check_var<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local __missing<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>    local __vars<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> __var in <span style="color:#e6db74">${</span>__vars<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>!__var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            error <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span><span style="color:#e6db74"> variable is missing.&#34;</span>
+</span></span><span style="display:flex;"><span>            __missing<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>__missing<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> true <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>check_num<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local var<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    check_var var
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>!var<span style="color:#e6db74">}</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>0-9<span style="color:#f92672">]</span>+$ <span style="color:#f92672">]]</span> ; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>var<span style="color:#e6db74">}</span><span style="color:#e6db74"> is not a number: &#39;</span><span style="color:#e6db74">${</span>!var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>element_in_array <span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local e match<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; shift;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> e; <span style="color:#66d9ef">do</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$e<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span>$match<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> 0; <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>get_bridges<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    readarray -t INTERFACES &lt; &lt;<span style="color:#f92672">(</span>cat /etc/network/interfaces | grep -Po <span style="color:#e6db74">&#34;^iface \K(vmbr[0-9]*)&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    stderr <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    stderr <span style="color:#e6db74">&#34;Currently configured bridges:&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;BRIDGE|NETWORK|COMMENT
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>            local COMMENT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>get_interface_comment <span style="color:#e6db74">${</span>i<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>i<span style="color:#e6db74">}</span><span style="color:#e6db74">|</span><span style="color:#66d9ef">$(</span>get_interface_network <span style="color:#e6db74">${</span>i<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">|</span><span style="color:#66d9ef">$(</span>get_interface_comment <span style="color:#e6db74">${</span>i<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">)</span> | column -t -s <span style="color:#e6db74">&#39;|&#39;</span> | trim_trailing_whitespace
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>prefix_to_netmask <span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#thanks https://forum.archive.openwrt.org/viewtopic.php?id=47986&amp;p=1#p220781</span>
+</span></span><span style="display:flex;"><span>    set -- <span style="color:#66d9ef">$((</span> <span style="color:#ae81ff">5</span> <span style="color:#f92672">-</span> <span style="color:#f92672">(</span>$1 <span style="color:#f92672">/</span> <span style="color:#ae81ff">8</span><span style="color:#f92672">)</span> <span style="color:#66d9ef">))</span> <span style="color:#ae81ff">255</span> <span style="color:#ae81ff">255</span> <span style="color:#ae81ff">255</span> <span style="color:#ae81ff">255</span> <span style="color:#66d9ef">$((</span> <span style="color:#f92672">(</span><span style="color:#ae81ff">255</span> &lt;&lt; <span style="color:#f92672">(</span><span style="color:#ae81ff">8</span> <span style="color:#f92672">-</span> <span style="color:#f92672">(</span>$1 <span style="color:#f92672">%</span> <span style="color:#ae81ff">8</span><span style="color:#66d9ef">))</span><span style="color:#f92672">)</span> &amp; <span style="color:#ae81ff">255</span> <span style="color:#f92672">))</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> $1 -gt <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> shift $1 <span style="color:#f92672">||</span> shift
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">${</span>1-0<span style="color:#e6db74">}</span>.<span style="color:#e6db74">${</span>2-0<span style="color:#e6db74">}</span>.<span style="color:#e6db74">${</span>3-0<span style="color:#e6db74">}</span>.<span style="color:#e6db74">${</span>4-0<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>validate_ip_address <span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#thanks https://stackoverflow.com/a/21961938</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> | grep -o -E  <span style="color:#e6db74">&#39;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#39;</span> &gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>validate_ip_network<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#thanks https://stackoverflow.com/a/21961938</span>
+</span></span><span style="display:flex;"><span>    PREFIX<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> | grep -o -P <span style="color:#e6db74">&#34;/\K[[:digit:]]+</span>$<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PREFIX<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PREFIX<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -le <span style="color:#ae81ff">32</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> | grep -o -E  <span style="color:#e6db74">&#39;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/[[:digit:]]+&#39;</span> &gt;/dev/null
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>debug_var<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local var<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    check_var var
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;## DEBUG: </span><span style="color:#e6db74">${</span>var<span style="color:#e6db74">}</span><span style="color:#e6db74">=</span><span style="color:#e6db74">${</span>!var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt; /dev/stderr
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>new_interface<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local INTERFACE IP_CIDR IP_ADDRESS COMMENT OTHER_BRIDGE DEFAULT_IP_CIDR
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Configuring new NAT bridge ...&#34;</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Enter the existing bridge to NAT from&#34;</span> OTHER_BRIDGE vmbr0
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! element_in_array <span style="color:#e6db74">&#34;</span>$OTHER_BRIDGE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;Sorry, </span><span style="color:#e6db74">${</span>OTHER_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> is not a valid bridge (it does not exist)&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Enter a unique number for the new bridge (don&#39;t write the vmbr prefix)&#34;</span> BRIDGE_NUMBER
+</span></span><span style="display:flex;"><span>    check_num BRIDGE_NUMBER
+</span></span><span style="display:flex;"><span>    INTERFACE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;vmbr</span><span style="color:#e6db74">${</span>BRIDGE_NUMBER<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> element_in_array <span style="color:#e6db74">&#34;</span>$INTERFACE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        error <span style="color:#e6db74">&#34;Sorry, </span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74"> already exists.&#34;</span>
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Configuring new interface: </span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BRIDGE_NUMBER<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BRIDGE_NUMBER<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -le <span style="color:#ae81ff">255</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        DEFAULT_IP_CIDR<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DEFAULT_NETWORK_PATTERN<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s/BRIDGE/</span><span style="color:#e6db74">${</span>BRIDGE_NUMBER<span style="color:#e6db74">}</span><span style="color:#e6db74">/&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        DEFAULT_IP_CIDR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Enter the static IP address and network prefix in CIDR notation for </span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">:&#34;</span> IP_CIDR <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DEFAULT_IP_CIDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! validate_ip_network <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IP_CIDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;Bad IP address/network prefix (use the format eg. 192.168.1.1/24)&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    debug_var IP_CIDR
+</span></span><span style="display:flex;"><span>    IP_ADDRESS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$IP_CIDR<span style="color:#e6db74">&#34;</span> | cut -d <span style="color:#e6db74">&#34;/&#34;</span> -f 1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    NET_PREFIX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$IP_CIDR<span style="color:#e6db74">&#34;</span> | cut -d <span style="color:#e6db74">&#34;/&#34;</span> -f 2<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! validate_ip_address <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IP_ADDRESS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;Bad IP address: </span><span style="color:#e6db74">${</span>IP_ADDRESS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Enter the description/comment for this interface&#34;</span> COMMENT <span style="color:#e6db74">&#34;NAT </span><span style="color:#e6db74">${</span>IP_CIDR<span style="color:#e6db74">}</span><span style="color:#e6db74"> bridged to </span><span style="color:#e6db74">${</span>OTHER_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt;&gt; /etc/network/interfaces
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auto ${INTERFACE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">iface ${INTERFACE} inet static
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        address  ${IP_ADDRESS}/${NET_PREFIX}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        bridge_ports none
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        bridge_stp off
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        bridge_fd 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        post-up echo 1 &gt; /proc/sys/net/ipv4/ip_forward
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        post-up   iptables -t nat -A POSTROUTING -s &#39;${IP_CIDR}&#39; -o ${OTHER_BRIDGE} -j MASQUERADE
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        post-down iptables -t nat -D POSTROUTING -s &#39;${IP_CIDR}&#39; -o ${OTHER_BRIDGE} -j MASQUERADE
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#${COMMENT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Wrote /etc/network/interfaces&#34;</span>
+</span></span><span style="display:flex;"><span>    ifup <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Activated </span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>get_interface_comment<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> awk <span style="color:#e6db74">&#34;/^iface </span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74"> /,/^</span>$<span style="color:#e6db74">/&#34;</span> /etc/network/interfaces | grep -v -e <span style="color:#e6db74">&#39;^$&#39;</span> | grep -e <span style="color:#e6db74">&#39;^#&#39;</span> | tail -1 | tr -d <span style="color:#e6db74">&#39;#&#39;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>get_interface_network<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> awk <span style="color:#e6db74">&#34;/^iface </span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74"> /,/^</span>$<span style="color:#e6db74">/&#34;</span> /etc/network/interfaces | grep -o -P <span style="color:#e6db74">&#34;^\W+address \K(.*)&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>activate_iptables_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;iptables script not found: </span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">${</span>SYSTEMD_SERVICE<span style="color:#e6db74">}</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${SYSTEMD_SERVICE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=Load iptables ruleset from ${IPTABLES_RULES_SCRIPT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ConditionFileIsExecutable=${IPTABLES_RULES_SCRIPT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">After=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Type=forking
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=${IPTABLES_RULES_SCRIPT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">TimeoutSec=0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RemainAfterExit=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">GuessMainPID=no
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=network-online.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    systemctl daemon-reload
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>systemctl is-enabled <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;enabled&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        enable_service
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Systemd unit already enabled: </span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        systemctl restart <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;NAT rules applied: </span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>get_port_forward_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Retrieve the PORT_FORWARD_RULES array from the iptables script:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#39; &#39;</span> read -ra rule_parts &lt; &lt;<span style="color:#f92672">(</span>grep -P -o <span style="color:#e6db74">&#34;^PORT_FORWARD_RULES=\(\K(.*)\)</span>$<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span> | tr -d <span style="color:#e6db74">&#39;()&#39;</span> | tail -1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> part in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>part<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create_iptables_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    readarray -t PORT_FORWARD_RULES <span style="color:#f92672">&lt;&lt;&lt;</span> <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${#</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -eq <span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;PORT_FORWARD_RULES array is empty!&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39; &gt; ${IPTABLES_RULES_SCRIPT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## Script to configure the DNAT port forwarding rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## This script should not be edited by hand, it is generated from proxmox_nat.sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">error(){ echo &#34;Error: $@&#34;; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn(){ echo &#34;Warning: $@&#34;; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fault(){ test -n &#34;$1&#34; &amp;&amp; error $1; echo &#34;Exiting.&#34; &gt;/dev/stderr; exit 1; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">check_var(){
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    local __missing=false
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    local __vars=&#34;$@&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for __var in ${__vars}; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if [[ -z &#34;${!__var}&#34; ]]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            error &#34;${__var} variable is missing.&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            __missing=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if [[ ${__missing} == true ]]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        fault
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">purge_port_forward_rules() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    iptables-save | grep -v &#34;Added by ${BASH_SOURCE}&#34; | iptables-restore
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">apply_port_forward_rules() {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ## Validate all the rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    set -e
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if [[ &#34;${#PORT_FORWARD_RULES[@]}&#34; -le 1 ]] &amp;&amp; [[ &#34;${PORT_FORWARD_RULES[0]}&#34; == &#34;&#34; ]]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        warn &#34;PORT_FORWARD_RULES array is empty!&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        exit 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for rule in &#34;${PORT_FORWARD_RULES[@]}&#34;; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        echo &#34;debug: ${rule}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        IFS=&#39;:&#39; read -ra rule_parts &lt;&lt;&lt; &#34;$rule&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if [[ &#34;${#rule_parts[@]}&#34; != &#34;5&#34; ]]; then
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            fault &#34;Invalid rule (there should be 5 parts): ${rule}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        fi
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ## Apply all the rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for rule in &#34;${PORT_FORWARD_RULES[@]}&#34;; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        IFS=&#39;:&#39; read -ra rule_parts &lt;&lt;&lt; &#34;$rule&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        local INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        INTERFACE=&#34;${rule_parts[0]}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        PROTOCOL=&#34;${rule_parts[1]}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        IN_PORT=&#34;${rule_parts[2]}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        DEST_IP=&#34;${rule_parts[3]}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        DEST_PORT=&#34;${rule_parts[4]}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        check_var INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        iptables -t nat -A PREROUTING -i ${INTERFACE} -p ${PROTOCOL} \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --dport ${IN_PORT} -j DNAT --to ${DEST_IP}:${DEST_PORT} \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            -m comment --comment &#34;Added by ${BASH_SOURCE}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt;&gt; ${IPTABLES_RULES_SCRIPT}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## PORT_FORWARD_RULES is an array of port forwarding rules,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## each item in the array contains five elements separated by colon:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## INTERFACE:PROTOCOL:OUTSIDE_PORT:IP_ADDRESS:DEST_PORT
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## * IMPORTANT: PORT_FORWARD_RULES should all be on ONE LINE with no line breaks.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## Here is an example with two rules (commented out), and explained:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">##  * For any TCP packet on port 2222 coming from vmbr0, forward to 10.15.0.2 on port 22
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">##  * For any UDP packet on port 5353 coming from vmbr0, forward to 10.15.0.3 on port 53
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">## PORT_FORWARD_RULES=(vmbr0:tcp:2222:10.15.0.2:22 vmbr0:udp:5353:10.15.0.3:53)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PORT_FORWARD_RULES=(${PORT_FORWARD_RULES[@]})
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">### Apply all the rules:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">purge_port_forward_rules
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">apply_port_forward_rules
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    chmod a+x <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Wrote </span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print_port_forward_rule<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;:&#39;</span> read -ra rule_parts <span style="color:#f92672">&lt;&lt;&lt;</span> <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    local INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT
+</span></span><span style="display:flex;"><span>    INTERFACE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[0]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    PROTOCOL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[1]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    IN_PORT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[2]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    DEST_IP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[3]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    DEST_PORT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule_parts[4]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    check_var INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">|</span><span style="color:#e6db74">${</span>PROTOCOL<span style="color:#e6db74">}</span><span style="color:#e6db74">|</span><span style="color:#e6db74">${</span>IN_PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">|</span><span style="color:#e6db74">${</span>DEST_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">|</span><span style="color:#e6db74">${</span>DEST_PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print_port_forward_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    readarray -t PORT_FORWARD_RULES &lt; &lt;<span style="color:#f92672">(</span>get_port_forward_rules<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${#</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -le <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[0]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;No inbound port forwarding (DNAT) rules have been created yet.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;## Existing inbound port forwarding (DNAT) rules:&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;INTERFACE|PROTOCOL|IN_PORT|DEST_IP|DEST_PORT&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> rule in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>                print_port_forward_rule <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>rule<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">)</span> | column -t -s <span style="color:#e6db74">&#39;|&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>define_port_forwarding_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    readarray -t PORT_FORWARD_RULES &lt; &lt;<span style="color:#f92672">(</span>get_port_forward_rules<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Defining new port forward rule:&#34;</span>
+</span></span><span style="display:flex;"><span>        ask <span style="color:#e6db74">&#34;Enter the inbound interface&#34;</span> INTERFACE vmbr0
+</span></span><span style="display:flex;"><span>        ask <span style="color:#e6db74">&#34;Enter the protocol (tcp, udp)&#34;</span> PROTOCOL tcp
+</span></span><span style="display:flex;"><span>        ask <span style="color:#e6db74">&#34;Enter the inbound Port number&#34;</span> IN_PORT
+</span></span><span style="display:flex;"><span>        check_num IN_PORT
+</span></span><span style="display:flex;"><span>        ask <span style="color:#e6db74">&#34;Enter the destination IP address&#34;</span> DEST_IP
+</span></span><span style="display:flex;"><span>        validate_ip_address <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DEST_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> fault <span style="color:#e6db74">&#34;Invalid ip address: </span><span style="color:#e6db74">${</span>DEST_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        ask <span style="color:#e6db74">&#34;Enter the destination Port number&#34;</span> DEST_PORT
+</span></span><span style="display:flex;"><span>        check_num DEST_PORT
+</span></span><span style="display:flex;"><span>        check_var INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT
+</span></span><span style="display:flex;"><span>        local RULE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>PROTOCOL<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>IN_PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>DEST_IP<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>DEST_PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;INTERFACE|PROTOCOL|IN_PORT|DEST_IP|DEST_PORT&#34;</span>
+</span></span><span style="display:flex;"><span>            print_port_forward_rule <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RULE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">)</span> | column -t -s <span style="color:#e6db74">&#39;|&#39;</span>
+</span></span><span style="display:flex;"><span>        confirm yes <span style="color:#e6db74">&#34;Is this rule correct&#34;</span> <span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        PORT_FORWARD_RULES<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;</span>$RULE<span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>        confirm no <span style="color:#e6db74">&#34;Would you like to define more port forwarding rules now&#34;</span> <span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#f92672">||</span> break
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    create_iptables_rules <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    activate_iptables_rules
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    print_port_forward_rules
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>delete_port_forwarding_rules<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    readarray -t PORT_FORWARD_RULES &lt; &lt;<span style="color:#f92672">(</span>get_port_forward_rules<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            print_port_forward_rules
+</span></span><span style="display:flex;"><span>            break
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;LINE# INTERFACE PROTOCOL IN_PORT DEST_IP DEST_PORT&#34;</span>
+</span></span><span style="display:flex;"><span>            print_port_forward_rules 2&gt;/dev/null | grep -v <span style="color:#e6db74">&#34;#&#34;</span> | tail -n +2 | cat -n | trim_whitespace
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">)</span> | column -t | trim_whitespace
+</span></span><span style="display:flex;"><span>        ask_allow_blank <span style="color:#e6db74">&#39;Enter the line number for the rule you wish to delete (type `q` or blank for none)&#39;</span> RULE_TO_DELETE
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;q&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            break
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        RULE_TO_DELETE<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span><span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -lt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>               <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gt <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${#</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            error <span style="color:#e6db74">&#34;Invalid rule number&#34;</span>
+</span></span><span style="display:flex;"><span>            break
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        local to_delete<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[<span style="color:#e6db74">${</span>RULE_TO_DELETE<span style="color:#e6db74">}</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        PORT_FORWARD_RULES<span style="color:#f92672">=(</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[@]/<span style="color:#e6db74">${</span>to_delete<span style="color:#e6db74">}}</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        create_iptables_rules <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT_FORWARD_RULES[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        activate_iptables_rules
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>enable_service<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;The systemd unit is named: </span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;The systemd unit is currently: </span><span style="color:#66d9ef">$(</span>systemctl is-enabled <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> confirm yes <span style="color:#e6db74">&#34;Would you like to enable the systemd unit on boot&#34;</span> <span style="color:#e6db74">&#34;?&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        systemctl enable <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Systemd unit enabled: </span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        systemctl restart <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;NAT rules applied: </span><span style="color:#e6db74">${</span>IPTABLES_RULES_SCRIPT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        systemctl disable <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Systemd unit is disabled on next boot: </span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print_help<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;NAT bridge tool:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `i` or `interfaces` to list the bridge interfaces.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `c` or `create` to create a new NAT bridge.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `l` or `list` to list the NAT rules.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `n` or `new` to create some new NAT rules.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `d` or `delete` to delete some existing NAT rules.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `e` or `enable` to enable or disable adding the rules on boot.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `?` or `help` to see this help message again.&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39; * Type `q` or `quit` to quit.&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    get_bridges
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> :
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        print_help
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>        ask_allow_blank <span style="color:#e6db74">&#39;Enter command (for help, enter `?`)&#39;</span> COMMAND
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$COMMAND<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;q&#39;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$COMMAND<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;quit&#39;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>systemctl is-enabled <span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;enabled&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>                enable_service
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;goodbye&#34;</span>
+</span></span><span style="display:flex;"><span>            exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;?&#39;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;help&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            print_help
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;i&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;interfaces&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            get_bridges
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;c&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;create&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            get_bridges
+</span></span><span style="display:flex;"><span>            new_interface <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;l&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;list&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            print_port_forward_rules
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;n&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;new&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            define_port_forwarding_rules
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;d&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;delete&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            delete_port_forwarding_rules
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;e&#34;</span> <span style="color:#f92672">||</span> $COMMAND <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;enable&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            enable_service
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        echo
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main
+</span></span></code></pre></div>
+
+<h2 id="systemd-unit-to-manage-nat-rules"><a class="heading-anchor" href="#systemd-unit-to-manage-nat-rules">Systemd unit to manage NAT rules</a></h2>
+<p>The script includes a systemd unit that is setup to add the DNAT
+(ingress) rules on every system boot.</p>
+<p>Here are the relevant files, whose paths are all declared at the top
+of the script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>SYSTEMD_UNIT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;my-iptables-rules&#34;</span>
+</span></span><span style="display:flex;"><span>SYSTEMD_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/systemd/system/</span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">.service&#34;</span>
+</span></span><span style="display:flex;"><span>IPTABLES_RULES_SCRIPT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/network/</span><span style="color:#e6db74">${</span>SYSTEMD_UNIT<span style="color:#e6db74">}</span><span style="color:#e6db74">.sh&#34;</span>
+</span></span></code></pre></div><ul>
+<li><code>SYSTEMD_UNIT</code> is the name of the systemd service that is started.
+You can interact with it with <code>systemctl</code>:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+$ systemctl status my-iptables-rules
+● my-iptables-rules.service - Load iptables ruleset from /etc/network/my-iptables-rules.sh
+     Loaded: loaded (/etc/systemd/system/my-iptables-rules.service; enabled; preset: enabled)
+     Active: active (exited) since Wed 2023-11-22 16:05:48 MST; 6h ago
+    Process: 469722 ExecStart=/etc/network/my-iptables-rules.sh (code=exited, status=0/SUCCESS)
+        CPU: 8ms
+
+Nov 22 16:05:48 pve systemd[1]: Starting my-iptables-rules.service - Load iptables ruleset from /…s.sh...Nov 22 16:05:48 pve my-iptables-rules.sh[469722]: Error: PORT_FORWARD_RULES array is empty!
+Nov 22 16:05:48 pve systemd[1]: Started my-iptables-rules.service - Load iptables ruleset from /e…les.sh.Hint: Some lines were ellipsized, use -l to show in full.
+</pre></div>
+</div>
+
+
+<p>The output <code>Error: PORT_FORWARD_RULES array is empty!</code> is normal when
+you have not yet defined any DNAT rules (ie. all ports are blocked).
+If you need to see the full log output, use <code>journalctl</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>journalctl --unit my-iptables-rules
+</span></span></code></pre></div><ul>
+<li><code>SYSTEMD_SERVICE</code> is the full path to the systemd service config
+file, (and which is automatically created by the script).</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## You don&#39;t need to copy this, this is just an example of what
+</span></span><span style="display:flex;"><span>## the script automatically creates for you:
+</span></span><span style="display:flex;"><span>[Unit]
+</span></span><span style="display:flex;"><span>Description=Load iptables ruleset from /etc/network/my-iptables-rules
+</span></span><span style="display:flex;"><span>ConditionFileIsExecutable=/etc/network/my-iptables-rules
+</span></span><span style="display:flex;"><span>After=network-online.target
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[Service]
+</span></span><span style="display:flex;"><span>Type=forking
+</span></span><span style="display:flex;"><span>ExecStart=/etc/network/my-iptables-rules
+</span></span><span style="display:flex;"><span>TimeoutSec=0
+</span></span><span style="display:flex;"><span>RemainAfterExit=yes
+</span></span><span style="display:flex;"><span>GuessMainPID=no
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[Install]
+</span></span><span style="display:flex;"><span>WantedBy=network-online.target
+</span></span></code></pre></div><p>The <code>WantedBy</code> config will ensure the service is started on boot.</p>
+<ul>
+<li><code>IPTABLES_RULES_SCRIPT</code> is the path to the NAT rules
+configuration/script, (and which is automatically created by the
+script). The systemd service calls this script to add the NAT
+rules, on boot. You can also call the script yourself anytime. When
+the script is executed, <em>all</em> of the existing DNAT rules are purged
+(they are all tagged <code>Added by ${IPTABLES_RULES_SCRIPT}</code>, and so
+are deleted based on this same tag.). New rules are then created
+based on the <code>PORT_FORWARD_RULES</code> variable in the current
+<code>IPTABLES_RULES_SCRIPT</code>.</li>
+</ul>
+<h2 id="manage-bridges-from-the-dashboard"><a class="heading-anchor" href="#manage-bridges-from-the-dashboard">Manage bridges from the dashboard</a></h2>
+<p>Although you cannot manage the NAT rules from the dashboard, you can
+add or remove the bridges:</p>
+<figure>
+    <img
+        srcset="/img/proxmox/nat-bridges_hua2b6b1ebd3e8b20d6d521f74a58d5e2f_93417_480x0_resize_box_3.png 480w,/img/proxmox/nat-bridges_hua2b6b1ebd3e8b20d6d521f74a58d5e2f_93417_768x0_resize_box_3.png 768w,/img/proxmox/nat-bridges_hua2b6b1ebd3e8b20d6d521f74a58d5e2f_93417_1366x0_resize_box_3.png 1366w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/nat-bridges.png"
+        alt="Proxmox dashboard shows all the NAT bridges, you can easily delete them from here"
+        width="100%"
+        height="auto"/>
+    <figcaption>Proxmox dashboard shows all the NAT bridges, you can easily delete them from here</figcaption>
+</figure>
+
+<h2 id="creating-vms-with-nat"><a class="heading-anchor" href="#creating-vms-with-nat">Creating VMs with NAT</a></h2>
+<p>With bridge networking, VMs can query a DHCP server to get an IP
+address. When using a private NAT network, there is no DHCP server (by
+default) that can be contacted. Therefore, you will need to configure
+a static IP address and gateway for each VM:</p>
+<figure>
+    <img
+        srcset="/img/proxmox/cloud-init-static-ip-address_huda94feb2eb5d8c6f9595ce48a05be340_91656_480x0_resize_box_3.png 480w,/img/proxmox/cloud-init-static-ip-address_huda94feb2eb5d8c6f9595ce48a05be340_91656_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/cloud-init-static-ip-address.png"
+        alt="VM cloud-init setting a static IP address and gateway"
+        width="100%"
+        height="auto"/>
+    <figcaption>VM cloud-init setting a static IP address and gateway</figcaption>
+</figure>
+
+<p>Configure the virtual network card to connect to the correct bridge:</p>
+<figure>
+    <img
+        srcset="/img/proxmox/vm-network-bridge_hude6fd0c72ae8ac3fbc3015021c3d0acd_84275_480x0_resize_box_3.png 480w,/img/proxmox/vm-network-bridge_hude6fd0c72ae8ac3fbc3015021c3d0acd_84275_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/vm-network-bridge.png"
+        alt="A VM selecting the bridge to connect the virtual ethernet cable to"
+        width="100%"
+        height="auto"/>
+    <figcaption>A VM selecting the bridge to connect the virtual ethernet cable to</figcaption>
+</figure>
+
+<h2 id="adding-a-dhcp-server"><a class="heading-anchor" href="#adding-a-dhcp-server">Adding a DHCP server</a></h2>
+<p>If you want to add a DHCP server to your NAT bridge, you can use
+something simple like dnsmasq. You&rsquo;ll need to create a VM with a
+static IP.</p>
+<p>For example, suppose:</p>
+<ul>
+<li><code>10.1.1.1</code> is the Proxmox host on <code>vmbr1</code> (this is the gateway)</li>
+<li><code>10.1.1.2</code> is a VM with a static IP, tasked with running dnsmasq
+(this is the DHCP server)</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this on the VM running on 10.1.1.2:
+systemctl stop systemd-resolved
+systemctl mask systemd-resolved
+apt update
+apt install dnsmasq
+</pre></div>
+</div>
+
+
+<p>Edit the <code>/etc/dnsmasq.conf</code> config file on the VM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Example /etc/dnsmasq.conf file for running a DHCP server:
+</span></span><span style="display:flex;"><span>### 10.1.1.1 is the gateway (the proxmox host)
+</span></span><span style="display:flex;"><span>### 10.1.1.2 is this VM, the DHCP server
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># Run on the main VM interface:
+</span></span><span style="display:flex;"><span>interface=eth0
+</span></span><span style="display:flex;"><span>except-interface=lo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># Set an appropriate domain:
+</span></span><span style="display:flex;"><span>domain=vm1
+</span></span><span style="display:flex;"><span>bind-interfaces
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># Listen on the static IP address for this VM (10.1.1.2):
+</span></span><span style="display:flex;"><span>listen-address=10.1.1.2
+</span></span><span style="display:flex;"><span>server=::1
+</span></span><span style="display:flex;"><span>server=127.0.0.1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># Serve the DHCP range from .10 to .250:
+</span></span><span style="display:flex;"><span>dhcp-range=10.1.1.10,10.1.1.250,255.255.255.0,1h
+</span></span><span style="display:flex;"><span># Add the default route through the proxmox host (10.1.1.1):
+</span></span><span style="display:flex;"><span>dhcp-option=3,10.1.1.1
+</span></span><span style="display:flex;"><span>dhcp-option=6,10.1.1.1
+</span></span></code></pre></div><p>Save the file, and restart dnsmasq:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+systemctl enable --now dnsmasq
+systemctl restart dnsmasq
+</pre></div>
+</div>
+
+
+<p>If you now boot another VM on the same bridge (<code>vmbr1</code>), and if its
+configured for DHCP, it should get an ip from the dnsmasq server, and
+create a route through the proxmox host <code>10.1.1.1</code>. Now you won&rsquo;t have
+to set any more static IPs.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

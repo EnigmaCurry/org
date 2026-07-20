@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Install Traefik · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/" aria-label="Previous: install-docker-and-d.rymcg.tech" title="prev: install-docker-and-d.rymcg.tech"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/set-up-raspberry-pi/install-whoami/" aria-label="Next: install-whoami" title="next: install-whoami"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a><ul><li class="lvl1"><a href="#">install-traefik</a></li><li class="lvl2"><a href="#basic-traefik-config">Basic Traefik config</a></li><li class="lvl3"><a href="#traefik-config">Traefik Config</a></li><li class="lvl2"><a href="#install-traefik">Install Traefik</a></li><li class="lvl2"><a href="#verify-traefik-status">Verify Traefik status</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node open">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a><ul class="sections"><li><a class="" href="/portable-docker/set-up-raspberry-pi/build-your-pi/">build-your-pi</a></li><li><a class="" href="/portable-docker/set-up-raspberry-pi/install-raspbian/">install-raspbian</a></li><li><a class="" href="/portable-docker/set-up-raspberry-pi/set-up-networking/">set-up-networking</a></li><li><a class="" href="/portable-docker/set-up-raspberry-pi/install-docker-and-d.rymcg.tech/">install-docker-and-d.rymcg.tech</a></li><li><a class="active" href="/portable-docker/set-up-raspberry-pi/install-traefik/">install-traefik</a></li><li><a class="" href="/portable-docker/set-up-raspberry-pi/install-whoami/">install-whoami</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/set-up-raspberry-pi/">/set-up-raspberry-pi</a><a class="pseg pcur" href="/portable-docker/set-up-raspberry-pi/install-traefik/">/install-traefik</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Install Traefik</a></h1>
+
+
+<figure><img src="/img/portable-docker/gopher.webp">
+</figure>
+
+<p><a href="https://doc.traefik.io/traefik/">Traefik</a> is an ingress application proxy and router for all of your web
+services (HTTP / TCP / UDP). Traefik facilitates automatic TLS
+certificate management via <a href="https://letsencrypt.org/getting-started/">Let&rsquo;s Encrypt</a>, and handles transport
+security for all of your applications. Traefik is configured to
+support several authentication and sentry authorization mechanisms,
+including: HTTP Basic Auth, OAuth2, mutual TLS, and IP address
+filtering.</p>
+<pre class="mermaid">
+sequenceDiagram
+    participant Browser as Web Browser
+    participant Traefik as Traefik Proxy
+    participant Whoami as Container: whoami
+
+Browser->>Traefik: HTTP Request
+Traefik->>Whoami: Forward Request
+Whoami->>Traefik: Response
+Traefik->>Browser: HTTP Response
+</pre>
+
+<h2 id="basic-traefik-config"><a class="heading-anchor" href="#basic-traefik-config">Basic Traefik config</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make traefik config
+</pre></div>
+</div>
+
+
+<p>This presents the interactive configuration menu for Traefik:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+############################################################
+###                          pi                          ###
+############################################################
+
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+</pre></div>
+</div>
+
+<p>You can use the up and down arrow keys to choose the selection, and
+you may type any substring to narrow the list. Select the <code>Config</code> entry and press
+the <code>Enter</code> key.</p>
+<h3 id="traefik-config"><a class="heading-anchor" href="#traefik-config">Traefik Config</a></h3>
+<div class="box notice notice-secondary"><div class="label">Don&#39;t wander off</div>
+  <div class="body">
+<p>The Traefik configuration is extensive. This section will only show
+you how to configure Traefik for a basic install. Many of the menu
+options will be skipped for the time being. Follow these instructions
+exactly, and don&rsquo;t go wandering through the other menus just yet.</p>
+  </div>
+</div>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+During first time setup, you must complete the following tasks:
+
+- Create Traefik user.
+- Configure TLS certificates and ACME (optional).
+- Install traefik.
+
+Traefik must be re-installed to apply any changes.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+? Traefik Configuration:
+> Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+  Error page template
+v Logging level
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+</pre></div>
+</div>
+
+<h4 id="traefik-user"><a class="heading-anchor" href="#traefik-user">Traefik user</a></h4>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+> Traefik user
+  Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+</pre></div>
+</div>
+
+<p>Select the <code>Traefik user</code> option to create the <code>traefik</code> user on the
+host.</p>
+<h4 id="entrypoints--including-dashboard"><a class="heading-anchor" href="#entrypoints--including-dashboard">Entrypoints (including dashboard)</a></h4>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+</pre></div>
+</div>
+
+<p>The following entrypoints are defined by default:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Entrypoint  Listen_address  Listen_port  Protocol  Upstream_proxy
+----------  --------------  -----------  --------  --------------
+web         0.0.0.0         80           tcp
+websecure   0.0.0.0         443          tcp
+</pre></div>
+</div>
+
+<p>You will need to reconfigure the <code>websecure</code> entrypoint, to enable the
+<code>Proxy Protocol</code>:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik entrypoint config
+  Show enabled entrypoints
+> Configure stock entrypoints
+  Configure custom entrypoints
+
+? Select entrypoint to configure:
+  dashboard : Traefik dashboard (only accessible from 127.0.0.1:8080 and requires HTTP basic auth)
+  web : HTTP (unencrypted; used to redirect requests to use HTTPS)
+> websecure : HTTPS (TLS encrypted HTTP)
+  web_plain : HTTP (unencrypted; specifically NOT redirected to websecure; must use different port than web)
+  mqtt : MQTT (mosquitto) pub-sub service
+  ssh : SSH (forgejo) git (ssh) entrypoint
+v xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
+
+> Do you want to enable the websecure entrypoint? Yes
+Set TRAEFIK_WEBSECURE_ENTRYPOINT_ENABLED=true
+TRAEFIK_WEBSECURE_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (e.g., 0.0.0.0)
+
+: 0.0.0.0
+
+TRAEFIK_WEBSECURE_ENTRYPOINT_PORT: Enter the host port to listen on (e.g., 443)
+
+: 443
+
+? Is this entrypoint downstream from another trusted proxy?
+  No, clients dial directly to this server. (Turn off Proxy Protocol)
+> Yes, clients are proxied through a trusted server. (Turn on Proxy Protocol)
+
+TRAEFIK_WEBSECURE_ENTRYPOINT_PROXY_PROTOCOL_TRUSTED_IPS: Enter the comma separated list of trusted upstream proxy servers (CIDR)
+
+: 10.13.16.1/32
+</pre></div>
+</div>
+
+<p><code>10.13.16.1/32</code> is the correct (default) IP address of the sentry
+WireGuard peer.</p>
+<p>Press <code>ESC</code> two times to get back to the traefik config menu.</p>
+<h4 id="configure-acme"><a class="heading-anchor" href="#configure-acme">Configure ACME</a></h4>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+  Traefik user
+  Entrypoints (including dashboard)
+> TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+> Configure ACME (Let's Encrypt or Step-CA)
+  Configure TLS certificates (make certs)
+
+? Which ACME provider do you want to use?
+> Let's Encrypt (ACME)
+  Step-CA (ACME)
+  Disable ACME
+  Cancel / Go back
+
+? Which LE environment do you want to use?
+> Production (recommended!)
+  Staging (untrusted / testing)
+
+Which type of ACME challenge should be used?
+  TLS-ALPN-01 (default for public servers, easy, but no wildcard certs)
+> DNS-01 (requires API key, but good behind firewalls, and allows wildcard certs)
+
+TRAEFIK_ACME_CA_EMAIL: Enter your email address (not required; blank to skip)
+
+:
+
+TRAEFIK_ACME_DNS_PROVIDER: Enter the LEGO code for your DNS Provider (eg. digitalocean)
+
+: digitalocean
+
+TRAEFIK_ACME_DNS_VARNAME_1: Enter the 1st DNS provider variable name (eg. DO_AUTH_TOKEN)
+
+: DO_AUTH_TOKEN
+
+TRAEFIK_ACME_DNS_VARNAME_2: Enter the 2nd DNS provider variable name (or leave blank)
+
+:
+
+Now to enter the values for the custom DNS API variables:
+DO_AUTH_TOKEN: Enter the value for DO_AUTH_TOKEN (e.g., your-actual-digitalocean-token-here)
+
+: dop_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</pre></div>
+</div>
+
+<h4 id="request-tls-certificates"><a class="heading-anchor" href="#request-tls-certificates">Request TLS certificates</a></h4>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik TLS config:
+  Configure certificate authorities (CA)
+  Configure ACME (Let's Encrypt or Step-CA)
+> Configure TLS certificates (make certs)
+
+? Configure Traefik TLS certificates
+  Manage all certificates.
+> Create a new certificate.
+  Done / Go back
+</pre></div>
+</div>
+
+<p>Next enter the domain names you want listed on this certificate:</p>
+<ul>
+<li><code>pi.example.com</code> (this is your main domain name CN record for the server.)</li>
+<li><code>*.pi.example.com</code> (this is your various app sub-domains wildcard
+SANS record, matching e.g., <code>whoami.pi.example.com</code>)</li>
+<li>Any other domains you want listed on the same certificate.</li>
+</ul>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Enter the main domain (CN) for this certificate (e.g., `d.rymcg.tech` or `*.d.rymcg.tech`)
+
+: pi.example.com
+
+Now enter additional domains (SANS), one per line:
+Enter a secondary domain (enter blank to skip)
+
+: *.pi.example.com
+
+Enter a secondary domain (enter blank to skip)
+
+:
+</pre></div>
+</div>
+
+<p>It will continue asking you to enter additional SANS domains until you
+enter a blank response to signify you are done.</p>
+<h4 id="certificate-summary"><a class="heading-anchor" href="#certificate-summary">Certificate summary</a></h4>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Main domain:
+ pi.example.com
+Secondary (SANS) domains:
+ *.pi.example.com
+</pre></div>
+</div>
+
+<p>Finally a summary of the certificate request is printed.</p>
+<ul>
+<li>Press the <code>ESC</code> key three times to go back to the main menu.</li>
+</ul>
+<h4 id="error-page-template"><a class="heading-anchor" href="#error-page-template">Error page template</a></h4>
+<p>You can customize the <a href="https://github.com/tarampampam/error-pages#-templates">Traefik error page template</a> by selecing a custom
+theme:</p>
+<figure><img src="/img/portable-docker/404.webp">
+</figure>
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik Configuration:
+^ Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / WireGuard)
+> Error page template
+  Logging level
+  Access logs
+
+? Select an error page theme (https://github.com/tarampampam/error-pages#-templates)
+^ hacker-terminal
+  cats
+  lost-in-space
+  app-down
+  connection
+> matrix
+  orient
+</pre></div>
+</div>
+
+<p>Since this theme is only used for the 404s and other errors coming
+from Traefik directly (and not for any errors coming from the apps
+themselves), the choice here is not purely aesthetic: as long as you
+choose <em>unique</em> error page template themes for each Traefik server
+instance (e.g., <code>pi</code>, <code>sentry</code>), you will gain extra debugging
+knowledge of knowing <em>which</em> Traefik instance is returning a
+particular error.</p>
+<h2 id="install-traefik"><a class="heading-anchor" href="#install-traefik">Install Traefik</a></h2>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+############################################################
+###                          pi                          ###
+############################################################
+
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+[↑↓ to move, enter to select, type to filter, ESC to cancel]
+</pre></div>
+</div>
+
+<p>On the main menu, select <code>Install (make install)</code>.</p>
+<p>Wait for the Traefik service to be installed, and then you will be
+returned to the main menu.</p>
+<p>Press the <code>Esc</code> key to quit the Traefik configuration.</p>
+<h2 id="verify-traefik-status"><a class="heading-anchor" href="#verify-traefik-status">Verify Traefik status</a></h2>
+<p>You can check to see that Traefik has started:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make traefik status
+</pre></div>
+</div>
+
+
+<p>You should see two services running: <code>traefik</code> and
+<code>traefik-error-pages</code>, both in state <code>running</code>:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+NAME                   ENV              IMAGE                           STATE
+traefik-error-pages-1  .env_pi_default  tarampampam/error-pages:2.25.0  running
+traefik-traefik-1      .env_pi_default  traefik-traefik                 running
+</pre></div>
+</div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  
+  mermaid.initialize({ startOnLoad: false });
+  mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+</script>
+
+
+</body>
+</html>

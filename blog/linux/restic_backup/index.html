@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Daily backups to S3 with Restic and systemd timers · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/01-install/" aria-label="Previous: install" title="prev: install"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/virtual-proxmox/03-port-forwarding/" aria-label="Next: port-forwarding" title="next: port-forwarding"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">restic_backup</a></li><li class="lvl2"><a href="#choose-an-s3-vendor-and-create-a-bucket">Choose an S3 vendor and create a bucket</a></li><li class="lvl3"><a href="#example-with-minio">Example with Minio</a></li><li class="lvl3"><a href="#example-with-wasabi">Example with Wasabi</a></li><li class="lvl2"><a href="#download-and-edit-the-backup-script">Download and edit the backup script</a></li><li class="lvl2"><a href="#usage">Usage</a></li><li class="lvl3"><a href="#initialize-the-restic-repository">Initialize the restic repository</a></li><li class="lvl3"><a href="#run-the-first-backup-manually">Run the first backup manually</a></li><li class="lvl3"><a href="#install-the-systemd-service">Install the systemd service</a></li><li class="lvl3"><a href="#check-the-status">Check the status</a></li><li class="lvl3"><a href="#list-snapshots">List snapshots</a></li><li class="lvl3"><a href="#restore-from-the-latest-snapshot">Restore from the latest snapshot</a></li><li class="lvl3"><a href="#restore-from-a-different-snapshot">Restore from a different snapshot</a></li><li class="lvl3"><a href="#prune-the-repository">Prune the repository</a></li><li class="lvl2"><a href="#security-considerations">Security considerations</a></li><li class="lvl2"><a href="#systemd-timers-are-way-better-than-cron">Systemd timers are way better than cron</a></li><li class="lvl2"><a href="#frequently-saskedexpected-questions">Frequently s/asked/expected/ questions</a></li><li class="lvl3"><a href="#how-do-i-know-its-working">How do I know its working?</a></li><li class="lvl3"><a href="#i-lost-my-whole-computer-how-do-i-get-my-files-back">I lost my whole computer, how do I get my files back?</a></li><li class="lvl3"><a href="#can-i-move-or-rename-the-script">Can I move or rename the script?</a></li><li class="lvl3"><a href="#can-i-move-my-backups-to-a-new-bucket-name-or-endpoint">Can I move my backups to a new bucket name or endpoint?</a></li><li class="lvl3"><a href="#why-suggest-the-path-configrestic_backupmy_backupsh">Why suggest the path ~/.config/restic_backup/my_backup.sh?</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="active" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/restic_backup/">/restic_backup</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Daily backups to S3 with Restic and systemd timers</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-01-17">2022-01-17</time></span>
+  <span>updated <time datetime="2022-01-30">2022-01-30</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+  </span>
+</div>
+
+<p><a href="https://restic.net/">Restic</a> is a modern backup program that can archive your
+files onto many different cloud and network storage locations, and to help
+restore your files in case of disaster. This article will show you how to backup
+one or more user directories to S3 cloud storage, using restic and systemd.</p>
+<h2 id="choose-an-s3-vendor-and-create-a-bucket"><a class="heading-anchor" href="#choose-an-s3-vendor-and-create-a-bucket">Choose an S3 vendor and create a bucket</a></h2>
+<p>Restic supports many different storage mechanisms, but this article and
+associated scripts will only focus on using S3 storage (AWS or S3 API
+compatible endpoint). You can choose from many different storage vendors: AWS,
+DigitalOcean, Backblaze, Wasabi, Minio etc.</p>
+<p>You&rsquo;ll need to gather the following information from your S3 provider:</p>
+<ul>
+<li><code>S3_BUCKET</code> - the name of the S3 bucket</li>
+<li><code>S3_ENDPOINT</code> the domain name of the S3 server</li>
+<li><code>S3_ACCESS_KEY_ID</code> The S3 access ID</li>
+<li><code>S3_SECRET_ACCESS_KEY</code> The S3 secret key</li>
+</ul>
+<h3 id="example-with-minio"><a class="heading-anchor" href="#example-with-minio">Example with Minio</a></h3>
+<p>Minio is an open-source self-hosted S3 server. You can easily install Minio on
+your docker server. See the instructions for
+<a href="https://github.com/EnigmaCurry/d.rymcg.tech">d.rymcg.tech</a> and then install
+<a href="https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/minio">minio</a>.</p>
+<p>Follow <a href="https://github.com/EnigmaCurry/d.rymcg.tech/tree/master/minio#create-a-bucket">the instructions for creating a bucket, policy, and
+credentials</a></p>
+<h3 id="example-with-wasabi"><a class="heading-anchor" href="#example-with-wasabi">Example with Wasabi</a></h3>
+<p><a href="https://wasabi.com/">Wasabi</a> is an inexpensive cloud storage vendor with an S3
+compatible API, and with a pricing and usage model perfect for backups.</p>
+<ul>
+<li>Create a wasabi account and <a href="https://console.wasabisys.com/">log in to the console</a></li>
+<li>Click on <code>Buckets</code> in the menu, then click <code>Create Bucket</code>. Choose a unique
+name for the bucket. Select the region, then click <code>Create Bucket</code>.</li>
+<li>Click on <code>Policies</code> in the menu, then click <code>Create Policy</code>. Enter any name
+for the policy, but its easiest to name it the same thing as the bucket. Copy
+and paste the full policy document below into the policy form, replacing
+<code>BUCKET_NAME</code> with your chosen bucket name (there are two instances to
+replace in the body).</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  &#34;Version&#34;: &#34;2012-10-17&#34;,
+</span></span><span style="display:flex;"><span>  &#34;Statement&#34;: [
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      &#34;Effect&#34;: &#34;Allow&#34;,
+</span></span><span style="display:flex;"><span>      &#34;Action&#34;: &#34;s3:ListBucket&#34;,
+</span></span><span style="display:flex;"><span>      &#34;Resource&#34;: &#34;arn:aws:s3:::BUCKET_NAME&#34;
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      &#34;Effect&#34;: &#34;Allow&#34;,
+</span></span><span style="display:flex;"><span>      &#34;Action&#34;: [
+</span></span><span style="display:flex;"><span>        &#34;s3:PutObject&#34;,
+</span></span><span style="display:flex;"><span>        &#34;s3:GetObject&#34;,
+</span></span><span style="display:flex;"><span>        &#34;s3:DeleteObject&#34;
+</span></span><span style="display:flex;"><span>      ],
+</span></span><span style="display:flex;"><span>      &#34;Resource&#34;: &#34;arn:aws:s3:::BUCKET_NAME/*&#34;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  ]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>
+<p>Once the policy document is edited, click <code>Create Policy</code>.</p>
+</li>
+<li>
+<p>Click on <code>Users</code> in the menu, then click <code>Create User</code>.</p>
+<ul>
+<li>Enter any username you like, but its easiest to name the user the same as
+the bucket.</li>
+<li>Check the type of access as <code>Programatic</code>.</li>
+<li>Click <code>Next</code>.</li>
+<li>Skip the Groups screen.</li>
+<li>On the Policies page, click the dropdown called <code>Attach Policy To User</code> and
+find the name of the policy you created above.</li>
+<li>Click <code>Next</code>.</li>
+<li>Review and click <code>Create User.</code></li>
+<li>View the Access and Secret keys. Click <code>Copy Keys To Clipboard</code>.</li>
+<li>Paste the keys into a temporary buffer in your editor to save them, you
+will need to copy them into the script that you download in the next
+section.</li>
+<li>You will need to know the <a href="https://wasabi-support.zendesk.com/hc/en-us/articles/360015106031-What-are-the-service-URLs-for-Wasabi-s-different-storage-regions-">S3 endpoint URLs for
+wasabi</a>
+later, which are dependent on the Region you chose for the bucket. (eg.
+<code>s3.us-west-1.wasabisys.com</code>)</li>
+</ul>
+</li>
+</ul>
+<h2 id="download-and-edit-the-backup-script"><a class="heading-anchor" href="#download-and-edit-the-backup-script">Download and edit the backup script</a></h2>
+<p>Install <code>restic</code> <a href="https://restic.readthedocs.io/en/stable/020_installation.html">with your package
+manager</a>.</p>
+<p>Here is an all-in-one script that can setup and run your restic backups
+automatically on a daily basis, all from your user account (No root needed).</p>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/systemd/restic_backup.sh">Download the script from this direct link</a></li>
+<li>You can save it wherever you want, named whatever you want, but one
+suggestion is to put it in <code>${HOME}/.config/restic_backup/</code> and rename it to
+<code>my_backup.sh</code> or another recognizable name for you.</li>
+<li>Alternatively, you may copy and paste the entire script into a new file, as
+follows:</li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">### restic_backup.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### See the blog post: https://blog.rymcg.tech/blog/linux/restic_backup/</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Restic Backup Script for S3 cloud storage (and compatible APIs).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Install the `restic` package with your package manager.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Copy this script to any directory, and change the permissions:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">##   chmod 0700 restic_backup.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Put all your configuration directly in this script.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Consider creating an alias in your ~/.bashrc: alias backup=&lt;path-to-this-script&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Edit the variables below (especially the ones like change-me-change-me-change-me):  </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## WARNING: This will include plain text passwords for restic and S3</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## SAVE A COPY of this configured script to a safe place in the case of disaster.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Which local directories do you want to backup?</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Specify one or more directories inside this bash array (paths separated by space):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Directories that don&#39;t exist will be skipped:</span>
+</span></span><span style="display:flex;"><span>RESTIC_BACKUP_PATHS<span style="color:#f92672">=(</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/Documents <span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/Music <span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/Photos <span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/Sync<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Create a secure encryption passphrase for your restic data:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## WRITE THIS PASSWORD DOWN IN A SAFE PLACE:</span>
+</span></span><span style="display:flex;"><span>RESTIC_PASSWORD<span style="color:#f92672">=</span>change-me-change-me-change-me
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Enter the bucket name, endpoint, and credentials:</span>
+</span></span><span style="display:flex;"><span>S3_BUCKET<span style="color:#f92672">=</span>change-me-change-me-change-me
+</span></span><span style="display:flex;"><span>S3_ENDPOINT<span style="color:#f92672">=</span>s3.us-west-1.wasabisys.com
+</span></span><span style="display:flex;"><span>S3_ACCESS_KEY_ID<span style="color:#f92672">=</span>change-me-change-me-change-me
+</span></span><span style="display:flex;"><span>S3_SECRET_ACCESS_KEY<span style="color:#f92672">=</span>change-me-change-me-change-me
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### How often do you want to backup? Use systemd timer OnCalander= notation:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### https://man.archlinux.org/man/systemd.time.7#CALENDAR_EVENTS</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### (Backups may occur at a later time if the computer is turned off)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Hourly on the hour:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BACKUP_FREQUENCY=&#39;*-*-* *:00:00&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Daily at 3:00 AM:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BACKUP_FREQUENCY=&#39;*-*-* 03:00:00&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Every 10 minutes:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BACKUP_FREQUENCY=&#39;*-*-* *:0/10:00&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Systemd also knows aliases like &#39;hourly&#39;, &#39;daily&#39;, &#39;weekly&#39;, &#39;monthly&#39;:</span>
+</span></span><span style="display:flex;"><span>BACKUP_FREQUENCY<span style="color:#f92672">=</span>daily
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Restic data retention (prune) policy:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://restic.readthedocs.io/en/stable/060_forget.html#removing-snapshots-according-to-a-policy</span>
+</span></span><span style="display:flex;"><span>RETENTION_DAYS<span style="color:#f92672">=</span><span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span>RETENTION_WEEKS<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>RETENTION_MONTHS<span style="color:#f92672">=</span><span style="color:#ae81ff">6</span>
+</span></span><span style="display:flex;"><span>RETENTION_YEARS<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### How often to prune the backups?</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Use systemd timer OnCalendar= notation</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### https://man.archlinux.org/man/systemd.time.7#CALENDAR_EVENTS</span>
+</span></span><span style="display:flex;"><span>PRUNE_FREQUENCY<span style="color:#f92672">=</span>monthly
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## The tag to apply to all snapshots made by this script:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## (Default is to use the full command path name)</span>
+</span></span><span style="display:flex;"><span>BACKUP_TAG<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>BASH_SOURCE<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## These are the names and paths for the systemd services, you can leave these as-is probably:</span>
+</span></span><span style="display:flex;"><span>BACKUP_NAME<span style="color:#f92672">=</span>restic_backup.<span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span>-<span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>BACKUP_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.config/systemd/user/<span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span>.service
+</span></span><span style="display:flex;"><span>BACKUP_TIMER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.config/systemd/user/<span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>PRUNE_NAME<span style="color:#f92672">=</span>restic_backup.prune.<span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span>-<span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>PRUNE_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.config/systemd/user/<span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span>.service
+</span></span><span style="display:flex;"><span>PRUNE_TIMER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.config/systemd/user/<span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>commands<span style="color:#f92672">=(</span>init now trigger forget prune enable disable status logs prune_logs snapshots restore help<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>run_restic<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    export RESTIC_PASSWORD
+</span></span><span style="display:flex;"><span>    export AWS_ACCESS_KEY_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>S3_ACCESS_KEY_ID<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    export AWS_SECRET_ACCESS_KEY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>S3_SECRET_ACCESS_KEY<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>set -x; restic -v -r s3:https://<span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span>/<span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span> $@<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>init<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Initialize restic repository</span>
+</span></span><span style="display:flex;"><span>    run_restic init
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>now<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Run backup now</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Test if running in a terminal and have enabled the backup service:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -t <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">${</span>BACKUP_SERVICE<span style="color:#e6db74">}</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">## Run by triggering the systemd unit, so everything gets logged:</span>
+</span></span><span style="display:flex;"><span>        trigger
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Not running interactive, or haven&#39;t run &#39;enable&#39; yet, so run directly:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> run_restic backup --tag <span style="color:#e6db74">${</span>BACKUP_TAG<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>RESTIC_BACKUP_PATHS[@]<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Restic backup finished successfully.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Restic backup failed!&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>trigger<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Run backup now, by triggering the systemd service</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>set -x; systemctl --user start <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span>.service<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;systemd is now running the backup job in the background. Check &#39;status&#39; later.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>prune<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Remove old snapshots from repository</span>
+</span></span><span style="display:flex;"><span>    run_restic prune
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>forget<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Apply the configured data retention policy to the backend</span>
+</span></span><span style="display:flex;"><span>    run_restic forget --tag <span style="color:#e6db74">${</span>BACKUP_TAG<span style="color:#e6db74">}</span> --group-by <span style="color:#e6db74">&#34;paths,tags&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>           --keep-daily $RETENTION_DAYS --keep-weekly $RETENTION_WEEKS <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>           --keep-monthly $RETENTION_MONTHS --keep-yearly $RETENTION_YEARS
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>snapshots<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : List all snapshots</span>
+</span></span><span style="display:flex;"><span>    run_restic snapshots
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>restore<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># [SNAPSHOT] [ROOT_PATH] : Restore data from snapshot (default &#39;latest&#39;)</span>
+</span></span><span style="display:flex;"><span>    SNAPSHOT<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>latest<span style="color:#e6db74">}</span>; ROOT_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span>/<span style="color:#e6db74">}</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> test -d <span style="color:#e6db74">${</span>ROOT_PATH<span style="color:#e6db74">}</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>ROOT_PATH<span style="color:#e6db74">}</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;ERROR: Non-root restore path already exists: </span><span style="color:#e6db74">${</span>ROOT_PATH<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Choose a non-existing directory name and try again. Exiting.&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -p <span style="color:#e6db74">&#34;Are you sure you want to restore all data from snapshot &#39;</span><span style="color:#e6db74">${</span>SNAPSHOT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; (y/N)? &#34;</span> yes_no
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>yes_no,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>yes_no,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        run_restic restore -t <span style="color:#e6db74">${</span>ROOT_PATH<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>SNAPSHOT<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Exiting.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>enable<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Schedule backups by installing systemd timers</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> loginctl show-user <span style="color:#e6db74">${</span>USER<span style="color:#e6db74">}</span> | grep <span style="color:#e6db74">&#34;Linger=no&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	    echo <span style="color:#e6db74">&#34;User account does not allow systemd Linger.&#34;</span>
+</span></span><span style="display:flex;"><span>	    echo <span style="color:#e6db74">&#34;To enable lingering, run as root: loginctl enable-linger </span>$USER<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	    echo <span style="color:#e6db74">&#34;Then try running this command again.&#34;</span>
+</span></span><span style="display:flex;"><span>	    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#66d9ef">$(</span>dirname $BACKUP_SERVICE<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${BACKUP_SERVICE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=restic_backup $(realpath ${BASH_SOURCE})
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">After=network.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Wants=network.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Type=oneshot
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=$(realpath ${BASH_SOURCE}) now
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStartPost=$(realpath ${BASH_SOURCE}) forget
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${BACKUP_TIMER}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=restic_backup $(realpath ${BASH_SOURCE}) daily backups
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Timer]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">OnCalendar=${BACKUP_FREQUENCY}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Persistent=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=timers.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${PRUNE_SERVICE}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=restic_backup prune $(realpath ${BASH_SOURCE})
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">After=network.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Wants=network.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Service]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Type=oneshot
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ExecStart=$(realpath ${BASH_SOURCE}) prune
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${PRUNE_TIMER}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Unit]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Description=restic_backup $(realpath ${BASH_SOURCE}) monthly pruning
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Timer]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">OnCalendar=${PRUNE_FREQUENCY}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Persistent=true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Install]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WantedBy=timers.target
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>    systemctl --user enable --now <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>    systemctl --user enable --now <span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>    systemctl --user status <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span> --no-pager
+</span></span><span style="display:flex;"><span>    systemctl --user status <span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span> --no-pager
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;You can watch the logs with this command:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;   journalctl --user --unit </span><span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>disable<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Disable scheduled backups and remove systemd timers</span>
+</span></span><span style="display:flex;"><span>    systemctl --user disable --now <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>    systemctl --user disable --now <span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span>.timer
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">${</span>BACKUP_SERVICE<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>BACKUP_TIMER<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>PRUNE_SERVICE<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>PRUNE_TIMER<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>status<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Show the last and next backup/prune times </span>
+</span></span><span style="display:flex;"><span>    BACKUP_NAME<span style="color:#f92672">=</span>restic_backup.<span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span>-<span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    PRUNE_NAME<span style="color:#f92672">=</span>restic_backup.prune.<span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span>-<span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Restic backup paths: (</span><span style="color:#e6db74">${</span>RESTIC_BACKUP_PATHS[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Restic S3 endpoint/bucket: </span><span style="color:#e6db74">${</span>S3_ENDPOINT<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>S3_BUCKET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    journalctl --user --unit <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span> --since yesterday | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        grep -E <span style="color:#e6db74">&#34;(Restic backup finished successfully|Restic backup failed)&#34;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        sort | awk <span style="color:#e6db74">&#39;{ gsub(&#34;Restic backup finished successfully&#34;, &#34;\033[1;33m&amp;\033[0m&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                      gsub(&#34;Restic backup failed&#34;, &#34;\033[1;31m&amp;\033[0m&#34;); print }&#39;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Run the &#39;logs&#39; subcommand for more information.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>set -x; systemctl --user list-timers <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span> --no-pager<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    run_restic stats
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>logs<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Show recent service logs</span>
+</span></span><span style="display:flex;"><span>    set -x
+</span></span><span style="display:flex;"><span>    journalctl --user --unit <span style="color:#e6db74">${</span>BACKUP_NAME<span style="color:#e6db74">}</span> --since yesterday
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>prune_logs<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Show prune logs</span>
+</span></span><span style="display:flex;"><span>    set -x
+</span></span><span style="display:flex;"><span>    journalctl --user --unit <span style="color:#e6db74">${</span>PRUNE_NAME<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>help<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#75715e"># : Show this help</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;## restic_backup.sh Help:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;# subcommand [ARG1] [ARG2]\t#  Help Description&#34;</span> | expand -t35
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> cmd in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>commands[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        annotation<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>grep -E <span style="color:#e6db74">&#34;^</span><span style="color:#e6db74">${</span>cmd<span style="color:#e6db74">}</span><span style="color:#e6db74">\(\) { # &#34;</span> <span style="color:#e6db74">${</span>BASH_SOURCE<span style="color:#e6db74">}</span> | sed <span style="color:#e6db74">&#34;s/^</span><span style="color:#e6db74">${</span>cmd<span style="color:#e6db74">}</span><span style="color:#e6db74">() { # \(.*\)/\1/&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        args<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>annotation<span style="color:#e6db74">}</span> | cut -d <span style="color:#e6db74">&#34;:&#34;</span> -f1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        description<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">${</span>annotation<span style="color:#e6db74">}</span> | cut -d <span style="color:#e6db74">&#34;:&#34;</span> -f2<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>cmd<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>args<span style="color:#e6db74">}</span><span style="color:#e6db74">\t# </span><span style="color:#e6db74">${</span>description<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#34;</span> | expand -t35
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#66d9ef">$(</span>stat -c <span style="color:#e6db74">&#34;%a&#34;</span> <span style="color:#e6db74">${</span>BASH_SOURCE<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;700&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Incorrect permissions on script. Run: &#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;  chmod 0700 </span><span style="color:#66d9ef">$(</span>realpath <span style="color:#e6db74">${</span>BASH_SOURCE<span style="color:#e6db74">}</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! which restic &gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;You need to install restic.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> test $# <span style="color:#f92672">=</span> 0; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        help
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        CMD<span style="color:#f92672">=</span>$1; shift;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34; </span><span style="color:#e6db74">${</span>commands[*]<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#34;</span> <span style="color:#f92672">=</span>~ <span style="color:#e6db74">&#34; </span><span style="color:#e6db74">${</span>CMD<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">${</span>CMD<span style="color:#e6db74">}</span> $@
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Unknown command: </span><span style="color:#e6db74">${</span>CMD<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>main $@
+</span></span></code></pre></div>
+
+<ul>
+<li>Review and edit all of the variables at the top of the file, and save the
+file.</li>
+<li>Change the permissions on the file to be executable and private:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>chmod 0700 ${HOME}/.config/restic_backup/my_backup.sh
+</span></span></code></pre></div><ul>
+<li>Consider saving a copy of the final script in your password manager, you will
+need this to recover your files in the event of a disaster.</li>
+</ul>
+<h2 id="usage"><a class="heading-anchor" href="#usage">Usage</a></h2>
+<ul>
+<li>To make using the script easier, create this BASH alias in your <code>~/.bashrc</code>:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## &#39;backup&#39; is an alias to the full path of my personal backup script:
+</span></span><span style="display:flex;"><span>alias backup=${HOME}/.config/restic_backup/my_backup.sh
+</span></span></code></pre></div><ul>
+<li>Restart the shell or close/reopen your terminal.</li>
+<li>Run the script alias, to see the help screen: <code>backup</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## restic_backup.sh Help:
+</span></span><span style="display:flex;"><span># subcommand [ARG1] [ARG2]         #  Help Description
+</span></span><span style="display:flex;"><span>init                               #  Initialize restic repository in ${RESTIC_BACKUP_PATH}
+</span></span><span style="display:flex;"><span>now                                #  Run backup now
+</span></span><span style="display:flex;"><span>forget                             #  Apply the configured data retention policy to the backend
+</span></span><span style="display:flex;"><span>prune                              #  Remove old snapshots from repository
+</span></span><span style="display:flex;"><span>enable                             #  Schedule backups by installing systemd timers
+</span></span><span style="display:flex;"><span>disable                            #  Disable scheduled backups and remove systemd timers
+</span></span><span style="display:flex;"><span>status                             #  Show the last and next backup/prune times
+</span></span><span style="display:flex;"><span>logs                               #  Show recent service logs
+</span></span><span style="display:flex;"><span>snapshots                          #  List all snapshots
+</span></span><span style="display:flex;"><span>restore [SNAPSHOT] [ROOT_PATH]     #  Restore data from snapshot (default
+</span></span><span style="display:flex;"><span>help                               #  Show this help
+</span></span></code></pre></div><h3 id="initialize-the-restic-repository"><a class="heading-anchor" href="#initialize-the-restic-repository">Initialize the restic repository</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup init
+</span></span></code></pre></div><h3 id="run-the-first-backup-manually"><a class="heading-anchor" href="#run-the-first-backup-manually">Run the first backup manually</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup now
+</span></span></code></pre></div><h3 id="install-the-systemd-service"><a class="heading-anchor" href="#install-the-systemd-service">Install the systemd service</a></h3>
+<p>This will schedule the backup to automatically run daily</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup enable
+</span></span></code></pre></div><h3 id="check-the-status"><a class="heading-anchor" href="#check-the-status">Check the status</a></h3>
+<p>This will show you the last time and the next time that the timers will run the
+backup job:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup status
+</span></span></code></pre></div><h3 id="list-snapshots"><a class="heading-anchor" href="#list-snapshots">List snapshots</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup snapshots
+</span></span></code></pre></div><h3 id="restore-from-the-latest-snapshot"><a class="heading-anchor" href="#restore-from-the-latest-snapshot">Restore from the latest snapshot</a></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## WARNING: this will reset your files to the backed up versions!
+</span></span><span style="display:flex;"><span>backup restore
+</span></span></code></pre></div><h3 id="restore-from-a-different-snapshot"><a class="heading-anchor" href="#restore-from-a-different-snapshot">Restore from a different snapshot</a></h3>
+<p>This will restore the snapshot (<code>xxxxxx</code>) to an alternative directory (<code>~/copy</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup restore xxxxxx ~/copy
+</span></span></code></pre></div><h3 id="prune-the-repository"><a class="heading-anchor" href="#prune-the-repository">Prune the repository</a></h3>
+<p>This will clean up storage space, and delete old snapshots that are past the
+time of your data retention policy. (This is scheduled to be run automatically
+once a month)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup prune
+</span></span></code></pre></div><h2 id="security-considerations"><a class="heading-anchor" href="#security-considerations">Security considerations</a></h2>
+<p><strong>Be sure not to share your edited script with anyone else, because it now
+contains your Restic password and S3 credentials!</strong></p>
+<p>The script has permissions of <code>0700</code> (<code>-rwx------</code>) so only your user account
+(and <code>root</code>) can read the configuraton. However, this also means that <em>any other
+program your user runs can potentially read this file</em>.</p>
+<p>To limit the possiblity of leaking the passwords, you may consider running this
+script in a new user account dedicated to backups. You will also need to take
+care that this second user has the correct permissions to read all of the files
+that are to be backed up.</p>
+<h2 id="systemd-timers-are-way-better-than-cron"><a class="heading-anchor" href="#systemd-timers-are-way-better-than-cron">Systemd timers are way better than cron</a></h2>
+<p>The backups timers are set to run
+<a href="https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnCalendar=">OnCalendar=daily</a>,
+which means to run every single day at midnight. But what if you&rsquo;re running
+backups on a laptop, and your laptop wasn&rsquo;t turned on at midnight? Well that&rsquo;s
+what
+<a href="https://www.freedesktop.org/software/systemd/man/systemd.timer.html#Persistent=">Persistent=true</a>
+is for. Persistent timers remember when they last ran, and if your laptop turns
+on and finds that it is past due for running one of the timers it will run it
+immediately. So you&rsquo;ll never miss a scheduled backup just because you were
+offline.</p>
+<h2 id="frequently-saskedexpected-questions"><a class="heading-anchor" href="#frequently-saskedexpected-questions">Frequently s/asked/expected/ questions</a></h2>
+<h3 id="how-do-i-know-its-working"><a class="heading-anchor" href="#how-do-i-know-its-working">How do I know its working?</a></h3>
+<p>I hope this script will be reliable for you, but I make no guarantees. You
+should check <code>backup status</code> and <code>backup logs</code> regularly to make sure it&rsquo;s still
+working and stable for you in the long term. It might be nice if this script
+would email you if there were an error, but this has not been implemented yet.</p>
+<p>You should play a mock-disaster scenario: use a second computer and test that
+your backup copy of your backup script works (<em>You did</em> save a backup of your
+script in your password manager, right??):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## After copying the script onto a second computer ....
+</span></span><span style="display:flex;"><span>## Test restoring and copying all backed up files into a new directory:
+</span></span><span style="display:flex;"><span>chmod 0700 ./my_backup.sh
+</span></span><span style="display:flex;"><span>./my_backup.sh restore latest ~/restored-files
+</span></span></code></pre></div><p>Now you should see all your backed up files in <code>~/restored-files</code>, if you do,
+you now have evidence that the backup and restore procedures are working.</p>
+<h3 id="i-lost-my-whole-computer-how-do-i-get-my-files-back"><a class="heading-anchor" href="#i-lost-my-whole-computer-how-do-i-get-my-files-back">I lost my whole computer, how do I get my files back?</a></h3>
+<p>Copy your backup script (the one you saved in your password manager) to any
+computer, and run the <code>restore</code> command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## After installing your backup script and BASH alias onto a new computer ....
+</span></span><span style="display:flex;"><span>## Restore all files to the same directories they were in before:
+</span></span><span style="display:flex;"><span>backup restore
+</span></span></code></pre></div><h3 id="can-i-move-or-rename-the-script"><a class="heading-anchor" href="#can-i-move-or-rename-the-script">Can I move or rename the script?</a></h3>
+<p>Yes, you can name it whatever you like, and save it in any directory. But
+there&rsquo;s some things you need to know about moving it later:</p>
+<ul>
+<li>The full path of the script is used as the restic backup tag. (Shown via
+<code>backup snapshots</code>)</li>
+<li>This tag is an identifier, so that you can differentiate between backups made
+by this script vs. backups made by running the restic command manually.</li>
+<li>If you change the path of the script, you will change the backup tag going
+forward.</li>
+<li>Make sure you update your BASH alias to the new path.</li>
+<li>The full path of the script is written to the systemd service file, so if you
+change the name or the path, you need to re-enable the service:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Reinstall the systemd services after changing the script path:
+</span></span><span style="display:flex;"><span>backup enable
+</span></span></code></pre></div><h3 id="can-i-move-my-backups-to-a-new-bucket-name-or-endpoint"><a class="heading-anchor" href="#can-i-move-my-backups-to-a-new-bucket-name-or-endpoint">Can I move my backups to a new bucket name or endpoint?</a></h3>
+<p>Yes, after copying your bucket data to the new endpoint/name, you will also need
+to disable and then re-enable the systemd timers:</p>
+<ul>
+<li>The name of the systemd service and timer is based upon the bucket name and
+the S3 endpoint, from the <code>BACKUP_NAME</code> variable which is set to
+<code>restic_backup.${S3_ENDPOINT}-${S3_BUCKET}</code> by default, so by changing either
+of these variables necessitates changing the name of the systemd service and
+timers.</li>
+<li>Note: if you only need to change the S3 access or secret keys, but the bucket
+and endpoint stay the same, there&rsquo;s no need to do anything besides editing
+the script.</li>
+</ul>
+<p>Before making the change, disable the existing timers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup disable
+</span></span></code></pre></div><p>Now edit your script to account for the updated bucket name and/or endpoint.</p>
+<p>After making the change, re-enable the timers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup enable
+</span></span></code></pre></div><p>Check the status:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>backup status
+</span></span></code></pre></div><h3 id="why-suggest-the-path-configrestic_backupmy_backupsh"><a class="heading-anchor" href="#why-suggest-the-path-configrestic_backupmy_backupsh">Why suggest the path ~/.config/restic_backup/my_backup.sh?</a></h3>
+<ul>
+<li><code>~/.config</code> is the default <a href="https://wiki.archlinux.org/title/XDG_Base_Directory">XDG Base
+Directory</a> which is
+defined as <code>Where user-specific configurations should be written (analogous to /etc).</code></li>
+<li>Normally, scripts wouldn&rsquo;t go into <code>~/.config</code> (nor <code>/etc</code>), but this script
+is a hybrid config file <em>and</em> program script, so it counts as a config file.</li>
+<li>Each project makes its own subdirectory in <code>~/.config</code>, using the project
+name, eg. <code>restic_backup</code>. By creating a sub-directory, this allows you to
+save (and use) more than one backup script. (Note: to do so, you would need
+to create an additional BASH alias with a different name.)</li>
+<li><code>my_backup.sh</code> implies that the script contains personal information and
+should not be shared. Both of which are true!</li>
+<li>If you share your <code>~/.config</code> publicly (some people I&rsquo;ve seen share this
+entire directory on GitHub), you should choose a different path for your
+script!</li>
+<li>The name and path of the script does not functionally matter.</li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

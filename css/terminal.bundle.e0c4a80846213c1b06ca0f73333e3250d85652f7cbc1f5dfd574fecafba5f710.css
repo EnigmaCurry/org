@@ -1,0 +1,1053 @@
+/* ============================================================
+   TERMINAL THEME PROTOTYPE
+   - Inconsolata (readable coding monospace) for chrome, headings, and code;
+     Inter (proportional) for the running prose of the reading column
+   - phosphor palette (amber default; green / mono via toggle)
+   - faint scanline + vignette CRT overlay
+   - decode "rain" reveal scoped to the first screen
+   This is a static mock of how the Hugo theme would look.
+   ============================================================ */
+
+:root{
+  --bg:        #0d0e0c;
+  --bg-soft:   #15171400;
+  --panel:     #131512;
+  --fg:        #eed2a7;   /* phosphor body text (amber) */
+  --fg-dim:    #6f776b;
+  --fg-bright: #d6ddd0;
+  --accent:    #dfa22c;   /* amber (matches existing site accent) */
+  --accent-2:  #5fd75f;   /* command/run green */
+  --rule:      #2a2d27;
+  --selection: #3a3410;
+  --code-bg:   #0c0e0c;   /* run box command panel */
+  --sel-bg:    #fff;      /* copy select-all reverse video (bg) */
+  --sel-fg:    #000;      /* ...and text */
+  --sec:       #db9e51;   /* secondary run box hue (another machine); per-theme below */
+  --col: 74ch;            /* reading column width */
+  --font-mono: "Inconsolata", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-read: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;  /* proportional reading face for prose */
+  color-scheme:dark;      /* native UI (scrollbars, etc.) match the dark themes */
+}
+/* palette variants -------------------------------------------------*/
+:root[data-theme="green"]{ --accent:#5fd75f; --accent-2:#5fd75f; --fg:#b4deac; --fg-bright:#c8f5c8; --selection:#16320f; --sec:#1ce59a; }
+:root[data-theme="mono"]{  --accent:#cdd3c8; --accent-2:#9aa394; --fg:#d2d5cd; --fg-bright:#e6ebe2; --selection:#2c2f29; --sec:#fff; }
+/* lite: mono, but reverse video (light bg / dark text). reverse-video bits flip back. */
+:root[data-theme="lite"]{
+  --bg:#d3d6cd; --panel:#c7cabf; --fg:#2b2e28; --fg-dim:#5f645a; --fg-bright:#111310;
+  --accent:#2f332b; --accent-2:#4a4f44; --rule:#a6aa9f; --selection:#b3b7a8;
+  --code-bg:#c4c7bd; --sel-bg:#16180f; --sel-fg:#e8eadf;
+  --sec:#98844a;          /* the cyan washes out on the pale bg -- use a darker amber */
+  color-scheme:light;     /* lite is a light theme */
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; }
+/* fluid base size: ~21px on desktop, easing down to ~16px on a phone.
+   rem-based headings scale with this automatically. */
+html{ font-size:clamp(16px, 0.7vw + 13px, 21px);
+      scrollbar-gutter:stable;       /* reserve scrollbar space so it never reflows the header */
+      background:var(--bg); }        /* bg on the root -> always covers the full page (viewport resize safe) */
+.wait-fonts body{ visibility:hidden; }   /* removed once the web font has loaded */
+body{
+  min-height:100vh;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--font-mono);
+  font-size:1rem;
+  line-height:1.7;
+  letter-spacing:.1px;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{ background:var(--selection); color:var(--fg-bright); }
+
+/* layout: TUI sidebar + reading column ---------------------------- */
+.wrap{ display:grid; grid-template-columns:30ch minmax(0,1fr); min-height:100vh; }
+
+/* sidebar: book-of-books, terminal styled ------------------------- */
+.sidebar{
+  border-right:1px solid var(--rule);
+  padding:.85rem 1.1rem 1.4rem; position:sticky; top:0; align-self:start; height:100vh; overflow:hidden;   /* top padding aligns the brand with the centered topbar prompt */
+  display:flex; flex-direction:column;   /* pinned brand (top) + scrolling tree + pinned controls (bottom) */
+  background:var(--panel);
+  font-size:.82rem;            /* keep nav compact at the larger base size */
+}
+.sidebar .brand{ color:var(--accent); font-weight:600; margin-bottom:.2rem;
+  display:flex; align-items:center; gap:.4ch; min-width:0; flex:none;   /* pinned top; tighter gaps so the title + deco fit the 30ch sidebar */
+  user-select:none; -webkit-user-select:none; }
+.brand .bname{ color:inherit; text-decoration:none; border-bottom:none; }
+.brand .bname:hover{ color:var(--fg-bright); }
+/* CSS checkered "block-art" flanking the title, fading toward the name, mirrored */
+.brand .deco{ display:inline-flex; gap:1px; flex:none; }
+.brand .blk{ display:block; width:.7em; height:.7em;
+  background:repeating-conic-gradient(var(--accent) 0 25%, color-mix(in srgb, var(--accent), #000 62%) 0 50%);
+  background-size:.35em .35em; }
+.brand .deco .blk:nth-child(1){ opacity:1; }
+.brand .deco .blk:nth-child(2){ opacity:.6; }
+.brand .deco .blk:nth-child(3){ opacity:.32; }
+.brand .deco.right .blk:nth-child(1){ opacity:.32; }
+.brand .deco.right .blk:nth-child(3){ opacity:1; }
+/* on load: the three shades rotate through the block positions once (slow),
+   each keyframe ending on the block's resting opacity. Timed to the other fx. */
+@keyframes shade1{ 0%,33%{opacity:.32;} 34%,66%{opacity:.6;}  67%,100%{opacity:1;}   }
+@keyframes shade2{ 0%,33%{opacity:1;}   34%,66%{opacity:.32;} 67%,100%{opacity:.6;}  }
+@keyframes shade3{ 0%,33%{opacity:.6;}  34%,66%{opacity:1;}   67%,100%{opacity:.32;} }
+@media (prefers-reduced-motion: no-preference){
+  .go .brand .deco .blk:nth-child(1){ animation:shade1 1.5s linear; }
+  .go .brand .deco .blk:nth-child(2){ animation:shade2 1.5s linear; }
+  .go .brand .deco .blk:nth-child(3){ animation:shade3 1.5s linear; }
+  .go .brand .deco.right .blk:nth-child(1){ animation:shade3 1.5s linear; }
+  .go .brand .deco.right .blk:nth-child(2){ animation:shade2 1.5s linear; }
+  .go .brand .deco.right .blk:nth-child(3){ animation:shade1 1.5s linear; }
+}
+.sidebar .brand .blink{ color:var(--accent); }
+.sidebar .tag{ color:var(--fg-dim); font-size:.85em; margin-bottom:1.3rem; flex:none; }
+.tree{ list-style:none; margin:0; padding:0;
+  flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain; }   /* the only scrolling region */
+.tree li{ overflow-wrap:anywhere; }   /* long slugs wrap instead of overflowing */
+.tree a{ color:var(--fg); text-decoration:none; display:block; padding:1px 0; }
+.tree a:hover{ color:var(--accent); }
+.tree .book::before{ content:"▸ "; color:var(--fg-dim); }
+.tree .book.open::before{ content:"▾ "; color:var(--accent); }
+.tree .book.open > a{ color:var(--fg-bright); }
+.tree .chapters{ list-style:none; margin:.1rem 0 .7rem; padding:0 0 0 1.6ch; border-left:1px solid var(--rule); }
+.tree .chapters li::before{ content:none; }   /* drop the global "–" li bullet; the · / › anchor markers are the tree's own */
+.tree .chapters a::before{ content:"· "; color:var(--fg-dim); }
+.tree .chapters a.active{ color:var(--accent); }
+.tree .chapters a.active::before{ content:"› "; color:var(--accent); }
+
+/* top bar: a terminal title / prompt line ------------------------- */
+.topbar{
+  border-bottom:1px solid var(--rule); padding:.7rem 8.25rem .7rem 2rem;   /* right padding clears the fixed .topnav cluster */
+  color:var(--fg-dim); display:flex; gap:1.5ch; align-items:center; flex-wrap:wrap;
+  background:var(--panel); position:sticky; top:0; z-index:10;
+}
+/* prompt stays on ONE non-wrapping line so it never grows the header height.
+   JS (fitPrompt) drops the visitor@host: prefix when the line won't fit, then
+   left-truncates the path; the CSS here is the static / no-JS fallback. */
+.topbar .cmd{ display:flex; flex-wrap:nowrap; flex:1 1 auto; min-width:0; max-width:100%; overflow:hidden; }   /* grow to fill the bar so clientWidth = available width, not content width */
+.topbar .cmd .seg{ white-space:nowrap; }
+.topbar .cmd .prefix{ flex:0 0 auto; }                  /* shown only when the whole line fits */
+.topbar .cmd.hide-prefix .prefix{ display:none; }
+.topbar .cmd .pathseg{ flex:0 1 auto; min-width:0; overflow:hidden; }
+.topbar .prompt{ color:var(--accent); }
+.topbar .prompt .at{ color:var(--fg-dim); }
+.topbar .username{ font-weight:700; color:color-mix(in srgb, var(--accent), #fff 18%); }
+.topbar .cmd a{ text-decoration:none; border-bottom:none; color:inherit; cursor:pointer; }
+.topbar .path{ color:var(--fg); white-space:nowrap; }
+.topbar .path .pseg{ color:var(--fg); }
+.topbar .path .pseg:hover{ color:var(--accent); }
+.topbar .path .pell{ color:var(--fg-dim); }
+.topbar .cmd a.prefix:hover .prompt{ color:color-mix(in srgb, var(--accent), #fff 30%); }
+.btn{
+  font:inherit; font-size:.82em; background:transparent; color:var(--fg-dim);
+  border:1px solid var(--rule); padding:.15rem .6rem; cursor:pointer; border-radius:2px;
+}
+.btn:hover{ color:var(--accent); border-color:var(--accent); }
+
+/* top-right control cluster: previous-chapter / page-outline(#) / next-chapter,
+   fixed in the corner, mirroring the sidebar's menu toggle on the left.
+     sidebar (left)  = site / book / chapter navigation
+     #  (here)       = this page's sub-headings — a second, separate index
+     arrows (here)   = previous / next chapter */
+.topnav{ position:fixed; top:.5rem; right:.55rem; z-index:70; display:flex; gap:.4rem; }
+.navbtn{
+  width:2.1rem; height:2.1rem; flex:none; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  font:inherit; font-weight:700; font-size:1.2rem; line-height:1;
+  color:var(--fg-dim); background:var(--panel); text-decoration:none;
+  border:1px solid var(--rule); border-radius:3px; cursor:pointer;
+}
+.navbtn:hover{ color:var(--accent); border-color:var(--accent); }
+.navbtn[aria-disabled="true"]{ opacity:.32; pointer-events:none; }   /* at the first / last chapter */
+.navprev::before{ content:"\2039"; }   /* ‹ previous chapter */
+.navnext::before{ content:"\203A"; }   /* › next chapter */
+.toc-toggle::before{ content:"#"; font-size:.95em; }
+.toc-toggle.is-home::before{ content:"\03BB"; }   /* root page: the index is the book list -> lambda, not # */
+/* the checkbox holds open/closed state; clip it offscreen but keep it focusable */
+.toc-checkbox{ position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+  border:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+#toctoggle:checked ~ .toc-toggle{ color:var(--bg); background:var(--accent); border-color:var(--accent); }
+.toc-checkbox:focus-visible ~ .toc-toggle{ outline:2px solid var(--accent); outline-offset:2px; }
+
+.toc{
+  display:none;   /* shown when #toctoggle is checked (label click); works without JS */
+  position:absolute; top:100%; right:0; margin-top:.4rem; z-index:30;
+  width:min(92vw, 40ch); max-height:75vh; overflow:auto;
+  background:var(--panel); border:1px solid var(--accent); border-radius:3px;
+  padding:.85rem 1rem 1rem; box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+#toctoggle:checked ~ .toc{ display:block; }
+/* book title: the container context, in case the breadcrumb truncated it away */
+.toc .toc-book{ display:block; color:var(--fg-bright); font-weight:700; font-size:.78rem; text-decoration:none;
+  border-bottom:1px solid var(--rule); padding-bottom:.5rem; margin-bottom:.5rem; overflow-wrap:anywhere; }
+/* the header link always goes up one level (book index, or site root from a book
+   index) -> a turn-up arrow instead of the #-heading marker, to advertise it */
+.toc .toc-book::before{ content:"\2191\00a0"; color:var(--fg-dim); font-weight:400; }   /* ↑ (basic arrow: renders where the turn-arrows don't) */
+.toc .toc-book:hover::before{ color:var(--accent); }
+.toc .toc-book.is-root::before{ content:none; }   /* root page: nowhere up to go */
+.toc .toc-book:hover{ color:var(--accent); }
+.toc ul{ list-style:none; margin:0; padding:0; font-size:.92rem; }
+.toc li{ overflow-wrap:anywhere; padding-left:0; }
+.toc li::before{ content:none; }   /* suppress the global "ul li" en-dash bullet; the ## prefix is on the link */
+.toc a{ color:var(--fg); text-decoration:none; display:block; padding:2px 0; border-bottom:none; }
+.toc a::before{ content:"## "; color:var(--fg-dim); }    /* mirror the heading's own # markers */
+.toc li.lvl1 a::before{ content:"# "; }                  /* the page title (h1), first in the list */
+.toc li.lvl3 a::before{ content:"### "; }                /* h3 -> ###, flush left (the # count shows depth) */
+/* child-page links (book/chapter index) navigate elsewhere -> a "go to" arrow
+   instead of a #-heading marker, with nesting shown by indent rather than depth */
+.toc li.page a::before{ content:"\2192\00a0"; color:var(--fg-dim); }   /* → */
+.toc li.page.lvl3{ padding-left:1.6ch; }
+.toc a:hover, .toc a:hover::before, .toc a.active, .toc a.active::before{ color:var(--accent); }
+
+/* sidebar theme control */
+/* action row: external-link + settings icon buttons, pinned near the bottom */
+.sidebar-actions{
+  flex:none; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--rule);
+  display:flex; flex-wrap:wrap; gap:.55rem;
+}
+.iconbtn{ display:inline-flex; align-items:center; justify-content:center;
+  width:2.1rem; height:2.1rem; padding:0; min-width:0; }
+.iconbtn svg{ display:block; }
+/* JS-only chrome (the settings gear): shown only once scripting is confirmed */
+.js-only{ display:none; }
+html.js .iconbtn.js-only{ display:inline-flex; }
+/* site build date, pinned beneath the actions (templated by Hugo in the real theme) */
+.build-date{ flex:none; margin-top:.6rem; color:var(--fg-dim); font-size:.62rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.build-date .lbl{ color:var(--accent); }
+
+/* settings modal (theme + fx controls), opened from the gear in the action row */
+.settings-modal{
+  margin:auto; padding:0; max-width:min(92vw, 30ch); width:max-content;
+  color:var(--fg); background:var(--panel); border:1px solid var(--accent); border-radius:3px;
+  box-shadow:0 12px 30px rgba(0,0,0,.45);
+}
+.settings-modal::backdrop{ background:rgba(4,5,4,.74); }
+.settings-head{ display:flex; align-items:center; justify-content:space-between; gap:1ch;
+  padding:.55rem .7rem; border-bottom:1px solid var(--rule); }
+.settings-title{ color:var(--fg-bright); font-weight:700; font-size:.82rem; }
+.settings-close{ width:2.1rem; height:2.1rem; padding:0; min-width:0; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center; }
+.settings-body{ display:grid; grid-template-columns:max-content max-content; gap:.7rem .8ch;
+  align-items:center; padding:.85rem .9rem 1rem; }
+.settings-row{ display:contents; }   /* label + button land in the grid columns */
+.settings-body .ctl-label{ color:var(--accent); font-size:.82rem; }
+.settings-body .btn{ justify-self:start; min-width:7ch; text-align:center; }
+
+/* menu toggle: a circle glyph, hidden on wide screens, shown when the sidebar
+   collapses. ○ (hollow) = closed, ● (filled) = open. Both circles exist in
+   virtually every monospace font, so it degrades cleanly to the system fallback. */
+/* the checkbox itself is the open/closed state; keep it off-screen but still
+   focusable (clip, not display:none) so the menu is keyboard-reachable. */
+.nav-checkbox{ position:fixed; top:0; left:0; width:1px; height:1px; margin:-1px; padding:0;
+  border:0; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }   /* fixed + pinned to the viewport so focusing it (via the label) never scrolls the page to the top */
+.menutoggle{ display:none; }
+.menutoggle::before{ content:"\25CB"; }                  /* ○ menu closed */
+#navtoggle:checked ~ .menutoggle::before{ content:"\25CF"; }    /* ● menu open */
+#navtoggle:checked ~ .menutoggle{ color:var(--bg); background:var(--accent); border-color:var(--accent); } /* reverse-video when open, matching the # toggle */
+.nav-checkbox:focus-visible ~ .menutoggle{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* inline UI widget demos: rendered on the intro page in place of screenshots, so
+   the docs always show the live chrome (and follow the active theme). They reuse
+   the real .navbtn / .btn classes; the wrapper just strips the fixed positioning
+   those carry inside .topnav and lays them out in a captioned row. */
+.uidemo{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:1.2rem; margin:.3rem 0 .1rem; }
+.uidemo .navbtn, .uidemo .btn{ position:static; }
+.uidemo figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:.45rem; }
+.uidemo figcaption{ color:var(--fg-dim); font-size:.72rem; text-align:center; max-width:16ch; }
+.uidemo .row{ display:inline-flex; align-items:center; gap:.4rem; }
+.uidemo .ctl-label{ color:var(--accent); font-size:.82rem; }
+/* the standalone hamburger demo: same ○ glyph + box as the real .menutoggle */
+.uidemo .menudemo::before{ content:"\25CB"; }
+/* keycaps for the arrow-key demo */
+.uidemo .kbd{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:2.1rem; height:2.1rem; padding:0 .55rem;
+  font:inherit; font-weight:700; font-size:1.15rem; line-height:1;
+  color:var(--fg-dim); background:var(--panel);
+  border:1px solid var(--rule); border-bottom-width:3px; border-radius:4px;
+}
+
+/* off-canvas backdrop: only exists on narrow screens (see media query) */
+.nav-backdrop{ display:none; }
+.toggles button.on{ color:var(--bg); background:var(--accent); border-color:var(--accent); }
+
+/* reading column -------------------------------------------------- */
+main{ padding:0.5rem 1rem 6rem; }
+.content{ max-width:var(--col); margin:0 auto;
+  overflow-wrap:anywhere; }   /* break-less scramble tokens still wrap -> page width never grows */
+
+/* Running prose reads in a proportional face; the terminal chrome, headings, and
+   ALL code stay monospace (Inconsolata). Code inside a paragraph must re-assert
+   the mono var so it doesn't inherit the reading font from its <p>. */
+.content p, .content li, .content blockquote, .content dd, .content dt{
+  font-family:var(--font-read); letter-spacing:0;
+}
+.content code, .content pre, .content kbd, .content samp{ font-family:var(--font-mono); }
+
+h1,h2,h3{ color:var(--fg-bright); font-weight:600; line-height:1.3; letter-spacing:.3px; }
+h1{ font-size:1.55rem; margin:.2rem 0 1.4rem; }
+h1::before{ content:"# "; color:var(--accent); }
+h2{ font-size:1.15rem; margin:2.6rem 0 .9rem; padding-top:.8rem; border-top:1px dashed var(--rule); }
+h2::before{ content:"## "; color:var(--accent); }
+h3{ font-size:1rem; margin:1.8rem 0 .6rem; }
+h3::before{ content:"### "; color:var(--accent); }
+h1,h2,h3{ scroll-margin-top:4.5rem; }   /* anchor jumps clear the sticky header */
+h3{ scroll-margin-top:5.3rem; }         /* h3 lacks h2's border-top + .8rem padding, so add that clearance or its text tucks under the header */
+
+p{ margin:.9rem 0; }
+a{ color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+a:hover{ border-bottom-color:var(--accent); }
+
+ul{ margin:.9rem 0; padding-left:0; list-style:none; }
+ul li{ padding-left:2.2ch; position:relative; }
+ul li::before{ content:"–"; position:absolute; left:0; color:var(--fg-dim); }
+
+code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg)); padding:.05em .45em; border-radius:2px; }
+
+/* ox-hugo shortcode boxes as TUI framed dialogs -------------------- */
+.box{
+  --bw:3px; --bs:double;               /* border width/style (overridden per box) */
+  border:var(--bw) var(--bs) transparent;   /* invisible at first; the beam draws it in */
+  --line:var(--rule);                  /* the eventual line color (per box below) */
+  margin:1.7rem 0; background:transparent; position:relative;
+}
+.box .label{                           /* title straddles the top line, ncurses/DOS legend style */
+  position:absolute; top:0; left:1.4ch; transform:translateY(-55%);
+  user-select:none; -webkit-user-select:none;   /* chrome, not content -> excluded from selection/copy */
+  z-index:1;                           /* above the beam so it isn't drawn through the title */
+  padding:.14em .6ch; font-size:.83em; font-weight:700;
+  background:var(--bg);                /* page-colored -> "cuts" a gap in the border (and the beam) */
+  color:var(--fg-bright);
+  /* subdued chip border around the title */
+  border:1px solid color-mix(in srgb, var(--accent), #fff 28%);
+  max-width:calc(100% - 3ch);          /* keep clear of the right corner */
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.box .body{ padding:1.2rem 1.1rem .95rem; }
+/* default (no JS): scroll, so the full text stays readable without an expand
+   button. The head script adds html.js synchronously (before first paint), so JS
+   browsers instead clip to a one-screen preview -- the expand control reveals the
+   rest. No flash, and non-JS readers can still reach every line. */
+.box .body pre{ margin:0; white-space:pre; overflow-x:auto; }
+html.js .box .body pre{ overflow:hidden; text-overflow:ellipsis; }
+
+.run{ --line:color-mix(in srgb, var(--accent) 65%, var(--rule));
+  background:color-mix(in srgb, var(--accent), transparent 92%); }   /* same faint wash as notes */
+.run .label{ color:var(--accent); max-width:calc(100% - 8ch); }   /* leave room for copy button + a gap */
+.run .label .lt::before{ content:"$ "; }
+.run code, .run .body pre{ color:var(--fg-bright); background:none; padding:0; }
+.run .body{ background:none; }   /* let the box's accent wash show through */
+
+/* secondary run box: a command meant for *another* machine (a Pi, a server).
+   Same TUI frame, but a distinct hue (--sec) -- not the amber the primary run
+   box owns -- so a different host reads at a glance. Like .notice-orange the
+   hue is deliberately off-palette (the primary's amber is palette-driven),
+   guaranteeing the two stay distinct in every theme -- incl. the green theme,
+   where --accent-2 would have collapsed onto --accent. Its per-theme values
+   live with the palette blocks up top. The wash is stronger than the primary's
+   so the whole box, not just the line, shifts color. */
+.run-secondary{
+  --line:color-mix(in srgb, var(--sec) 75%, var(--rule));
+  background:color-mix(in srgb, var(--sec), transparent 86%); }
+.run-secondary .label{ color:var(--sec);
+  border-color:color-mix(in srgb, var(--sec), #fff 22%); }
+.run-secondary .label .lt::before{ content:"\2197 "; }   /* ↗ : runs elsewhere */
+.run-secondary .copy:hover{ color:var(--sec); }
+
+/* copy button: a second cutout in the top-right border of run boxes */
+.box .copy{
+  position:absolute; top:0; right:1.4ch; transform:translateY(-55%); z-index:1;
+  background:var(--bg); border:none; cursor:pointer; padding:0 .55ch;
+  color:#a5a5a5; line-height:1; display:inline-flex; align-items:center;
+}
+.box .copy:hover{ color:var(--accent); }
+/* icon visuals are button-agnostic (shared by the box copy + the code-sheet copy) */
+.copy .ico{ display:inline-block; position:relative; }
+/* two overlapping sheets = the universal "copy" symbol */
+.copy .clip{ width:1.5em; height:1.6em; }
+.copy .clip::before{ content:""; position:absolute; left:0; top:0;          /* back sheet (peeks out top-left) */
+  width:1em; height:1.2em; border:2px solid currentColor; border-radius:2px; }
+.copy .clip::after{ content:""; position:absolute; left:.45em; top:.4em;     /* front sheet, shifted down-right */
+  width:1em; height:1.2em; border:2px solid currentColor; border-radius:2px; background:var(--bg); }
+.copy .check{ display:none; width:.82em; height:1.5em;
+  border-right:2.5px solid currentColor; border-bottom:2.5px solid currentColor; transform:rotate(45deg); }
+.copy.copied{ color:var(--accent); }
+.copy.copied .clip{ display:none; }
+.copy.copied .check{ display:inline-block; }
+/* terminal reverse-video selection sweep during copy (run pre + inline code) */
+.ch.sel{ background:var(--sel-bg); color:var(--sel-fg); }
+
+/* "expand" control: opens the block in a near-fullscreen sheet (wrapped +
+   selectable raw text). JS adds it -- on any device -- to any code block whose
+   content actually overflows: the framed boxes (run/env/stdout/edit/annotate)
+   and the standalone src .highlight. It's toggled as the viewport changes, so it
+   only shows while there's clipped content to reveal. The (optional) copy button
+   on run/env is folded into the same top-right border cutout. ------------- */
+.box-ctl{
+  position:absolute; top:0; right:1.4ch; transform:translateY(-55%); z-index:1;
+  display:inline-flex; align-items:center; gap:.9ch;
+  background:var(--bg); padding:0 .3ch;   /* one page-colored gap in the border */
+}
+.box-ctl .copy{                       /* was absolute; now flows inside the group */
+  position:static; top:auto; right:auto; transform:none; background:none; padding:0 .3ch; }
+.expand{
+  background:none; border:none; cursor:pointer; color:#a5a5a5;
+  line-height:1; display:inline-flex; align-items:center; padding:0 .3ch; }
+.expand:hover{ color:var(--accent); }
+.expand svg{ display:block; width:1.6em; height:1.6em; }   /* match the copy icon's box */
+/* [hidden] must beat the flex display set above (and on .iconbtn) */
+.box-ctl[hidden], .expand[hidden], .iconbtn[hidden]{ display:none; }
+/* width-constrained: when the full title would collide with the controls, JS adds
+   .ctl-stacked -> the controls drop to a second row just below the title (still
+   right-aligned, right:1.4ch unchanged), and the body's top padding opens up so
+   they don't sit on the content. The title gets the full width on its own row. */
+.box.ctl-stacked .box-ctl{ top:.9em; transform:none; background:none; }
+.box.ctl-stacked .label{ max-width:calc(100% - 2.8ch); }
+.box.ctl-stacked .body{ padding-top:calc(1.2rem + 2.5em); }
+/* the sheet itself (only ever opened on touch) */
+.code-sheet{
+  width:100vw; max-width:100vw; height:100dvh; max-height:100dvh;
+  margin:0; padding:0; border:none; background:var(--bg); color:var(--fg); }
+.code-sheet::backdrop{ background:rgba(0,0,0,.6); }
+.code-sheet[open]{ display:flex; flex-direction:column; }
+.code-sheet-head{
+  display:flex; align-items:center; gap:.6ch; flex:none;
+  padding:.7rem .9rem; border-bottom:1px solid var(--rule); }
+.code-sheet-title{
+  flex:1 1 auto; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  color:var(--fg-dim); font-size:.8rem; }
+/* both head buttons are .iconbtn squares; the copy icon sizes itself in em, so just
+   match the close glyph to it -> one icon family, equal footprint */
+.code-sheet-close svg{ width:1.6em; height:1.6em; }
+.code-sheet-body{
+  flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
+  margin:0; padding:1rem .9rem 2.5rem; color:var(--fg-bright);
+  white-space:pre;                                    /* don't wrap; scroll both axes instead */
+  font-size:1rem; line-height:1.55;
+  user-select:text; -webkit-user-select:text; }
+.content code{ cursor:pointer; }
+.content code:hover{ background:color-mix(in srgb, var(--fg) 26%, var(--bg)); }
+
+/* notes: palette-derived (not blue) and a distinct call-out box —
+   single solid border + a faint accent wash, vs run's double-line frame */
+.notice{
+  --line:color-mix(in srgb, var(--accent) 60%, var(--rule));
+  --bw:2px; --bs:dashed;
+  background:color-mix(in srgb, var(--accent), transparent 92%);
+}
+.notice .label{ color:var(--accent); }
+.notice .label::before{          /* CSS-drawn chevron (no font glyph -> renders identically everywhere) */
+  content:""; display:inline-block;
+  width:.38em; height:.38em; margin-right:.55em; vertical-align:.08em;
+  border-top:2px solid currentColor; border-right:2px solid currentColor;
+  transform:rotate(45deg);
+}
+.notice .body{ color:var(--fg); }
+
+/* annotated source block: a framed code sample (the Chroma .highlight) with an
+   explanatory note attached directly beneath it. Replaces the hand-typed
+   "└──" connector -- the frame groups code+note unambiguously, and a CSS
+   corner ties the note to the code above. Authored as an `annotate` special
+   block: a normal Org src block followed by the note prose (see the paired
+   shortcode in themes/terminal/layouts/shortcodes/annotate.html). */
+.annotate{
+  --line:color-mix(in srgb, var(--accent) 50%, var(--rule));
+  --bw:2px; --bs:solid;
+  background:color-mix(in srgb, var(--accent), transparent 94%);
+}
+.annotate .label{ color:var(--accent); }
+.annotate .body{ color:var(--fg); }
+/* the shown code renders as an ordinary Chroma .highlight (same as every other
+   src block on the site); just pull it flush to the top of the frame */
+.annotate .body .highlight{ margin:0; }
+/* the attached note: every block following the code, dimmed and indented
+   under a drawn corner-connector */
+.annotate .body .highlight ~ p,
+.annotate .body .highlight ~ ul,
+.annotate .body .highlight ~ ol{
+  color:var(--fg-dim); margin:.6rem 0 0 2.4ch; padding-left:.2ch;
+  position:relative; font-size:.95em; line-height:1.55;
+}
+.annotate .body .highlight ~ *:last-child{ margin-bottom:0; }
+.annotate .body .highlight ~ p:first-of-type::before{   /* the └─ connector, drawn in CSS */
+  content:""; position:absolute; left:-1.6ch; top:-.55rem;
+  width:1ch; height:1.1rem;
+  border-left:2px solid var(--line);
+  border-bottom:2px solid var(--line);
+  border-bottom-left-radius:2px;
+}
+.annotate .body .highlight ~ p code,                    /* inline =code= in the note */
+.annotate .body .highlight ~ ul code,
+.annotate .body .highlight ~ ol code{ color:var(--accent); }
+
+/* draw-on border-beam: a glowing head circles the frame and PAINTS the line
+   behind it (the box draws itself), in sync with the text rain. Then the real
+   double-border settles in and the beam overlay fades. */
+@property --draw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+.box::before{   /* the REAL border style (dashed/double), revealed clockwise by a conic mask */
+  content:""; position:absolute; inset:calc(-1 * var(--bw)); border-radius:inherit;
+  border:var(--bw) var(--bs) var(--line); pointer-events:none; opacity:0;
+  -webkit-mask:conic-gradient(from var(--beam-start,45deg), #000 0 var(--draw), transparent var(--draw) 360deg);
+          mask:conic-gradient(from var(--beam-start,45deg), #000 0 var(--draw), transparent var(--draw) 360deg);
+}
+.box::after{    /* bright leading-edge glow, riding the front of the drawn line */
+  content:""; position:absolute; inset:calc(-1 * var(--bw)); border-radius:inherit;
+  padding:var(--bw); pointer-events:none; opacity:0;
+  background:conic-gradient(from var(--beam-start,45deg),
+    transparent 0 calc(var(--draw) - 9deg),
+    color-mix(in srgb, var(--accent), #fff 60%) var(--draw),
+    transparent var(--draw) 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+          mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite:exclude;
+}
+/* the real border fades in once the beam has drawn it */
+.go .box{ border-color:var(--line); }
+/* fx off: show the border statically, no beam */
+body.no-fx .box{ border-color:var(--line); transition:none; }
+body.no-fx .box::before, body.no-fx .box::after{ display:none; }
+body.no-fx .brand .deco .blk{ animation:none !important; }   /* checker rotation off when fx is off (!important beats the higher-specificity .go :nth-child rules) */
+@media (prefers-reduced-motion: no-preference){
+  .box{ transition:border-color .5s ease; }
+  .go .box{ transition-delay:1.05s; }
+  .go .box::before, .go .box::after{ animation:draw 1.5s ease-out forwards; }
+}
+@keyframes draw{
+  0%  { --draw:0deg;   opacity:1; }
+  78% { --draw:360deg; opacity:1; }   /* one lap paints the whole frame */
+  100%{ --draw:360deg; opacity:0; }   /* hold, then hand off to the real border */
+}
+
+/* blinking block cursor ------------------------------------------- */
+.cursor{ display:inline-block; width:1ch; background:var(--accent); color:var(--accent); }
+@keyframes blink{ 50%{ opacity:0; } }
+
+.hint{ color:var(--fg-dim); font-size:.85em; margin-top:.4rem; }
+.firstscreen-marker{ border-top:1px dashed var(--rule); color:var(--fg-dim);
+  font-size:.78em; text-align:center; margin:2.2rem 0; padding-top:.4rem; }
+
+/* glyph lab (prototype probe) — see which decorative glyphs the webfont
+   actually provides vs. which fall back to a system monospace (watch the
+   advance width: fallback glyphs won't line up with the grid). */
+.glyphs{ margin:1rem 0; display:grid; gap:.35rem; }
+.glyphs .row{ display:flex; gap:1.4ch; align-items:baseline; }
+.glyphs .lbl{ color:var(--fg-dim); font-size:.78em; min-width:12ch; flex:none; text-align:right; }
+.glyphs .g{ color:var(--fg-bright); font-size:1.25rem; letter-spacing:0; overflow-wrap:anywhere; }
+pre.tui{ color:var(--accent); background:var(--code-bg); padding:1rem 1.1rem; margin:1.4rem 0;
+  border:1px solid var(--rule); border-radius:3px; overflow:auto; line-height:1.15; font-size:1.05rem; }
+.glyphs .g .miss{ color:var(--fg-dim); }   /* glyphs Inconsolata lacks even at source */
+
+/* half-block pixel art: each cell is U+2580 (▀, upper half). The glyph colour
+   paints the TOP pixel, the cell background paints the BOTTOM pixel -> two
+   vertical pixels per character, so an N-tall image needs only N/2 rows. */
+.pixart{ line-height:1; font-size:1.3rem; margin:1.4rem 0; }
+.pixart .prow{ display:block; white-space:pre; }
+.pixart .prow span{ background-clip:padding-box; }   /* crisp bottom-pixel edges */
+
+/* ============ narrow screens: off-canvas sidebar + menu toggle =========
+   MUST come after the base .sidebar/.nav-backdrop rules so its position
+   overrides win (equal specificity -> later source wins).
+
+   Breakpoint = the exact width where the reading column can no longer hold
+   its full --col, so the sidebar collapses at the same moment the text would
+   start to rewrap (rather than at an arbitrary device width):
+     sidebar(30ch) + content(74ch) + main padding(1rem x 2)  =  104ch + 2rem
+   At these widths the font-size clamp is pinned to its 21px max, so
+   1ch = 0.6em ~ 12.6px and 1rem = 21px:  104*12.6 + 2*21  ~  1352px.
+   (Tunable: nudge if the column visibly squeezes before the sidebar drops.) */
+@media (max-width:1352px){
+  .wrap{ grid-template-columns:minmax(0,1fr); }
+  .menutoggle{
+    display:inline-flex; align-items:center; justify-content:center;
+    position:fixed; top:.5rem; left:.55rem; z-index:70;   /* above the sidebar */
+    width:2.1rem; height:2.1rem; padding:0; box-sizing:border-box;   /* rem (not em) so the box doesn't scale with the glyph, and fits inside the header */
+    font:inherit; font-weight:700; font-size:1.4rem; line-height:1; color:var(--accent);
+    background:var(--panel); border:1px solid var(--rule); border-radius:3px; cursor:pointer;
+  }
+  .menutoggle:hover{ color:var(--fg-bright); border-color:var(--accent); }
+  #navtoggle:checked ~ .topnav{ opacity:.32; pointer-events:none; }   /* sidebar overlay covers the page -> dim/disable the right-hand page-nav cluster */
+  .topbar{ padding-left:4rem; }     /* clear the fixed toggle */
+  .sidebar{ padding-top:.55rem; }   /* align header with the toggle's top, not below it */
+  .sidebar .brand, .sidebar .tag{ padding-left:2rem; }   /* sit to the right of the toggle */
+  .sidebar{                                   /* terminal panel: snaps open + decodes in, no web slide */
+    position:fixed; z-index:60; top:0; left:0;
+    width:min(86vw, 34ch); height:100vh; height:100dvh;   /* dvh: match the visible area so the bottom controls stay reachable under the mobile toolbar */
+    display:none; border-right:1px solid var(--accent);
+    overscroll-behavior:contain;                          /* keep scroll momentum inside the panel */
+  }
+  #navtoggle:checked ~ .wrap .sidebar{ display:flex; }   /* flex (not block) so the pinned-header/scroll-tree/pinned-footer layout holds on mobile */
+  .nav-backdrop{                              /* solid console dim, snaps in */
+    display:none; position:fixed; inset:0; z-index:55; background:rgba(4,5,4,.74);
+  }
+  #navtoggle:checked ~ .wrap .nav-backdrop{ display:block; }
+}
+/* ============================================================
+   THEME ADDITIONS (beyond the static prototype's <style>)
+   Kept separate so re-extracting the prototype never clobbers it.
+   - third level in the nav tree (book -> chapter -> section)
+   - notice style variants, badge, button, math block, children index
+   ============================================================ */
+
+/* --- nav tree: expandable middle (chapter) node + third (section) level --- */
+.tree .chapters li.node > a::before{ content:"\25B8 "; color:var(--fg-dim); }   /* ▸ */
+.tree .chapters li.node.open > a::before{ content:"\25BE "; color:var(--accent); }   /* ▾ */
+.tree .chapters li.node.open > a{ color:var(--fg-bright); }
+.tree .sections{ list-style:none; margin:.1rem 0 .55rem; padding:0 0 0 1.6ch; border-left:1px solid var(--rule); }
+.tree .sections a{ color:var(--fg); text-decoration:none; display:block; padding:1px 0; }
+.tree .sections a:hover{ color:var(--accent); }
+.tree .sections a.active{ color:var(--accent); }
+.tree .sections a.active::before{ content:"\203A "; color:var(--accent); }   /* › */
+
+/* --- "old" group: a non-clickable header nesting archived books. Shown only
+       while the current page is inside it (always rendered .open). --- */
+.tree .group > .gname{ color:var(--fg-dim); display:block; padding:1px 0; }
+.tree .group > .gname::before{ content:"\25BE "; color:var(--accent); }   /* ▾ */
+.tree .grouped{ list-style:none; margin:.1rem 0 .7rem; padding:0 0 0 1.6ch; border-left:1px solid var(--rule); }
+
+/* --- notice style variants (accent stays palette-driven; hue shifts wash/line) --- */
+.notice-warning, .notice-orange{
+  --line:color-mix(in srgb, #e0a33a 60%, var(--rule));
+  background:color-mix(in srgb, #e0a33a, transparent 92%);
+}
+.notice-warning .label, .notice-orange .label{ color:#e8b552; }
+.notice-grey, .notice-credits{
+  --line:var(--rule);
+  background:color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.notice-grey .label, .notice-credits .label{ color:var(--fg-dim); }
+/* primary / info / blue fall through to the prototype's default accent .notice */
+
+/* --- inline badge --- */
+.badge{
+  display:inline-block; font-size:.8em; font-weight:700; line-height:1.3;
+  padding:.02em .6ch; border-radius:2px; vertical-align:.05em;
+  border:1px solid var(--accent); color:var(--accent);
+  background:color-mix(in srgb, var(--accent), transparent 88%);
+}
+.badge-green{ border-color:var(--accent-2); color:var(--accent-2); }
+
+/* --- link button --- */
+.button-link{
+  display:inline-block; font-weight:700; padding:.3em 1ch; margin:.3rem .5ch .3rem 0;
+  border:1px solid var(--accent); border-radius:3px;
+  color:var(--accent); text-decoration:none;
+}
+.button-link:hover{ background:var(--accent); color:var(--bg); border-bottom-color:var(--accent); }
+.button-green{ border-color:var(--accent-2); color:var(--accent-2); }
+.button-green:hover{ background:var(--accent-2); }
+
+/* --- math block --- */
+.math-block{ margin:1.4rem 0; overflow-x:auto; }
+
+/* --- fenced code blocks (Chroma .highlight): scroll long lines instead of
+       overflowing, and strip the inline-code pill styling that leaks onto the
+       block <code> (its background/padding drew stray edge lines) --- */
+/* a plain src block is framed exactly like the env box: a single dashed line in
+   the same color (var(--accent) 60% over the rule), square corners, and the same
+   faint accent wash -- just without the title straddling the top. To match the
+   env/run boxes we also drop Chroma's inline dark panel so the wash shows
+   through (the syntax colors keep their own foreground). Boxed highlights
+   (annotate) bring their own frame, so they opt back out of the border below. */
+.content .highlight{
+  margin:1rem 0;
+  position:relative;   /* anchor the JS-added .box-ctl expand control */
+  border:2px dashed color-mix(in srgb, var(--accent) 60%, var(--rule));
+  background:color-mix(in srgb, var(--accent), transparent 92%);
+}
+.box .highlight{ margin:0; border:none; background:none; }
+/* smaller font so the reading column fits ~80+ monospace columns without scrolling */
+.content .highlight pre{
+  overflow-x:auto; max-width:100%; padding:.5rem 1.1rem; font-size:.7rem; line-height:1.5;
+  background:transparent !important;   /* override Chroma's inline background-color */
+}
+/* default (no JS): scroll so the full text is readable. With JS, clip to a
+   one-screen preview like the boxes -- the expand control reveals the rest. */
+html.js .content .highlight pre{ overflow:hidden; text-overflow:ellipsis; }
+.box .highlight pre{ padding:.9rem .25rem; }
+/* Chroma bakes its token colors inline (monokai), so they can't follow the
+   theme. The colorful amber/green themes keep them, but the `mono` and `lite`
+   palettes are deliberately monochrome -- so there we drop the syntax colors and
+   render code in the theme foreground (light on mono, near-black on lite). */
+:root[data-theme="mono"] .content .highlight pre,
+:root[data-theme="mono"] .content .highlight pre *,
+:root[data-theme="lite"] .content .highlight pre,
+:root[data-theme="lite"] .content .highlight pre *{ color:var(--fg-bright) !important; }
+.content pre code{ background:none; padding:0; color:inherit; border-radius:0; cursor:auto; }
+.content pre code:hover{ background:none; }
+/* match the fenced-code size (.7em above) for run-box text */
+.run .body pre, .run .body code{ font-size:.7em; line-height:1.5; }
+
+/* --- images / figures: fit the reading column, centered --- */
+.content img{ max-width:100%; height:auto; display:block; margin:0 auto; border-radius:2px; }
+.content figure{ margin:1.7rem auto; max-width:100%; text-align:center; }
+.content figure figcaption{ color:var(--fg-dim); font-size:.85em; margin-top:.5rem; }
+
+/* --- mermaid diagrams: light panel so the lines have contrast (mermaid's
+       default theme assumes a light background), centered and width-capped --- */
+.content .mermaid{
+  background:#f4f4ee;
+  border:1px solid var(--rule);
+  border-radius:3px;
+  padding:1.2rem;
+  margin:1.7rem 0;
+  text-align:center;
+  overflow-x:auto;
+}
+.content .mermaid svg{ max-width:100%; height:auto; }
+
+/* --- children index list (book/chapter listing) --- */
+ul.children{ margin:.6rem 0; }
+ul.children .children-desc{ color:var(--fg-dim); }
+/* "old" group in the index: drop the leading – bullet on the wrapper, dim the
+   label, and tighten the nested list so archived books read as a sub-group. */
+ul.children .group-old::before{ content:none; }
+ul.children .group-old > .gname{ color:var(--fg-dim); }
+ul.children .group-old > ul.children{ margin:.15rem 0; }
+
+/* --- intro λ logo (home page only): an oversized lambda centered like a
+       poster, with a matrix-style glyph-rain canvas fading in behind it.
+       Lives at body level (see #page-fx in baseof.html) and takes over the
+       viewport just like a WebGL takeover shader — position:fixed, aligned to
+       the reading column via the same --reading-left / --reading-width vars
+       the shader canvas uses (published by takeover.js). Its opacity follows
+       --fx-opacity so it dims as the reader scrolls the content in, matching
+       the behavior of body.has-takeover .fx-canvas below. --- */
+.lambda-logo{
+  position:fixed; top:0;
+  left:var(--reading-left, 0px);
+  width:var(--reading-width, 100vw);
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:-1;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .8s ease;
+}
+.lambda-logo .lambda-rain{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 1.4s ease;
+}
+.lambda-logo.rain-on .lambda-rain{ opacity:.5; }
+.lambda-logo .lambda-glyph{
+  position:relative; z-index:1;
+  font-family:var(--font-mono);
+  font-size:clamp(7rem, 22vh, 15rem);
+  line-height:1;
+  color:var(--accent);
+  text-shadow:0 0 24px color-mix(in srgb, var(--accent), transparent 55%);
+  user-select:none;
+}
+/* Reveal-on-first-frame: terminal.js adds .rain-on once the canvas has drawn a
+   frame; that class doubles as the "fade the whole poster in" trigger, so we
+   don't flash a giant static λ during boot. Once revealed, --fx-opacity from
+   Takeover drives the dim-on-scroll. */
+html:not(.js) .lambda-logo{ display:none; }                          /* no JS: hidden */
+/* Reveal-on-first-frame path (fx on, motion allowed): lambdaRain adds .rain-on
+   once the canvas has drawn a frame, and the transition eases the whole poster
+   in. Fx off or reduced-motion path: the glyph-rain canvas is suppressed and
+   the giant λ shows as a static poster right away. In every visible case,
+   --fx-opacity (from Takeover) drives the dim-on-scroll. */
+html.js .lambda-logo.rain-on,
+.no-fx .lambda-logo{ opacity:var(--fx-opacity, 1); }
+.no-fx .lambda-logo .lambda-rain{ display:none; }
+body.has-takeover .lambda-logo{ transition:opacity .15s linear; }   /* snappier while scrolling */
+@media (prefers-reduced-motion: reduce){
+  .lambda-logo{ opacity:var(--fx-opacity, 1); }
+  .lambda-logo .lambda-rain{ display:none; }
+}
+
+/* lite (light) palette: the page is pale, so back the scene with a translucent
+   gray panel — the dark phosphor trails read much better against it than on white */
+:root[data-theme="lite"] .lambda-logo{ background:rgba(20,24,18,0.12); border-radius:4px; }
+
+/* when a maxed mother core detonates, its glyph ascends to replace the λ here —
+   flash + scale-pop so the swap reads as a climactic event */
+@keyframes lambda-swap{ 0%{ transform:scale(1.7); filter:brightness(2.4); } 100%{ transform:scale(1); filter:none; } }
+.lambda-logo .lambda-glyph.swap{ animation:lambda-swap .7s ease-out; }
+
+/* --- self-linking content headings: each heading is an anchor to its own
+       #fragment, so the heading text itself is clickable/copyable.
+       Inherit the heading's color/weight so it reads as a heading, not a link;
+       the decorative #/## prefix already marks it, so hover just tints it. --- */
+.content h1 > a.heading-anchor,
+.content h2 > a.heading-anchor,
+.content h3 > a.heading-anchor,
+.content h4 > a.heading-anchor,
+.content h5 > a.heading-anchor,
+.content h6 > a.heading-anchor{
+  color:inherit; text-decoration:none; border-bottom:none;
+}
+.content a.heading-anchor:hover{ color:var(--accent); }
+
+/* --- content tables: the theme body font is monospace, and the prose-face rule
+       only covers p/li/blockquote/dd/dt, so cells would inherit mono and the
+       columns size by content (squeezing a short first column to nothing).
+       Give tables the reading face, full width, and a fixed-ish layout where the
+       first column hugs its label and the rest goes to the body column. --- */
+.content table{
+  width:100%; border-collapse:collapse; margin:1.5rem 0;
+  font-family:var(--font-read); font-size:.95em; line-height:1.55;
+}
+.content table th,
+.content table td{
+  font-family:var(--font-read);
+  text-align:left; vertical-align:top;
+  padding:.5rem .75rem; border:1px solid var(--rule);
+}
+.content table th{
+  color:var(--accent); font-weight:700;
+  border-bottom:2px solid var(--rule); background:var(--bg-soft);
+}
+.content table tbody tr:hover{ background:color-mix(in srgb, var(--fg) 6%, transparent); }
+/* the first column is a short identifier/label: keep it on one line so it sizes
+   to its content instead of wrapping char-by-char (the .content overflow-wrap
+   rule otherwise shatters short =code= tokens). */
+.content table td:first-child,
+.content table th:first-child{ white-space:nowrap; width:1%; }
+/* inline =code= stays monospace inside cells, like everywhere else */
+.content table code{ font-family:var(--font-mono); }
+
+/* ============================================================
+   PERSISTENT SHADER CANVAS (see themes/terminal/assets/js/shader.js)
+   A body-level full-viewport background that survives soft navigation. Sits above
+   the page --bg (z-index:-1) but behind the translucent content, so text always
+   wins and the opaque topbar (z 10) / pagenav (z 70) cover it. Progressive
+   enhancement: shown only with JS on AND fx on AND motion allowed. It fades in
+   (.fx-ready, added by the engine after its first frame) to avoid a hard pop.
+   ============================================================ */
+.fx-canvas{
+  position:fixed; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:-1;
+  opacity:0; transition:opacity .8s ease;
+}
+/* The persistent canvas's horizontal placement is driven by shader.js at
+   runtime — it measures <main> and the .sidebar overlay (positionBg in
+   shader.js) and sets inline left/width on the canvas so a takeover shader
+   centers on the reading column across every breakpoint (wide, narrow with
+   sidebar closed, narrow with sidebar overlay open). The base rule above is
+   the pre-JS fallback; the canvas is display:none without JS anyway. */
+
+/* Takeover pages: give the shader an unobstructed "cinema" at the top of the
+   reading column, then reveal the prose as the reader scrolls into it. The
+   70vh padding pushes .content below the fold; shader.js sets an inline
+   opacity on .content (0 at scrollY=0, ramping to 1 by scrollY=50vh) so the
+   text fades in symmetrically as the reader scrolls down or back up. Body
+   class toggled by the shader manager (see scan() in shader.js).
+   A ::before pseudo-element on main renders a small "scroll ↓" hint in the
+   cinema; shader.js sets --scroll-hint-opacity inversely to the content fade
+   so the hint fades out as the reader scrolls in. */
+body.has-takeover main{ padding-top:70vh; }
+body.has-takeover main::before{
+  content:"scroll \2193";                                 /* ↓ */
+  /* Center on the reading column, not the viewport — shader.js publishes
+     --reading-left / --reading-width from the same box that positions the
+     canvas, so the hint stays aligned as sidebar state changes. Fallback to
+     viewport-center for the split second before JS sets the vars. */
+  position:fixed; bottom:1.4rem;
+  left:calc(var(--reading-left, 0px) + var(--reading-width, 100vw) / 2);
+  transform:translateX(-50%);
+  padding:.35rem .8rem; border:1px solid var(--rule); border-radius:3px;
+  background:color-mix(in srgb, var(--panel) 82%, transparent);
+  color:var(--fg-dim); font:.82rem/1.35 var(--font-mono); letter-spacing:.25ch; white-space:nowrap;
+  opacity:var(--scroll-hint-opacity, 1); pointer-events:none; z-index:5;
+}
+/* The canvas sits at z-index:-1, which paints above html's background but below
+   body. terminal.css gives BOTH html and body an opaque --bg, so body would paint
+   right over the canvas and hide it. Drop body's background (html keeps the base
+   color) so the canvas shows through. Visually identical when the shader is hidden
+   (fx/JS off), and scoped to html.js so the no-JS page is unchanged. */
+html.js body{ background:transparent; }
+/* --fx-opacity defaults to 1 (unchanged behaviour on ambient/floating pages);
+   on takeover pages shader.js ramps it down to ~0.25 as the reader scrolls
+   into the text, so the shader recedes to a hint behind the prose. */
+html.js .fx-canvas.fx-ready{ opacity:var(--fx-opacity, 1); }
+body.has-takeover .fx-canvas{ transition:opacity .15s linear; }   /* snappier than the .8s fade-in for scroll response */
+html:not(.js) .fx-canvas{ display:none; }              /* no JS -> never shown */
+.no-fx .fx-canvas{ display:none; }                     /* mirrors .no-fx .lambda-rain */
+@media (prefers-reduced-motion: reduce){ .fx-canvas{ display:none; } }
+
+/* the shader-config marker is data only — never rendered */
+.shader-config{ display:none; }
+
+/* inline shader window: a contained live canvas embedded in the content flow */
+.shader-window{
+  /* default footprint: full content width, a clamped height. The shortcode may
+     override width/height/aspect-ratio via an inline style (see shader.html);
+     the aspect-ratio-only case reuses --shader-default-h to fit this box. */
+  --shader-default-h:clamp(180px, 34vh, 340px);
+  display:block; width:100%; height:var(--shader-default-h);
+  margin:1.3rem 0; border:1px solid var(--rule); border-radius:3px;
+  overflow:hidden; position:relative; background:var(--bg);   /* opaque canvas sits on it; shows when cleared. matches the theme */
+}
+.shader-window .shader-canvas{
+  display:block; width:100%; height:100%;
+  opacity:0; transition:opacity .5s ease;
+}
+html.js .shader-window .shader-canvas.fx-ready{ opacity:1; }
+html:not(.js) .shader-window{ display:none; }   /* no JS -> no empty box */
+/* compile-error overlay for literate (custom GLSL) shader windows */
+.shader-error{
+  position:absolute; inset:0; margin:0; padding:.6rem .7rem; z-index:2;
+  overflow:auto; white-space:pre-wrap;
+  font:12px/1.45 var(--font-mono); color:#ff9b9b;
+  background:color-mix(in srgb, #200 78%, transparent);
+}
+
+/* shader controls: play/stop. Used by both the inline window (where it sits at the
+   left of the in-figure controls panel) and the floating background panel (#fxctl,
+   fixed bottom-right, shown only while a takeover is live). */
+.shader-ctl{ display:flex; gap:.3rem; z-index:1; }
+.shader-ctl button{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.7rem; height:1.7rem; padding:0; cursor:pointer;
+  color:var(--fg-dim); background:color-mix(in srgb, var(--panel) 72%, transparent);
+  border:1px solid var(--rule); border-radius:3px;
+}
+.shader-ctl button:hover{ color:var(--accent); border-color:var(--accent); }
+.shader-ctl svg{ display:block; }
+/* play/stop toggle: show the icon matching the current state (.paused = stopped) */
+.shader-ctl:not(.paused) .ico-play{ display:none; }   /* playing -> show stop */
+.shader-ctl.paused .ico-stop{ display:none; }         /* stopped -> show play */
+
+/* the controls (play/stop + the panel) start invisible and ease in when the pointer
+   moves over the shader; after it rests a moment shader.js drops .ui-on and they
+   fade back out — together with the cursor — video-player style. :focus-within keeps
+   them up while a control has focus or is mid-drag. */
+.shader-window .shader-panel{ opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.shader-window.ui-on .shader-panel,
+.shader-window:focus-within .shader-panel{ opacity:1; pointer-events:auto; }
+.shader-window:hover:not(.ui-on):not(:focus-within){ cursor:none; }   /* idle -> hide the cursor */
+
+/* per-window controls panel: a play/stop button on the far left, then a column of
+   control rows — a speed slider (every shader) plus any @slider/@select inputs a
+   literate shader declares (populated by shader.js). Overlays the window's lower
+   edge and scrolls if it outgrows the box (clipped by .shader-window overflow). */
+.shader-panel{
+  position:absolute; left:.4rem; right:.4rem; bottom:.4rem; z-index:3;
+  display:flex; align-items:stretch; gap:.5rem;   /* play button | control rows */
+  margin:0; padding:.55rem .65rem;
+  max-height:calc(100% - .8rem); overflow:auto;
+  background:color-mix(in srgb, var(--panel) 88%, transparent);
+  border:1px solid var(--rule); border-radius:3px;
+  font:12px/1.35 var(--font-mono); color:var(--fg-dim);
+}
+/* play/stop: far left, a tall bar spanning the panel height (≈ two rows) */
+.shader-panel .shader-ctl{ flex:0 0 auto; align-items:stretch; }
+.shader-panel .shader-play{ width:2.2rem; height:auto; min-height:2.4rem; align-self:stretch; }
+/* the stacked rows fill the rest, wrapping so two selects can share one line */
+.shader-rows{
+  flex:1 1 auto; min-width:0; align-content:center;
+  display:flex; flex-wrap:wrap; gap:.4rem .5rem;   /* row-gap / column-gap */
+}
+/* rows fill the row-column width by default (speed + sliders stay full width);
+   selects shrink to ~half so two label+dropdown pairs pack onto one line */
+.shader-row{ display:flex; align-items:center; gap:.5rem; flex:1 1 100%; min-width:0; }
+.shader-row-half{ flex:1 1 calc(50% - .5rem); }
+.shader-row label{ flex:0 0 auto; min-width:5.5ch; color:var(--fg-dim); }
+.shader-row input[type="range"]{ flex:1 1 auto; min-width:0; accent-color:var(--accent); }
+.shader-row select{
+  flex:1 1 auto; min-width:0; font:inherit; padding:.05rem .3rem;
+  color:var(--fg); background:var(--bg); border:1px solid var(--rule); border-radius:2px;
+}
+.shader-row .shader-val{ flex:0 0 auto; min-width:3.5ch; text-align:right; color:var(--fg); }
+
+/* floating background-shader panel: hidden until a takeover activates it */
+.shader-bgctl{ position:fixed; top:auto; right:.55rem; bottom:.55rem; z-index:60; display:none; }
+.shader-bgctl.on{ display:flex; }
+html:not(.js) .shader-bgctl{ display:none; }
+
+/* floating inline window (`:effect floating`): at wide-enough viewports the inline
+   window pops out of the content flow and pins to the right gutter, under the
+   topbar, so it stays in view while the reader scrolls the prose. shader.js adds
+   .has-floating-shader to <body> for such a page so the reading column hugs the
+   left, freeing that gutter. Below the breakpoint (or with JS off) the window
+   renders as an ordinary inline window and the column stays centered — so the
+   effect is purely additive when there's room for it. The breakpoint clears the
+   sidebar (30ch) + column (74ch) + the panel + gaps; see the .wrap math note. */
+@media (min-width:1700px){
+  body.has-floating-shader .content{ margin-left:0; }   /* hug left; free the right gutter */
+  .shader-window[data-effect="floating"]{
+    /* Size to the room actually left over rather than a fixed cap. The gutter width
+       is the viewport minus the column's right edge and the side gaps; the usable
+       height is the viewport minus the top offset and a bottom gap. A square (the
+       shortcode derives one from --shader-default-h via aspect-ratio) grows to the
+       largest that fits EITHER constraint via min(); clamped so it never drops below
+       the old footprint or balloons on an ultra-wide display. Re-evaluates on resize. */
+    --float-room-w:calc(100vw - 30ch - var(--col) - 4rem);   /* mirrors the left offset + right gap */
+    --float-room-h:calc(100vh - 5rem);                        /* top offset (3.4rem) + bottom gap */
+    --shader-default-h:clamp(200px, min(var(--float-room-w), var(--float-room-h)), 1024px);
+    /* pin to just past the left-hugged column's right edge: sidebar grid track
+       (30ch) + main's left padding (1rem) + the column (var(--col)) + a gap. */
+    position:fixed; top:3.4rem; left:calc(30ch + 1rem + var(--col) + 1.5rem); margin:0; z-index:5;   /* under topbar(10)/topnav(70), over content */
+    width:clamp(220px, var(--float-room-w), 1024px);   /* used only when no explicit size; an inline aspect-ratio/width overrides */
+    box-shadow:0 12px 30px rgba(0,0,0,.45);   /* reads as a detached, floating panel */
+  }
+}
+
+/* --- diffbox: a code box toggling between a unified diff and the full source of
+   the evolved block (see layouts/shortcodes/diffbox.html + the ox-hugo `diff'
+   block in emacs.d/init.el). The default view is baked in server-side so it
+   reads with NO JS; html.js reveals the toggle + copy controls. --- */
+.diffbox{ --line:color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+.diffbox .label{ color:var(--accent); max-width:calc(100% - 20ch); }   /* leave room for the controls */
+.diffbox .body{ padding:0; }
+.diffbox .body .highlight{ margin:0; }
+.diffbox .body .highlight pre{ margin:0; }
+/* panes scroll on overflow; the expand control opens them in the code sheet */
+html.js .diffbox .body pre{ overflow:auto; text-overflow:clip; }
+/* controls share the run/env top-right cutout, but are JS-only on a diffbox
+   (toggle/copy/expand all need scripting), so hide the whole group without JS */
+.diffbox .box-ctl{ display:none; }
+html.js .diffbox .box-ctl{ display:inline-flex; }
+.diffbox .box-ctl[hidden]{ display:none; }
+.diff-toggle{
+  background:none; cursor:pointer; color:#a5a5a5; font:inherit; font-size:.8em;
+  line-height:1.5; padding:0 .7ch;
+  border:1px solid color-mix(in srgb, var(--accent), transparent 50%); border-radius:3px;
+}
+.diff-toggle:hover{ color:var(--accent); border-color:var(--accent); }
+
+/* --- GitHub-style unified diff table (built by wireDiffBoxes from the Chroma
+   blocks). Code sits on the same dark Chroma surface as the rest of the site's
+   code; added lines are blocked in green, removed lines in red, with old/new
+   line numbers in the gutter. --- */
+.diffbox .src-pane{ overflow-x:auto; }
+.diffbox .diff-unified{ overflow-x:auto; background:#272822; padding:0 0 .55rem; }
+/* clear the title chip by padding the first row's cells -- so the hunk-header
+   tint (the first row is always a hunk) runs as one color to the very top */
+.diffbox .dt tbody tr:first-child td{ padding-top:.75rem; }
+/* opt the JS-built diff tables out of the prose-table styling (.content table):
+   keep them monospace with no cell borders/margins/hover, like a code block. */
+.diffbox .dt{
+  border-collapse:collapse; width:100%; margin:0; color:#f8f8f2;
+  font-family:var(--font-mono); font-size:.7rem; line-height:1.55; tab-size:4;
+}
+.diffbox .dt td{ padding:0; vertical-align:top; font-family:var(--font-mono); border:none; }
+.diffbox .dt tbody tr:hover{ background:none; }
+.diffbox .dl-n{    /* line-number gutter: match the Chroma source view's numbers --
+                      same #7f7f7f, same left offset, no tinted gutter background */
+  width:1%; padding:0 .8em 0 .4em; text-align:center; white-space:nowrap;
+  color:#7f7f7f; user-select:none; -webkit-user-select:none;
+}
+.diffbox .dt .dl-n:first-child{ padding-left:.9em; }   /* a little room off the box's left edge */
+.diffbox .dl-mark{ width:1ch; padding:0 .3ch; text-align:center; color:#7f7f7f; user-select:none; -webkit-user-select:none; }
+.diffbox .dl-code{ white-space:pre; padding:0 .8em; width:100%; }
+/* tint the whole changed row */
+.diffbox tr.dl-add td{ background:rgba(63,185,80,.16); }
+.diffbox tr.dl-del td{ background:rgba(248,81,73,.16); }
+.diffbox tr.dl-add .dl-mark{ color:#3fb950; }
+.diffbox tr.dl-del .dl-mark{ color:#f85149; }
+/* hunk header rows (the @@ ... @@ context) */
+.diffbox .dl-hunk td{ background:rgba(88,166,255,.12); color:#8b949e; padding:.05em .8em; user-select:none; -webkit-user-select:none; }
+/* the copy-flash sweep selects text -> paint it white-on-black reverse video like
+   the run boxes (.ch.sel uses --sel-bg/--sel-fg), not the page's ::selection block */
+.diffbox ::selection{ background:var(--sel-bg); color:var(--sel-fg); }
+.diffbox ::-moz-selection{ background:var(--sel-bg); color:var(--sel-fg); }

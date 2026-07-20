@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 9: Virtual Private Cloud (VPC) · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/git-extensions-babashka/" aria-label="Previous: git-extensions-babashka" title="prev: git-extensions-babashka"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/pipewire-record-firefox-audacity/" aria-label="Next: pipewire-record-firefox-audacity" title="next: pipewire-record-firefox-audacity"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">vpc</a></li><li class="lvl2"><a href="#architecture">Architecture</a></li><li class="lvl2"><a href="#prerequisites">Prerequisites</a></li><li class="lvl2"><a href="#download-the-script">Download the script</a></li><li class="lvl2"><a href="#configuration">Configuration</a></li><li class="lvl2"><a href="#create-the-vpc">Create the VPC</a></li><li class="lvl2"><a href="#create-the-router-vm">Create the router VM</a></li><li class="lvl3"><a href="#load-an-os-iso">Load an OS ISO</a></li><li class="lvl2"><a href="#install-nifty-filter-on-the-router-vm">Install nifty-filter on the router VM</a></li><li class="lvl3"><a href="#build-the-iso">Build the ISO</a></li><li class="lvl3"><a href="#install-nifty-filter">Install nifty-filter</a></li><li class="lvl3"><a href="#configure-nifty-filter">Configure nifty-filter</a></li><li class="lvl2"><a href="#create-a-client-vm">Create a client VM</a></li><li class="lvl3"><a href="#creating-additional-client-vms">Creating additional client VMs</a></li><li class="lvl2"><a href="#testing">Testing</a></li><li class="lvl3"><a href="#verify-isolation">Verify isolation</a></li><li class="lvl2"><a href="#the-script">The script</a></li><li class="lvl2"><a href="#cleanup">Cleanup</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="active" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/09-vpc/">/vpc</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 9: Virtual Private Cloud (VPC)</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-04-14">2026-04-14</time></span>
+  <span>updated <time datetime="2026-04-15">2026-04-15</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>In <a href="/blog/proxmox/02-networking">part 2</a>, we set up NAT bridges where
+the Proxmox host itself performs IP masquerading for VMs on private
+networks. This is simple and effective, but it means that every VM on
+a NAT bridge has a direct path to the internet through the host
+kernel. There is no way to inspect, filter, or control that egress
+traffic at the VM level.</p>
+<p>In this post, we will create a Virtual Private Cloud (VPC): an
+isolated network where VMs have <strong>no direct internet access</strong>. The
+only path to the outside world is through a dedicated <strong>router VM</strong>
+that you fully control. This is similar to how AWS VPCs work: you
+create an isolated network, attach a NAT gateway (our router VM), and
+only traffic that passes through the gateway can reach the internet.</p>
+<p>This is useful for:</p>
+<ul>
+<li><strong>Security sandboxing</strong> — run untrusted workloads on a network
+where you control all egress</li>
+<li><strong>Testing</strong> — simulate a production network topology with a
+router, firewall, and isolated clients</li>
+<li><strong>Multi-tenant isolation</strong> — give each tenant their own VPC with
+a dedicated router</li>
+</ul>
+<p>Unlike <a href="/blog/proxmox/06-router">part 6</a> (which builds a full home
+LAN router with physical NIC passthrough), this setup is purely
+virtual. No special hardware is required — just a standard Proxmox
+installation.</p>
+<h2 id="architecture"><a class="heading-anchor" href="#architecture">Architecture</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>             Internet
+</span></span><span style="display:flex;"><span>                |
+</span></span><span style="display:flex;"><span>            [vmbr0]
+</span></span><span style="display:flex;"><span>             |    |
+</span></span><span style="display:flex;"><span>   Proxmox Host   Router VM
+</span></span><span style="display:flex;"><span>(management only)  net0: vmbr0 (internet)
+</span></span><span style="display:flex;"><span> 10.99.0.2/24      net1: vmbr99 (VPC gateway)
+</span></span><span style="display:flex;"><span>             |    |
+</span></span><span style="display:flex;"><span>            [vmbr99] — VPC Bridge (no host NAT)
+</span></span><span style="display:flex;"><span>                |
+</span></span><span style="display:flex;"><span>            Client VM
+</span></span><span style="display:flex;"><span>             net0: vmbr99 (VPC only)
+</span></span></code></pre></div><p>The Proxmox host has a management IP on the VPC bridge (<code>10.99.0.2</code>)
+so you can SSH to VMs for administration, but the host does <strong>not</strong>
+perform any masquerading or IP forwarding for the VPC network. The
+only way a client VM can reach the internet is through the router VM.</p>
+<h2 id="prerequisites"><a class="heading-anchor" href="#prerequisites">Prerequisites</a></h2>
+<ul>
+<li>Proxmox installed (<a href="/blog/proxmox/01-install">part 1</a>)</li>
+<li>SSH access to the Proxmox host as <code>root</code></li>
+</ul>
+<h2 id="download-the-script"><a class="heading-anchor" href="#download-the-script">Download the script</a></h2>
+<p>Connect to the Proxmox host via SSH and download the <code>proxmox_vpc.sh</code>
+script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_vpc.sh
+chmod &#43;x proxmox_vpc.sh
+</pre></div>
+</div>
+
+
+<p>Running the script without arguments shows the available commands and
+current configuration:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_vpc.sh
+</pre></div>
+</div>
+
+
+<h2 id="configuration"><a class="heading-anchor" href="#configuration">Configuration</a></h2>
+<p>All settings are controlled by environment variables with sensible
+defaults. You can see the full list and their current values by
+running <code>./proxmox_vpc.sh</code> with no arguments. To override settings,
+export them before running commands:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## VPC Bridge:
+export VPC_BRIDGE=vmbr99
+export VPC_HOST_CIDR=10.99.0.2/24
+
+## Router VM:
+export ROUTER_VM_ID=200
+export ROUTER_HOSTNAME=router
+export ROUTER_DISK_SIZE=32G
+export ROUTER_MEMORY=2048
+export ROUTER_CORES=1
+export PUBLIC_BRIDGE=vmbr0
+
+## Client VM:
+export CLIENT_VM_ID=201
+export CLIENT_HOSTNAME=client
+export CLIENT_DISK_SIZE=32G
+export CLIENT_MEMORY=2048
+export CLIENT_CORES=1
+
+## Storage:
+export STORAGE=local-lvm
+</pre></div>
+</div>
+
+
+<h2 id="create-the-vpc"><a class="heading-anchor" href="#create-the-vpc">Create the VPC</a></h2>
+<p>Create the private bridge:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_vpc.sh create_vpc
+</pre></div>
+</div>
+
+
+<p>This creates a Linux bridge (<code>vmbr99</code> by default) with:</p>
+<ul>
+<li><code>bridge_ports none</code> — not connected to any physical interface</li>
+<li>A management IP for the Proxmox host (<code>10.99.0.2/24</code>)</li>
+<li><strong>No masquerade rules</strong> — the host will not NAT traffic for this bridge</li>
+<li><strong>No ip_forward</strong> — the host will not route traffic between this
+bridge and <code>vmbr0</code></li>
+</ul>
+<p>This is the key difference from
+<a href="/blog/proxmox/02-networking">part 2</a>&rsquo;s NAT bridges. The VPC bridge
+is just a Layer 2 switch. It connects VMs to each other, but provides
+no path to the internet on its own.</p>
+<h2 id="create-the-router-vm"><a class="heading-anchor" href="#create-the-router-vm">Create the router VM</a></h2>
+<p>The router VM has one foot in each network: <code>vmbr0</code> for internet
+access and the VPC bridge for the private side.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_vpc.sh create_router
+</pre></div>
+</div>
+
+
+<p>This creates a VM with:</p>
+<ul>
+<li><strong>net0</strong> on <code>vmbr0</code> (internet-facing)</li>
+<li><strong>net1</strong> on <code>vmbr99</code> (VPC private side)</li>
+<li>A blank disk (no OS installed)</li>
+</ul>
+<h3 id="load-an-os-iso"><a class="heading-anchor" href="#load-an-os-iso">Load an OS ISO</a></h3>
+<p>The VM is created with an empty CD/DVD drive. In the Proxmox GUI:</p>
+<ul>
+<li>Select VM <strong>200</strong> (router)</li>
+<li>Go to <strong>Hardware</strong> → double-click the <strong>CD/DVD Drive</strong></li>
+<li>Select an ISO image (any Linux distribution will work)</li>
+<li>Go to <strong>Options</strong> → <strong>Boot Order</strong> and ensure the CD/DVD drive is
+first for the initial install</li>
+</ul>
+<h2 id="install-nifty-filter-on-the-router-vm"><a class="heading-anchor" href="#install-nifty-filter-on-the-router-vm">Install nifty-filter on the router VM</a></h2>
+<p><a href="https://github.com/EnigmaCurry/nifty-filter">nifty-filter</a> is an
+immutable NixOS router distribution that provides everything the
+router VM needs: nftables firewall, DHCP server, DNS server, and
+network routing. It runs on a read-only root filesystem with
+configuration stored on a read-write <code>/var</code> partition.</p>
+<h3 id="build-the-iso"><a class="heading-anchor" href="#build-the-iso">Build the ISO</a></h3>
+<p>On a machine with Nix installed, clone and build the nifty-filter ISO:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone https://github.com/EnigmaCurry/nifty-filter.git
+cd nifty-filter
+nix build .#iso
+</pre></div>
+</div>
+
+
+<p>Upload the resulting ISO to the Proxmox host&rsquo;s ISO storage (or use
+the Proxmox GUI to upload it).</p>
+<h3 id="install-nifty-filter"><a class="heading-anchor" href="#install-nifty-filter">Install nifty-filter</a></h3>
+<ul>
+<li>Load the nifty-filter ISO into the router VM&rsquo;s CD/DVD drive</li>
+<li>Start the VM and open the console</li>
+<li>Log in with the default credentials: <code>admin</code> / <code>nifty</code></li>
+<li>Run the interactive installer:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+nifty-install
+</pre></div>
+</div>
+
+
+<p>The installer will prompt you for:</p>
+<ul>
+<li><strong>Hostname</strong> — e.g., <code>router</code></li>
+<li><strong>Disk</strong> — select the virtual disk to install to</li>
+<li><strong>WAN interface</strong> — the upstream interface (net0, connected to
+<code>vmbr0</code>)</li>
+<li><strong>LAN interface</strong> — the VPC interface (net1, connected to the
+VPC bridge)</li>
+<li><strong>Subnet configuration</strong> — use <code>10.99.0.1/24</code> for the VPC side</li>
+<li><strong>DNS servers</strong> — upstream DNS resolvers</li>
+</ul>
+<p>After installation, reboot the VM. nifty-filter will automatically
+configure IP forwarding, nftables masquerade, DHCP, and DNS for the
+VPC network.</p>
+<h3 id="configure-nifty-filter"><a class="heading-anchor" href="#configure-nifty-filter">Configure nifty-filter</a></h3>
+<p>After the initial install, you can reconfigure at any time:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+nifty-config
+</pre></div>
+</div>
+
+
+<p>Or edit the configuration files directly in <code>/var/nifty-filter/</code>:</p>
+<ul>
+<li><code>router.env</code> — firewall rules and interface configuration</li>
+<li><code>dhcp.env</code> — DHCP pool settings and DNS configuration</li>
+</ul>
+<h2 id="create-a-client-vm"><a class="heading-anchor" href="#create-a-client-vm">Create a client VM</a></h2>
+<p>Back on the Proxmox host, create a client VM that is isolated on the
+VPC:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_vpc.sh create_vm
+</pre></div>
+</div>
+
+
+<p>This creates a VM with:</p>
+<ul>
+<li><strong>net0</strong> on <code>vmbr99</code> — the <strong>only</strong> network interface, connected
+exclusively to the VPC bridge</li>
+<li>A blank disk (no OS installed)</li>
+</ul>
+<p>Load an OS ISO into the CD/DVD drive in the Proxmox GUI and install
+the OS, just as you did for the router. The nifty-filter DHCP server
+will automatically assign an IP address and configure the default
+gateway, so the client should be able to use DHCP with no additional
+configuration.</p>
+<h3 id="creating-additional-client-vms"><a class="heading-anchor" href="#creating-additional-client-vms">Creating additional client VMs</a></h3>
+<p>To create more VMs on the same VPC, override the VM ID and hostname:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+CLIENT_VM_ID=202 CLIENT_HOSTNAME=client2 ./proxmox_vpc.sh create_vm
+CLIENT_VM_ID=203 CLIENT_HOSTNAME=client3 ./proxmox_vpc.sh create_vm
+</pre></div>
+</div>
+
+
+<h2 id="testing"><a class="heading-anchor" href="#testing">Testing</a></h2>
+<p>Once both VMs are running, verify the setup from inside the client VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the client VM:
+
+## Test connectivity to the router:
+ping -c 3 10.99.0.1
+
+## Test internet access through the router:
+ping -c 3 1.1.1.1
+
+## Test DNS resolution:
+ping -c 3 google.com
+</pre></div>
+</div>
+
+
+<h3 id="verify-isolation"><a class="heading-anchor" href="#verify-isolation">Verify isolation</a></h3>
+<p>The client VM should <strong>not</strong> be able to reach the Proxmox host&rsquo;s
+management network directly. The host&rsquo;s <code>vmbr0</code> address is on a
+different network, and since there is no masquerade or ip_forward on
+the host for the VPC bridge, the client&rsquo;s only path out is through
+the router VM.</p>
+<p>You can verify this by checking the routing table on the client:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the client VM:
+ip route
+</pre></div>
+</div>
+
+
+<p>The default route should point to <code>10.99.0.1</code> (the router VM), not
+to the Proxmox host.</p>
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_vpc.sh">You can download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Create a Virtual Private Cloud (VPC) on Proxmox</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## See https://blog.rymcg.tech/blog/proxmox/09-vpc/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## VPC Bridge configuration:</span>
+</span></span><span style="display:flex;"><span>VPC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#66d9ef">:-</span>vmbr99<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>VPC_HOST_CIDR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VPC_HOST_CIDR<span style="color:#66d9ef">:-</span>10.99.0.2/24<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Router VM configuration:</span>
+</span></span><span style="display:flex;"><span>ROUTER_VM_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#66d9ef">:-</span>200<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>ROUTER_HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#66d9ef">:-</span>router<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>ROUTER_DISK_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ROUTER_DISK_SIZE<span style="color:#66d9ef">:-</span>32G<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>ROUTER_MEMORY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ROUTER_MEMORY<span style="color:#66d9ef">:-</span>2048<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>ROUTER_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>ROUTER_CORES<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>PUBLIC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#66d9ef">:-</span>vmbr0<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Client VM configuration:</span>
+</span></span><span style="display:flex;"><span>CLIENT_VM_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#66d9ef">:-</span>201<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CLIENT_HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#66d9ef">:-</span>client<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CLIENT_DISK_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLIENT_DISK_SIZE<span style="color:#66d9ef">:-</span>32G<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CLIENT_MEMORY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLIENT_MEMORY<span style="color:#66d9ef">:-</span>2048<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>CLIENT_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>CLIENT_CORES<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Shared configuration:</span>
+</span></span><span style="display:flex;"><span>STORAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>STORAGE<span style="color:#66d9ef">:-</span>local-lvm<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_confirm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set +x
+</span></span><span style="display:flex;"><span>    test <span style="color:#e6db74">${</span>YES<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    default<span style="color:#f92672">=</span>$1; prompt<span style="color:#f92672">=</span>$2; question<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;. Proceed?&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prompt<span style="color:#e6db74">}${</span>question<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>dflt<span style="color:#e6db74">}</span><span style="color:#e6db74">): &#34;</span> answer
+</span></span><span style="display:flex;"><span>    answer<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>answer<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>default<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Canceled.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create_vpc<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Creating VPC bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> ...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Check if bridge already exists:</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> pvesh get /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network/<span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> already exists.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --iface <span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --type bridge <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --cidr <span style="color:#e6db74">${</span>VPC_HOST_CIDR<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --autostart <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --comments <span style="color:#e6db74">&#34;VPC private bridge - no NAT&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    pvesh set /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Created VPC bridge: </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  Host management IP: </span><span style="color:#e6db74">${</span>VPC_HOST_CIDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  No masquerade, no ip_forward — routing is handled by the router VM.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create_router<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Creating router VM </span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">) ...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    qm create <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --name <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --sockets <span style="color:#e6db74">${</span>ROUTER_CORES<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --memory <span style="color:#e6db74">${</span>ROUTER_MEMORY<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --bios ovmf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --efidisk0 <span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>:0,efitype<span style="color:#f92672">=</span>4m,pre-enrolled-keys<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --machine q35 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --net0 <span style="color:#e6db74">&#34;virtio,bridge=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --net1 <span style="color:#e6db74">&#34;virtio,bridge=</span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --scsihw virtio-scsi-pci <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --ide2 none,media<span style="color:#f92672">=</span>cdrom <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --onboot <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Allocate a blank disk:</span>
+</span></span><span style="display:flex;"><span>    pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/storage/<span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>/content <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --vmid <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --filename vm-<span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span>-disk-0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --size <span style="color:#e6db74">${</span>ROUTER_DISK_SIZE<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --format raw
+</span></span><span style="display:flex;"><span>    qm set <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> --scsi0 <span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>:vm-<span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span>-disk-0
+</span></span><span style="display:flex;"><span>    qm set <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> --boot order<span style="color:#f92672">=</span>scsi0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Created router VM: </span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  net0: </span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> (internet-facing)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  net1: </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> (VPC private side)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  Disk: </span><span style="color:#e6db74">${</span>ROUTER_DISK_SIZE<span style="color:#e6db74">}</span><span style="color:#e6db74"> on </span><span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Next steps:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  1. Load an OS ISO into the CD/DVD drive via the Proxmox GUI&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  2. Start the VM and install the OS&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  3. Configure NAT/masquerade inside the router (see blog post)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create_vm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Creating client VM </span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">) ...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    qm create <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --name <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --sockets <span style="color:#e6db74">${</span>CLIENT_CORES<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --memory <span style="color:#e6db74">${</span>CLIENT_MEMORY<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --bios ovmf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --efidisk0 <span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>:0,efitype<span style="color:#f92672">=</span>4m,pre-enrolled-keys<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --machine q35 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --net0 <span style="color:#e6db74">&#34;virtio,bridge=</span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --scsihw virtio-scsi-pci <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --ide2 none,media<span style="color:#f92672">=</span>cdrom <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --onboot <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Allocate a blank disk:</span>
+</span></span><span style="display:flex;"><span>    pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/storage/<span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>/content <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --vmid <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --filename vm-<span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span>-disk-0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --size <span style="color:#e6db74">${</span>CLIENT_DISK_SIZE<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>      --format raw
+</span></span><span style="display:flex;"><span>    qm set <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> --scsi0 <span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>:vm-<span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span>-disk-0
+</span></span><span style="display:flex;"><span>    qm set <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> --boot order<span style="color:#f92672">=</span>scsi0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Created client VM: </span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  net0: </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> (VPC only — isolated from internet)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  Disk: </span><span style="color:#e6db74">${</span>CLIENT_DISK_SIZE<span style="color:#e6db74">}</span><span style="color:#e6db74"> on </span><span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Next steps:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  1. Attach an OS ISO via the Proxmox GUI (Hardware &gt; CD/DVD Drive)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  2. Start the VM and install the OS&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  3. Set the default gateway to the router&#39;s VPC IP address&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>create_all<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    create_vpc
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    create_router
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    create_vm
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;=== VPC setup complete ===&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Attach OS ISOs to both VMs via the Proxmox GUI, then start them.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>status<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;=== VPC Bridge ===&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> pvesh get /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network/<span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        pvesh get /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network/<span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span> --output-format<span style="color:#f92672">=</span>yaml 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> does not exist.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;=== Router VM (</span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">) ===&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> qm status <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        qm status <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        qm config <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> | grep -E <span style="color:#e6db74">&#34;^(name|net[0-9]|scsi[0-9]|memory|sockets):&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;VM </span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> does not exist.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;=== Client VM (</span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">) ===&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> qm status <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        qm status <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        qm config <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span> | grep -E <span style="color:#e6db74">&#34;^(name|net[0-9]|scsi[0-9]|memory|sockets):&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;VM </span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> does not exist.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>destroy<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;This will destroy the following resources:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  - VM </span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  - VM </span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  - Bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    _confirm no <span style="color:#e6db74">&#34;Are you sure you want to destroy the VPC&#34;</span> <span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Destroying VPC ...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> VM_ID in <span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span> <span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> qm status <span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            qm stop <span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>            qm destroy <span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span> --purge
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Destroyed VM </span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;VM </span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> does not exist, skipping.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> pvesh get /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network/<span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span> &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        pvesh delete /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network/<span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        pvesh set /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/network
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Destroyed bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Bridge </span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74"> does not exist, skipping.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;VPC destroyed.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $# <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;# Documentation: https://blog.rymcg.tech/blog/proxmox/09-vpc/&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> &lt;command&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Commands:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  create_vpc     Create the VPC private bridge&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  create_router  Create the router VM (two NICs)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  create_vm      Create a client VM (VPC only)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  create_all     Create VPC bridge + router + client&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  status         Show VPC status&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  destroy        Tear down VPC, router, and client&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Environment variables (current values):&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  VPC_BRIDGE=</span><span style="color:#e6db74">${</span>VPC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">  VPC_HOST_CIDR=</span><span style="color:#e6db74">${</span>VPC_HOST_CIDR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  PUBLIC_BRIDGE=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  ROUTER_VM_ID=</span><span style="color:#e6db74">${</span>ROUTER_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">  ROUTER_HOSTNAME=</span><span style="color:#e6db74">${</span>ROUTER_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  ROUTER_DISK_SIZE=</span><span style="color:#e6db74">${</span>ROUTER_DISK_SIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">  ROUTER_MEMORY=</span><span style="color:#e6db74">${</span>ROUTER_MEMORY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  CLIENT_VM_ID=</span><span style="color:#e6db74">${</span>CLIENT_VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">  CLIENT_HOSTNAME=</span><span style="color:#e6db74">${</span>CLIENT_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  CLIENT_DISK_SIZE=</span><span style="color:#e6db74">${</span>CLIENT_DISK_SIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">  CLIENT_MEMORY=</span><span style="color:#e6db74">${</span>CLIENT_MEMORY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  STORAGE=</span><span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $# -gt <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    shift
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Invalid arguments: </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
+
+<h2 id="cleanup"><a class="heading-anchor" href="#cleanup">Cleanup</a></h2>
+<p>To tear down the entire VPC (both VMs and the bridge):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_vpc.sh destroy
+</pre></div>
+</div>
+
+
+<p>This will stop and destroy both VMs, then remove the VPC bridge. You
+will be prompted for confirmation before any resources are deleted.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

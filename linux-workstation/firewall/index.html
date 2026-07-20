@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Firewall · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/kvm-libvirt/" aria-label="Previous: kvm-libvirt" title="prev: kvm-libvirt"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/license/" aria-label="Next: license" title="next: license"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/">linux-workstation</a><ul><li class="lvl1"><a href="#">firewall</a></li><li class="lvl2"><a href="#firewalld">Firewalld</a></li><li class="lvl3"><a href="#don-t-mess-with-it">Don&amp;rsquo;t mess with it</a></li><li class="lvl3"><a href="#default-zone">Default Zone</a></li><li class="lvl3"><a href="#changing-the-default-zone">Changing the default zone</a></li><li class="lvl3"><a href="#zone-files">Zone files</a></li><li class="lvl3"><a href="#public-zone">Public zone</a></li><li class="lvl3"><a href="#test-blocked-ports">Test blocked ports</a></li><li class="lvl3"><a href="#adding-a-temporary-rule">Adding a temporary rule</a></li><li class="lvl3"><a href="#adding-a-permanent-rule">Adding a permanent rule</a></li><li class="lvl3"><a href="#remove-a-permanent-rule">Remove a permanent rule</a></li><li class="lvl3"><a href="#adding-a-new-zone">Adding a new zone</a></li><li class="lvl3"><a href="#promoting-all-temporary-rules-to-permanent-rules">Promoting all temporary rules to permanent rules</a></li><li class="lvl3"><a href="#showing-all-firewall-rules">Showing all firewall rules</a></li><li class="lvl3"><a href="#how-to-query-nftables">How to query nftables</a></li><li class="lvl3"><a href="#how-to-query-json-info-from-nftables">How to query JSON info from nftables</a></li><li class="lvl3"><a href="#read-firewalld-script">Read firewalld script</a></li><li class="lvl3"><a href="#useful-links">Useful links</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/config/">config</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="open">
+                  <a class="active" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg pcur" href="/linux-workstation/firewall/">/firewall</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Firewall</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<h2 id="firewalld"><a class="heading-anchor" href="#firewalld">Firewalld</a></h2>
+<p><a href="https://firewalld.org/">Firewalld</a> is an abstraction of <a href="https://netfilter.org/projects/nftables/index.html">nftables</a> (which is an abstraction of
+<a href="https://netfilter.org/">netfilter</a>). Firewalld is installed on Fedora systems by default, and
+it is what is used to configure the system firewall.</p>
+<p>Firewalld rules are grouped into <em>zones</em>. There can be multiple zones,
+and you may switch between them. There can only be <em>one active</em> zone
+per network interface.</p>
+<h3 id="don-t-mess-with-it"><a class="heading-anchor" href="#don-t-mess-with-it">Don&rsquo;t mess with it</a></h3>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>Fedora Atomic installs a good default zone for workstation use, named
+<code>public</code>. Theres really nothing more for you to do here. <strong>This chapter
+will mostly discuss things you should <em>NOT</em> change on a workstation</strong>,
+but this is a general guide as to how these things work, and how to
+modify the rules if the need should arise.</p>
+<p>If you are running virtual machines, these use a different interface
+<code>virbr0</code>, and so they use a different zone named <code>libvirt</code>. The VM
+routes are configured separately. Read the chapter <a href="/linux-workstation/kvm-libvirt/public-routes">Public routes to
+VMs</a>.</p>
+  </div>
+</div>
+<h3 id="default-zone"><a class="heading-anchor" href="#default-zone">Default Zone</a></h3>
+<p>Firewalld lets you configure multiple zones, which are segmented
+realms for different network activity or locations (for example, there
+are predefined zones for <code>home</code> and <code>work</code>).</p>
+<p>Check out the default zones of the system:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+firewall-cmd --get-active-zones
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+libvirt
+  interfaces: virbr0
+public (default)
+  interfaces: enp4s0
+</pre></div>
+</div>
+
+<p>This shows two active zones, one per interface:</p>
+<ul>
+<li><code>public</code>, which it mentions is the default, is attached to the
+primary network interface <code>enp4s0</code>.</li>
+<li><code>libvirt</code>, which is all the <a href="/linux-workstation/kvm-libvirt/public-routes">libvirt rules defined for VMs</a>, and only
+listening on the libvirt network interface <code>virbr0</code>.</li>
+</ul>
+<h3 id="changing-the-default-zone"><a class="heading-anchor" href="#changing-the-default-zone">Changing the default zone</a></h3>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>As long as you don&rsquo;t need multiple zones, it&rsquo;s recommended to use the
+default <code>public</code> zone. But here is how you can switch zones if you
+need to change it to something else (eg. <code>work</code>):</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ZONE=work
+sudo firewall-cmd --set-default-zone ${ZONE}
+</pre></div>
+</div>
+<p>This change is <strong>permanent</strong>, until you change it again.</p>
+  </div>
+</div>
+<h3 id="zone-files"><a class="heading-anchor" href="#zone-files">Zone files</a></h3>
+<p>On Fedora Atomic, there are two directories that contain firewalld
+zone files:</p>
+<ul>
+<li><code>/etc/firewalld/zones</code> this is the <em>primary</em> zone directory, and it
+takes precedence. The directory is empty by default.</li>
+<li><code>/usr/lib/firewalld/zones/</code> this is the <em>secondary</em> <strong>read-only</strong>
+default zone directory. The files here are loaded only if the
+primary zone directory is missing a file with the same name.</li>
+</ul>
+<h3 id="public-zone"><a class="heading-anchor" href="#public-zone">Public zone</a></h3>
+<p>Look at the default public zone file:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat /usr/lib/firewalld/zones/public.xml
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;zone&gt;
+  &lt;short&gt;Public&lt;/short&gt;
+  &lt;description&gt;For use in public areas. You do not trust the other computers on networks to not harm your computer. Only selected incoming connections are accepted.&lt;/description&gt;
+  &lt;service name="ssh"/&gt;
+  &lt;service name="mdns"/&gt;
+  &lt;service name="dhcpv6-client"/&gt;
+  &lt;forward/&gt;
+&lt;/zone&gt;
+</pre></div>
+</div>
+
+<p>You can find out what these services are by grepping <code>/etc/services</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat /etc/services | grep -P &#34;^(dhcpv6-client|ssh|mdns) &#34; | sort -u
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+dhcpv6-client   546/tcp
+dhcpv6-client   546/udp
+mdns            5353/tcp    # Multicast DNS
+mdns            5353/udp    # Multicast DNS
+ssh             22/sctp     # SSH
+ssh             22/tcp      # The Secure Shell (SSH) Protocol
+ssh             22/udp      # The Secure Shell (SSH) Protocol
+</pre></div>
+</div>
+
+<p>So that means that the only incoming ports that are allowed are:</p>
+<ul>
+<li>SSH (port 22, but only if you enable the SSH service.)</li>
+<li>multicast (broadcast) DNS (port 5353)</li>
+<li>IPV6 link-local DHCP (port 546)</li>
+</ul>
+<h3 id="test-blocked-ports"><a class="heading-anchor" href="#test-blocked-ports">Test blocked ports</a></h3>
+<p>Start a local netcat server on port 5000 (which is blocked by default):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+nc -l 5000
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>Leave the <code>nc</code> server running, and open another terminal window to
+continue on. When you are done testing, press <code>Ctrl-C</code> to quit nc.</p>
+  </div>
+</div>
+<p>From <em>another machine</em>, on the same network, try connecting to the
+blocked port 5000 on the workstations LAN ip address:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">Run this on another machine on the same network</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+</pre></div>
+</div>
+
+
+<p>It should immediately exit (return 1), and print nothing, because the
+port is blocked.</p>
+<h3 id="adding-a-temporary-rule"><a class="heading-anchor" href="#adding-a-temporary-rule">Adding a temporary rule</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo firewall-cmd --add-port=5000/tcp
+</pre></div>
+</div>
+
+
+<p>From <em>another machine</em>, on the same network, try connecting to the now
+open port 5000:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">Run this on another machine on the same network</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+WORKSTATION=192.168.1.10; nc ${WORKSTATION} 5000
+</pre></div>
+</div>
+
+
+<p>This time it should sucessfully connect. You can type some message and
+then press <code>Enter</code>. You should see the message in the original window
+running the <code>nc</code> server. If you see the message, you know the port is
+open.</p>
+<p>This rule is temporary, and will go away when the system reboots.</p>
+<h3 id="adding-a-permanent-rule"><a class="heading-anchor" href="#adding-a-permanent-rule">Adding a permanent rule</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo firewall-cmd --add-port=5000/tcp --permanent
+</pre></div>
+</div>
+
+
+<p>This adds the rule to the permanent config
+<code>/etc/firewalld/zones/public.xml</code>, and it will survive a system
+reboot:</p>
+<div class="box notice notice-info"><div class="label">Excerpt from /etc/firewalld/zones/public.xml</div>
+  <div class="body">
+<p>&lt;port port=&ldquo;5000&rdquo; protocol=&ldquo;tcp&rdquo;&gt;</p>
+  </div>
+</div>
+<h3 id="remove-a-permanent-rule"><a class="heading-anchor" href="#remove-a-permanent-rule">Remove a permanent rule</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo firewall-cmd --remove-port=5000/tcp --permanent
+</pre></div>
+</div>
+
+
+<h3 id="adding-a-new-zone"><a class="heading-anchor" href="#adding-a-new-zone">Adding a new zone</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+NEW_ZONE=foo
+sudo firewall-cmd --permanent --new-zone=${NEW_ZONE}
+</pre></div>
+</div>
+
+
+<h3 id="promoting-all-temporary-rules-to-permanent-rules"><a class="heading-anchor" href="#promoting-all-temporary-rules-to-permanent-rules">Promoting all temporary rules to permanent rules</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo firewall-cmd --runtime-to-permanent
+</pre></div>
+</div>
+
+
+<h3 id="showing-all-firewall-rules"><a class="heading-anchor" href="#showing-all-firewall-rules">Showing all firewall rules</a></h3>
+<p>To show all the netfilter rules formatted for nftables:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo nft list ruleset
+</pre></div>
+</div>
+
+
+<p>To show all the netfilter rules formatted for iptables:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo iptables-save
+sudo ip6tables-save
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>nftables and iptables are equivalent interfaces to the same netfilter
+backend. They show the same rules, just in a different format,
+depending on your preference.</p>
+  </div>
+</div>
+<h3 id="how-to-query-nftables"><a class="heading-anchor" href="#how-to-query-nftables">How to query nftables</a></h3>
+<h4 id="show-all-tables"><a class="heading-anchor" href="#show-all-tables">Show all tables</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo nft list tables
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+table inet firewalld
+table ip filter
+table ip nat
+table ip mangle
+table ip6 filter
+table ip6 nat
+table ip6 mangle
+</pre></div>
+</div>
+
+<h4 id="show-table-chains"><a class="heading-anchor" href="#show-table-chains">Show table chains</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TABLE=filter
+sudo nft list table ip ${TABLE}
+</pre></div>
+</div>
+
+
+<h4 id="show-chain"><a class="heading-anchor" href="#show-chain">Show chain</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TABLE=filter
+CHAIN=FORWARD
+sudo nft list chain ip ${TABLE} ${CHAIN}
+</pre></div>
+</div>
+
+
+<h3 id="how-to-query-json-info-from-nftables"><a class="heading-anchor" href="#how-to-query-json-info-from-nftables">How to query JSON info from nftables</a></h3>
+<h4 id="get-chain"><a class="heading-anchor" href="#get-chain">Get chain</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq &#39;.nftables[] | select(has(&#34;chain&#34;)) | select(.chain.name == &#34;&#39;${CHAIN}&#39;&#34;)&#39;
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+{
+  "chain": {
+    "family": "inet",
+    "table": "firewalld",
+    "name": "filter_IN_public_allow",
+    "handle": 153
+  }
+}
+</pre></div>
+</div>
+
+<h4 id="get-rules-per-chain"><a class="heading-anchor" href="#get-rules-per-chain">Get rules per chain</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq &#39;.nftables[] | select(has(&#34;rule&#34;)) | select(.rule.chain == &#34;&#39;${CHAIN}&#39;&#34;)&#39;
+</pre></div>
+</div>
+
+
+<h4 id="get-destination-ports--dnat--per-chain"><a class="heading-anchor" href="#get-destination-ports--dnat--per-chain">Get destination ports (DNAT) per chain</a></h4>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+CHAIN=filter_IN_public_allow
+sudo nft -j list ruleset | jq -c &#39;.nftables[] | select(has(&#34;rule&#34;)) | select(.rule.chain == &#34;&#39;${CHAIN}&#39;&#34;) | .rule.expr[0] | select(.match.left.payload.field == &#34;dport&#34;) | .match.right&#39;
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+22
+5000
+</pre></div>
+</div>
+
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>This might need better filtering and account for the &ldquo;allow&rdquo; action only.</p>
+  </div>
+</div>
+<h3 id="read-firewalld-script"><a class="heading-anchor" href="#read-firewalld-script">Read firewalld script</a></h3>
+<p><code>/usr/lib/python3.12/site-packages/firewall/core/nftables.py</code></p>
+<h3 id="useful-links"><a class="heading-anchor" href="#useful-links">Useful links</a></h3>
+<ul>
+<li><a href="https://wiki.nftables.org/wiki-nftables/index.php/Netfilter_hooks">Netfilter hooks flowchart</a></li>
+</ul>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

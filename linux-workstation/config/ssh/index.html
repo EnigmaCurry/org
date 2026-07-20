@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>SSH · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/config/emacs-on-fedora/" aria-label="Previous: emacs-on-fedora" title="prev: emacs-on-fedora"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/sudo-2fa/" aria-label="Next: sudo-2FA" title="next: sudo-2FA"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/config/">config</a><ul><li class="lvl1"><a href="#">ssh</a></li><li class="lvl2"><a href="#create-ssh-keys">Create SSH Keys</a></li><li class="lvl3"><a href="#setup-solokey--fido2--hardware-authentication">Setup Solokey (FIDO2) hardware authentication</a></li><li class="lvl3"><a href="#traditional-ssh-keyfiles">Traditional SSH keyfiles</a></li><li class="lvl2"><a href="#setup-the-ssh-agent">Setup the ssh-agent</a></li><li class="lvl2"><a href="#add-your-solokey-identity-per-session">Add your solokey identity per session</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node open">
+                  <a class="" href="/linux-workstation/config/">config</a><ul class="sections"><li><a class="" href="/linux-workstation/config/sway/">sway</a></li><li><a class="" href="/linux-workstation/config/firefox/">firefox</a></li><li><a class="" href="/linux-workstation/config/distrobox/">distrobox</a></li><li><a class="" href="/linux-workstation/config/emacs-on-fedora/">emacs-on-fedora</a></li><li><a class="active" href="/linux-workstation/config/ssh/">ssh</a></li></ul></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg" href="/linux-workstation/config/">/config</a><a class="pseg pcur" href="/linux-workstation/config/ssh/">/ssh</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">SSH</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<p>SSH (secure shell) is a secure networking tool used between a client
+and a server. Using an encrypted network protocol, it can be used to
+securely login to a server remotely, as well as for more advanded
+networking scenarios. Typical use cases for SSH include:</p>
+<ul>
+<li>Access to a server&rsquo;s console shell, remotely.</li>
+<li>Transfer files between the server and client (using <code>rsync</code>, <code>scp</code>,
+or <code>sftp</code>).</li>
+<li>Create network tunnels to access private servers, in both
+directions, either on the server, or on the client.</li>
+<li>Create a server that acts as a bastion or &ldquo;jump&rdquo; host, to be a port
+of entry into a larger private network. SSH is configured to only
+allow authorized client keys access through the bastion host.</li>
+<li>Create a server to act as an HTTP (socks) client proxy, to allow
+remote clients to browse the web, using the server&rsquo;s IP address as
+the origin.</li>
+<li>Remote controlling a Docker server using the <code>docker</code> command line
+client (SSH Docker Context).</li>
+</ul>
+<p>SSH is based upon public key cryptography. Both the client and the
+server need to create their own public/private keypair. Keys can be
+encrypted on disk (eg. <code>~/.ssh/id_ecdsa</code>) or they may also be loaded
+from a USB hardware token. Upon connecting to a remote server for the
+first time, the client asks the user to validate the server&rsquo;s public
+key fingerprint, and then the server&rsquo;s public key is written into a
+file called <code>~/.ssh/known_hosts</code>, which marks the connection as
+trusted from then on. The server also authorizes the client through a
+predefined <code>authorized_keys</code> file. If either side rejects the key
+presented by the other, the connection is unauthorized, and is closed
+immediately.</p>
+<h2 id="create-ssh-keys"><a class="heading-anchor" href="#create-ssh-keys">Create SSH Keys</a></h2>
+<p>This book recommends the use of hardware authentication tokens, like
+the <a href="https://solokeys.com/">Solokey</a>. Traditional SSH keyfiles are also acceptable, but these
+should be considered as a legacy format, as they are less secure.
+Finally, plain password authentication (non-key based) is fully
+deprecated and should <strong>never</strong> be used.</p>
+<h3 id="setup-solokey--fido2--hardware-authentication"><a class="heading-anchor" href="#setup-solokey--fido2--hardware-authentication">Setup Solokey (FIDO2) hardware authentication</a></h3>
+<p>Plug in your Solokey (or compatible hardware) to the USB port.</p>
+<p>Initialize the hardware with a new SSH key:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## You only need to do this one time per solokey!
+ssh-keygen -t ed25519-sk -O resident -O verify-required
+</pre></div>
+</div>
+
+
+<p>You will be required to create/enter a PIN for the Solokey.</p>
+<h3 id="traditional-ssh-keyfiles"><a class="heading-anchor" href="#traditional-ssh-keyfiles">Traditional SSH keyfiles</a></h3>
+<p>The Solokey still has some drawbacks, and cannot be used in all cases.
+Traditional SSH keyfiles are still useful for automated and unattended
+clients. Technically, the solokey is supposed to be able to work in a
+&ldquo;touchless&rdquo; mode, by using the <code>-O no-touch-required</code> option, but I
+never got this to work.</p>
+<p>Key files should be created uniquely for each user and workstation.
+They should never be shared between multiple users or workstations.</p>
+<h4 id="choosing-the-ssh-key-type"><a class="heading-anchor" href="#choosing-the-ssh-key-type">Choosing the SSH key type</a></h4>
+<p>It is recommended to use the newer <code>ed25519</code> key type, which uses the
+latest encryption standards. Your distribution may still use the older
+standard <code>rsa</code> by default (which is acceptable). You should explicitly
+select the key type when creating the keyfile to be sure.</p>
+<p>Some older servers don&rsquo;t accpet <code>ed25519</code> keys, and so in those cases
+you should still create an <code>rsa</code> key as well. Each key type is stored
+in a different file, so its OK to have multiple types installed on the
+same machine.</p>
+<h4 id="create-the-new-ssh-keys"><a class="heading-anchor" href="#create-the-new-ssh-keys">Create the new SSH keys</a></h4>
+<p>Create the <code>rsa</code> key type:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-keygen -t rsa -f ~/.ssh/id_rsa
+</pre></div>
+</div>
+
+
+<p>Create the <code>ed25519</code> key type:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+</pre></div>
+</div>
+
+
+<p>You will be prompted to enter an encryption passphrase for each file,
+which you should definitely not skip!</p>
+<h2 id="setup-the-ssh-agent"><a class="heading-anchor" href="#setup-the-ssh-agent">Setup the ssh-agent</a></h2>
+<p>Because your keyfiles are encrypted with a passphrase, you need to
+enter the passphrase everytime you use it. This is inconvenient, so
+you can run <code>ssh-agent</code> to temporarily store your key/identity in
+memory, and therefore you only need to enter your passphrase once,
+when you log in. (In the case of the solokey, the key is never held in
+memory, but you still need to hold the identity of it in the
+ssh-agent.)</p>
+<p>Keychain is a program that helps you setup the ssh-agent. If you
+installed <a href="/linux-workstation/config/sway/#install-home-manager">Home Manager</a> earlier, <code>keychain</code> is already installed
+via Nix, and is already configured in your <code>~/.bashrc</code>.</p>
+<p>When you open your terminal, you should be automatically prompted to
+enter your SSH passphrase. Once you have entered the passphrase, the
+SSH key will remain resident in memory until you log out.</p>
+<p>Double check that the key has been loaded, run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-add -L
+</pre></div>
+</div>
+
+
+<p>The above should print your public key, loaded into the running
+<code>ssh-agent</code>. Now you should be able to use your key without entering a
+passphrase. Copy the output and upload it to your services as your
+authorized key. For servers, put the key into
+<code>~/.ssh/authorized_keys</code>. For hosted services, like GitHub, paste the
+key into your SSH settings page.</p>
+<h2 id="add-your-solokey-identity-per-session"><a class="heading-anchor" href="#add-your-solokey-identity-per-session">Add your solokey identity per session</a></h2>
+<p>Apparently, keychain does not yet know how to load the Solokey
+automatically. You must add the Solokey to the ssh-agent manually, one
+time, each time you boot your workstation:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Do this to load your Solokey into the ssh-agent:
+ssh-add -K
+</pre></div>
+</div>
+
+
+<p>You will be prompted one time to enter your Solokey pin to unlock the
+key.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 1: Installation and Setup · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/02-networking/" aria-label="Previous: networking" title="prev: networking"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/restic_backup/" aria-label="Next: restic_backup" title="next: restic_backup"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">install</a></li><li class="lvl2"><a href="#hardware-requirements">Hardware requirements</a></li><li class="lvl2"><a href="#download-proxmox-ve-iso-image">Download Proxmox VE .iso image</a></li><li class="lvl2"><a href="#install">Install</a></li><li class="lvl2"><a href="#login-to-the-proxmox-dashboard">Login to the proxmox dashboard</a></li><li class="lvl2"><a href="#setup-ssh-keys-and-secure-properly">Setup SSH keys and secure properly</a></li><li class="lvl2"><a href="#disable-enterprise-features-and-enable-community-repository-optional">Disable Enterprise features and enable Community repository (optional)</a></li><li class="lvl2"><a href="#setup-firewall">Setup Firewall</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="active" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/01-install/">/install</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 1: Installation and Setup</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-04">2022-05-04</time></span>
+  <span>updated <time datetime="2024-10-29">2024-10-29</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>This post will detail how to install proxmox and perform the initial
+configuration. This is an abbreviated supplement to <a href="https://pve.proxmox.com/pve-docs/chapter-pve-installation.html">the main Proxmox
+install
+guide</a></p>
+<h2 id="hardware-requirements"><a class="heading-anchor" href="#hardware-requirements">Hardware requirements</a></h2>
+<ul>
+<li>x86_64 CPU architecture (Intel and/or AMD 64 bit)
+<ul>
+<li>VT-x (hardware acceleration for virtualization)</li>
+<li>VT-d or &ldquo;directed IO&rdquo;, for PCI passthrough support (optional)</li>
+</ul>
+</li>
+<li>Wired ethernet for your LAN/WAN</li>
+</ul>
+<h2 id="download-proxmox-ve-iso-image"><a class="heading-anchor" href="#download-proxmox-ve-iso-image">Download Proxmox VE .iso image</a></h2>
+<p><a href="https://proxmox.com/en/downloads/proxmox-virtual-environment">Download the latest Proxmox VE release
+here</a></p>
+<p>Write the image to a USB drive with <code>dd</code> or a tool like
+<a href="https://unetbootin.github.io/">UNetbootin</a></p>
+<h2 id="install"><a class="heading-anchor" href="#install">Install</a></h2>
+<p>Boot the USB drive installer in the target machine.</p>
+<figure>
+    <img
+        srcset="/img/proxmox/boot_hu147cb096e4dd7e0671e8347afb7e4ebe_69677_480x0_resize_box_3.png 480w,/img/proxmox/boot_hu147cb096e4dd7e0671e8347afb7e4ebe_69677_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/boot.png"
+        alt="The proxmox installer boot menu"
+        width="100%"
+        height="auto"/>
+    <figcaption>The proxmox installer boot menu</figcaption>
+</figure>
+
+<p>Choose <code>Install Proxmox VE (Graphical)</code></p>
+<p>Click the Target <code>Options</code> button, and change the <code>Filesystem</code>:</p>
+<ul>
+<li>If you have one drive, choose <code>zfs (RAID0)</code></li>
+<li>If you have two drives available, choose <code>zfs RAID1</code> mirror</li>
+<li>If you have three or more, choose <code>zfs RAIDZ-1</code>.</li>
+</ul>
+<p>Use this <a href="https://wintelguy.com/zfs-calc.pl">ZFS size calculator</a> to
+play around with various configurations.</p>
+<figure>
+    <img
+        srcset="/img/proxmox/hard-disk-options_hue459a7a5570fdae54dab53bdadcea302_166210_480x0_resize_box_3.png 480w,/img/proxmox/hard-disk-options_hue459a7a5570fdae54dab53bdadcea302_166210_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/hard-disk-options.png"
+        alt="Hard Disk Options, showing zfs RAID0 selected"
+        width="100%"
+        height="auto"/>
+    <figcaption>Hard Disk Options, showing zfs RAID0 selected</figcaption>
+</figure>
+
+<ul>
+<li>Select your Country, Time zone, and Keyboard layout.</li>
+<li>Choose a root password</li>
+<li>Enter <em>your</em> real email address, so that you receive notifications.
+(TODO: Requires setup of SMTP server later)</li>
+</ul>
+<figure>
+    <img
+        srcset="/img/proxmox/network-configuration_hubf8ddac1a320de05208e547f94048039_236269_480x0_resize_box_3.png 480w,/img/proxmox/network-configuration_hubf8ddac1a320de05208e547f94048039_236269_768x0_resize_box_3.png 768w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/network-configuration.png"
+        alt="Network configuration, including Hostname, IP address, Gateway, and DNS"
+        width="100%"
+        height="auto"/>
+    <figcaption>Network configuration, including Hostname, IP address, Gateway, and DNS</figcaption>
+</figure>
+
+<ul>
+<li>
+<p>Choose the primary / management network interface (NIC)</p>
+</li>
+<li>
+<p>Choose the fully qualified domain (host) name</p>
+</li>
+<li>
+<p>Set a <em>static</em> IP address (and reserve it with your LAN DHCP
+server, using the MAC address).</p>
+</li>
+<li>
+<p>Enter the upstream LAN gateway IP address.</p>
+</li>
+<li>
+<p>Enter the upstream LAN DNS server IP address.</p>
+</li>
+<li>
+<p>Finish the installation</p>
+</li>
+<li>
+<p>Reboot</p>
+</li>
+</ul>
+<h2 id="login-to-the-proxmox-dashboard"><a class="heading-anchor" href="#login-to-the-proxmox-dashboard">Login to the proxmox dashboard</a></h2>
+<ul>
+<li>Once the machine has rebooted, you will see the URL (and IP
+address) to access the dashboard printed on the console.</li>
+<li>Load the URL in your web browser, login with the username <code>root</code>
+and the password you chose during installation.</li>
+</ul>
+<h2 id="setup-ssh-keys-and-secure-properly"><a class="heading-anchor" href="#setup-ssh-keys-and-secure-properly">Setup SSH keys and secure properly</a></h2>
+<p>SSH is enabled by default, and you can login with the username <code>root</code>
+and the password is the password you chose during install. Because
+passwords are less secure than SSH keys, that&rsquo;s the next step: to
+install your SSH key, and disable password authentication.</p>
+<p>Create an SSH host entry in your workstation&rsquo;s <code>$HOME/.ssh/config</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+PROXMOX_IP_ADDRESS=192.168.X.X \
+PROXMOX_HOST=pve \
+cat &lt;&lt; EOF &gt;&gt; ~/.ssh/config
+
+Host ${PROXMOX_HOST}
+     Hostname ${PROXMOX_IP_ADDRESS}
+     User root
+
+EOF
+</pre></div>
+</div>
+
+
+<p>(Change the Hostname <code>192.168.X.X</code> to be the IP address of your Proxmox host.)</p>
+<p>If you have not created an SSH identity on this workstation, you will need to
+run <code>ssh-keygen</code>.</p>
+<ul>
+<li>From your workstation, run <code>ssh-copy-id pve</code>, which will ask you to
+confirm the ssh key fingerprint, and for your remote password (chosen during
+install) to login to the Proxmox server via SSH. It will copy your SSH key to
+the server&rsquo;s <code>authorized_keys</code> file, which will allow all future logins to be
+by key based authentication, instead of by password.</li>
+<li>SSH to the Proxmox host, run <code>ssh pve</code>. Ensure that no password is
+required (except perhaps for unlocking your key file). You will now be in the
+root account of Proxmox, be careful!</li>
+<li>You need to edit the <code>/etc/ssh/sshd_config</code> file. The text editors <code>nano</code> and
+<code>vi</code> are installed by default, or you can install other editors, for example
+<code>apt install emacs-nox</code>.</li>
+<li>Disable password authentication - search for the line that says
+<code>PasswordAuthentication yes</code>, which will be commented out with <code>#</code>. Remove
+the <code>#</code> to un-comment the line, and change the <code>yes</code> to a <code>no</code>.</li>
+<li>Save <code>/etc/ssh/sshd_config</code> and close the editor.</li>
+<li>Restart ssh, run: <code>systemctl restart sshd</code></li>
+<li>Exit the SSH session, and test logging in and out again still works, using
+your SSH key.</li>
+<li>To test that <code>PasswordAuthentication</code> is really turned off, you can attempt
+to SSH again, with a bogus username, one that you know does not really exist:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>$ ssh hunter1@pve
+</span></span><span style="display:flex;"><span>hunter1@192.168.122.177: Permission denied (publickey).
+</span></span></code></pre></div><p>The attempt should immediately fail and say <code>Permission denied (publickey)</code>, <em>and if it
+also does not ask you for a password</em>, then you have successfully turned off
+password authentication.</p>
+<h2 id="disable-enterprise-features-and-enable-community-repository-optional"><a class="heading-anchor" href="#disable-enterprise-features-and-enable-community-repository-optional">Disable Enterprise features and enable Community repository (optional)</a></h2>
+<figure>
+    <img
+        srcset="/img/proxmox/no-valid-subscription_huea490ee18e960dd4bad6fffc40e4a321_21740_480x0_resize_box_3.png 480w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/proxmox/no-valid-subscription.png"
+        alt="Nag screen which says No valid subscription"
+        width="100%"
+        height="auto"/>
+    <figcaption>Nag screen which says No valid subscription</figcaption>
+</figure>
+
+<p>By default, Proxmox expects that you are an enterprise, and that you have an
+enterprise license for Proxmox. If you do, skip this section. However, you may
+also use the Proxmox community version, without a license (and it is the same
+.iso image installer and method for both versions.) To switch between these
+versions, you must use different apt package repositories.</p>
+<p>If you wish to use Proxmox exclusively with the Community,
+non-enterprise version, run this as root:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Backup existing sources list for Proxmox
+cp /etc/apt/sources.list.d/pve-enterprise.list \
+  /etc/apt/sources.list.d/pve-enterprise.list.bak
+
+## Disable enterprise repository by commenting it out
+sed -i &#39;s/^deb/#deb/&#39; /etc/apt/sources.list.d/pve-enterprise.list
+sed -i &#39;s/^deb/#deb/&#39; /etc/apt/sources.list.d/ceph.list
+
+## Add the no-subscription community repository
+echo &#34;deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription&#34; &gt; \
+  /etc/apt/sources.list.d/pve-no-subscription.list
+
+## Update the package lists
+apt update
+
+## Clear the cache to make the changes effective immediately
+systemctl restart pveproxy.service
+</pre></div>
+</div>
+
+
+<h2 id="setup-firewall"><a class="heading-anchor" href="#setup-firewall">Setup Firewall</a></h2>
+<p>Proxmox has a 3-tier layered firewall:</p>
+<ul>
+<li>Datacenter - priority 3 - most general</li>
+<li>Node - priority 2 - node specific</li>
+<li>VM / Container - priority 1 - most specific</li>
+</ul>
+<p>By default the firewall is turned off. To set everything up, run the
+<code>proxmox_firewall.sh</code> script, which will reset the firewall rules,
+create basic rules for SSH and Web console, and enable both the Node
+and Datacenter firewalls:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_firewall.sh
+
+chmod &#43;x proxmox_firewall.sh
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_firewall.sh
+</pre></div>
+</div>
+
+
+<ul>
+<li>This script will delete all of the existing firewall rules.</li>
+<li>Confirm the prompt.</li>
+<li>Enter the management interface: <code>vmbr0</code>.</li>
+<li>Enter the allowed subnet for managers: <code>0.0.0.0/0</code> (the default
+allows access to anyone connected through the management interface,
+but you might want to further restrict this.)</li>
+<li>It will enable the firewalls and create new rules for SSH (port 22)
+and the web console (port 8006).</li>
+<li>You may re-run the script. It is idempotent.</li>
+</ul>
+<pre tabindex="0"><code class="language-stdout" data-lang="stdout">? This will reset the Node and Datacenter firewalls
+  and delete all existing rules.. Proceed? (y/N): y
+
+Enter the management interface (e.g., vmbr0)
+: vmbr0
+Which subnet is allowed to access the management interface?
+: 0.0.0.0/0
+
+Deleting node firewall rule at position 2.
+Deleting node firewall rule at position 1.
+Deleting node firewall rule at position 0.
+Allowing ICMP ping response from the management interface.
+Allowing access to SSH (22) for the management interface.
+Allowing access to Proxmox console (8006) for the management interface.
+Enabling Node firewall.
+Enabling Datacenter firewall.
+</code></pre><h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_firewall.sh">You can download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">## Reset and configure the Proxmox firewall.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -eo pipefail
+</span></span><span style="display:flex;"><span>stderr<span style="color:#f92672">(){</span> echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> &gt;/dev/stderr; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>error<span style="color:#f92672">(){</span> stderr <span style="color:#e6db74">&#34;Error: </span>$@<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>cancel<span style="color:#f92672">(){</span> stderr <span style="color:#e6db74">&#34;Canceled.&#34;</span>; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>fault<span style="color:#f92672">(){</span> test -n <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> error $1; stderr <span style="color:#e6db74">&#34;Exiting.&#34;</span>; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>confirm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local default<span style="color:#f92672">=</span>$1; local prompt<span style="color:#f92672">=</span>$2; local question<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;. Proceed?&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ok&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -e -p <span style="color:#e6db74">$&#39;\e[32m?\e[0m &#39;</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prompt<span style="color:#e6db74">}${</span>question<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>dflt<span style="color:#e6db74">}</span><span style="color:#e6db74">): &#34;</span> answer
+</span></span><span style="display:flex;"><span>    answer<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>answer<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>default<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ok&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ask<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local __prompt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __var<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; local __default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        read -e -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__prompt<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$&#39;\x0a\e[32m:\e[0m &#39;</span> -i <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        export <span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>!__var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> break
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>check_var<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local __missing<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>    local __vars<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> __var in <span style="color:#e6db74">${</span>__vars<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>!__var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            error <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>__var<span style="color:#e6db74">}</span><span style="color:#e6db74"> variable is missing.&#34;</span>
+</span></span><span style="display:flex;"><span>            __missing<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>__missing<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> true <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>check_num<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local var<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    check_var var
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>!var<span style="color:#e6db74">}</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>0-9<span style="color:#f92672">]</span>+$ <span style="color:#f92672">]]</span> ; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        fault <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>var<span style="color:#e6db74">}</span><span style="color:#e6db74"> is not a number: &#39;</span><span style="color:#e6db74">${</span>!var<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>validate_ip_address <span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#thanks https://stackoverflow.com/a/21961938</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> | grep -o -E  <span style="color:#e6db74">&#39;(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)&#39;</span> &gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>add_management_rule_macro<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    MACRO<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    check_var HOSTNAME MACRO MANAGER_INTERFACE MANAGER_SUBNET PUBLIC_IP_ADDRESS
+</span></span><span style="display:flex;"><span>    pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/firewall/rules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --action ACCEPT --type in --macro <span style="color:#e6db74">${</span>MACRO<span style="color:#e6db74">}</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --iface <span style="color:#e6db74">${</span>MANAGER_INTERFACE<span style="color:#e6db74">}</span> --source <span style="color:#e6db74">${</span>MANAGER_SUBNET<span style="color:#e6db74">}</span> --dest <span style="color:#e6db74">${</span>PUBLIC_IP_ADDRESS<span style="color:#e6db74">}</span> --enable <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --comment <span style="color:#e6db74">&#34;Allow </span><span style="color:#e6db74">${</span>MACRO^^<span style="color:#e6db74">}</span><span style="color:#e6db74"> from </span><span style="color:#e6db74">${</span>MANAGER_SUBNET<span style="color:#e6db74">}</span><span style="color:#e6db74"> on </span><span style="color:#e6db74">${</span>MANAGER_INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74"> for </span><span style="color:#e6db74">${</span>PUBLIC_IP_ADDRESS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>add_management_rule_port<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    PORT<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    check_var HOSTNAME MANAGER_INTERFACE MANAGER_SUBNET PUBLIC_IP_ADDRESS
+</span></span><span style="display:flex;"><span>    check_num PORT
+</span></span><span style="display:flex;"><span>    pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/firewall/rules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --action ACCEPT --type in --dport <span style="color:#e6db74">${</span>PORT<span style="color:#e6db74">}</span> --proto tcp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --iface <span style="color:#e6db74">${</span>MANAGER_INTERFACE<span style="color:#e6db74">}</span> --source <span style="color:#e6db74">${</span>MANAGER_SUBNET<span style="color:#e6db74">}</span> --dest <span style="color:#e6db74">${</span>PUBLIC_IP_ADDRESS<span style="color:#e6db74">}</span> --enable <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --comment <span style="color:#e6db74">&#34;Allow from </span><span style="color:#e6db74">${</span>MANAGER_SUBNET<span style="color:#e6db74">}</span><span style="color:#e6db74"> on </span><span style="color:#e6db74">${</span>MANAGER_INTERFACE<span style="color:#e6db74">}</span><span style="color:#e6db74"> to </span><span style="color:#e6db74">${</span>PUBLIC_IP_ADDRESS<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>reset_firewall<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    confirm no <span style="color:#e6db74">&#34;This will reset the Node and Datacenter firewalls and delete all existing rules.&#34;</span>
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Enter the management interface (e.g., vmbr0)&#34;</span> MANAGER_INTERFACE vmbr0
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Which subnet is allowed to access the management interface?&#34;</span> MANAGER_SUBNET 0.0.0.0/0
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    PUBLIC_IP_ADDRESS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip -4 addr show <span style="color:#e6db74">${</span>MANAGER_INTERFACE<span style="color:#e6db74">}</span> | grep -oP <span style="color:#e6db74">&#39;(?&lt;=inet\s)\d+(\.\d+){3}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    validate_ip_address <span style="color:#e6db74">${</span>PUBLIC_IP_ADDRESS<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Delete existing Datacenter rules</span>
+</span></span><span style="display:flex;"><span>    RULE_POSITIONS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>pvesh get /cluster/firewall/rules --output-format json | jq -r <span style="color:#e6db74">&#39;.[].pos&#39;</span> | sort -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Iterate over each rule position and delete the rule</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> POS in <span style="color:#e6db74">${</span>RULE_POSITIONS<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Deleting cluster firewall rule at position </span><span style="color:#e6db74">${</span>POS<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>        pvesh delete <span style="color:#e6db74">&#34;/cluster/firewall/rules/</span><span style="color:#e6db74">${</span>POS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Delete existing Node rules</span>
+</span></span><span style="display:flex;"><span>    RULE_POSITIONS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>pvesh get /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/firewall/rules --output-format json | jq -r <span style="color:#e6db74">&#39;.[].pos&#39;</span> | sort -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Iterate over each rule position and delete the rule</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> POS in <span style="color:#e6db74">${</span>RULE_POSITIONS<span style="color:#e6db74">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Deleting node firewall rule at position </span><span style="color:#e6db74">${</span>POS<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>        pvesh delete <span style="color:#e6db74">&#34;/nodes/</span><span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">/firewall/rules/</span><span style="color:#e6db74">${</span>POS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Allowing ICMP ping response from the management interface.&#34;</span>
+</span></span><span style="display:flex;"><span>    add_management_rule_macro ping
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Allowing access to SSH (22) for the management interface.&#34;</span>
+</span></span><span style="display:flex;"><span>    add_management_rule_macro ssh
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Allowing access to Proxmox console (8006) for the management interface.&#34;</span>
+</span></span><span style="display:flex;"><span>    add_management_rule_port <span style="color:#ae81ff">8006</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Enabling Node firewall.&#34;</span>
+</span></span><span style="display:flex;"><span>    pvesh set /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/firewall/options --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Enabling Datacenter firewall.&#34;</span>
+</span></span><span style="display:flex;"><span>    pvesh set /cluster/firewall/options --policy_in DROP --policy_out ACCEPT
+</span></span><span style="display:flex;"><span>    pvesh set /cluster/firewall/options --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>reset_firewall
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

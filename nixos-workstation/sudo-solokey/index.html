@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Sudo with a Solokey · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/nixos-workstation/profiles/" aria-label="Previous: profiles" title="prev: profiles"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/" aria-label="Next: portable-docker" title="next: portable-docker"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/nixos-workstation/">nixos-workstation</a><ul><li class="lvl1"><a href="#">sudo-solokey</a></li><li class="lvl2"><a href="#make-the-key-usable">Make the key usable</a></li><li class="lvl2"><a href="#set-a-device-pin">Set a device PIN</a></li><li class="lvl2"><a href="#register-your-solokeys">Register your Solokeys</a></li><li class="lvl2"><a href="#the-optional-sudo-profile">The optional sudo profile</a></li><li class="lvl2"><a href="#enable-it">Enable it</a></li><li class="lvl3"><a href="#test-sudo">Test sudo</a></li><li class="lvl2"><a href="#unlocking-sudo-remotely-over-ssh">Unlocking sudo remotely over SSH</a></li><li class="lvl3"><a href="#create-and-declare-a-hardware-backed-ssh-key">Create and declare a hardware-backed SSH key</a></li><li class="lvl3"><a href="#turn-on-agent-auth">Turn on agent auth</a></li><li class="lvl3"><a href="#how-it-layers-on-the-modes">How it layers on the modes</a></li><li class="lvl2"><a href="#turning-it-off">Turning it off</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/nixos-workstation/">nixos-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/nixos-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/nixos-workstation/install-choice/">install-choice</a></li><li class="node ">
+                  <a class="" href="/nixos-workstation/build-iso/">build-iso</a></li><li class="">
+                  <a class="" href="/nixos-workstation/making-changes/">making-changes</a></li><li class="">
+                  <a class="" href="/nixos-workstation/profiles/">profiles</a></li><li class="open">
+                  <a class="active" href="/nixos-workstation/sudo-solokey/">sudo-solokey</a></li></ul></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/nixos-workstation/">/nixos-workstation</a><a class="pseg pcur" href="/nixos-workstation/sudo-solokey/">/sudo-solokey</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Sudo with a Solokey</a></h1>
+
+
+<p>A <a href="https://solokeys.com/">Solokey</a> (or any FIDO2/U2F security key) can authenticate <code>sudo</code>: you
+touch the key instead of typing a password. This chapter sets that up on
+NixOS, with the key as the <strong>only</strong> factor &ndash; a press is required and no
+password is asked.</p>
+<p>The <a href="/linux-workstation/sudo-2fa">Linux Workstation book covers Solokeys in depth</a> &ndash; where to buy
+them, the v1 vs. v2 split, firmware updates, and the imperative Fedora
+setup. That background applies here unchanged, so this chapter does not
+repeat it. What <em>is</em> different on NixOS is the wiring: on Fedora you
+hand-edit <code>/etc/u2f_authorized_keys</code> and <code>/etc/pam.d/sudo</code> and hope you
+remember why later. On NixOS you <strong>declare</strong> the key mappings and the PAM
+rule in <code>config.nix</code>, the system regenerates <code>/etc/pam.d</code> for you, and
+the whole thing is reproducible from your repo on the next machine.</p>
+<p>The <code>config.nix</code> block below is configurable for <strong>three modes</strong>, and you
+pick one by uncommenting a line or two:</p>
+<ul>
+<li><strong>Mode 1 &ndash; key only</strong> (this chapter&rsquo;s default): a key press is <strong>required</strong>
+and <strong>no password</strong> is asked. This swaps your password for the key as a
+single factor &ndash; not stronger than a password on its own, but it moves
+<code>sudo</code> from something you <em>know</em> to something you <em>hold</em>. The trade-off
+is real: if you lose <em>every</em> registered key you can no longer <code>sudo</code> at
+all (escape hatches below).</li>
+<li><strong>Mode 2 &ndash; key or password</strong>: touch the key, or fall back to typing your
+password. The most convenient option &ndash; you can never be locked out, but
+also the weakest, since either factor alone is enough.</li>
+<li><strong>Mode 3 &ndash; key and password</strong>: real two-factor <code>sudo</code>, both required.
+The strongest option, at the cost of doing both every time.</li>
+</ul>
+<p>The whole thing is offered as a <strong>commented-out block</strong> in <code>config.nix</code>:
+a placeholder you fill in with your registered key and uncomment when
+you are ready. Until then it does nothing.</p>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>Mode 1 removes the password from <code>sudo</code> entirely, so a lost or broken key
+matters. Before you commit to it: register a <strong>backup</strong> key (below), make
+sure you know the <strong>root</strong> password (<code>su -</code> still uses it and is unaffected
+by this change &ndash; it is your way back in), and test with <code>admin test</code>
+rather than <code>admin upgrade</code> so a reboot reverts it. As a last resort you
+can always boot the <strong>previous generation</strong> from the boot menu, which still
+has password <code>sudo</code>.</p>
+  </div>
+</div>
+<h2 id="make-the-key-usable"><a class="heading-anchor" href="#make-the-key-usable">Make the key usable</a></h2>
+<p>Before <code>sudo</code> can use the key, your <strong>user</strong> needs to be able to talk to
+the device &ndash; to set its PIN and to register it. That means two things in
+<code>config.nix</code>: the FIDO2 command-line tools, and the udev rules that let a
+non-root user open the device node.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span><span style="color:#75715e"># FIDO2 / Solokey tooling and device access.</span>
+</span></span><span style="display:flex;"><span>environment<span style="color:#f92672">.</span>systemPackages <span style="color:#960050;background-color:#1e0010">=</span> [
+</span></span><span style="display:flex;"><span>  pkgs<span style="color:#f92672">.</span>libfido2    <span style="color:#75715e"># fido2-token: set the device PIN, list devices</span>
+</span></span><span style="display:flex;"><span>  pkgs<span style="color:#f92672">.</span>pam_u2f     <span style="color:#75715e"># pamu2fcfg: register a key into the authfile format</span>
+</span></span><span style="display:flex;"><span>  pkgs<span style="color:#f92672">.</span>solo2-cli   <span style="color:#75715e"># solo2: firmware updates for Solokey v2 (optional)</span>
+</span></span><span style="display:flex;"><span>];
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># udev rules so your normal user (not just root) can reach the key --</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># needed for registration here, and for SSH and browser WebAuthn too.</span>
+</span></span><span style="display:flex;"><span>services<span style="color:#f92672">.</span>udev<span style="color:#f92672">.</span>packages <span style="color:#960050;background-color:#1e0010">=</span> [ pkgs<span style="color:#f92672">.</span>libfido2 pkgs<span style="color:#f92672">.</span>solo2-cli ];
+</span></span></code></pre></div><p>Add that to <code>~/nixos/config.nix</code>, then commit and apply:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ~/nixos commit -am &#34;Add FIDO2 tooling and udev rules&#34;
+admin upgrade
+</pre></div>
+</div>
+
+
+<p>Unplug and replug the key after the rebuild so the new udev rules apply
+to it.</p>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>These two lines are worth keeping enabled on their own, even if you
+never wire up <code>sudo</code>: they are what make the Solokey usable as your
+normal user for <strong>SSH</strong> keys and for <strong>WebAuthn</strong> logins in the browser.
+Only the PAM rule further down is the optional <code>sudo</code> piece.</p>
+  </div>
+</div>
+<h2 id="set-a-device-pin"><a class="heading-anchor" href="#set-a-device-pin">Set a device PIN</a></h2>
+<p>Set a PIN on the device so a stolen key is useless on its own. Find the
+device node:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+fido2-token -L
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+/dev/hidraw0: vendor=0x1209, product=0xbeee (SoloKeys Solo 2)
+</pre></div>
+</div>
+
+<p>Then set the PIN on that device (<code>/dev/hidraw0</code> here):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+fido2-token -C /dev/hidraw0
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>This is the same PIN step as the <a href="/linux-workstation/sudo-2fa">Linux Workstation book</a>. If your
+Solokey v2 firmware is out of date, update it first with <code>solo2 update</code>
+(installed above) &ndash; see that book for the full firmware procedure.</p>
+  </div>
+</div>
+<h2 id="register-your-solokeys"><a class="heading-anchor" href="#register-your-solokeys">Register your Solokeys</a></h2>
+<p><code>pamu2fcfg</code> reads a key and prints one line in the <code>pam_u2f</code> <em>authfile</em>
+format. We will capture that line (or lines) now and paste it into
+<code>config.nix</code> in the next step.</p>
+<p>Register <strong>at least two</strong> keys &ndash; a primary and a backup &ndash; so losing one
+key does not cost you the convenience.</p>
+<p>Plug in the <strong>primary</strong> key and run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pamu2fcfg
+</pre></div>
+</div>
+
+
+<p>It prompts for the PIN, then asks you to touch the key. It prints a line
+beginning with your username:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+ryan:hQ2k...long...base64...,es256,+presence
+</pre></div>
+</div>
+
+<p>Now unplug it, plug in the <strong>backup</strong> key, and run <code>pamu2fcfg</code> again &ndash;
+this time with <code>-n</code>, which omits the username so the output can be
+appended to the same user&rsquo;s line:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pamu2fcfg -n
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+:tZ9p...long...base64...,es256,+presence
+</pre></div>
+</div>
+
+<p>Combine them into a <strong>single line</strong> for your user, with each key separated
+by a colon:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence
+</pre></div>
+</div>
+
+<p>That one line is what goes into <code>config.nix</code>.</p>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>This mapping contains only <strong>public</strong> key handles, not a secret &ndash; it is
+the FIDO2 equivalent of an <code>authorized_keys</code> entry. It is safe to commit
+to your (private) <code>~/nixos</code> repo.</p>
+<p>By default <code>pamu2fcfg</code> and <code>pam_u2f</code> both derive their origin from
+<code>pam://$HOSTNAME</code>, so the registration keeps working across rebuilds and
+reinstalls <strong>as long as the hostname stays the same</strong>. If you change the
+hostname, re-register.</p>
+  </div>
+</div>
+<h2 id="the-optional-sudo-profile"><a class="heading-anchor" href="#the-optional-sudo-profile">The optional sudo profile</a></h2>
+<p>Here is the block to add to <code>~/nixos/config.nix</code>. Paste it in
+<strong>commented out</strong>, as a placeholder &ndash; it does nothing until you uncomment
+it and drop in your registered key:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span><span style="color:#75715e"># --- Optional: Solokey (FIDO2) authentication for sudo -----------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Register your key(s) first (see &#34;Register your Solokeys&#34;), paste the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pamu2fcfg line below, uncomment this block, then pick ONE mode.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># environment.etc.&#34;u2f_keys&#34;.text = &#39;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ryan:hQ2k...,es256,+presence:tZ9p...,es256,+presence</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># &#39;&#39;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.u2f.settings = { cue = true; authfile = &#34;/etc/u2f_keys&#34;; };</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># # Turn u2f on for the sudo PAM service ONLY (not login, ssh, greetd):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.services.sudo.u2fAuth = true;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --- Pick ONE mode ----------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mode 1 -- KEY ONLY: a key press is required; no password is asked.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   (Strongest. Lose every key =&gt; no more sudo; mind the warning above.)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.u2f.control            = &#34;sufficient&#34;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.services.sudo.unixAuth = false;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mode 2 -- KEY OR PASSWORD: touch the key, or fall back to the password.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   (Most convenient; you can never lock yourself out.)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.u2f.control            = &#34;sufficient&#34;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mode 3 -- KEY AND PASSWORD: real two-factor (both required).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># security.pam.u2f.control            = &#34;required&#34;;</span>
+</span></span></code></pre></div><p>What each piece does:</p>
+<ul>
+<li><code>environment.etc.&quot;u2f_keys&quot;</code> writes your mapping declaratively to
+<code>/etc/u2f_keys</code>. No hand-editing of <code>/etc</code>; rebuild and it is there.</li>
+<li><code>security.pam.u2f.settings.authfile</code> points <code>pam_u2f</code> at that file
+(the default is a per-user <code>~/.config/Yubico/u2f_keys</code>, which is not
+reproducible &ndash; a central file in your repo is).</li>
+<li><code>cue = true</code> prints the <code>Please touch the device</code> prompt; without it
+<code>sudo</code> just hangs silently waiting for a touch.</li>
+<li><code>security.pam.services.sudo.u2fAuth = true</code> scopes u2f to the <code>sudo</code>
+service. We set it <strong>per-service</strong> on purpose.</li>
+<li><code>security.pam.services.sudo.unixAuth = false</code> (Mode 1 only) removes the
+password module from <code>sudo</code>, leaving the key as the only way in.</li>
+</ul>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p><strong>Why Mode 1 keeps <code>control = &quot;sufficient&quot;</code> and does not use <code>required</code>.</strong>
+On NixOS the <code>sudo</code> auth stack ends in <code>pam_deny</code> (always fails), and a
+<code>sufficient</code> module that succeeds is what short-circuits to success
+<em>before</em> reaching it. With the password removed (<code>unixAuth = false</code>), the
+key is the only module that can grant success &ndash; so <code>sufficient</code> makes the
+key <strong>de facto required</strong> while still short-circuiting. If you instead set
+<code>control = &quot;required&quot;</code> with no password module, the key would pass but
+control would fall through to <code>pam_deny</code>, and <code>sudo</code> would be denied even
+with a correct touch. So: Mode 1 is <code>sufficient</code> + <code>unixAuth = false</code>,
+<strong>not</strong> <code>required</code>.</p>
+  </div>
+</div>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>Do <strong>not</strong> reach for <code>security.pam.u2f.enable = true</code>. That global switch
+turns <code>pam_u2f</code> on for <em>every</em> PAM service at once &ndash; login, <code>su</code>, the
+greeter, even <code>sshd</code> &ndash; because each service&rsquo;s u2f flag defaults to it.
+Enabling it per-service with <code>security.pam.services.sudo.u2fAuth</code> keeps
+the key bound to <code>sudo</code> and nothing else. The <code>control</code> and <code>settings</code>
+under <code>security.pam.u2f</code> are just shared configuration; they do not, by
+themselves, switch u2f on anywhere.</p>
+  </div>
+</div>
+<h2 id="enable-it"><a class="heading-anchor" href="#enable-it">Enable it</a></h2>
+<p>When you are ready, uncomment the block, paste your real mapping line
+into the <code>u2f_keys</code> text, uncomment the <strong>one mode</strong> you want, then test it
+<strong>without</strong> making it permanent:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ~/nixos commit -am &#34;Enable Solokey sudo authentication&#34;
+admin test
+</pre></div>
+</div>
+
+
+<p><code>admin test</code> builds and activates the change but does <strong>not</strong> add it to
+the boot menu, so if something is wrong a reboot returns you to the
+previous generation. Open a <strong>new terminal</strong> and test <code>sudo</code> (see below).
+Once you are happy, make it permanent:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+admin upgrade
+</pre></div>
+</div>
+
+
+<h3 id="test-sudo"><a class="heading-anchor" href="#test-sudo">Test sudo</a></h3>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p><code>sudo</code> caches a successful authentication per terminal for a few
+minutes, so always test in a <strong>fresh terminal</strong> (or run <code>sudo -k</code> first to
+clear the cache).</p>
+  </div>
+</div>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo -k; sudo true
+</pre></div>
+</div>
+
+
+<p>With the key plugged in you are prompted to touch it, and on a touch
+<code>sudo</code> succeeds with <strong>no password</strong> asked at all:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Please touch the device.
+</pre></div>
+</div>
+
+<p>Now unplug the key and try again in a fresh terminal. In <strong>Mode 1</strong> there
+is no password fallback, so <code>sudo</code> is simply denied:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Please touch the device.
+sudo: no authentication methods succeeded
+</pre></div>
+</div>
+
+<p>This is the moment your escape hatches matter: <code>su -</code> (still password,
+unchanged by this) gets you a root shell, and the <strong>previous generation</strong>
+in the boot menu still has password <code>sudo</code>. In <strong>Mode 2</strong> the same test
+falls back to the password prompt instead; in <strong>Mode 3</strong> you are asked for
+the password <em>after</em> the touch.</p>
+<h2 id="unlocking-sudo-remotely-over-ssh"><a class="heading-anchor" href="#unlocking-sudo-remotely-over-ssh">Unlocking sudo remotely over SSH</a></h2>
+<p>Everything above wires <code>sudo</code> to <code>pam_u2f</code>, which talks to a FIDO2 device
+on the <strong>local</strong> USB bus. That is fine at the machine&rsquo;s own keyboard, but
+this book builds toward a <strong>headless</strong> box you drive over SSH &ndash; and
+<code>pam_u2f</code> has no way to reach a key plugged into your laptop. Run <code>sudo</code>
+in an SSH session and it looks for a Solokey in the <strong>server</strong>, not in your
+hand, so for a headless host <code>pam_u2f</code> is effectively ruled out as a
+remote <code>sudo</code> factor.</p>
+<p>The fix is a different module, <code>pam_ssh_agent_auth</code>, which authenticates
+against a key in your <strong>forwarded SSH agent</strong> instead of a local device.
+Pair it with a FIDO2-backed SSH key and the touch happens on the Solokey
+plugged into your <strong>laptop</strong> (the SSH client): <code>sudo</code> on the box asks your
+forwarded agent to sign a challenge, your local key blinks, you touch it,
+and <code>sudo</code> succeeds &ndash; with no key in the server at all.</p>
+<h3 id="create-and-declare-a-hardware-backed-ssh-key"><a class="heading-anchor" href="#create-and-declare-a-hardware-backed-ssh-key">Create and declare a hardware-backed SSH key</a></h3>
+<p>On your <strong>laptop</strong>, with the Solokey plugged in, create an <code>ed25519-sk</code> key
+&ndash; the <code>-sk</code> (&ldquo;security key&rdquo;) private half lives on the Solokey and
+cannot be copied off it:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-keygen -t ed25519-sk -C &#34;ryan@laptop&#34;
+</pre></div>
+</div>
+
+
+<p>(This uses the <code>libfido2</code> tooling from the <em>Make the key usable</em> step &ndash;
+another reason to keep those two lines enabled even if you skip the local
+<code>pam_u2f</code> setup.)</p>
+<p>Then declare the <strong>public</strong> key on the box. It has to live somewhere root
+owns: <code>pam_ssh_agent_auth</code> deliberately ignores <code>~/.ssh/authorized_keys</code>
+(a user-writable file there would let any process running as you forge
+its own <code>sudo</code> access), and NixOS goes further &ndash; <code>authorizedKeysFiles</code>
+defaults to just <code>/etc/ssh/authorized_keys.d/%u</code> and <strong>asserts</strong> against any
+home-directory path. The declarative home for it is your user&rsquo;s
+<code>openssh.authorizedKeys</code>, which NixOS writes into that root-owned
+directory:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span>users<span style="color:#f92672">.</span>users<span style="color:#f92672">.</span>ryan<span style="color:#f92672">.</span>openssh<span style="color:#f92672">.</span>authorizedKeys<span style="color:#f92672">.</span>keys <span style="color:#960050;background-color:#1e0010">=</span> [
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;sk-ssh-ed25519@openssh.com AAAA... ryan@laptop&#34;</span>
+</span></span><span style="display:flex;"><span>];
+</span></span></code></pre></div><p>That is the same list that already authorizes your SSH <strong>login</strong>, so the
+one key both logs you in and unlocks <code>sudo</code>.</p>
+<h3 id="turn-on-agent-auth"><a class="heading-anchor" href="#turn-on-agent-auth">Turn on agent auth</a></h3>
+<p>Add these alongside your chosen mode in the optional block:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-nix" data-lang="nix"><span style="display:flex;"><span><span style="color:#75715e"># Authenticate sudo against the forwarded SSH agent (remote Solokey):</span>
+</span></span><span style="display:flex;"><span>security<span style="color:#f92672">.</span>pam<span style="color:#f92672">.</span>sshAgentAuth<span style="color:#f92672">.</span>enable        <span style="color:#960050;background-color:#1e0010">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>security<span style="color:#f92672">.</span>pam<span style="color:#f92672">.</span>services<span style="color:#f92672">.</span>sudo<span style="color:#f92672">.</span>sshAgentAuth <span style="color:#960050;background-color:#1e0010">=</span> <span style="color:#66d9ef">true</span>;
+</span></span></code></pre></div><p>NixOS gives <code>pam_ssh_agent_auth</code> the control <code>sufficient</code> and slots it at
+the <strong>front</strong> of the <code>sudo</code> auth stack &ndash; ahead of <code>pam_u2f</code> &ndash; and it also
+adds <code>Defaults env_keep+=SSH_AUTH_SOCK</code> to <code>sudoers</code> so the forwarded
+agent socket survives into <code>sudo</code>. None of that is something you
+configure; it follows from the two lines above.</p>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>Unlike <code>security.pam.u2f.enable</code> (the global switch we warned against,
+which turns u2f on for <em>every</em> service), <code>security.pam.sshAgentAuth.enable</code>
+is safe to leave on: the per-service <code>sshAgentAuth</code> flag defaults to
+<code>false</code>, so agent auth is active only where you set it &ndash; here, <code>sudo</code>
+alone.</p>
+  </div>
+</div>
+<p>Finally, connect with agent forwarding so the box can see your laptop&rsquo;s
+agent:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh -A box
+</pre></div>
+</div>
+
+
+<p>(or <code>ForwardAgent yes</code> for that host in <code>~/.ssh/config</code>). Now <code>sudo -k; sudo true</code> on the box prompts a touch on the key in your <strong>laptop</strong>.</p>
+<h3 id="how-it-layers-on-the-modes"><a class="heading-anchor" href="#how-it-layers-on-the-modes">How it layers on the modes</a></h3>
+<p>The remote path does not add a new mode; it is an extra <code>sufficient</code>
+branch on top of whichever mode you already picked. Because its control
+is <strong>fixed</strong> at <code>sufficient</code> &ndash; you cannot make it <code>required</code> &ndash; it only
+composes with the single-factor modes:</p>
+<ul>
+<li><strong>With Mode 1</strong> (key only): <code>sudo</code> now accepts the <strong>local</strong> Solokey <strong>or</strong>
+the <strong>forwarded</strong> key, and still asks for no password. The natural choice
+for a headless box &ndash; touch locally when you are sitting at it, touch
+your laptop&rsquo;s key when you are not.</li>
+<li><strong>With Mode 2</strong> (key or password): the forwarded key becomes a third way
+in, alongside the local key and the password.</li>
+</ul>
+<p>You do not touch the <code>control</code> settings or any ordering to get this &ndash;
+the default stack already runs the agent check first (it fails instantly
+when there is no forwarded key, so sitting at the machine falls straight
+through to the local touch) and the local <code>pam_u2f</code> second.</p>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p><strong>Do not combine this with Mode 3.</strong> Mode 3&rsquo;s two-factor guarantee depends
+on <code>pam_u2f</code> being <code>required</code> so the touch can never be skipped &ndash; but
+<code>pam_ssh_agent_auth</code> is hardcoded <code>sufficient</code> and runs <strong>first</strong>, so a
+forwarded key short-circuits to success <em>before</em> the password is ever
+asked. Enabling <code>sshAgentAuth</code> therefore silently downgrades Mode 3 to
+single-factor for any forwarded session. If you want real two-factor
+<code>sudo</code>, leave <code>sshAgentAuth</code> off and <code>sudo</code> from the local console.</p>
+  </div>
+</div>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>Agent forwarding lets any host you are connected to <strong>ask</strong> your agent to
+sign while you are logged in, so only forward to machines you trust. A
+FIDO2/=-sk= key blunts the risk: every signature needs a physical touch,
+so a compromised box can never use your key <em>silently</em> &ndash; it can only
+trigger a press you would see and refuse. That touch-per-use property is
+what makes forwarding a hardware key reasonable where forwarding a
+software key would not be.</p>
+  </div>
+</div>
+<h2 id="turning-it-off"><a class="heading-anchor" href="#turning-it-off">Turning it off</a></h2>
+<p>Reverting is symmetric: re-comment the block (or set <code>u2fAuth = false</code>
+and drop <code>unixAuth = false</code>, plus <code>sshAgentAuth = false</code> if you enabled
+remote auth), commit, and <code>admin upgrade</code>. The PAM rule
+disappears from the regenerated <code>/etc/pam.d/sudo</code> and <code>sudo</code> goes back to
+password-only &ndash; nothing left behind in <code>/etc</code> to clean up by hand.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

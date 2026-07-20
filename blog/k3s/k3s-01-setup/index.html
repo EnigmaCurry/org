@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>K3s part 1: Setup your workstation · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/k3s/k3s-02-install/" aria-label="Previous: k3s-02-install" title="prev: k3s-02-install"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" aria-disabled="true" aria-label="No next page"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">k3s-01-setup</a></li><li class="lvl2"><a href="#prepare-your-workstation">Prepare your workstation</a></li><li class="lvl2"><a href="#running-commands">Running Commands</a></li><li class="lvl2"><a href="#create-a-local-git-repository">Create a local git repository</a></li><li class="lvl2"><a href="#create-toolbox-container-optional">Create toolbox container (optional)</a></li><li class="lvl2"><a href="#setup-podman-remote-in-toolbox-container-optional">Setup podman-remote in toolbox container (optional)</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="active" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/k3s/k3s-01-setup/">/k3s-01-setup</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">K3s part 1: Setup your workstation</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2020-12-11">2020-12-11</time></span>
+  <span>updated <time datetime="2023-08-12">2023-08-12</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/k3s/">k3s</a>
+  </span>
+</div>
+
+<p>This is the first post in the K3s series, <a href="/tags/k3s">read the introduction
+first</a>.</p>
+<h2 id="prepare-your-workstation"><a class="heading-anchor" href="#prepare-your-workstation">Prepare your workstation</a></h2>
+<p>When working with kubernetes, you should resist the urge to directly login into
+the host server via SSH, unless you have to. Instead, you will create all of the
+config files on your local laptop, which will be referred to as your
+workstation, and use <code>kubectl</code> to access the remote cluster API.</p>
+<p>You will need to install several command line tools on your workstation (or
+follow the guide to <a href="#create-toolbox-container-optional">build a utility
+container</a> to use as your virtual
+&ldquo;workstation&rdquo; environment, which has all of the tools builtin):</p>
+<ul>
+<li>
+<p>A modern BASH shell, being the default Linux terminal shell, but also
+available on various platforms.</p>
+</li>
+<li>
+<p><code>kubectl</code>:</p>
+<ul>
+<li>Arch Linux: <code>sudo pacman -S kubectl</code></li>
+<li>Other OS: <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-using-native-package-management">See docs</a></li>
+<li>You can take a small detour now and setup bash shell tab-key completion for
+kubectl, this is quite useful for interactive use. Run <code>kubectl completion -h</code> and follow the directions for setting up your shell. However, you can
+skip this, since all of the commands you will run are already prepared for
+you in this blog.</li>
+</ul>
+</li>
+<li>
+<p><code>kustomize</code>:</p>
+<ul>
+<li>Arch Linux: <code>sudo pacman -S kustomize</code></li>
+<li>Other OS: <a href="https://github.com/kubernetes-sigs/kustomize/releases">see releases</a></li>
+<li>You may have heard about kubectl having kustomize as a built-in feature
+(<code>kubectl apply -k</code>). However, the version of kustomize that is bundled
+with kubectl is old, and has bugs. You should use the latest version of
+<code>kustomize</code> directly instead of the bundled kubectl version (<code>kustomize build | kubectl apply -f - </code>).</li>
+<li>NOTICE: <a href="https://github.com/kubernetes-sigs/kustomize/issues/3340#issue-761638279">kustomize v3.9.0 does not
+work</a>
+(Fails to create <code>RoleBinding</code> resources) This may already be fixed in a
+later version, but the tested WORKING version as of 2020-12-14 is kustomize
+<a href="https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv3.8.8">v3.8.8</a></li>
+</ul>
+</li>
+<li>
+<p><code>kubeseal</code>:</p>
+<ul>
+<li>Arch Linux: <code>sudo pacman -S kubeseal</code></li>
+<li>Other OS: <a href="https://github.com/bitnami-labs/sealed-secrets/releases">see releases</a></li>
+<li>Note: only install the client side at this point, you will install the
+cluster side later in a different way.</li>
+</ul>
+</li>
+<li>
+<p><code>flux</code>:</p>
+<ul>
+<li>Arch Linux has an <a href="https://aur.archlinux.org/packages/flux-go/">AUR build</a></li>
+<li>Other OS: <a href="https://github.com/fluxcd/flux2/tree/main/install">see docs</a></li>
+<li>Optional: Add shell completion support to your <code>~/.bashrc</code></li>
+</ul>
+</li>
+</ul>
+<pre tabindex="0"><code class="language-env-static" data-lang="env-static">## Optional bash shell completion for flux
+. &lt;(flux completion bash)
+</code></pre><ul>
+<li>
+<p><code>git</code>:</p>
+<ul>
+<li>Arch Linux: <code>sudo pacman -S git</code></li>
+<li>Ubuntu: <code>sudo apt install git</code></li>
+<li><a href="https://git-scm.com/downloads">Other OS</a></li>
+</ul>
+</li>
+<li>
+<p><code>tea</code>:</p>
+<ul>
+<li>Gitea command line client, useful for creating remote git repos</li>
+<li><a href="https://gitea.com/gitea/tea">Install docs</a></li>
+</ul>
+</li>
+<li>
+<p><code>jq</code> and <code>yq</code>:</p>
+<ul>
+<li>JSON and YAML wrangling tools.</li>
+<li>Arch Linux: <code>sudo pacman -S jq yq</code></li>
+<li>Ubuntu: <code>sudo apt install jq yq</code></li>
+</ul>
+</li>
+<li>
+<p><code>podman</code> and <code>docker</code>:</p>
+<ul>
+<li>Sometimes it is useful to run a container on your local workstation, podman
+can run rootless (no sudo required), and is the best option for doing this.</li>
+<li>This won&rsquo;t be used until <a href="/blog/k3s/k3s-07-mutual-tls">part 7</a></li>
+<li>This is also useful for <a href="#create-toolbox-container-optional">installing all of these tools in a
+container</a> rather than native on your
+workstation.</li>
+<li><a href="https://podman.io/getting-started/installation">Install Podman</a>.</li>
+<li>The Docker CLI client is still useful for interfacing with remote docker
+servers (or Virtual Machine).</li>
+<li><a href="https://docs.docker.com/engine/install/">Install Docker</a> (you only need
+the client, not the engine, but this [and most distros] package both parts
+in the same package. You do not need to start the docker service, you will
+only use the docker client.)</li>
+<li>DO NOT follow common advice to <code>alias docker=podman</code>. Podman and Docker are
+useful for different purposes, and you should install both. Podman doesn&rsquo;t
+have a daemon, and it can&rsquo;t talk to one; this is convenient, and secure,
+for running containers locally on your workstation with your normal user
+account (rootless). Docker (the CLI client) is useful for controlling
+<em>remote</em> Docker servers (or VM) by setting <code>DOCKER_HOST</code>. Podman can also
+act as a client for remote <em>podman</em> hosts (through socket activation) but
+it can&rsquo;t talk to a Docker daemon (local nor remote). Docker (the engine)
+requires running a daemon, which is normally run as root (or another
+priviliged account), and so is mostly unusable for rootless accounts, but
+this can be made to work well with a Virtual Machine (normal user runs
+docker client running on workstation, controlling docker daemon installed
+inside VM.)</li>
+</ul>
+</li>
+<li>
+<p><code>vagrant</code> (Optional):</p>
+<ul>
+<li>A Virtual Machine manager</li>
+<li>Only used for <a href="/blog/k3s/k3s-12-drone-development">Part 12</a>, for installing
+a Virtual Machine to run Docker (daemon) and a Drone runner, running CI
+jobs for your remote cluster, but on your local workstation.</li>
+<li><a href="https://wiki.archlinux.org/index.php/Vagrant#Installation">Arch Linux</a></li>
+<li>Also install
+<a href="https://wiki.archlinux.org/index.php/Libvirt#Installation">libvirt</a></li>
+<li>Install the libvirt plugin too: <code>vagrant plugin install vagrant-libvirt</code></li>
+</ul>
+</li>
+<li>
+<p><code>hugo</code> (Optional) :</p>
+<ul>
+<li>To build <a href="https://github.com/EnigmaCurry/blog.rymcg.tech">the source code</a>
+and serve this blog from localhost (Or just continue reading this blog
+online.)</li>
+<li>Arch Linux: <code>sudo pacman -S hugo</code></li>
+<li><a href="https://gohugo.io/getting-started/installing/">Other OS</a></li>
+</ul>
+</li>
+<li>
+<p><code>k3sup</code> (Optional) :</p>
+<ul>
+<li><a href="https://github.com/alexellis/k3sup">alexellis/k3sup</a> is a very useful tool
+to automatically create k3s clusters on machines that you already have SSH
+access to.</li>
+<li><a href="https://github.com/alexellis/k3sup/releases">Releases</a></li>
+</ul>
+</li>
+<li>
+<p><code>CDK8s</code> (Optional) :</p>
+<ul>
+<li>Programmatically generate YAML from python, typescript, or java.</li>
+<li><a href="https://cdk8s.io/docs/latest/getting-started/">Install CDK8s</a></li>
+</ul>
+</li>
+<li>
+<p><code>OpenFaaS</code> (Optional) :</p>
+<ul>
+<li>Create serverless functions and microservices</li>
+<li><a href="https://docs.openfaas.com/cli/install/">Install OpenFaaS CLI</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="running-commands"><a class="heading-anchor" href="#running-commands">Running Commands</a></h2>
+<p>This blog is written in a Literate Programming style, containing <em>exact</em> BASH
+shell commands for you to copy and paste into your workstation terminal.</p>
+<p>These block-quoted commands are intended to be run <em>without needing to edit
+them</em>. Commands that need configuration, will reference environment variables,
+which you create before you run the command, so that you may customize the
+variables first, and then run the command as-is.</p>
+<p>You should configure your BASH so that your pasted commands are never run unless
+you give your confirmation, after pasting, by pressing the Enter key. In
+general, this allows you the opportunity to edit commands on the terminal prompt
+line, before running them. (In this case, you will only need to do this in the
+case of customizing variables, not for editing commands, which should be run
+without editing them.) Run this to enable this feature, called
+<code>bracketed-paste</code>, in BASH:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Enable for the current shell:
+bind &#39;set enable-bracketed-paste on&#39;
+# Enable for future environments:
+echo &#34;set enable-bracketed-paste on&#34; &gt;&gt; ${HOME}/.inputrc
+</pre></div>
+</div>
+
+
+<p>For example, here is a command block that is asking you to customize two
+environment variables (<code>SOME_VARIABLE</code> and <code>SOME_OTHER_VARIABLE</code>). You should
+copy and paste this into your shell, and edit the values on the command line
+(<code>foo</code> and <code>bar</code>; change them to something else), then press Enter.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>SOME_VARIABLE<span style="color:#f92672">=</span>foo
+</span></span><span style="display:flex;"><span>SOME_OTHER_VARIABLE<span style="color:#f92672">=</span>bar
+</span></span></code></pre></div><p>Now run a command that references the variables. You don&rsquo;t need to edit it, just
+copy the command, paste into the terminal, and press Enter:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo some command that needs ${SOME_VARIABLE} and ${SOME_OTHER_VARIABLE}
+</pre></div>
+</div>
+
+
+<p>Often, a command will use the <a href="https://tldp.org/LDP/abs/html/here-docs.html">BASH HEREDOC
+format</a> to create whole files
+without needing to use a text editor. For example, this next code block will
+create a new temporary file with a random name, with the contents <code>Hello, World!</code>.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TMP_FILE=$(mktemp)
+cat &lt;&lt;EOF &gt; ${TMP_FILE}
+Hello, World!
+EOF
+
+echo &#34;-------------------------------------------&#34;
+echo The random temporary file is ${TMP_FILE}
+echo The contents written were: $(cat ${TMP_FILE})
+</pre></div>
+</div>
+
+
+<p>The contents of the file is the line(s) between <code>cat &lt;&lt;EOF</code> on line 2 and the
+second <code>EOF</code> on its own line, line 4 (<code>Hello, World!\n</code>). Any lines that comes
+after the second <code>EOF</code> (the <code>echo</code> lines) are just regular commands, not part of
+the content of the file created. (Technically, HEREDOC format allows any marker
+instead of <code>EOF</code> but this blog will always use <code>EOF</code> by convention, which is
+mnemonic for <code>End Of File</code>.)</p>
+<p>Note that the previous example rendered environment variables <em>before</em> writing
+the file. The file contains the <em>value</em> of the variable as it was at the time of
+creation, and replaces the variable name reference. In order to write a shell
+script, via HEREDOC, that contains variable <em>names</em> (not values), you need to
+disable this behaviour. To do this, you put quotes around the first <code>EOF</code>
+marker, and then no variables will be substituted in the body:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TMP_FILE=$(mktemp --suffix .sh)
+cat &lt;&lt;&#39;EOF&#39; &gt; ${TMP_FILE}
+## I&#39;m a shell script that needs raw variable names to be preserved.
+## To do this, the HEREDOC used &lt;&lt;&#39;EOF&#39; instead of &lt;&lt;EOF
+echo Hello I am ${USER} on ${HOSTNAME} at $(date)
+EOF
+
+echo &#34;-------------------------------------------&#34;
+cat ${TMP_FILE}
+echo &#34;The variables are evaluated on run:&#34;
+sh ${TMP_FILE}
+</pre></div>
+</div>
+
+
+<h2 id="create-a-local-git-repository"><a class="heading-anchor" href="#create-a-local-git-repository">Create a local git repository</a></h2>
+<p>You need a place to store your cluster configuration, so create a git repository
+someplace on your workstation called <code>flux-infra</code> (or whatever you want to call
+it). The <code>flux-infra</code> repository will manage the root level of one or more of
+your clusters. Each cluster storing its manifests in its own sub-directory,
+listed by domain name. Each kubernetes namespace gets a sub-sub-directory :</p>
+<ul>
+<li><code>~/git/flux-infra/${CLUSTER}/${NAMESPACE}</code></li>
+</ul>
+<p>Choose the directory where to create the git repo and the domain name for your
+new cluster:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>FLUX_INFRA_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/git/flux-infra
+</span></span><span style="display:flex;"><span>CLUSTER<span style="color:#f92672">=</span>k3s.example.com
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkdir -p ${FLUX_INFRA_DIR}/${CLUSTER} &amp;&amp; \
+git -C ${FLUX_INFRA_DIR} init &amp;&amp; \
+cd ${FLUX_INFRA_DIR}/${CLUSTER} &amp;&amp; \
+echo Cluster working directory: $(pwd)
+</pre></div>
+</div>
+
+
+<p>In an upcoming post, you will create a git remote to push this repository to.</p>
+<h2 id="create-toolbox-container-optional"><a class="heading-anchor" href="#create-toolbox-container-optional">Create toolbox container (optional)</a></h2>
+<p>As an alternative to installing all of these command line tools natively on your
+workstation, you can build a utility container that has all of the tools inside.
+If you go this route, the utility container becomes your &ldquo;workstation&rdquo;, and
+whenever this blog tells you to run something on your &ldquo;workstation&rdquo;, it will
+mean for you to run it inside this container instead.</p>
+<p>If you skipped down to this section, it is critical to go back up and read the
+section titled <a href="#running-commands">Running Commands</a> once you get your utility
+container up and going.</p>
+<p>This container will create a persistent volume mounted to the virtual home
+directory (<code>/root</code> inside the container), for keeping files safe. Git
+repositories are intended to be cloned somewhere in your native workstation home
+directory, and then mounted inside the container (eg. a host directory
+<code>${HOME}/git</code> mounted as <code>/root/git</code> inside the container). This way you can
+still use your native workstation editor tools, rather than installing an editor
+in the container.</p>
+<p>This requires you to <a href="https://podman.io/getting-started/installation">install
+podman</a>.</p>
+<p>Build the container image (<code>kube-toolbox</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;&#39;EOF&#39; | podman build -t kube-toolbox -f -
+FROM alpine:latest
+
+ARG GIT_TEA_VERSION=0.6.0
+ARG KUSTOMIZE_VERSION=3.9.1
+ARG PODMAN_REMOTE_VERSION=v2.2.1
+
+## Packages and upstream Kubernetes tools:
+RUN cd /usr/local/bin &amp;&amp; \
+ apk add --no-cache bash curl openssh git bash-completion jq docker-cli &amp;&amp; \
+ echo &#34;## Arkade installer&#34; &amp;&amp; \
+   curl -sLS https://get.arkade.dev | sh &amp;&amp; \
+   arkade get kubectl &amp;&amp; \
+   arkade get kubeseal &amp;&amp; \
+   arkade get hugo &amp;&amp; \
+   arkade get k3sup &amp;&amp; \
+   arkade get faas-cli &amp;&amp; \
+   arkade get helm &amp;&amp; \
+   arkade get k9s &amp;&amp; \
+   arkade get kustomize --version=${KUSTOMIZE_VERSION} &amp;&amp; \
+   mv /root/.arkade/bin/* /usr/local/bin &amp;&amp; \
+ echo &#34;### Flux: &#34; &amp;&amp; \
+   curl -sL https://toolkit.fluxcd.io/install.sh | bash &amp;&amp; \
+ echo &#34;### cdk8s / pyenv&#34; &amp;&amp; \
+   apk add libffi-dev openssl-dev bzip2-dev zlib-dev readline-dev \
+      sqlite-dev build-base python3 py3-pip yarn npm &amp;&amp; \
+   pip install --user pipenv &amp;&amp; \
+   curl https://pyenv.run | bash &amp;&amp; \
+   yarn global add cdk8s-cli &amp;&amp; \
+ echo &#34;### Podman remote&#34; &amp;&amp; \
+   curl -LO https://github.com/containers/podman/releases/download/${PODMAN_REMOTE_VERSION}/podman-remote-static.tar.gz &amp;&amp; \
+   tar xfvz podman-remote-static.tar.gz &amp;&amp; \
+   rm podman-remote-static.tar.gz &amp;&amp; \
+   mv podman-remote-static podman &amp;&amp; \
+ echo &#34;## yq&#34; &amp;&amp; \
+   pip install yq &amp;&amp; \
+ echo &#34;## git-tea&#34; &amp;&amp; \
+   curl -LO \
+     https://dl.gitea.io/tea/${GIT_TEA_VERSION}/tea-${GIT_TEA_VERSION}-linux-amd64 &amp;&amp; \
+   mv tea-${GIT_TEA_VERSION}-linux-amd64 tea &amp;&amp; \
+   chmod 0755 tea
+
+WORKDIR /root
+
+## root account setup:
+## Note that the files in the /root volume will override these image defaults:
+RUN echo &#39;export PATH=${HOME}/.arkade/bin:${HOME}/.local/bin:${PATH}&#39; &gt;&gt; .bashrc &amp;&amp; \
+    echo &#39;source /usr/share/bash-completion/bash_completion&#39; &gt;&gt; .bashrc &amp;&amp; \
+    echo &#39;source &lt;(kubectl completion bash)&#39; &gt;&gt; .bashrc &amp;&amp; \
+    echo &#39;source &lt;(flux completion bash)&#39; &gt;&gt; .bashrc &amp;&amp; \
+    echo &#39;export PS1=&#34;[\u@kube-toolbox \W]\$ &#34;&#39; &gt;&gt; .bashrc &amp;&amp; \
+    echo &#39;set enable-bracketed-paste on&#39; &gt; .inputrc
+
+CMD /bin/bash
+EOF
+</pre></div>
+</div>
+
+
+<p>Create an alias <code>kbox</code> to easily start the container shell:</p>
+<pre tabindex="0"><code class="language-env-static" data-lang="env-static">## You can create multiple aliases for different environments
+## Just make sure to use a different volume name for each one (eg. kbox:/root)
+alias kbox=&#34;podman run --rm -it -v kbox:/root -v ${HOME}/git:/root/git \
+   -v ${HOME}/.gitconfig:/root/.gitconfig --name kbox-${RANDOM} kube-toolbox&#34;
+</code></pre><p>Now you can run <code>kbox</code>, and you will enter the BASH shell within the
+kube-toolbox container. The home directory inside the container (<code>/root</code>) is
+mounted to a persistent volume also called <code>kbox</code> (see it with <code>podman volume ls</code>). You can save any files under <code>/root</code> and they will be persisted to the
+volume, which includes Kubernetes API tokens, SSH keys, and any other config
+files. A host directory (<code>${HOME}/git</code>) is mapped into the container to share
+git repositories with the container, and to allow you to use a native file
+editor on the host. <code>${HOME}/.gitconfig</code> is mounted as well, so that you do not
+need to reconfigure git inside the container.</p>
+<p>You should not be concerned about running as <code>root</code> inside this container, it is
+intentional and safe. When running podman as a user, it is run <em>rootless</em>, which
+means that it will map <code>root</code> inside the container to the same UID on the host
+that ran podman (your regular workstation user ID, <em>not</em> the real root user.)
+This means that when you create files in the container, as root, in <code>/root/git</code>,
+they will show up in the host directory <code>${HOME}/git</code> owned by your regular
+workstation user ID.</p>
+<p>Enter the interactive sub-shell:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kbox
+</pre></div>
+</div>
+
+
+<p>You will see the toolbox BASH prompt (<code>kube-toolbox</code>), indicating you are now inside the container:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>[root@kube-toolbox ~]$
+</span></span></code></pre></div><p>Create a new ssh key :</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-keygen
+</pre></div>
+</div>
+
+
+<p>Also note, that the lifetime of the container is the lifetime of the shell
+process, so as soon as you quit the shell, the container is removed (<code>podman run --rm</code>). So if you install programs (alpine Linux <code>apk add</code>) or create files
+(outside of <code>/root</code> or <code>/root/git</code>) they will be <strong>gone</strong> the next time you run
+<code>kbox</code>. In order to permanently add additional programs, you should modify the
+Dockerfile, and rebuild the image, as shown above.</p>
+<h2 id="setup-podman-remote-in-toolbox-container-optional"><a class="heading-anchor" href="#setup-podman-remote-in-toolbox-container-optional">Setup podman-remote in toolbox container (optional)</a></h2>
+<p>The toolbox container cannot run other containers inside of itself. This means
+that normally, you can only run <code>podman</code> or <code>docker</code> on the <em>host</em> workstation.
+However, the toolbox container has installed <code>podman</code>, which is actually
+<code>podman-remote</code> (just renamed to <code>podman</code>) which is a stripped version of podman
+that is only used for connecting to a <em>remote</em> system and running podman on the
+remote machine (this version of podman cannot run containers by itself.)</p>
+<p>You can setup your host workstation to run podman, and configure the remote
+access for the <code>kbox</code> container to use it, so that the container itself can run
+normal podman (remote) commands, and have them run on the host podman. See the
+upstream <a href="https://github.com/containers/podman/blob/master/docs/tutorials/remote_client.md">podman-remote
+instructions</a>
+for setup, here is the gist:</p>
+<ul>
+<li>You must enable ssh on the host workstation.</li>
+<li>You must copy the container root user ssh key (<code>/root/.ssh/id_rsa.pub</code>) into
+your host workstation user&rsquo;s authorized_keys file
+(<code>${HOME}/.ssh/authorized_keys</code>)</li>
+<li>You must test that ssh works from within <code>kbox</code>, to the host workstation IP
+address: <code>ssh USER@X.X.X.X</code></li>
+<li>You must enable the podman systemd socket activation on the host workstation:
+<code>systemctl --user enable --now podman.socket</code></li>
+</ul>
+<p>Once ssh is tested to work, from <code>kbox</code> to your host workstation, you can add
+the connection to podman.</p>
+<p>Run this inside <code>kbox</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>HOST_WORKSTATION<span style="color:#f92672">=</span>workstation-host
+</span></span><span style="display:flex;"><span>HOST_USER<span style="color:#f92672">=</span>ryan
+</span></span><span style="display:flex;"><span>HOST_IP_ADDRESS<span style="color:#f92672">=</span>X.X.X.X
+</span></span></code></pre></div><p>Setup the connection persistence on bash startup (run in <code>kbox</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt;&gt; ${HOME}/.bashrc
+## Setup podman remote to host workstation:
+podman system connection add \
+  ${HOST_WORKSTATION} ssh://${HOST_USER}@${HOST_IP_ADDRESS} \
+  --identity ~/.ssh/id_rsa
+EOF
+</pre></div>
+</div>
+
+
+<p>Now exit and restart <code>kbox</code> (press <code>Ctrl-D</code> or type <code>exit</code> and then retstart
+<code>kbox</code>)</p>
+<p>Inside the new <code>kbox</code> shell, list the podman connections:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+podman system connection list
+</pre></div>
+</div>
+
+
+<p>You should see the workstation connection name listed, ending with an asterisk
+(<code>*</code>) to indicate it is the default connection to use.</p>
+<p>Test that you can list containers:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+podman ps
+</pre></div>
+</div>
+
+
+<p>You should see a list of all of the containers that are running on your host
+workstation user account (which at least includes the running kbox container.)</p>
+<p>Test that you can run the standard <code>hello-world</code> container:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+podman run --rm -it hello-world
+</pre></div>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

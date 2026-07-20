@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Whirlpool (living drain) · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/whirlpool/spiral-tunnel/" aria-label="Previous: spiral-tunnel" title="prev: spiral-tunnel"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/plasma/" aria-label="Next: plasma" title="next: plasma"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/whirlpool/">whirlpool</a><ul><li class="lvl1"><a href="#">living-drain</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node open">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a><ul class="sections"><li><a class="" href="/shaders/whirlpool/first-whirlpool/">first-whirlpool</a></li><li><a class="" href="/shaders/whirlpool/precision-stable/">precision-stable</a></li><li><a class="" href="/shaders/whirlpool/palettes/">palettes</a></li><li><a class="" href="/shaders/whirlpool/palette-sweep/">palette-sweep</a></li><li><a class="" href="/shaders/whirlpool/looping-transport/">looping-transport</a></li><li><a class="" href="/shaders/whirlpool/spiral-tunnel/">spiral-tunnel</a></li><li><a class="active" href="/shaders/whirlpool/living-drain/">living-drain</a></li></ul></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg" href="/shaders/whirlpool/">/whirlpool</a><a class="pseg pcur" href="/shaders/whirlpool/living-drain/">/living-drain</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Whirlpool (living drain)</a></h1>
+
+
+<p>The <a href="/shaders/whirlpool/spiral-tunnel/">spiral</a> drains, but mechanically: a fixed eye, a constant pull, a metronome
+spin. A real drain sloshes — the vortex wanders, surges, and breathes. This
+changeset (from the <a href="/shaders/whirlpool/spiral-tunnel/">spiral &amp; tunnel</a>) adds that life with three time-varying
+wobbles, then keeps the <code>@loop</code> seamless with one trick: <strong>every wobble is a sine
+at a whole multiple of the loop frequency</strong> <code>w = TAU / LOOP</code>, so each returns to
+its start at <code>iTime = LOOP</code>.</p>
+<ul>
+<li><strong>meander</strong> — offset the center along a Lissajous path (<code>w</code> against its 2nd and
+3rd harmonics) so the eye wanders instead of sitting dead center.</li>
+<li><strong>volume</strong> — a <code>breathe</code> factor swells and ebbs the pull, so the funnel
+tightens and loosens like the water level is changing.</li>
+<li><strong>surge</strong> — an extra sine on the angle makes the rotation speed up and stall,
+so the spin never feels like clockwork.</li>
+</ul>
+<p>The tunnel was a detour; this page drops the <code>@select</code> and its branch to commit
+to the flat spiral drain, and gives that spiral all three wobbles. The base
+rotation is still five whole turns per loop, so <code>LOOP = 25</code> holds:</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// no function pointers in GLSL ES — palettes inline, dispatched by index
+// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+vec3 palette(int i, vec2 q){
+  if(i == 0) return vec3(q, 0.0);                             // square
+  if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+  if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+  if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+  return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+}
+
+// swirl a centered position into its antialiased 2-bit quadrant (q.x = x-bit,
+// q.y = y-bit) — the texture the palettes color. factored out so the peeling
+// layer can sample the same swirl from a pulled-away position.
+vec2 quad(vec2 pp, float twist, float turn){
+  float rr = length(pp);
+  float ang = atan(pp.y, pp.x) + twist * log(rr) + turn;
+  vec2 s = vec2(cos(ang), sin(ang)) * rr + 0.5;
+  vec2 fw = fwidth(s); // pixel footprint of the swirled coords
+  return smoothstep(0.5 - fw, 0.5 + fw, s); // antialiased quadrant edge
+}
+
+// iTime is periodic: wrap it and show a transport scrubber in the panel.
+// 25 = 5 palettes * HOLD (5.0) — one full palette cycle.
+// @loop 25
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord/iResolution.xy; // <0,1>
+
+  const float HOLD = 5.0;        // seconds per palette (slow, viscous transfer)
+  const float LOOP = 5.0 * HOLD; // one full cycle of all five palettes
+  const float TAU  = 6.2831853;
+  float w = TAU / LOOP;          // loop fundamental: one cycle over the loop
+
+  // every wobble below is a sine at a WHOLE multiple of w, so it lands back on
+  // its start at iTime = LOOP and the loop stays seamless.
+
+  // the eye wanders on a Lissajous path instead of sitting dead center, so
+  // the drain meanders as if the water were sloshing
+  vec2 wander = 0.06 * vec2(sin(w*iTime) + 0.5*sin(2.0*w*iTime + 1.3),
+                            cos(w*iTime) + 0.5*cos(3.0*w*iTime + 0.7));
+
+  vec2 p = uv - 0.5 - wander; // recenter on the wandering eye
+
+  // the drain breathes: its pull swells and ebbs over the loop (volume)
+  float breathe = 1.0 + 0.6 * sin(2.0*w*iTime);
+
+  // one turn per loop, the seamless base of the spin
+  float spin = mod(iTime * w, TAU);
+
+  // SPIRAL ARMS: twist by log(r); rotating a log spiral == scaling it, so
+  // spinning it drains the arms inward like a whirlpool. breathe varies how
+  // hard it twists (volume); the extra sin makes the spin surge and stall.
+  float twist = 3.0 * breathe; // how hard it winds (volume)
+  float turn  = spin * 5.0 + 0.6 * sin(3.0 * w * iTime); // 5 turns/loop + surge
+
+  vec2 e = quad(p, twist, turn); // the new layer, lying flat on the surface
+
+  // cycle the 5 palettes, one sweep wipe per slot
+  float T = iTime / HOLD;
+  int i0 = int(mod(floor(T), 5.0)); // current palette
+  int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+  // viscous descent: the wipe eases across most of the slot, slow at the rim
+  // and creeping as it nears the eye, so the palette oozes down the drain
+  float sweep = smoothstep(0.1, 1.0, fract(T));
+
+  // drain-in wipe: the new palette floods in from the rim and collapses
+  // toward the eye last, so the transition itself drains. p tracks the
+  // wandering center, so the drain point meanders with the vortex.
+  // liquid wobble: ripple the wipe's radius with two drifting lobe sets so the
+  // front is a wavy edge, not a clean circle (whole lobes + harmonics keep it
+  // seamless). ea is the raw angle, taken before the spiral twisted a.
+  float ea = atan(p.y, p.x);
+  // the wave amplitude swells and ebbs as the front descends (sweep) and
+  // flows over time, so the wobble breathes on the way down
+  float amp = 0.09 + 0.08 * sin(sweep * 12.566 - 4.0 * w * iTime);
+  float wob = 1.0 + amp * sin(ea * 5.0 + 3.0 * w * iTime)
+                  + amp * 0.6 * sin(ea * 8.0 - 2.0 * w * iTime);
+  float swp = 1.0 - length(p) / (0.8 * wob); // wavy front: ~1 eye, ~0 rim
+  float band = fwidth(swp) * 1.5; // antialias the wipe edge
+  // 1 once the sweep has passed this pixel
+  float toNew = smoothstep(swp - band, swp + band, sweep);
+
+  // PEEL: the old layer lifts off the surface and is pulled down the drain,
+  // revealing the new one underneath. lift leads the fade, so the old sheet
+  // visibly slides toward the eye (and swirls in) before it dissolves.
+  float lift = smoothstep(swp - 0.45, swp + band, sweep); // 0 ahead, 1 peeled
+  vec2 pe = p * (1.0 - 0.6 * lift); // drag old layer toward the eye
+  vec3 oldCol = palette(i0, quad(pe, twist, turn + lift * 3.0)); // sliding away
+  vec3 col = mix(oldCol, palette(i1, e), toNew);
+
+  // bright crystallized edge: a sharp ridge of light rides the wipe front
+  // (where swp ~ sweep), faceted by high-frequency angular glints so it
+  // sparkles like ice (whole-number glint frequencies/drift -> seamless)
+  float ridge = 1.0 - smoothstep(0.0, band * 3.0, abs(sweep - swp));
+  ridge *= smoothstep(0.0, 0.03, sweep); // only while a wipe is travelling
+  float glint = sin(ea * 40.0 + 6.0 * w * iTime)
+              * sin(ea * 23.0 - 4.0 * w * iTime);
+  glint = pow(0.5 + 0.5 * glint, 6.0); // sharpen the bands into sparkles
+  col += ridge * (0.25 + 0.75 * glint); // additive white-hot crystal rim
+
+  // Output to screen
+  fragColor = vec4(col,1.0);
+}
+</script></div>
+<div class="box diffbox" data-view="diff" data-from="whirlpool-spiral-tunnel-shader" data-to="whirlpool-living-drain-shader">
+  <div class="label"><span class="lt" title="Diff: whirlpool-spiral-tunnel-shader → whirlpool-living-drain-shader" data-title-diff="Diff: whirlpool-spiral-tunnel-shader → whirlpool-living-drain-shader" data-title-source="Source: whirlpool-living-drain-shader">Diff: whirlpool-spiral-tunnel-shader → whirlpool-living-drain-shader</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- whirlpool-spiral-tunnel-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ whirlpool-living-drain-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,69 +1,104 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> // no function pointers in GLSL ES — palettes inline, dispatched by index
+</span></span><span style="display:flex;"><span> // each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color
+</span></span><span style="display:flex;"><span> vec3 palette(int i, vec2 q){
+</span></span><span style="display:flex;"><span>   if(i == 0) return vec3(q, 0.0);                             // square
+</span></span><span style="display:flex;"><span>   if(i == 1) return vec3(q, q.x + q.y - 2.0*q.x*q.y);         // tetra
+</span></span><span style="display:flex;"><span>   if(i == 2) return vec3(q, 1.0 - (q.x + q.y - 2.0*q.x*q.y)); // rgbw
+</span></span><span style="display:flex;"><span>   if(i == 3) return vec3((2.0*q.x + q.y) / 3.0);              // gray
+</span></span><span style="display:flex;"><span>   return vec3(1.0 - q.x, 1.0 - q.y, 1.0);                     // cmy
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-// iTime is periodic: wrap it and show a transport scrubber in the panel.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-// 12.5 = 5 palettes * HOLD (2.5) — one full palette cycle.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-// @loop 12.5
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+// swirl a centered position into its antialiased 2-bit quadrant (q.x = x-bit,
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+// q.y = y-bit) — the texture the palettes color. factored out so the peeling
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+// layer can sample the same swirl from a pulled-away position.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+vec2 quad(vec2 pp, float twist, float turn){
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float rr = length(pp);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float ang = atan(pp.y, pp.x) + twist * log(rr) + turn;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 s = vec2(cos(ang), sin(ang)) * rr + 0.5;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 fw = fwidth(s); // pixel footprint of the swirled coords
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  return smoothstep(0.5 - fw, 0.5 + fw, s); // antialiased quadrant edge
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+}
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-// a controls-panel dropdown picks the polar remap (default 0 = spiral arms)
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-// @select GEOMETRY 0 spiral tunnel
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-uniform int GEOMETRY;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+// iTime is periodic: wrap it and show a transport scrubber in the panel.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+// 25 = 5 palettes * HOLD (5.0) — one full palette cycle.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+// @loop 25
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span> void mainImage( out vec4 fragColor, in vec2 fragCoord )
+</span></span><span style="display:flex;"><span> {
+</span></span><span style="display:flex;"><span>   vec2 uv = fragCoord/iResolution.xy; // &lt;0,1&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 p = uv - 0.5; // recenter so the figure pivots on the middle
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float r = length(p); // distance from the center
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float a = atan(p.y, p.x); // current angle
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  const float HOLD = 2.5;        // seconds per palette (hold + wipe)
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  const float HOLD = 5.0;        // seconds per palette (slow, viscous transfer)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>   const float LOOP = 5.0 * HOLD; // one full cycle of all five palettes
+</span></span><span style="display:flex;"><span>   const float TAU  = 6.2831853;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float w = TAU / LOOP;          // loop fundamental: one cycle over the loop
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // every wobble below is a sine at a WHOLE multiple of w, so it lands back on
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // its start at iTime = LOOP and the loop stays seamless.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  // one turn per loop, the seamless base both geometries share
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float spin = mod(iTime * (TAU / LOOP), TAU);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // the eye wanders on a Lissajous path instead of sitting dead center, so
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // the drain meanders as if the water were sloshing
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 wander = 0.06 * vec2(sin(w*iTime) + 0.5*sin(2.0*w*iTime + 1.3),
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+                            cos(w*iTime) + 0.5*cos(3.0*w*iTime + 0.7));
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 sw; // coords (in &lt;0,1&gt;) handed to the quadrant/palette lookup
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  if (GEOMETRY == 0) {
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // SPIRAL ARMS: twist the angle by log(r) instead of the whirlpool&#39;s
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // exp(-r). log is scale-invariant, so the quadrant edges become true
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // logarithmic spirals — the same arm shape repeats at every radius.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // Rotating a log spiral == scaling it, so spinning it makes the arms
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // drain inward like a whirlpool; 5 whole turns/loop reads fast yet seamless.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    a += 3.0 * log(r) + spin * 5.0;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    sw = vec2(cos(a), sin(a)) * r + 0.5; // rebuild swirled coords in &lt;0,1&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  } else {
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // TUNNEL: drop the cartesian rebuild. Read (angle, 1/r) as the texture
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // coords — angle wraps the wall, 1/r recedes to a vanishing point at the
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    // center, +spin marches the wall toward you; fract tiles the quadrant.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-    sw = fract(vec2(a / TAU + spin / TAU, 0.35 / r + spin / TAU));
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  }
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  vec2 p = uv - 0.5 - wander; // recenter on the wandering eye
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 aa = fwidth(sw); // pixel footprint of the swirled coords
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 e = smoothstep(0.5 - aa, 0.5 + aa, sw); // antialiased quadrant edge
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // the drain breathes: its pull swells and ebbs over the loop (volume)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float breathe = 1.0 + 0.6 * sin(2.0*w*iTime);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // one turn per loop, the seamless base of the spin
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float spin = mod(iTime * w, TAU);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // SPIRAL ARMS: twist by log(r); rotating a log spiral == scaling it, so
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // spinning it drains the arms inward like a whirlpool. breathe varies how
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // hard it twists (volume); the extra sin makes the spin surge and stall.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float twist = 3.0 * breathe; // how hard it winds (volume)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float turn  = spin * 5.0 + 0.6 * sin(3.0 * w * iTime); // 5 turns/loop + surge
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 e = quad(p, twist, turn); // the new layer, lying flat on the surface
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span>   // cycle the 5 palettes, one sweep wipe per slot
+</span></span><span style="display:flex;"><span>   float T = iTime / HOLD;
+</span></span><span style="display:flex;"><span>   int i0 = int(mod(floor(T), 5.0)); // current palette
+</span></span><span style="display:flex;"><span>   int i1 = int(mod(floor(T) + 1.0, 5.0)); // next palette
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  float sweep = smoothstep(0.6, 1.0, fract(T)); // hold, then wipe the last 40%
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // diagonal wipe coord — try uv.x, or atan(p.y,p.x)/6.2831853+0.5
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float swp = (uv.x + uv.y) * 0.5;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // viscous descent: the wipe eases across most of the slot, slow at the rim
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // and creeping as it nears the eye, so the palette oozes down the drain
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float sweep = smoothstep(0.1, 1.0, fract(T));
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // drain-in wipe: the new palette floods in from the rim and collapses
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // toward the eye last, so the transition itself drains. p tracks the
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // wandering center, so the drain point meanders with the vortex.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // liquid wobble: ripple the wipe&#39;s radius with two drifting lobe sets so the
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // front is a wavy edge, not a clean circle (whole lobes + harmonics keep it
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // seamless). ea is the raw angle, taken before the spiral twisted a.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float ea = atan(p.y, p.x);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // the wave amplitude swells and ebbs as the front descends (sweep) and
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // flows over time, so the wobble breathes on the way down
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float amp = 0.09 + 0.08 * sin(sweep * 12.566 - 4.0 * w * iTime);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float wob = 1.0 + amp * sin(ea * 5.0 + 3.0 * w * iTime)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+                  + amp * 0.6 * sin(ea * 8.0 - 2.0 * w * iTime);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float swp = 1.0 - length(p) / (0.8 * wob); // wavy front: ~1 eye, ~0 rim
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>   float band = fwidth(swp) * 1.5; // antialias the wipe edge
+</span></span><span style="display:flex;"><span>   // 1 once the sweep has passed this pixel
+</span></span><span style="display:flex;"><span>   float toNew = smoothstep(swp - band, swp + band, sweep);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec3 col = mix(palette(i0, e), palette(i1, e), toNew);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // PEEL: the old layer lifts off the surface and is pulled down the drain,
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // revealing the new one underneath. lift leads the fade, so the old sheet
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // visibly slides toward the eye (and swirls in) before it dissolves.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float lift = smoothstep(swp - 0.45, swp + band, sweep); // 0 ahead, 1 peeled
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 pe = p * (1.0 - 0.6 * lift); // drag old layer toward the eye
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec3 oldCol = palette(i0, quad(pe, twist, turn + lift * 3.0)); // sliding away
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec3 col = mix(oldCol, palette(i1, e), toNew);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // bright crystallized edge: a sharp ridge of light rides the wipe front
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // (where swp ~ sweep), faceted by high-frequency angular glints so it
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // sparkles like ice (whole-number glint frequencies/drift -&gt; seamless)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float ridge = 1.0 - smoothstep(0.0, band * 3.0, abs(sweep - swp));
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  ridge *= smoothstep(0.0, 0.03, sweep); // only while a wipe is travelling
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float glint = sin(ea * 40.0 + 6.0 * w * iTime)
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+              * sin(ea * 23.0 - 4.0 * w * iTime);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  glint = pow(0.5 + 0.5 * glint, 6.0); // sharpen the bands into sparkles
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  col += ridge * (0.25 + 0.75 * glint); // additive white-hot crystal rim
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>
+</span></span><span style="display:flex;"><span>   // Output to screen
+</span></span><span style="display:flex;"><span>   fragColor = vec4(col,1.0);
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">  9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 55
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 56
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 57
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 58
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 59
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 60
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 61
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 62
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 63
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 64
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 65
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 66
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 67
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 68
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 69
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 70
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 71
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 72
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 73
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 74
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 75
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 76
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 77
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 78
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 79
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 80
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 81
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 82
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 83
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 84
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 85
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 86
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 87
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 88
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 89
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 90
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 91
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 92
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 93
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 94
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 95
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 96
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 97
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 98
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 99
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">100
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">101
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">102
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">103
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">104
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#75715e">// no function pointers in GLSL ES — palettes inline, dispatched by index</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">vec3</span> palette(<span style="color:#66d9ef">int</span> i, <span style="color:#66d9ef">vec2</span> q){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, <span style="color:#ae81ff">0.0</span>);                             <span style="color:#75715e">// square</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, q.x <span style="color:#f92672">+</span> q.y <span style="color:#f92672">-</span> <span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x<span style="color:#f92672">*</span>q.y);         <span style="color:#75715e">// tetra</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> (q.x <span style="color:#f92672">+</span> q.y <span style="color:#f92672">-</span> <span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x<span style="color:#f92672">*</span>q.y)); <span style="color:#75715e">// rgbw</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">3</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>((<span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x <span style="color:#f92672">+</span> q.y) <span style="color:#f92672">/</span> <span style="color:#ae81ff">3.0</span>);              <span style="color:#75715e">// gray</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> q.x, <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> q.y, <span style="color:#ae81ff">1.0</span>);                     <span style="color:#75715e">// cmy</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// swirl a centered position into its antialiased 2-bit quadrant (q.x = x-bit,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// q.y = y-bit) — the texture the palettes color. factored out so the peeling</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// layer can sample the same swirl from a pulled-away position.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">vec2</span> quad(<span style="color:#66d9ef">vec2</span> pp, <span style="color:#66d9ef">float</span> twist, <span style="color:#66d9ef">float</span> turn){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> rr <span style="color:#f92672">=</span> length(pp);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> ang <span style="color:#f92672">=</span> atan(pp.y, pp.x) <span style="color:#f92672">+</span> twist <span style="color:#f92672">*</span> log(rr) <span style="color:#f92672">+</span> turn;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> s <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(cos(ang), sin(ang)) <span style="color:#f92672">*</span> rr <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> fw <span style="color:#f92672">=</span> fwidth(s); <span style="color:#75715e">// pixel footprint of the swirled coords</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> smoothstep(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> fw, <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> fw, s); <span style="color:#75715e">// antialiased quadrant edge</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// iTime is periodic: wrap it and show a transport scrubber in the panel.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 25 = 5 palettes * HOLD (5.0) — one full palette cycle.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// @loop 25</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uv <span style="color:#f92672">=</span> fragCoord<span style="color:#f92672">/</span>iResolution.xy; <span style="color:#75715e">// &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> HOLD <span style="color:#f92672">=</span> <span style="color:#ae81ff">5.0</span>;        <span style="color:#75715e">// seconds per palette (slow, viscous transfer)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> LOOP <span style="color:#f92672">=</span> <span style="color:#ae81ff">5.0</span> <span style="color:#f92672">*</span> HOLD; <span style="color:#75715e">// one full cycle of all five palettes</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> TAU  <span style="color:#f92672">=</span> <span style="color:#ae81ff">6.2831853</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> w <span style="color:#f92672">=</span> TAU <span style="color:#f92672">/</span> LOOP;          <span style="color:#75715e">// loop fundamental: one cycle over the loop</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// every wobble below is a sine at a WHOLE multiple of w, so it lands back on</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// its start at iTime = LOOP and the loop stays seamless.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the eye wanders on a Lissajous path instead of sitting dead center, so</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the drain meanders as if the water were sloshing</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> wander <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.06</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">vec2</span>(sin(w<span style="color:#f92672">*</span>iTime) <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span><span style="color:#f92672">*</span>sin(<span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>w<span style="color:#f92672">*</span>iTime <span style="color:#f92672">+</span> <span style="color:#ae81ff">1.3</span>),
+</span></span><span style="display:flex;"><span>                            cos(w<span style="color:#f92672">*</span>iTime) <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span><span style="color:#f92672">*</span>cos(<span style="color:#ae81ff">3.0</span><span style="color:#f92672">*</span>w<span style="color:#f92672">*</span>iTime <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.7</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> p <span style="color:#f92672">=</span> uv <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> wander; <span style="color:#75715e">// recenter on the wandering eye</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the drain breathes: its pull swells and ebbs over the loop (volume)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> breathe <span style="color:#f92672">=</span> <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.6</span> <span style="color:#f92672">*</span> sin(<span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>w<span style="color:#f92672">*</span>iTime);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// one turn per loop, the seamless base of the spin</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> spin <span style="color:#f92672">=</span> mod(iTime <span style="color:#f92672">*</span> w, TAU);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// SPIRAL ARMS: twist by log(r); rotating a log spiral == scaling it, so</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// spinning it drains the arms inward like a whirlpool. breathe varies how</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// hard it twists (volume); the extra sin makes the spin surge and stall.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> twist <span style="color:#f92672">=</span> <span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> breathe; <span style="color:#75715e">// how hard it winds (volume)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> turn  <span style="color:#f92672">=</span> spin <span style="color:#f92672">*</span> <span style="color:#ae81ff">5.0</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.6</span> <span style="color:#f92672">*</span> sin(<span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime); <span style="color:#75715e">// 5 turns/loop + surge</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> e <span style="color:#f92672">=</span> quad(p, twist, turn); <span style="color:#75715e">// the new layer, lying flat on the surface</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// cycle the 5 palettes, one sweep wipe per slot</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> T <span style="color:#f92672">=</span> iTime <span style="color:#f92672">/</span> HOLD;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i0 <span style="color:#f92672">=</span> <span style="color:#66d9ef">int</span>(mod(floor(T), <span style="color:#ae81ff">5.0</span>)); <span style="color:#75715e">// current palette</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i1 <span style="color:#f92672">=</span> <span style="color:#66d9ef">int</span>(mod(floor(T) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">5.0</span>)); <span style="color:#75715e">// next palette</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// viscous descent: the wipe eases across most of the slot, slow at the rim</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// and creeping as it nears the eye, so the palette oozes down the drain</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> sweep <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.1</span>, <span style="color:#ae81ff">1.0</span>, fract(T));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// drain-in wipe: the new palette floods in from the rim and collapses</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// toward the eye last, so the transition itself drains. p tracks the</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// wandering center, so the drain point meanders with the vortex.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// liquid wobble: ripple the wipe&#39;s radius with two drifting lobe sets so the</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// front is a wavy edge, not a clean circle (whole lobes + harmonics keep it</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// seamless). ea is the raw angle, taken before the spiral twisted a.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> ea <span style="color:#f92672">=</span> atan(p.y, p.x);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the wave amplitude swells and ebbs as the front descends (sweep) and</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// flows over time, so the wobble breathes on the way down</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> amp <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.09</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.08</span> <span style="color:#f92672">*</span> sin(sweep <span style="color:#f92672">*</span> <span style="color:#ae81ff">12.566</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">4.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> wob <span style="color:#f92672">=</span> <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">+</span> amp <span style="color:#f92672">*</span> sin(ea <span style="color:#f92672">*</span> <span style="color:#ae81ff">5.0</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime)
+</span></span><span style="display:flex;"><span>                  <span style="color:#f92672">+</span> amp <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.6</span> <span style="color:#f92672">*</span> sin(ea <span style="color:#f92672">*</span> <span style="color:#ae81ff">8.0</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">2.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> swp <span style="color:#f92672">=</span> <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> length(p) <span style="color:#f92672">/</span> (<span style="color:#ae81ff">0.8</span> <span style="color:#f92672">*</span> wob); <span style="color:#75715e">// wavy front: ~1 eye, ~0 rim</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> band <span style="color:#f92672">=</span> fwidth(swp) <span style="color:#f92672">*</span> <span style="color:#ae81ff">1.5</span>; <span style="color:#75715e">// antialias the wipe edge</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1 once the sweep has passed this pixel</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> toNew <span style="color:#f92672">=</span> smoothstep(swp <span style="color:#f92672">-</span> band, swp <span style="color:#f92672">+</span> band, sweep);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// PEEL: the old layer lifts off the surface and is pulled down the drain,</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// revealing the new one underneath. lift leads the fade, so the old sheet</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// visibly slides toward the eye (and swirls in) before it dissolves.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> lift <span style="color:#f92672">=</span> smoothstep(swp <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.45</span>, swp <span style="color:#f92672">+</span> band, sweep); <span style="color:#75715e">// 0 ahead, 1 peeled</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> pe <span style="color:#f92672">=</span> p <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.6</span> <span style="color:#f92672">*</span> lift); <span style="color:#75715e">// drag old layer toward the eye</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> oldCol <span style="color:#f92672">=</span> palette(i0, quad(pe, twist, turn <span style="color:#f92672">+</span> lift <span style="color:#f92672">*</span> <span style="color:#ae81ff">3.0</span>)); <span style="color:#75715e">// sliding away</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> mix(oldCol, palette(i1, e), toNew);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// bright crystallized edge: a sharp ridge of light rides the wipe front</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// (where swp ~ sweep), faceted by high-frequency angular glints so it</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// sparkles like ice (whole-number glint frequencies/drift -&gt; seamless)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> ridge <span style="color:#f92672">=</span> <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> smoothstep(<span style="color:#ae81ff">0.0</span>, band <span style="color:#f92672">*</span> <span style="color:#ae81ff">3.0</span>, abs(sweep <span style="color:#f92672">-</span> swp));
+</span></span><span style="display:flex;"><span>  ridge <span style="color:#f92672">*=</span> smoothstep(<span style="color:#ae81ff">0.0</span>, <span style="color:#ae81ff">0.03</span>, sweep); <span style="color:#75715e">// only while a wipe is travelling</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> glint <span style="color:#f92672">=</span> sin(ea <span style="color:#f92672">*</span> <span style="color:#ae81ff">40.0</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">6.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime)
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">*</span> sin(ea <span style="color:#f92672">*</span> <span style="color:#ae81ff">23.0</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">4.0</span> <span style="color:#f92672">*</span> w <span style="color:#f92672">*</span> iTime);
+</span></span><span style="display:flex;"><span>  glint <span style="color:#f92672">=</span> pow(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">*</span> glint, <span style="color:#ae81ff">6.0</span>); <span style="color:#75715e">// sharpen the bands into sparkles</span>
+</span></span><span style="display:flex;"><span>  col <span style="color:#f92672">+=</span> ridge <span style="color:#f92672">*</span> (<span style="color:#ae81ff">0.25</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.75</span> <span style="color:#f92672">*</span> glint); <span style="color:#75715e">// additive white-hot crystal rim</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Output to screen</span>
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col,<span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#75715e">// no function pointers in GLSL ES — palettes inline, dispatched by index</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// each maps the antialiased quadrant q (q.x = x-bit, q.y = y-bit) to a color</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">vec3</span> palette(<span style="color:#66d9ef">int</span> i, <span style="color:#66d9ef">vec2</span> q){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, <span style="color:#ae81ff">0.0</span>);                             <span style="color:#75715e">// square</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, q.x <span style="color:#f92672">+</span> q.y <span style="color:#f92672">-</span> <span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x<span style="color:#f92672">*</span>q.y);         <span style="color:#75715e">// tetra</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(q, <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> (q.x <span style="color:#f92672">+</span> q.y <span style="color:#f92672">-</span> <span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x<span style="color:#f92672">*</span>q.y)); <span style="color:#75715e">// rgbw</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(i <span style="color:#f92672">==</span> <span style="color:#ae81ff">3</span>) <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>((<span style="color:#ae81ff">2.0</span><span style="color:#f92672">*</span>q.x <span style="color:#f92672">+</span> q.y) <span style="color:#f92672">/</span> <span style="color:#ae81ff">3.0</span>);              <span style="color:#75715e">// gray</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> q.x, <span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> q.y, <span style="color:#ae81ff">1.0</span>);                     <span style="color:#75715e">// cmy</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// iTime is periodic: wrap it and show a transport scrubber in the panel.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 12.5 = 5 palettes * HOLD (2.5) — one full palette cycle.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// @loop 12.5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// a controls-panel dropdown picks the polar remap (default 0 = spiral arms)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// @select GEOMETRY 0 spiral tunnel</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">int</span> GEOMETRY;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uv <span style="color:#f92672">=</span> fragCoord<span style="color:#f92672">/</span>iResolution.xy; <span style="color:#75715e">// &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> p <span style="color:#f92672">=</span> uv <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.5</span>; <span style="color:#75715e">// recenter so the figure pivots on the middle</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> r <span style="color:#f92672">=</span> length(p); <span style="color:#75715e">// distance from the center</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> a <span style="color:#f92672">=</span> atan(p.y, p.x); <span style="color:#75715e">// current angle</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> HOLD <span style="color:#f92672">=</span> <span style="color:#ae81ff">2.5</span>;        <span style="color:#75715e">// seconds per palette (hold + wipe)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> LOOP <span style="color:#f92672">=</span> <span style="color:#ae81ff">5.0</span> <span style="color:#f92672">*</span> HOLD; <span style="color:#75715e">// one full cycle of all five palettes</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> TAU  <span style="color:#f92672">=</span> <span style="color:#ae81ff">6.2831853</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// one turn per loop, the seamless base both geometries share</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> spin <span style="color:#f92672">=</span> mod(iTime <span style="color:#f92672">*</span> (TAU <span style="color:#f92672">/</span> LOOP), TAU);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> sw; <span style="color:#75715e">// coords (in &lt;0,1&gt;) handed to the quadrant/palette lookup</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (GEOMETRY <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// SPIRAL ARMS: twist the angle by log(r) instead of the whirlpool&#39;s</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// exp(-r). log is scale-invariant, so the quadrant edges become true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// logarithmic spirals — the same arm shape repeats at every radius.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Rotating a log spiral == scaling it, so spinning it makes the arms</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// drain inward like a whirlpool; 5 whole turns/loop reads fast yet seamless.</span>
+</span></span><span style="display:flex;"><span>    a <span style="color:#f92672">+=</span> <span style="color:#ae81ff">3.0</span> <span style="color:#f92672">*</span> log(r) <span style="color:#f92672">+</span> spin <span style="color:#f92672">*</span> <span style="color:#ae81ff">5.0</span>;
+</span></span><span style="display:flex;"><span>    sw <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(cos(a), sin(a)) <span style="color:#f92672">*</span> r <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span>; <span style="color:#75715e">// rebuild swirled coords in &lt;0,1&gt;</span>
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// TUNNEL: drop the cartesian rebuild. Read (angle, 1/r) as the texture</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// coords — angle wraps the wall, 1/r recedes to a vanishing point at the</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// center, +spin marches the wall toward you; fract tiles the quadrant.</span>
+</span></span><span style="display:flex;"><span>    sw <span style="color:#f92672">=</span> fract(<span style="color:#66d9ef">vec2</span>(a <span style="color:#f92672">/</span> TAU <span style="color:#f92672">+</span> spin <span style="color:#f92672">/</span> TAU, <span style="color:#ae81ff">0.35</span> <span style="color:#f92672">/</span> r <span style="color:#f92672">+</span> spin <span style="color:#f92672">/</span> TAU));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> aa <span style="color:#f92672">=</span> fwidth(sw); <span style="color:#75715e">// pixel footprint of the swirled coords</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> e <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> aa, <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> aa, sw); <span style="color:#75715e">// antialiased quadrant edge</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// cycle the 5 palettes, one sweep wipe per slot</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> T <span style="color:#f92672">=</span> iTime <span style="color:#f92672">/</span> HOLD;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i0 <span style="color:#f92672">=</span> <span style="color:#66d9ef">int</span>(mod(floor(T), <span style="color:#ae81ff">5.0</span>)); <span style="color:#75715e">// current palette</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> i1 <span style="color:#f92672">=</span> <span style="color:#66d9ef">int</span>(mod(floor(T) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1.0</span>, <span style="color:#ae81ff">5.0</span>)); <span style="color:#75715e">// next palette</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> sweep <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.6</span>, <span style="color:#ae81ff">1.0</span>, fract(T)); <span style="color:#75715e">// hold, then wipe the last 40%</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// diagonal wipe coord — try uv.x, or atan(p.y,p.x)/6.2831853+0.5</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> swp <span style="color:#f92672">=</span> (uv.x <span style="color:#f92672">+</span> uv.y) <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.5</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> band <span style="color:#f92672">=</span> fwidth(swp) <span style="color:#f92672">*</span> <span style="color:#ae81ff">1.5</span>; <span style="color:#75715e">// antialias the wipe edge</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1 once the sweep has passed this pixel</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> toNew <span style="color:#f92672">=</span> smoothstep(swp <span style="color:#f92672">-</span> band, swp <span style="color:#f92672">+</span> band, sweep);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> mix(palette(i0, e), palette(i1, e), toNew);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Output to screen</span>
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col,<span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div></div>
+  </div>
+</div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

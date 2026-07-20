@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 5: KVM and Cloud-Init · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/proxmox/06-router/" aria-label="Previous: router" title="prev: router"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/04-containers/" aria-label="Next: containers" title="next: containers"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">kvm-templates</a></li><li class="lvl2"><a href="#kvm">KVM?</a></li><li class="lvl2"><a href="#cloud-init">Cloud-Init?</a></li><li class="lvl2"><a href="#install-the-script">Install the script</a></li><li class="lvl2"><a href="#warnings-for-alternative-proxmox-storage-backends-nfs">Warnings for alternative proxmox storage backends (NFS)</a></li><li class="lvl2"><a href="#creating-kvm-templates">Creating KVM templates</a></li><li class="lvl3"><a href="#arch-linux">Arch Linux</a></li><li class="lvl3"><a href="#debian-13-trixie">Debian (13; trixie)</a></li><li class="lvl3"><a href="#ubuntu-noble-2404-lts">Ubuntu (noble; 24.04 LTS)</a></li><li class="lvl3"><a href="#fedora-43">Fedora (43)</a></li><li class="lvl3"><a href="#docker">Docker</a></li><li class="lvl3"><a href="#freebsd-15">FreeBSD (15)</a></li><li class="lvl3"><a href="#any-other-cloud-image">Any other cloud image</a></li><li class="lvl2"><a href="#creating-new-virtual-machines-by-cloning-these-templates">Creating new virtual machines by cloning these templates</a></li><li class="lvl2"><a href="#the-script">The script</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="active" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/05-kvm-templates/">/kvm-templates</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 5: KVM and Cloud-Init</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-06">2022-05-06</time></span>
+  <span>updated <time datetime="2026-01-26">2026-01-26</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>This post introduces a shell script to create KVM virtual machine
+templates on Proxmox.</p>
+<h2 id="kvm"><a class="heading-anchor" href="#kvm">KVM?</a></h2>
+<p>According to Wikipedia:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Kernel-based Virtual Machine (KVM) is a virtualization module in the
+</span></span><span style="display:flex;"><span>Linux kernel that allows the kernel to function as a hypervisor.
+</span></span></code></pre></div><p>With KVM you can create virtual machines that are hardware
+accelerated. Unlike a container, a virtual machine boots its own
+virtual hardware (CPU, memory, disk, etc). Each KVM virtual machine is
+running its own (Linux) kernel and is isolated from the host operating
+system.</p>
+<p>The main advantages of a virtual machine are greater isolation and the
+ability to run any operating system. (Whereas a container is limited
+to running under the exact same Linux kernel as the host.)</p>
+<p>Proxmox supports both KVM virtual machines and LXC containers.
+<a href="./04-containers">Containers were covered in part 4</a>. This post will
+cover building KVM templates.</p>
+<h2 id="cloud-init"><a class="heading-anchor" href="#cloud-init">Cloud-Init?</a></h2>
+<p>Another advantage of KVM is the ability to use cloud images (using
+<a href="https://pve.proxmox.com/wiki/Cloud-Init_Support">cloud-init</a>) to be
+able to customize the username and SSH keys, and custom scripts for
+installing additional software. Cloud-Init will handle all of the
+configuration on the first boot of the VM.</p>
+<h2 id="install-the-script"><a class="heading-anchor" href="#install-the-script">Install the script</a></h2>
+<p>Login to your Proxmox server as the root user via SSH.</p>
+<p>Download the script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+wget https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_kvm.sh
+</pre></div>
+</div>
+
+
+<p>Read all of the comments, and then edit the variables at the top of
+the script to change any defaults you desire. You can also override
+the configuration defaults in your parent shell environment as will be
+shown.</p>
+<p>Make the script executable:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+chmod a&#43;x proxmox_kvm.sh
+</pre></div>
+</div>
+
+
+<h2 id="warnings-for-alternative-proxmox-storage-backends-nfs"><a class="heading-anchor" href="#warnings-for-alternative-proxmox-storage-backends-nfs">Warnings for alternative proxmox storage backends (NFS)</a></h2>
+<p>This script is setup by default for the <code>local-lvm</code> storage pool. If
+that&rsquo;s what you want, skip reading this section. You can also use
+<code>local-zfs</code>, by setting <code>STORAGE=local-zfs</code>. NFS storage can be used,
+with caveats. Other filesystems like ceph or gluster have not been
+tested. Finally, the Proxmox OS drive (<code>local</code>) should never be used
+for storing VMs. If you want to use anything other than <code>local-lvm</code>,
+you must change the <code>STORAGE</code> variable, as shown in all examples.</p>
+<p>You can store KVM templates on any storage pool that is tagged for the
+<code>Disk Image</code> content type (by default, only <code>local-lvm</code> is set this
+way). If you have added an NFS storage backend (and tagged it for the
+<code>Disk Image</code> content type), you may encounter this error when creating
+the final VM template (with <code>qm template {TEMPLATE_ID}</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Error you may see if using NFS or another alternative storage backend:
+</span></span><span style="display:flex;"><span>/usr/bin/chattr: Operation not supported while reading flags on /mnt/pve/{STORAGE}/images/{TEMPLATE_ID}/base-{TEMPLATE_ID}-disk-0.raw
+</span></span></code></pre></div><p>This is because NFS does not support immutable files, but this is not
+especially important as long as Proxmox is the only client of this
+storage pool. So, this error may be ignored.</p>
+<p>The examples below assume that you are using <code>STORAGE=local-lvm</code>, but
+you may change this to any other compatible storage pool name.</p>
+<p>If you do change the default <code>STORAGE</code>, please note that the <code>DISK</code>
+parameter might need slight tweaking as well, as shown in the script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## Depending on the storage backend, the DISK path may differ slightly:
+</span></span><span style="display:flex;"><span>if [ &#34;${STORAGE_TYPE}&#34; == &#39;nfs&#39; ]; then
+</span></span><span style="display:flex;"><span>    # nfs path:
+</span></span><span style="display:flex;"><span>    DISK=&#34;${STORAGE}:${TEMPLATE_ID}/vm-${TEMPLATE_ID}-disk-0.raw&#34;
+</span></span><span style="display:flex;"><span>elif [ &#34;${STORAGE_TYPE}&#34; == &#39;local&#39; ]; then
+</span></span><span style="display:flex;"><span>    # lvm path:
+</span></span><span style="display:flex;"><span>    DISK=&#34;${STORAGE}:vm-${TEMPLATE_ID}-disk-0&#34;
+</span></span><span style="display:flex;"><span>else
+</span></span><span style="display:flex;"><span>    echo &#34;only &#39;local&#39; (lvm) or &#39;nfs&#39; storage backends are supported at this time&#34;
+</span></span><span style="display:flex;"><span>    exit 1
+</span></span><span style="display:flex;"><span>fi
+</span></span></code></pre></div><p>Be sure to set <code>STORAGE_TYPE</code> to <code>local</code> if you&rsquo;re using the local-lvm backend
+or to <code>nfs</code>  if you&rsquo;re using the NFS backend. If you&rsquo;re using any other
+storage backend, you may need to tweak the <code>DISK</code> parameter and alter this
+<code>if</code> statement accordingly. I don&rsquo;t know why the naming is different between
+storage backends (if you do, <a href="https://github.com/EnigmaCurry/blog.rymcg.tech/issues">please file an issue</a>),
+but what I do know is that it&rsquo;s very annoying. I don&rsquo;t have a good solution
+here other than to hardcode the path differences into an if statement and
+to document the issue here.</p>
+<h2 id="creating-kvm-templates"><a class="heading-anchor" href="#creating-kvm-templates">Creating KVM templates</a></h2>
+<p>You can create templates for every Operating System you wish to run.
+In order to follow along with this blog series, you should create all
+of the following templates with the same <code>TEMPLATE_ID</code> shown, as these
+templates will be used in subsequent posts (you&rsquo;ll need at least the
+ones for Arch Linux (<code>9000</code>), Debian (<code>9001</code>), and Docker (<code>9998</code>)).</p>
+<h3 id="arch-linux"><a class="heading-anchor" href="#arch-linux">Arch Linux</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=arch TEMPLATE_ID=9000 STORAGE_TYPE=local STORAGE=local-lvm ./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="debian-13-trixie"><a class="heading-anchor" href="#debian-13-trixie">Debian (13; trixie)</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=debian TEMPLATE_ID=9001 STORAGE_TYPE=local STORAGE=local-lvm ./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="ubuntu-noble-2404-lts"><a class="heading-anchor" href="#ubuntu-noble-2404-lts">Ubuntu (noble; 24.04 LTS)</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=ubuntu TEMPLATE_ID=9002 STORAGE_TYPE=local STORAGE=local-lvm ./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="fedora-43"><a class="heading-anchor" href="#fedora-43">Fedora (43)</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=fedora TEMPLATE_ID=9003 STORAGE_TYPE=local STORAGE=local-lvm ./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="docker"><a class="heading-anchor" href="#docker">Docker</a></h3>
+<p>You can install Docker on any of the supported distributions. Pass the
+<code>INSTALL_DOCKER=yes</code> variable to attach a small install script to the
+VM so that it automatically installs Docker on first boot, via
+cloud-init:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+VM_HOSTNAME=docker \
+DISTRO=debian \
+TEMPLATE_ID=9998 \
+INSTALL_DOCKER=yes \
+STORAGE_TYPE=local \
+STORAGE=local-lvm \
+./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="freebsd-15"><a class="heading-anchor" href="#freebsd-15">FreeBSD (15)</a></h3>
+<p>FreeBSD does not allow root login, so you must choose an alternate <code>VM_USER</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=freebsd TEMPLATE_ID=9004 STORAGE=local-lvm VM_USER=fred ./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h3 id="any-other-cloud-image"><a class="heading-anchor" href="#any-other-cloud-image">Any other cloud image</a></h3>
+<p>You can use any other generic cloud image directly by setting
+<code>IMAGE_URL</code>. For example, this script knows nothing about OpenBSD, but
+you can find a third party cloud image from <a href="https://bsd-cloud-image.org/">this
+website</a>, and so you can use their image
+with this script:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISTRO=OpenBSD \
+TEMPLATE_ID=9999 \
+VM_USER=fred \
+STORAGE=local-lvm \
+IMAGE_URL=https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/openbsd/7.0/2021-12-11/openbsd-7.0.qcow2 \
+./proxmox_kvm.sh template
+</pre></div>
+</div>
+
+
+<h2 id="creating-new-virtual-machines-by-cloning-these-templates"><a class="heading-anchor" href="#creating-new-virtual-machines-by-cloning-these-templates">Creating new virtual machines by cloning these templates</a></h2>
+<p>This script uses a custom cloud-init User Data template that is copied
+to <code>/var/lib/vz/snippets/vm-${VM_ID}-user-data.yml</code> which means that
+you cannot use the Proxmox GUI to edit cloud-init data. Therefore,
+this script encapsulates this logic for you, and makes it easy to
+clone the template:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TEMPLATE_ID=9000 \
+VM_ID=100 \
+VM_HOSTNAME=my_arch \
+./proxmox_kvm.sh clone
+</pre></div>
+</div>
+
+
+<p>Start the VM whenever you&rsquo;re ready:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm start 100
+</pre></div>
+</div>
+
+
+<p>cloud-init will run the first time the VM boots. This will install the
+Qemu guest agent, which may take a few minutes.</p>
+<p>Wait a bit for the boot to finish, then find out what the IP address
+is:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+VM_ID=100 ./proxmox_kvm.sh get_ip
+</pre></div>
+</div>
+
+
+<h2 id="the-script"><a class="heading-anchor" href="#the-script">The script</a></h2>
+<ul>
+<li><a href="https://raw.githubusercontent.com/EnigmaCurry/blog.rymcg.tech/master/src/proxmox/proxmox_kvm.sh">You can download the script from this direct link</a></li>
+</ul>
+
+
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-shell" data-lang="shell"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Create Proxmox KVM templates from cloud images</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## See https://blog.rymcg.tech/blog/proxmox/05-kvm-templates/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Specify DISTRO and the latest image will be discovered automatically:</span>
+</span></span><span style="display:flex;"><span>DISTRO<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#66d9ef">:-</span>arch<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Alternatively, specify IMAGE_URL to the full URL of the cloud image:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#IMAGE_URL=https://mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## To configure DISK path correctly, set STORAGE_TYPE to &#34;nfs&#34; or &#34;local&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## (no other storage backends supported at this time)</span>
+</span></span><span style="display:flex;"><span>STORAGE_TYPE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>STORAGE_TYPE<span style="color:#66d9ef">:-</span>local<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## The ID of the storage to create the disk in</span>
+</span></span><span style="display:flex;"><span>STORAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>STORAGE<span style="color:#66d9ef">:-</span>local-lvm<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Set these variables to configure the container:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## (All variables can be overriden from the parent environment)</span>
+</span></span><span style="display:flex;"><span>TEMPLATE_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#66d9ef">:-</span>9001<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>VM_ID<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VM_ID<span style="color:#66d9ef">:-</span>100<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>VM_HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VM_HOSTNAME<span style="color:#66d9ef">:-$(</span>echo <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> | cut -d- -f1<span style="color:#66d9ef">)</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>VM_USER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VM_USER<span style="color:#66d9ef">:-</span>root<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>VM_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>VM_PASSWORD<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>PUBLIC_PORTS_TCP<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PUBLIC_PORTS_TCP<span style="color:#66d9ef">:-</span>22,80,443<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>PUBLIC_PORTS_UDP<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PUBLIC_PORTS_UDP<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Point to the local authorized_keys file to copy into VM:</span>
+</span></span><span style="display:flex;"><span>SSH_KEYS<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SSH_KEYS<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/.ssh/authorized_keys<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container CPUs:</span>
+</span></span><span style="display:flex;"><span>NUM_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>NUM_CORES<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container RAM in MB:</span>
+</span></span><span style="display:flex;"><span>MEMORY<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#66d9ef">:-</span>2048<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container swap size in MB:</span>
+</span></span><span style="display:flex;"><span>SWAP_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SWAP_SIZE<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Container root filesystem size in GB:</span>
+</span></span><span style="display:flex;"><span>FILESYSTEM_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>FILESYSTEM_SIZE<span style="color:#66d9ef">:-</span>50<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>INSTALL_DOCKER<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>START_ON_BOOT<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>START_ON_BOOT<span style="color:#66d9ef">:-</span>1<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Depending on the storage backend, the DISK path may differ slightly:</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STORAGE_TYPE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;nfs&#39;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># nfs path:</span>
+</span></span><span style="display:flex;"><span>    DISK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">/vm-</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">-disk-0.raw&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STORAGE_TYPE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;local&#39;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># lvm path:</span>
+</span></span><span style="display:flex;"><span>    DISK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">:vm-</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">-disk-0&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;only &#39;local&#39; (lvm) or &#39;nfs&#39; storage backends are supported at this time&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PUBLIC_BRIDGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#66d9ef">:-</span>vmbr0<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>SNIPPETS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#66d9ef">:-</span>/var/lib/vz/snippets<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_confirm<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set +x
+</span></span><span style="display:flex;"><span>    test <span style="color:#e6db74">${</span>YES<span style="color:#66d9ef">:-</span>no<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    default<span style="color:#f92672">=</span>$1; prompt<span style="color:#f92672">=</span>$2; question<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;. Proceed?&#34;</span><span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> $default <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Y/n&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        dflt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;y/N&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    read -p <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prompt<span style="color:#e6db74">}${</span>question<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>dflt<span style="color:#e6db74">}</span><span style="color:#e6db74">): &#34;</span> answer
+</span></span><span style="display:flex;"><span>    answer<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>answer<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>default<span style="color:#e6db74">}}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">${</span>answer,,<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Exiting.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span>$BASH_SOURCE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>template<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    USER_DATA_RUNCMD<span style="color:#f92672">=()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>set -x; qm create <span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -v IMAGE_URL <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        _template_from_url <span style="color:#e6db74">${</span>IMAGE_URL<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;arch&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;archlinux&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;rm -rf /etc/pacman.d/gnupg&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;pacman-key --init&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;pacman-key --populate archlinux&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;pacman -Syu --noconfirm&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;pacman -S --noconfirm qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;sed -i -e &#39;s/^#\?GRUB_TERMINAL_INPUT=.*/GRUB_TERMINAL_INPUT=\&#34;console serial\&#34;/&#39; -e &#39;s/^#\?GRUB_TERMINAL_OUTPUT=.*/GRUB_TERMINAL_OUTPUT=\&#34;console serial\&#34;/&#39; -e &#39;s/^#\?GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\&#34;rootflags=compress-force=zstd console=tty0 console=ttyS0,115200\&#34;/&#39; /etc/default/grub&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;sh -c \&#34;echo &#39;GRUB_SERIAL_COMMAND=\\\&#34;serial --unit=0 --speed=115200\\\&#34;&#39; &gt;&gt; /etc/default/grub\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;grub-mkconfig -o /boot/grub/grub.cfg&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;debian&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;trixie&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;bookworm&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;bullseye&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud.debian.org/images/cloud/bullseye/latest/debian-11-genericcloud-amd64.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;plucky&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud-images.ubuntu.com/plucky/current/plucky-server-cloudimg-amd64.img
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ubuntu&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;noble&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;jammy&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;focal&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;apt-get update&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;apt-get install -y qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl start qemu-guest-agent&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;fedora&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;fedora-43&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://download.fedoraproject.org/pub/fedora/linux/releases/43/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-43-1.6.x86_64.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;sh -c \&#34;echo PasswordAuthentication no &gt; /etc/ssh/sshd_config.d/00-no-passwords.conf\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl restart sshd&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;fedora-42&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://download.fedoraproject.org/pub/fedora/linux/releases/42/Cloud/x86_64/images/Fedora-Cloud-Base-Generic-42-1.1.x86_64.qcow2
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;sh -c \&#34;echo PasswordAuthentication no &gt; /etc/ssh/sshd_config.d/00-no-passwords.conf\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>                               <span style="color:#e6db74">&#34;systemctl restart sshd&#34;</span>
+</span></span><span style="display:flex;"><span>                              <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;freebsd&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;freebsd-15&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># There&#39;s a lot more images to try here:  https://bsd-cloud-image.org/</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://download.freebsd.org/releases/VM-IMAGES/15.0-RELEASE/amd64/Latest/FreeBSD-15.0-RELEASE-amd64-zfs.qcow2.xz
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;freebsd-13&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># There&#39;s a lot more images to try here:  https://bsd-cloud-image.org/</span>
+</span></span><span style="display:flex;"><span>            _template_from_url https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/13.2/2023-04-21/zfs/freebsd-13.2-zfs-2023-04-21.qcow2
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;DISTRO &#39;</span><span style="color:#e6db74">${</span>DISTRO<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; is not supported by this script yet.&#34;</span>
+</span></span><span style="display:flex;"><span>            exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>        COMMON_ARGS<span style="color:#f92672">=(</span>
+</span></span><span style="display:flex;"><span>            --name <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>VM_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --sockets <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NUM_CORES<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --memory <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --net0 <span style="color:#e6db74">&#34;virtio,bridge=</span><span style="color:#e6db74">${</span>PUBLIC_BRIDGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --scsihw virtio-scsi-pci
+</span></span><span style="display:flex;"><span>            --scsi0 <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DISK<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --ide2 <span style="color:#e6db74">${</span>STORAGE<span style="color:#e6db74">}</span>:cloudinit
+</span></span><span style="display:flex;"><span>            --sshkey <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SSH_KEYS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            --ipconfig0 ip<span style="color:#f92672">=</span>dhcp
+</span></span><span style="display:flex;"><span>            --boot c
+</span></span><span style="display:flex;"><span>            --bootdisk scsi0
+</span></span><span style="display:flex;"><span>            --serial0 socket
+</span></span><span style="display:flex;"><span>            --vga serial0
+</span></span><span style="display:flex;"><span>            --agent <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        pvesh set /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/qemu/<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>/firewall/options --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/qemu/<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>/firewall/rules <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>          --action ACCEPT --type in --macro ping --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;,&#39;</span> read -ra PORTS <span style="color:#f92672">&lt;&lt;&lt;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PUBLIC_PORTS_TCP<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> PORT in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORTS[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>            pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/qemu/<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>/firewall/rules --action ACCEPT --type in --proto tcp --dport <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>        IFS<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;,&#39;</span> read -ra UDP_PORTS <span style="color:#f92672">&lt;&lt;&lt;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PUBLIC_PORTS_UDP<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> PORT in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>UDP_PORTS[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>            pvesh create /nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/qemu/<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>/firewall/rules --action ACCEPT --type in --proto udp --dport <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PORT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> --enable <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">## Generate cloud-init User Data script:</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INSTALL_DOCKER<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">## Attach the Docker install script as Cloud-Init User Data so</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">## that it is installed automatically on first boot:</span>
+</span></span><span style="display:flex;"><span>            USER_DATA_RUNCMD<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;sh -c &#39;curl -sSL https://get.docker.com | sh&#39;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        mkdir -p <span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        USER_DATA<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#e6db74">}</span>/vm-template-<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>-user-data.yaml
+</span></span><span style="display:flex;"><span>        cat <span style="color:#e6db74">&lt;&lt;EOF &gt; ${USER_DATA}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#cloud-config
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">fqdn: ${VM_HOSTNAME}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssh_pwauth: false
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">users:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> - name: ${VM_USER}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   gecos: ${VM_USER}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   groups: docker
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">   ssh_authorized_keys:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">$(cat ${SSH_KEYS} | grep -E &#34;^ssh&#34; | xargs -iXX echo &#34;     - XX&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">runcmd:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> cmd in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>USER_DATA_RUNCMD[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34; - </span><span style="color:#e6db74">${</span>cmd<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">${</span>USER_DATA<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>        qm set <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_ARGS[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> --cicustom <span style="color:#e6db74">&#34;user=local:snippets/vm-template-</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">-user-data.yaml&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">## Resize filesystem and turn into a template:</span>
+</span></span><span style="display:flex;"><span>        qm resize <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> scsi0 <span style="color:#e6db74">&#34;+</span><span style="color:#e6db74">${</span>FILESYSTEM_SIZE<span style="color:#e6db74">}</span><span style="color:#e6db74">G&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">## chattr +i will fail on NFS but don&#39;t worry about it:</span>
+</span></span><span style="display:flex;"><span>        qm template <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STORAGE_TYPE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;nfs&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> set +x <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;\`chattr +i\` will fail on NFS but don&#39;t worry about it.&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>clone<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>    qm clone <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> --full <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    USER_DATA<span style="color:#f92672">=</span>vm-<span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span>-user-data.yaml
+</span></span><span style="display:flex;"><span>    cp <span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#e6db74">}</span>/vm-template-<span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span>-user-data.yaml <span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#e6db74">}</span>/<span style="color:#e6db74">${</span>USER_DATA<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    sed -i <span style="color:#e6db74">&#34;s/^fqdn:.*/fqdn: </span><span style="color:#e6db74">${</span>VM_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">/&#34;</span> <span style="color:#e6db74">${</span>SNIPPETS_DIR<span style="color:#e6db74">}</span>/<span style="color:#e6db74">${</span>USER_DATA<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -v VM_PASSWORD <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        cat <span style="color:#e6db74">&lt;&lt;EOF &gt;&gt; ${SNIPPETS_DIR}/${USER_DATA}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">chpasswd:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  expire: false
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  list:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    - ${VM_USER}:${VM_PASSWORD}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    qm set <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --name <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>VM_HOSTNAME<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --sockets <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>NUM_CORES<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --memory <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MEMORY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --onboot <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>START_ON_BOOT<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>       --cicustom <span style="color:#e6db74">&#34;user=local:snippets/</span><span style="color:#e6db74">${</span>USER_DATA<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#qm snapshot &#34;${VM_ID}&#34; init</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Cloned VM </span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74"> from template </span><span style="color:#e6db74">${</span>TEMPLATE_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">. To start it, run:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  qm start </span><span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>get_ip<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -eo pipefail
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">## Get the IP address through the guest agent</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! command -v jq &gt;/dev/null; <span style="color:#66d9ef">then</span> apt install -y jq; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    pvesh get nodes/<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>/qemu/<span style="color:#e6db74">${</span>VM_ID<span style="color:#e6db74">}</span>/agent/network-get-interfaces --output-format<span style="color:#f92672">=</span>json | jq -r <span style="color:#e6db74">&#39;.result[] | select(.name | test(&#34;eth0&#34;)) | .&#34;ip-addresses&#34;[] | select(.&#34;ip-address-type&#34; | test(&#34;ipv4&#34;)) | .&#34;ip-address&#34;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_template_from_url<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    IMAGE_URL<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    IMAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>IMAGE_URL##*/<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    TMP<span style="color:#f92672">=</span>/tmp/kvm-images
+</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">&#34;</span>$TMP<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cd <span style="color:#e6db74">&#34;</span>$TMP<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$IMAGE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> *.qcow2.xz <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ! command -v xz &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Error: xz is not installed. Please install it before proceeding.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># The source file is compressed</span>
+</span></span><span style="display:flex;"><span>        EXTRACTED<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>IMAGE%.xz<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># If the extracted file already exists, skip downloading the .xz file</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EXTRACTED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Extracted file &#39;</span><span style="color:#e6db74">${</span>EXTRACTED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; already present – skipping download of </span><span style="color:#e6db74">${</span>IMAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Only download the .xz file if it doesn&#39;t already exist</span>
+</span></span><span style="display:flex;"><span>            test -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IMAGE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> wget <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IMAGE_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Decompress only if the .xz file exists and the extracted file doesn&#39;t exist</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -f <span style="color:#e6db74">&#34;</span>$IMAGE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EXTRACTED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span> 
+</span></span><span style="display:flex;"><span>            xz -d <span style="color:#e6db74">&#34;</span>$IMAGE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        IMAGE<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>IMAGE%.xz<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        test -f <span style="color:#e6db74">&#34;</span>$IMAGE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> wget <span style="color:#e6db74">&#34;</span>$IMAGE_URL<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    qm importdisk <span style="color:#e6db74">&#34;</span>$TEMPLATE_ID<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$IMAGE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$STORAGE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $# <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;# Documentation: https://blog.rymcg.tech/blog/proxmox/05-kvm-templates/&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Commands:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; template&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; clone&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34; get_ip&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> <span style="color:#f92672">[[</span> $# &gt; <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    shift
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Invalid arguments: </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

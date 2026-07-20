@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Marquee · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/letters/tileset/" aria-label="Previous: tileset" title="prev: tileset"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/" aria-label="Next: linux-workstation" title="next: linux-workstation"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/letters/">letters</a><ul><li class="lvl1"><a href="#">marquee</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node open">
+                  <a class="" href="/shaders/letters/">letters</a><ul class="sections"><li><a class="" href="/shaders/letters/letter-a/">letter-a</a></li><li><a class="" href="/shaders/letters/letter-a-sdf/">letter-a-sdf</a></li><li><a class="" href="/shaders/letters/hello-world/">hello-world</a></li><li><a class="" href="/shaders/letters/tileset/">tileset</a></li><li><a class="active" href="/shaders/letters/marquee/">marquee</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg" href="/shaders/letters/">/letters</a><a class="pseg pcur" href="/shaders/letters/marquee/">/marquee</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Marquee</a></h1>
+
+
+<p>The <a href="/shaders/letters/tileset/">previous page</a> treats a tileset as a lookup: partition the screen into
+cells, and let a hash of <code>(cell, time)</code> pick a character for each. The
+<strong>choice function</strong> is the whole show.</p>
+<p>Flip the axes. Instead of many tiny cells with per-cell choices, sample from
+a single <strong>virtual cell that fills the frame</strong> and drive the character choice
+from a scrolling <strong>world x</strong> — a linear coordinate that advances one integer
+per glyph. Now the whole screen shows one giant glyph, and the next slides
+in from the right as the coordinate crosses the next integer. A classic
+marquee, over the same atlas.</p>
+<p>The scan is a two-line change: <code>worldX = uv.x / FIT + pan</code>, <code>idx = floor(worldX) mod count</code>, cell-local UV = <code>(fract(worldX), y)</code>. Feed
+<code>@tileset</code> the marquee&rsquo;s own text (&ldquo;Hello, World!&rdquo;) so the atlas <strong>is</strong> the
+string, one cell per character — including the space at position 6, whose
+empty cell reads on screen exactly as it should: a gap.</p>
+<p>Inconsolata&rsquo;s monospace side-bearings leave each glyph filling only the
+middle ~45% of its atlas cell, so at <code>STRIDE = 1.0</code> adjacent letters sit
+55% of a cell apart — too airy. Compress <code>STRIDE</code> to <code>0.5875</code> and crop
+the same amount off each atlas edge; because atlas-per-worldX stays 1:1,
+each glyph keeps its on-screen size — only the whitespace between letters
+shrinks, from 0.55 cells down to ~0.14.</p>
+<p>For a seamless loop use the <a href="/shaders/whirlpool/looping-transport/"><code>@loop</code> directive</a>. Over <code>LOOP = 13.0</code>
+seconds the pan advances <code>iTilesCount</code> character-widths — one full pass of
+the string — so the visible content at <code>t = LOOP</code> matches <code>t = 0</code> exactly,
+and the <code>mod</code> wrap closes the seam. The transport scrubber comes with it,
+so you can drop the camera anywhere in the sentence.</p>
+<p>Shown here via <code>#+attr_diff</code> as a changeset from the <a href="/shaders/letters/tileset/">previous Tileset</a>.
+The grid partition, per-cell periods, and hash-based choice function are
+gone; a single pan and a character-unit world x are in.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// @tileset iTiles "Hello, World!"
+// @loop 13.0
+uniform sampler2D iTiles;
+uniform vec2  iTilesGrid;    // (cols, rows) laid out in the atlas
+uniform float iTilesCount;   // number of cells actually filled
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  // aspect-corrected coords centered on the middle; y in <-0.5, 0.5>
+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+
+  // Character-unit world x: one STRIDE per glyph. FIT sizes a single cell
+  // to 90% of the screen height, matching the single-glyph pages, so one
+  // giant character fills the frame and a slice of the next slides in from
+  // the right. Inconsolata monospace strokes only fill the middle ~45% of
+  // each atlas cell; the rest is side-bearing whitespace. Compress the
+  // cell period to STRIDE (< 1) and crop the same amount off each atlas
+  // edge — the on-screen glyph size is preserved (atlas-per-worldX stays
+  // 1:1) but the visible gap between adjacent letters shrinks by the same
+  // ratio. STRIDE=0.5875 tightens the original 0.55-unit gap to ~0.14.
+  const float FIT    = 0.9;
+  const float STRIDE = 0.5875;
+  const float CROP   = (1.0 - STRIDE) * 0.5;
+
+  // Pan advances STRIDE*iTilesCount world-x per LOOP so cellF = worldX/STRIDE
+  // advances iTilesCount — one full pass — and `mod(idx, count)` closes the
+  // seam exactly, so t=0 and t=LOOP show identical frames. The extra
+  // aspect-aware offset positions cellF=0 (the H's left cell boundary) at
+  // the *right edge* of the viewport at t=0, so the loop visibly begins
+  // with the H sliding in from the right — rather than mid-cross.
+  float aspect = iResolution.x / iResolution.y;
+  float pan    = iTime / 13.0 * iTilesCount * STRIDE - aspect * 0.5 / FIT;
+  float worldX = uv.x / FIT + pan;
+  float cellF  = worldX / STRIDE;
+
+  // Choice function: which character sits under this fragment. Wrap so the
+  // string tiles infinitely as the camera pans right — the '!' end butts
+  // straight up against the 'H' start, one continuous marquee ribbon.
+  float idx = mod(floor(cellF), iTilesCount);
+
+  // Cell-local UV inside the glyph's atlas cell. Horizontal fract remaps
+  // into [CROP, 1-CROP] so the whitespace side-bearings are skipped;
+  // aspect-corrected y maps directly with the same 90% fit.
+  vec2 cellUV = vec2(fract(cellF) * STRIDE + CROP, uv.y / FIT + 0.5);
+
+  // Decode idx → atlas (col, row), sample the atlas at cell-local UV. The
+  // atlas is uploaded with UNPACK_FLIP_Y_WEBGL=true so canvas row 0 (where
+  // 'H' was drawn) lives at the *top* of texture v, not the bottom — invert
+  // the row so ordered indices actually hit their glyphs. LINEAR filtering
+  // + SDF threshold keeps each glyph one-pixel sharp.
+  vec2 atlasCell = vec2(mod(idx, iTilesGrid.x),
+                        (iTilesGrid.y - 1.0) - floor(idx / iTilesGrid.x));
+  vec2 atlasUV   = (atlasCell + cellUV) / iTilesGrid;
+  float mask = 0.0;
+  if(cellUV.y >= 0.0 && cellUV.y <= 1.0){
+    mask = texture2D(iTiles, atlasUV).a;
+  }
+  float aa    = fwidth(mask);
+  float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+
+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+  fragColor = vec4(col, 1.0);
+}
+</script></div>
+<div class="box diffbox" data-view="diff" data-from="letters-tileset-shader" data-to="letters-marquee-shader">
+  <div class="label"><span class="lt" title="Diff: letters-tileset-shader → letters-marquee-shader" data-title-diff="Diff: letters-tileset-shader → letters-marquee-shader" data-title-source="Source: letters-marquee-shader">Diff: letters-tileset-shader → letters-marquee-shader</span></div>
+  <div class="box-ctl">
+    <button class="diff-toggle" type="button" aria-label="Toggle between diff and source view">Source</button>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <button class="expand" type="button" aria-label="Open in full screen" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg></button>
+  </div>
+  <div class="body">
+    <div class="diff-pane">
+      <div class="diff-raw"><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-diff" data-lang="diff"><span style="display:flex;"><span><span style="color:#f92672">--- letters-tileset-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+++ letters-marquee-shader
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span><span style="color:#75715e">@@ -1,42 +1,63 @@
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">-// @tileset iTiles &#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!,@#$%^&amp;*()-+=&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+// @tileset iTiles &#34;Hello, World!&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+// @loop 13.0
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span> uniform sampler2D iTiles;
+</span></span><span style="display:flex;"><span> uniform vec2  iTilesGrid;    // (cols, rows) laid out in the atlas
+</span></span><span style="display:flex;"><span> uniform float iTilesCount;   // number of cells actually filled
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-float hash(vec2 p){
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-}
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span> void mainImage( out vec4 fragColor, in vec2 fragCoord )
+</span></span><span style="display:flex;"><span> {
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  // Partition the screen into fixed 40-pixel square cells. Row and column
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // indices come from the integer part of fragCoord/CELL_PX; the local UV
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // inside the cell is the fractional part.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  const float CELL_PX = 40.0;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 cell     = floor(fragCoord / CELL_PX);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 uvInCell = fract(fragCoord / CELL_PX);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // Choice function: pick a character index per cell, on a *per-cell* random
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // period so each cell ticks on its own clock — some flip several times a
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // second, others hold for seconds at a time. Swap the hash for any
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // (cell, time) function to get radiating rings, falling scrolls, waves…
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float period = 0.15 + hash(cell + vec2(1.7)) * 2.5;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float phase  = hash(cell + vec2(4.3)) * period;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float stepT  = floor((iTime + phase) / period);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float idx    = floor(hash(cell + vec2(stepT * 0.317)) * iTilesCount);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // Decode idx → atlas (col, row), sample the atlas at cell-local UV.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // LINEAR filtering + SDF threshold keeps each glyph one-pixel sharp.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 atlasCell = vec2(mod(idx, iTilesGrid.x), floor(idx / iTilesGrid.x));
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec2 atlasUV   = (atlasCell + uvInCell) / iTilesGrid;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float mask = texture2D(iTiles, atlasUV).a;
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  // aspect-corrected coords centered on the middle; y in &lt;-0.5, 0.5&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 uv = (fragCoord - 0.5 * iResolution.xy) / iResolution.y;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // Character-unit world x: one STRIDE per glyph. FIT sizes a single cell
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // to 90% of the screen height, matching the single-glyph pages, so one
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // giant character fills the frame and a slice of the next slides in from
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // the right. Inconsolata monospace strokes only fill the middle ~45% of
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // each atlas cell; the rest is side-bearing whitespace. Compress the
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // cell period to STRIDE (&lt; 1) and crop the same amount off each atlas
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // edge — the on-screen glyph size is preserved (atlas-per-worldX stays
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // 1:1) but the visible gap between adjacent letters shrinks by the same
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // ratio. STRIDE=0.5875 tightens the original 0.55-unit gap to ~0.14.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  const float FIT    = 0.9;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  const float STRIDE = 0.5875;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  const float CROP   = (1.0 - STRIDE) * 0.5;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // Pan advances STRIDE*iTilesCount world-x per LOOP so cellF = worldX/STRIDE
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // advances iTilesCount — one full pass — and `mod(idx, count)` closes the
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // seam exactly, so t=0 and t=LOOP show identical frames. The extra
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // aspect-aware offset positions cellF=0 (the H&#39;s left cell boundary) at
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // the *right edge* of the viewport at t=0, so the loop visibly begins
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // with the H sliding in from the right — rather than mid-cross.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float aspect = iResolution.x / iResolution.y;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float pan    = iTime / 13.0 * iTilesCount * STRIDE - aspect * 0.5 / FIT;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float worldX = uv.x / FIT + pan;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float cellF  = worldX / STRIDE;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // Choice function: which character sits under this fragment. Wrap so the
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // string tiles infinitely as the camera pans right — the &#39;!&#39; end butts
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // straight up against the &#39;H&#39; start, one continuous marquee ribbon.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float idx = mod(floor(cellF), iTilesCount);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // Cell-local UV inside the glyph&#39;s atlas cell. Horizontal fract remaps
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // into [CROP, 1-CROP] so the whitespace side-bearings are skipped;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // aspect-corrected y maps directly with the same 90% fit.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 cellUV = vec2(fract(cellF) * STRIDE + CROP, uv.y / FIT + 0.5);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // Decode idx → atlas (col, row), sample the atlas at cell-local UV. The
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // atlas is uploaded with UNPACK_FLIP_Y_WEBGL=true so canvas row 0 (where
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // &#39;H&#39; was drawn) lives at the *top* of texture v, not the bottom — invert
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // the row so ordered indices actually hit their glyphs. LINEAR filtering
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  // + SDF threshold keeps each glyph one-pixel sharp.
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 atlasCell = vec2(mod(idx, iTilesGrid.x),
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+                        (iTilesGrid.y - 1.0) - floor(idx / iTilesGrid.x));
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  vec2 atlasUV   = (atlasCell + cellUV) / iTilesGrid;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  float mask = 0.0;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  if(cellUV.y &gt;= 0.0 &amp;&amp; cellUV.y &lt;= 1.0){
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+    mask = texture2D(iTiles, atlasUV).a;
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">+  }
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>   float aa    = fwidth(mask);
+</span></span><span style="display:flex;"><span>   float glyph = smoothstep(0.5 - aa, 0.5 + aa, mask);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">-  // Highlight layer: a slow diagonal sine over the grid modulates the fill
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  // brightness. Independent of the choice function, composable on top.
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  float wave = 0.5 + 0.5 * sin(cell.x * 0.15 + cell.y * 0.08 - iTime * 1.5);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672">-  vec3 col = mix(vec3(0.0), iAccent, glyph) * (0.3 + 0.7 * wave);
+</span></span></span><span style="display:flex;"><span><span style="color:#f92672"></span><span style="color:#a6e22e">+  vec3 col = mix(vec3(0.0), iAccent, glyph);
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e"></span>   fragColor = vec4(col, 1.0);
+</span></span><span style="display:flex;"><span> }
+</span></span></code></pre></div></div>
+    </div>
+    <div class="src-pane" hidden><div class="highlight"><div style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">39
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">40
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">41
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">42
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">43
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">44
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">45
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">46
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">47
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">48
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">49
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">50
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">51
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">52
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">53
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">54
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">55
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">56
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">57
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">58
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">59
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">60
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">61
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">62
+</span><span style="white-space:pre;-webkit-user-select:none;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">63
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#75715e">// @tileset iTiles &#34;Hello, World!&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// @loop 13.0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">sampler2D</span> iTiles;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">vec2</span>  iTilesGrid;    <span style="color:#75715e">// (cols, rows) laid out in the atlas</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">float</span> iTilesCount;   <span style="color:#75715e">// number of cells actually filled</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// aspect-corrected coords centered on the middle; y in &lt;-0.5, 0.5&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uv <span style="color:#f92672">=</span> (fragCoord <span style="color:#f92672">-</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">*</span> iResolution.xy) <span style="color:#f92672">/</span> iResolution.y;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Character-unit world x: one STRIDE per glyph. FIT sizes a single cell</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// to 90% of the screen height, matching the single-glyph pages, so one</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// giant character fills the frame and a slice of the next slides in from</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the right. Inconsolata monospace strokes only fill the middle ~45% of</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// each atlas cell; the rest is side-bearing whitespace. Compress the</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// cell period to STRIDE (&lt; 1) and crop the same amount off each atlas</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// edge — the on-screen glyph size is preserved (atlas-per-worldX stays</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1:1) but the visible gap between adjacent letters shrinks by the same</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ratio. STRIDE=0.5875 tightens the original 0.55-unit gap to ~0.14.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> FIT    <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.9</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> STRIDE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5875</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> CROP   <span style="color:#f92672">=</span> (<span style="color:#ae81ff">1.0</span> <span style="color:#f92672">-</span> STRIDE) <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.5</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Pan advances STRIDE*iTilesCount world-x per LOOP so cellF = worldX/STRIDE</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// advances iTilesCount — one full pass — and `mod(idx, count)` closes the</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// seam exactly, so t=0 and t=LOOP show identical frames. The extra</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// aspect-aware offset positions cellF=0 (the H&#39;s left cell boundary) at</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the *right edge* of the viewport at t=0, so the loop visibly begins</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// with the H sliding in from the right — rather than mid-cross.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> aspect <span style="color:#f92672">=</span> iResolution.x <span style="color:#f92672">/</span> iResolution.y;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> pan    <span style="color:#f92672">=</span> iTime <span style="color:#f92672">/</span> <span style="color:#ae81ff">13.0</span> <span style="color:#f92672">*</span> iTilesCount <span style="color:#f92672">*</span> STRIDE <span style="color:#f92672">-</span> aspect <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">/</span> FIT;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> worldX <span style="color:#f92672">=</span> uv.x <span style="color:#f92672">/</span> FIT <span style="color:#f92672">+</span> pan;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> cellF  <span style="color:#f92672">=</span> worldX <span style="color:#f92672">/</span> STRIDE;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Choice function: which character sits under this fragment. Wrap so the</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// string tiles infinitely as the camera pans right — the &#39;!&#39; end butts</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// straight up against the &#39;H&#39; start, one continuous marquee ribbon.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> idx <span style="color:#f92672">=</span> mod(floor(cellF), iTilesCount);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Cell-local UV inside the glyph&#39;s atlas cell. Horizontal fract remaps</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// into [CROP, 1-CROP] so the whitespace side-bearings are skipped;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// aspect-corrected y maps directly with the same 90% fit.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> cellUV <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(fract(cellF) <span style="color:#f92672">*</span> STRIDE <span style="color:#f92672">+</span> CROP, uv.y <span style="color:#f92672">/</span> FIT <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Decode idx → atlas (col, row), sample the atlas at cell-local UV. The</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// atlas is uploaded with UNPACK_FLIP_Y_WEBGL=true so canvas row 0 (where</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// &#39;H&#39; was drawn) lives at the *top* of texture v, not the bottom — invert</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// the row so ordered indices actually hit their glyphs. LINEAR filtering</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// + SDF threshold keeps each glyph one-pixel sharp.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> atlasCell <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(mod(idx, iTilesGrid.x),
+</span></span><span style="display:flex;"><span>                        (iTilesGrid.y <span style="color:#f92672">-</span> <span style="color:#ae81ff">1.0</span>) <span style="color:#f92672">-</span> floor(idx <span style="color:#f92672">/</span> iTilesGrid.x));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> atlasUV   <span style="color:#f92672">=</span> (atlasCell <span style="color:#f92672">+</span> cellUV) <span style="color:#f92672">/</span> iTilesGrid;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(cellUV.y <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0.0</span> <span style="color:#f92672">&amp;&amp;</span> cellUV.y <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">1.0</span>){
+</span></span><span style="display:flex;"><span>    mask <span style="color:#f92672">=</span> texture2D(iTiles, atlasUV).a;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> aa    <span style="color:#f92672">=</span> fwidth(mask);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> glyph <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> aa, <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> aa, mask);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> mix(<span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">0.0</span>), iAccent, glyph);
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col, <span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></td></tr></table>
+</div>
+</div></div>
+    <div class="diff-from" hidden><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-glsl" data-lang="glsl"><span style="display:flex;"><span><span style="color:#75715e">// @tileset iTiles &#34;ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!,@#$%^&amp;*()-+=&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">sampler2D</span> iTiles;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">vec2</span>  iTilesGrid;    <span style="color:#75715e">// (cols, rows) laid out in the atlas</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">uniform</span> <span style="color:#66d9ef">float</span> iTilesCount;   <span style="color:#75715e">// number of cells actually filled</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">float</span> hash(<span style="color:#66d9ef">vec2</span> p){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> fract(sin(dot(p, <span style="color:#66d9ef">vec2</span>(<span style="color:#ae81ff">127.1</span>, <span style="color:#ae81ff">311.7</span>))) <span style="color:#f92672">*</span> <span style="color:#ae81ff">43758.5453</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> mainImage( <span style="color:#66d9ef">out</span> <span style="color:#66d9ef">vec4</span> fragColor, <span style="color:#66d9ef">in</span> <span style="color:#66d9ef">vec2</span> fragCoord )
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Partition the screen into fixed 40-pixel square cells. Row and column</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// indices come from the integer part of fragCoord/CELL_PX; the local UV</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// inside the cell is the fractional part.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">float</span> CELL_PX <span style="color:#f92672">=</span> <span style="color:#ae81ff">40.0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> cell     <span style="color:#f92672">=</span> floor(fragCoord <span style="color:#f92672">/</span> CELL_PX);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> uvInCell <span style="color:#f92672">=</span> fract(fragCoord <span style="color:#f92672">/</span> CELL_PX);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Choice function: pick a character index per cell, on a *per-cell* random</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// period so each cell ticks on its own clock — some flip several times a</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// second, others hold for seconds at a time. Swap the hash for any</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// (cell, time) function to get radiating rings, falling scrolls, waves…</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> period <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.15</span> <span style="color:#f92672">+</span> hash(cell <span style="color:#f92672">+</span> <span style="color:#66d9ef">vec2</span>(<span style="color:#ae81ff">1.7</span>)) <span style="color:#f92672">*</span> <span style="color:#ae81ff">2.5</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> phase  <span style="color:#f92672">=</span> hash(cell <span style="color:#f92672">+</span> <span style="color:#66d9ef">vec2</span>(<span style="color:#ae81ff">4.3</span>)) <span style="color:#f92672">*</span> period;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> stepT  <span style="color:#f92672">=</span> floor((iTime <span style="color:#f92672">+</span> phase) <span style="color:#f92672">/</span> period);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> idx    <span style="color:#f92672">=</span> floor(hash(cell <span style="color:#f92672">+</span> <span style="color:#66d9ef">vec2</span>(stepT <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.317</span>)) <span style="color:#f92672">*</span> iTilesCount);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Decode idx → atlas (col, row), sample the atlas at cell-local UV.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// LINEAR filtering + SDF threshold keeps each glyph one-pixel sharp.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> atlasCell <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec2</span>(mod(idx, iTilesGrid.x), floor(idx <span style="color:#f92672">/</span> iTilesGrid.x));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec2</span> atlasUV   <span style="color:#f92672">=</span> (atlasCell <span style="color:#f92672">+</span> uvInCell) <span style="color:#f92672">/</span> iTilesGrid;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> mask <span style="color:#f92672">=</span> texture2D(iTiles, atlasUV).a;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> aa    <span style="color:#f92672">=</span> fwidth(mask);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> glyph <span style="color:#f92672">=</span> smoothstep(<span style="color:#ae81ff">0.5</span> <span style="color:#f92672">-</span> aa, <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> aa, mask);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Highlight layer: a slow diagonal sine over the grid modulates the fill</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// brightness. Independent of the choice function, composable on top.</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">float</span> wave <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.5</span> <span style="color:#f92672">*</span> sin(cell.x <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.15</span> <span style="color:#f92672">+</span> cell.y <span style="color:#f92672">*</span> <span style="color:#ae81ff">0.08</span> <span style="color:#f92672">-</span> iTime <span style="color:#f92672">*</span> <span style="color:#ae81ff">1.5</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">vec3</span> col <span style="color:#f92672">=</span> mix(<span style="color:#66d9ef">vec3</span>(<span style="color:#ae81ff">0.0</span>), iAccent, glyph) <span style="color:#f92672">*</span> (<span style="color:#ae81ff">0.3</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">0.7</span> <span style="color:#f92672">*</span> wave);
+</span></span><span style="display:flex;"><span>  fragColor <span style="color:#f92672">=</span> <span style="color:#66d9ef">vec4</span>(col, <span style="color:#ae81ff">1.0</span>);
+</span></span><span style="display:flex;"><span>}</span></span></code></pre></div></div>
+  </div>
+</div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

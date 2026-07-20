@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Giza · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/synthwave-trip/" aria-label="Previous: synthwave-trip" title="prev: synthwave-trip"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/vhs/" aria-label="Next: vhs" title="next: vhs"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">giza</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="">
+                  <a class="" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="open">
+                  <a class="active" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/giza/">/giza</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Giza</a></h1>
+
+
+<p>Three pyramids on a desert horizon, running a 90-second day/night cycle
+with a deterministic weather system on top. Every cycle rolls a hashed
+die to pick clear, <strong>lightning storm</strong>, or <strong>dust storm</strong> weather — the same
+cycle index always produces the same weather, so the scene is
+reproducible.</p>
+<p>The dawn/day/dusk/night phases are explicit tent-functions of the cycle
+<code>fract</code>, not a sine wrap, so the plateau of full daylight and the long
+slow sunset have hand-set durations. Golden-hour lighting peaks during
+the transitions and drives the sunset gradient, cloud color, horizon
+haze, and pyramid edge highlights.</p>
+<p>The <a href="/shaders/matrix/">matrix</a> rain reappears here as a <strong>ghost</strong> layer in the sky — dim at
+midday, prominent at night, and reversing flow direction from
+falling-at-day to rising-at-night. Lightning strikes are their own
+timeline: each 3-second window either rolls a strike (bolt + flash) or
+doesn&rsquo;t; dust storms boost the FBM sand layers, tint the sky sandy, and
+apply a whole-screen haze.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Three pyramids on a desert horizon with 90s day/night cycle and
+// deterministic weather (clear / lightning / dust). Ghost matrix rain
+// in the sky. Palette = iAccent + three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i),                  hash(i + vec2(1.0, 0.0)), f.x),
+             mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  vec2 shift = vec2(100.0);
+  for(int i = 0; i < 5; i++){
+    v += a * valueNoise(p);
+    p = p * 2.0 + shift;
+    a *= 0.5;
+  }
+  return v;
+}
+
+// signed distance to a triangular pyramid silhouette (2D)
+float pyramidShape(vec2 uv, vec2 base, float halfWidth, float height){
+  vec2 p = uv - base;
+  p.x = abs(p.x);
+  if(p.y < 0.0) return 1.0;
+  if(p.y > height) return 1.0;
+  float edge = halfWidth * (1.0 - p.y / height);
+  return p.x - edge;
+}
+
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w + 0.03, d);
+}
+
+// smaller (20-shape) subset of the matrix procedural font
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+  int tt = int(floor(fract(seed * 7.31) * 20.0));
+  float s = 0.0;
+
+  if(tt == 0){
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071, w);
+  } else if(tt == 4){
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y + 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){
+    float dd = abs(p.x) + abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 9){
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 10){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 11){
+    float vert  = strokeLine(abs(p.x + 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 12){
+    vec2 tp = vec2(abs(p.x), p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 13){
+    vec2 tp = vec2(abs(p.x), -p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 14){
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) + p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 15){
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 16){
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 17){
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 18){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else {
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g + seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t        = iTime * 0.15 * tempo;
+  float rawTime  = iTime;
+  float syncTime = iTime * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  float horizon = 0.32;
+
+  // 90-second day/night cycle with hand-set phase boundaries
+  float cyclePeriod = 90.0;
+  float cycle = fract(rawTime / cyclePeriod);
+  float dawnEnd   = 0.18;
+  float duskStart = 0.50;
+  float duskEnd   = 0.78;
+
+  float arcLight;
+  if(cycle < dawnEnd)        arcLight = smoothstep(0.0, dawnEnd, cycle);
+  else if(cycle < duskStart) arcLight = 1.0;
+  else if(cycle < duskEnd)   arcLight = smoothstep(duskEnd, duskStart, cycle);
+  else                       arcLight = 0.0;
+
+  float daylight = arcLight;
+  // golden hour peaks during dawn and dusk transitions
+  float goldenHour = smoothstep(0.0, 0.4, arcLight) * smoothstep(0.85, 0.4, arcLight);
+  float nightAmount = 1.0 - daylight;
+
+  // deterministic weather per cycle: clear / lightning / dust
+  float cycleIdx = floor(rawTime / cyclePeriod);
+  float weatherSeed = hash(vec2(cycleIdx, 42.17));
+  float isLightning = step(0.33, weatherSeed) * (1.0 - step(0.66, weatherSeed));
+  float isDustStorm = step(0.66, weatherSeed);
+  float weatherStr = smoothstep(0.0, 0.3, daylight);
+
+  vec3 col = vec3(0.0);
+
+  // sky
+  if(uv.y > horizon){
+    float skyT = (uv.y - horizon) / (1.0 - horizon);
+
+    vec3 nightBot = c4 * 0.2;
+    vec3 nightTop = c4 * 0.08;
+    vec3 nightSky = mix(nightBot, nightTop, skyT);
+
+    vec3 sunsetBottom = mix(c1, c2, 0.3) * 0.9;
+    vec3 sunsetMid    = mix(c2, c3, 0.5) * 0.5;
+    vec3 sunsetTop    = c4 * 0.4;
+    vec3 sunsetSky;
+    if(skyT < 0.3) sunsetSky = mix(sunsetBottom, sunsetMid, skyT / 0.3);
+    else           sunsetSky = mix(sunsetMid, sunsetTop, (skyT - 0.3) / 0.7);
+
+    vec3 dayBottom = mix(c1, c2, 0.5) * 1.1;
+    vec3 dayTop    = mix(c3, c4, 0.3) * 0.55;
+    vec3 daySky    = mix(dayBottom, dayTop, skyT);
+
+    vec3 sky = nightSky;
+    sky = mix(sky, sunsetSky, goldenHour + daylight * 0.2);
+    sky = mix(sky, daySky,    daylight * (1.0 - goldenHour * 0.5));
+    col = sky;
+
+    col = mix(col, mix(c1, c2, 0.3) * 0.35, isDustStorm * weatherStr * 0.45 * (1.0 - skyT * 0.4));
+    col *= 1.0 - isLightning * weatherStr * 0.3;
+
+    // FBM cloud layer
+    vec2 cloudUV = vec2(uv.x * aspect * 1.5 + t * 0.08, skyT * 2.0 + t * 0.02);
+    float cloud1 = fbm(cloudUV * 2.0 + vec2(0.0, 7.3));
+    float cloud2 = fbm(cloudUV * 3.0 + vec2(13.0, 0.0) - t * 0.03);
+    cloud1 = smoothstep(0.40, 0.70, cloud1);
+    cloud2 = smoothstep(0.45, 0.72, cloud2);
+    float cloudBand = smoothstep(0.0, 0.08, skyT) * smoothstep(0.5, 0.2, skyT);
+    float cloudAlpha = (cloud1 * 0.6 + cloud2 * 0.4) * cloudBand;
+    vec3 cloudLitSunset = mix(c1, c2, cloud2) * 0.5;
+    vec3 cloudLitDay    = mix(c1, c3, 0.3) * 0.3;
+    vec3 cloudLit  = mix(cloudLitSunset, cloudLitDay, daylight * (1.0 - goldenHour));
+    vec3 cloudDark = c4 * 0.1;
+    float cloudVis = max(goldenHour, daylight * 0.5);
+    cloudAlpha *= 1.0 + isLightning * weatherStr * 2.5;
+    cloudVis = max(cloudVis, isLightning * weatherStr);
+    col = mix(col, mix(cloudDark, cloudLit, cloud1), cloudAlpha * 0.35 * cloudVis);
+
+    // horizon haze glow
+    float horizGlow = exp(-(skyT * skyT) * 15.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.3));
+    col += c1 * horizGlow;
+
+    // ghost matrix rain, dim at day / prominent at night, flow reverses
+    float matrixIntensity = mix(0.08, 0.5, nightAmount);
+    vec3 matrixCol = vec3(0.0);
+    for(int layer = 0; layer < 4; layer++){
+      float fi = float(layer);
+      float cols = 16.0 + fi * 5.0;
+      float cellW = iResolution.x / cols;
+      float cellH = cellW * 1.6;
+
+      vec2 fragPos = fragCoord;
+      vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+      vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+      float colSeed = hash(vec2(cell.x, fi * 73.13));
+      float speed = (0.25 + colSeed * 0.5) * tempo;
+      float phase = colSeed * 100.0;
+      float streamLen = 3.0 + colSeed * 6.0;
+      float gapLen   = 16.0 + colSeed * 24.0;
+      float period = streamLen + gapLen;
+      float rainDir = mix(-1.0, 1.0, daylight);
+      float cyclePos = mod(cell.y + rainDir * syncTime * speed + phase, period);
+
+      if(cyclePos < streamLen){
+        float dist = cyclePos;
+        float charSeed = hash(cell + vec2(fi * 37.0, floor(syncTime * (0.375 + colSeed * 0.5) * tempo)));
+        float g = glyph(cellUV, charSeed);
+        float brightness;
+        if(dist < 1.0){
+          brightness = 1.0;
+        } else {
+          brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+          brightness *= brightness;
+        }
+        float fog = 1.0 / (1.0 + fi * 0.6);
+        int colorIdx = int(mod(cell.x + fi, 4.0));
+        vec3 baseColor;
+        if(colorIdx == 0)      baseColor = c1;
+        else if(colorIdx == 1) baseColor = c2;
+        else if(colorIdx == 2) baseColor = c3;
+        else                   baseColor = c4;
+
+        vec3 glyphCol;
+        if(dist < 1.0) glyphCol = mix(baseColor * 1.5, vec3(1.0), 0.6);
+        else           glyphCol = baseColor * 1.5 * brightness;
+        matrixCol += glyphCol * g * fog;
+      }
+    }
+    float matrixFade = smoothstep(0.0, 0.15, skyT);
+    col += matrixCol * matrixIntensity * matrixFade;
+
+    // stars
+    if(nightAmount > 0.05 && skyT > 0.15){
+      vec2 starUV = floor(uv * vec2(90.0 * aspect, 90.0));
+      float starHash = hash(starUV);
+      float twinkle = sin(t * 4.0 + starHash * 6.28) * 0.5 + 0.5;
+      if(starHash > 0.986){
+        float starBright = (0.5 + 0.5 * twinkle) * nightAmount;
+        starBright *= smoothstep(0.15, 0.4, skyT);
+        col += vec3(starBright);
+      }
+    }
+  }
+
+  // desert ground
+  if(uv.y <= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    vec3 sandNearDay = mix(c1, c3, 0.4) * 0.45;
+    vec3 sandFarDay  = mix(c1, c2, 0.3) * 0.55;
+    vec3 sandNearNight = c4 * 0.12;
+    vec3 sandFarNight  = c4 * 0.08;
+    vec3 sandNear = mix(sandNearNight, sandNearDay, max(daylight, goldenHour * 0.7));
+    vec3 sandFar  = mix(sandFarNight,  sandFarDay,  max(daylight, goldenHour * 0.7));
+    vec3 sandCol = mix(sandFar, sandNear, groundT);
+
+    float sandNoise = fbm(vec2(uv.x * 20.0 * aspect, uv.y * 30.0 + t * 0.5)) * 0.08;
+    sandCol += sandNoise * c1 * 0.3 * max(daylight, goldenHour * 0.5);
+    col = sandCol;
+
+    float sandHorizGlow = exp(-groundT * 8.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.4));
+    col += mix(c1, c2, 0.3) * sandHorizGlow;
+  }
+
+  // three pyramids
+  float p1 = pyramidShape(uv, vec2(0.55, horizon - 0.005), 0.11, 0.16);
+  float p2 = pyramidShape(uv, vec2(0.35, horizon - 0.003), 0.09, 0.14);
+  float p3 = pyramidShape(uv, vec2(0.20, horizon - 0.002), 0.055, 0.08);
+
+  float pyramidMask = 1.0;
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p1));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p2));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p3));
+
+  vec3 pyramidCol = c4 * mix(0.06, 0.15, max(daylight, goldenHour * 0.5));
+  float lightStr = max(daylight, goldenHour * 0.8);
+  float edgeHighlight1 = smoothstep(0.006, 0.0, p1) * smoothstep(-0.006, 0.0, p1);
+  float heightFactor1  = smoothstep(horizon, horizon + 0.14, uv.y);
+  pyramidCol += c1 * edgeHighlight1 * heightFactor1 * 0.25 * lightStr;
+  float edgeHighlight2 = smoothstep(0.005, 0.0, p2) * smoothstep(-0.005, 0.0, p2);
+  float heightFactor2  = smoothstep(horizon, horizon + 0.12, uv.y);
+  pyramidCol += c1 * edgeHighlight2 * heightFactor2 * 0.2 * lightStr;
+  col = mix(pyramidCol, col, pyramidMask);
+
+  // two-layer FBM dust bank blowing across the base of the pyramids
+  {
+    float speed1 = 0.08;
+    float yBase1 = horizon - 0.03;
+    float ySpread1 = 0.14;
+    vec2 dustUV1 = vec2(uv.x * aspect * 2.0 - rawTime * speed1,
+                        (uv.y - yBase1) * 5.0);
+    float dust1 = fbm(dustUV1 + vec2(0.0, 3.7));
+    dust1 = smoothstep(0.30, 0.62, dust1);
+    float yDist1 = (uv.y - yBase1) / ySpread1;
+    float vertFade1 = exp(-yDist1 * yDist1 * 2.0);
+    float dustAlpha1 = dust1 * vertFade1 * 0.28;
+
+    float speed2 = 0.22;
+    float yBase2 = horizon - 0.06;
+    float ySpread2 = 0.10;
+    vec2 dustUV2 = vec2(uv.x * aspect * 3.5 - rawTime * speed2,
+                        (uv.y - yBase2) * 8.0 + 17.0);
+    float dust2 = fbm(dustUV2 + vec2(41.0, 0.0));
+    dust2 = smoothstep(0.35, 0.65, dust2);
+    float yDist2 = (uv.y - yBase2) / ySpread2;
+    float vertFade2 = exp(-yDist2 * yDist2 * 2.5);
+    float dustAlpha2 = dust2 * vertFade2 * 0.22;
+
+    float dustBoost = 1.0 + isDustStorm * weatherStr * 4.0;
+    dustAlpha1 *= dustBoost;
+    dustAlpha2 *= dustBoost;
+    float glowStr = mix(0.7, 1.0, max(nightAmount * 0.6, max(daylight, goldenHour * 0.8)));
+    vec3 dustColDay   = mix(c1, c3, 0.3) * 0.6;
+    vec3 dustColNight = mix(c1, c2, 0.45) * 0.5;
+    vec3 dustCol = mix(dustColNight, dustColDay, daylight);
+    col += dustCol * dustAlpha1 * glowStr;
+    col += dustCol * dustAlpha2 * glowStr;
+  }
+
+  // dust halo pulse around the horizon
+  float dustPulse = 0.7 + 0.3 * sin(rawTime * 0.4) * sin(rawTime * 0.27 + 1.3);
+  float dustBand = exp(-pow(abs(uv.y - horizon) / 0.12, 2.0)) * dustPulse;
+  float dustBandNoise = fbm(vec2(uv.x * aspect * 3.0 - rawTime * 0.1, rawTime * 0.05 + 7.0));
+  dustBand *= 0.6 + 0.4 * dustBandNoise;
+  dustBand *= 1.0 + isDustStorm * weatherStr * 2.5;
+  vec3 dustGlowDay   = mix(c1, c2, 0.3) * 0.2;
+  vec3 dustGlowNight = mix(c1, c2, 0.5) * 0.15;
+  col += mix(dustGlowNight, dustGlowDay, daylight) * dustBand;
+
+  // horizon haze band
+  float hazeStrength = smoothstep(0.18, 0.0, abs(uv.y - horizon));
+  hazeStrength *= 1.0 + isDustStorm * weatherStr * 3.0;
+  vec3 hazeColDay   = mix(c1, c2, 0.3) * 0.18;
+  vec3 hazeColNight = mix(c1, c2, 0.5) * 0.10;
+  col += mix(hazeColNight, hazeColDay, daylight) * hazeStrength;
+
+  // lightning: 3s strike windows with 45% chance while daylight is up
+  if(isLightning > 0.5 && weatherStr > 0.05){
+    float strikeWindow = 3.0;
+    float strikeIdx = floor(rawTime / strikeWindow);
+    float strikeSeed = hash(vec2(strikeIdx, cycleIdx * 7.3));
+    float strikeT = fract(rawTime / strikeWindow) * strikeWindow;
+    float hasStrike = step(0.55, strikeSeed) * weatherStr;
+    float flash = hasStrike * exp(-strikeT * 10.0);
+    col += flash * mix(c3, vec3(1.0), 0.6) * 0.5;
+
+    if(hasStrike > 0.5 && strikeT < 0.5 && uv.y > horizon){
+      float boltStartX = 0.15 + hash(vec2(strikeIdx * 3.1, cycleIdx)) * 0.7;
+      float boltCurX = boltStartX;
+      float boltD = 1e10;
+      vec2 prev = vec2(boltCurX, 0.95);
+      for(int seg = 0; seg < 12; seg++){
+        float fi = float(seg);
+        float segSeed = hash(vec2(fi + strikeIdx * 13.0, strikeSeed * 91.0 + cycleIdx));
+        boltCurX += (segSeed - 0.5) * 0.05;
+        float ny = 0.95 - (fi + 1.0) / 12.0 * (0.95 - horizon);
+        vec2 next = vec2(boltCurX, ny);
+        vec2 uvA = vec2(uv.x * aspect, uv.y);
+        vec2 prevA = vec2(prev.x * aspect, prev.y);
+        vec2 nextA = vec2(next.x * aspect, next.y);
+        vec2 pa = uvA - prevA;
+        vec2 ba = nextA - prevA;
+        float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+        float segD = length(pa - ba * h);
+        boltD = min(boltD, segD);
+        prev = next;
+      }
+      float boltCore = exp(-boltD * boltD * 50000.0) * exp(-strikeT * 8.0);
+      float boltGlow = exp(-boltD * boltD *  4000.0) * exp(-strikeT * 5.0);
+      col += boltCore * vec3(1.0) * 0.9;
+      col += boltGlow * mix(c1, c3, 0.5) * 0.4;
+    }
+  }
+
+  // whole-screen dust-storm haze
+  if(isDustStorm > 0.5 && weatherStr > 0.05){
+    vec3 stormHaze = mix(c1, c2, 0.2) * 0.3;
+    float stormNoise = fbm(vec2(uv.x * aspect * 1.5 - rawTime * 0.15, uv.y * 2.0 + rawTime * 0.05));
+    col = mix(col, stormHaze, isDustStorm * weatherStr * 0.3 * (0.5 + 0.5 * stormNoise));
+  }
+
+  float scanline = 0.93 + 0.07 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = uv - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.6;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Three pyramids on a desert horizon with 90s day/night cycle and
+// deterministic weather (clear / lightning / dust). Ghost matrix rain
+// in the sky. Palette = iAccent &#43; three fixed hues.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float valueNoise(vec2 p){
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i),                  hash(i &#43; vec2(1.0, 0.0)), f.x),
+             mix(hash(i &#43; vec2(0.0, 1.0)), hash(i &#43; vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p){
+  float v = 0.0;
+  float a = 0.5;
+  vec2 shift = vec2(100.0);
+  for(int i = 0; i &lt; 5; i&#43;&#43;){
+    v &#43;= a * valueNoise(p);
+    p = p * 2.0 &#43; shift;
+    a *= 0.5;
+  }
+  return v;
+}
+
+// signed distance to a triangular pyramid silhouette (2D)
+float pyramidShape(vec2 uv, vec2 base, float halfWidth, float height){
+  vec2 p = uv - base;
+  p.x = abs(p.x);
+  if(p.y &lt; 0.0) return 1.0;
+  if(p.y &gt; height) return 1.0;
+  float edge = halfWidth * (1.0 - p.y / height);
+  return p.x - edge;
+}
+
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w &#43; 0.03, d);
+}
+
+// smaller (20-shape) subset of the matrix procedural font
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+  int tt = int(floor(fract(seed * 7.31) * 20.0));
+  float s = 0.0;
+
+  if(tt == 0){
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x &#43; p.y)) * 0.7071, w);
+  } else if(tt == 4){
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y &#43; 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){
+    float dd = abs(p.x) &#43; abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 9){
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x &#43; p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 10){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 11){
+    float vert  = strokeLine(abs(p.x &#43; 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 12){
+    vec2 tp = vec2(abs(p.x), p.y &#43; 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 &#43; tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 13){
+    vec2 tp = vec2(abs(p.x), -p.y &#43; 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 &#43; tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 14){
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) &#43; p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 15){
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 16){
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 17){
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 18){
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else {
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g &#43; seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  vec2 uv = fragCoord / iResolution.xy;
+  float aspect = iResolution.x / iResolution.y;
+  float t        = iTime * 0.15 * tempo;
+  float rawTime  = iTime;
+  float syncTime = iTime * tempo;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  float horizon = 0.32;
+
+  // 90-second day/night cycle with hand-set phase boundaries
+  float cyclePeriod = 90.0;
+  float cycle = fract(rawTime / cyclePeriod);
+  float dawnEnd   = 0.18;
+  float duskStart = 0.50;
+  float duskEnd   = 0.78;
+
+  float arcLight;
+  if(cycle &lt; dawnEnd)        arcLight = smoothstep(0.0, dawnEnd, cycle);
+  else if(cycle &lt; duskStart) arcLight = 1.0;
+  else if(cycle &lt; duskEnd)   arcLight = smoothstep(duskEnd, duskStart, cycle);
+  else                       arcLight = 0.0;
+
+  float daylight = arcLight;
+  // golden hour peaks during dawn and dusk transitions
+  float goldenHour = smoothstep(0.0, 0.4, arcLight) * smoothstep(0.85, 0.4, arcLight);
+  float nightAmount = 1.0 - daylight;
+
+  // deterministic weather per cycle: clear / lightning / dust
+  float cycleIdx = floor(rawTime / cyclePeriod);
+  float weatherSeed = hash(vec2(cycleIdx, 42.17));
+  float isLightning = step(0.33, weatherSeed) * (1.0 - step(0.66, weatherSeed));
+  float isDustStorm = step(0.66, weatherSeed);
+  float weatherStr = smoothstep(0.0, 0.3, daylight);
+
+  vec3 col = vec3(0.0);
+
+  // sky
+  if(uv.y &gt; horizon){
+    float skyT = (uv.y - horizon) / (1.0 - horizon);
+
+    vec3 nightBot = c4 * 0.2;
+    vec3 nightTop = c4 * 0.08;
+    vec3 nightSky = mix(nightBot, nightTop, skyT);
+
+    vec3 sunsetBottom = mix(c1, c2, 0.3) * 0.9;
+    vec3 sunsetMid    = mix(c2, c3, 0.5) * 0.5;
+    vec3 sunsetTop    = c4 * 0.4;
+    vec3 sunsetSky;
+    if(skyT &lt; 0.3) sunsetSky = mix(sunsetBottom, sunsetMid, skyT / 0.3);
+    else           sunsetSky = mix(sunsetMid, sunsetTop, (skyT - 0.3) / 0.7);
+
+    vec3 dayBottom = mix(c1, c2, 0.5) * 1.1;
+    vec3 dayTop    = mix(c3, c4, 0.3) * 0.55;
+    vec3 daySky    = mix(dayBottom, dayTop, skyT);
+
+    vec3 sky = nightSky;
+    sky = mix(sky, sunsetSky, goldenHour &#43; daylight * 0.2);
+    sky = mix(sky, daySky,    daylight * (1.0 - goldenHour * 0.5));
+    col = sky;
+
+    col = mix(col, mix(c1, c2, 0.3) * 0.35, isDustStorm * weatherStr * 0.45 * (1.0 - skyT * 0.4));
+    col *= 1.0 - isLightning * weatherStr * 0.3;
+
+    // FBM cloud layer
+    vec2 cloudUV = vec2(uv.x * aspect * 1.5 &#43; t * 0.08, skyT * 2.0 &#43; t * 0.02);
+    float cloud1 = fbm(cloudUV * 2.0 &#43; vec2(0.0, 7.3));
+    float cloud2 = fbm(cloudUV * 3.0 &#43; vec2(13.0, 0.0) - t * 0.03);
+    cloud1 = smoothstep(0.40, 0.70, cloud1);
+    cloud2 = smoothstep(0.45, 0.72, cloud2);
+    float cloudBand = smoothstep(0.0, 0.08, skyT) * smoothstep(0.5, 0.2, skyT);
+    float cloudAlpha = (cloud1 * 0.6 &#43; cloud2 * 0.4) * cloudBand;
+    vec3 cloudLitSunset = mix(c1, c2, cloud2) * 0.5;
+    vec3 cloudLitDay    = mix(c1, c3, 0.3) * 0.3;
+    vec3 cloudLit  = mix(cloudLitSunset, cloudLitDay, daylight * (1.0 - goldenHour));
+    vec3 cloudDark = c4 * 0.1;
+    float cloudVis = max(goldenHour, daylight * 0.5);
+    cloudAlpha *= 1.0 &#43; isLightning * weatherStr * 2.5;
+    cloudVis = max(cloudVis, isLightning * weatherStr);
+    col = mix(col, mix(cloudDark, cloudLit, cloud1), cloudAlpha * 0.35 * cloudVis);
+
+    // horizon haze glow
+    float horizGlow = exp(-(skyT * skyT) * 15.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.3));
+    col &#43;= c1 * horizGlow;
+
+    // ghost matrix rain, dim at day / prominent at night, flow reverses
+    float matrixIntensity = mix(0.08, 0.5, nightAmount);
+    vec3 matrixCol = vec3(0.0);
+    for(int layer = 0; layer &lt; 4; layer&#43;&#43;){
+      float fi = float(layer);
+      float cols = 16.0 &#43; fi * 5.0;
+      float cellW = iResolution.x / cols;
+      float cellH = cellW * 1.6;
+
+      vec2 fragPos = fragCoord;
+      vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+      vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+      float colSeed = hash(vec2(cell.x, fi * 73.13));
+      float speed = (0.25 &#43; colSeed * 0.5) * tempo;
+      float phase = colSeed * 100.0;
+      float streamLen = 3.0 &#43; colSeed * 6.0;
+      float gapLen   = 16.0 &#43; colSeed * 24.0;
+      float period = streamLen &#43; gapLen;
+      float rainDir = mix(-1.0, 1.0, daylight);
+      float cyclePos = mod(cell.y &#43; rainDir * syncTime * speed &#43; phase, period);
+
+      if(cyclePos &lt; streamLen){
+        float dist = cyclePos;
+        float charSeed = hash(cell &#43; vec2(fi * 37.0, floor(syncTime * (0.375 &#43; colSeed * 0.5) * tempo)));
+        float g = glyph(cellUV, charSeed);
+        float brightness;
+        if(dist &lt; 1.0){
+          brightness = 1.0;
+        } else {
+          brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+          brightness *= brightness;
+        }
+        float fog = 1.0 / (1.0 &#43; fi * 0.6);
+        int colorIdx = int(mod(cell.x &#43; fi, 4.0));
+        vec3 baseColor;
+        if(colorIdx == 0)      baseColor = c1;
+        else if(colorIdx == 1) baseColor = c2;
+        else if(colorIdx == 2) baseColor = c3;
+        else                   baseColor = c4;
+
+        vec3 glyphCol;
+        if(dist &lt; 1.0) glyphCol = mix(baseColor * 1.5, vec3(1.0), 0.6);
+        else           glyphCol = baseColor * 1.5 * brightness;
+        matrixCol &#43;= glyphCol * g * fog;
+      }
+    }
+    float matrixFade = smoothstep(0.0, 0.15, skyT);
+    col &#43;= matrixCol * matrixIntensity * matrixFade;
+
+    // stars
+    if(nightAmount &gt; 0.05 &amp;&amp; skyT &gt; 0.15){
+      vec2 starUV = floor(uv * vec2(90.0 * aspect, 90.0));
+      float starHash = hash(starUV);
+      float twinkle = sin(t * 4.0 &#43; starHash * 6.28) * 0.5 &#43; 0.5;
+      if(starHash &gt; 0.986){
+        float starBright = (0.5 &#43; 0.5 * twinkle) * nightAmount;
+        starBright *= smoothstep(0.15, 0.4, skyT);
+        col &#43;= vec3(starBright);
+      }
+    }
+  }
+
+  // desert ground
+  if(uv.y &lt;= horizon){
+    float groundT = (horizon - uv.y) / horizon;
+    vec3 sandNearDay = mix(c1, c3, 0.4) * 0.45;
+    vec3 sandFarDay  = mix(c1, c2, 0.3) * 0.55;
+    vec3 sandNearNight = c4 * 0.12;
+    vec3 sandFarNight  = c4 * 0.08;
+    vec3 sandNear = mix(sandNearNight, sandNearDay, max(daylight, goldenHour * 0.7));
+    vec3 sandFar  = mix(sandFarNight,  sandFarDay,  max(daylight, goldenHour * 0.7));
+    vec3 sandCol = mix(sandFar, sandNear, groundT);
+
+    float sandNoise = fbm(vec2(uv.x * 20.0 * aspect, uv.y * 30.0 &#43; t * 0.5)) * 0.08;
+    sandCol &#43;= sandNoise * c1 * 0.3 * max(daylight, goldenHour * 0.5);
+    col = sandCol;
+
+    float sandHorizGlow = exp(-groundT * 8.0) * mix(0.03, 0.3, max(goldenHour, daylight * 0.4));
+    col &#43;= mix(c1, c2, 0.3) * sandHorizGlow;
+  }
+
+  // three pyramids
+  float p1 = pyramidShape(uv, vec2(0.55, horizon - 0.005), 0.11, 0.16);
+  float p2 = pyramidShape(uv, vec2(0.35, horizon - 0.003), 0.09, 0.14);
+  float p3 = pyramidShape(uv, vec2(0.20, horizon - 0.002), 0.055, 0.08);
+
+  float pyramidMask = 1.0;
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p1));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p2));
+  pyramidMask = min(pyramidMask, smoothstep(-0.003, 0.003, p3));
+
+  vec3 pyramidCol = c4 * mix(0.06, 0.15, max(daylight, goldenHour * 0.5));
+  float lightStr = max(daylight, goldenHour * 0.8);
+  float edgeHighlight1 = smoothstep(0.006, 0.0, p1) * smoothstep(-0.006, 0.0, p1);
+  float heightFactor1  = smoothstep(horizon, horizon &#43; 0.14, uv.y);
+  pyramidCol &#43;= c1 * edgeHighlight1 * heightFactor1 * 0.25 * lightStr;
+  float edgeHighlight2 = smoothstep(0.005, 0.0, p2) * smoothstep(-0.005, 0.0, p2);
+  float heightFactor2  = smoothstep(horizon, horizon &#43; 0.12, uv.y);
+  pyramidCol &#43;= c1 * edgeHighlight2 * heightFactor2 * 0.2 * lightStr;
+  col = mix(pyramidCol, col, pyramidMask);
+
+  // two-layer FBM dust bank blowing across the base of the pyramids
+  {
+    float speed1 = 0.08;
+    float yBase1 = horizon - 0.03;
+    float ySpread1 = 0.14;
+    vec2 dustUV1 = vec2(uv.x * aspect * 2.0 - rawTime * speed1,
+                        (uv.y - yBase1) * 5.0);
+    float dust1 = fbm(dustUV1 &#43; vec2(0.0, 3.7));
+    dust1 = smoothstep(0.30, 0.62, dust1);
+    float yDist1 = (uv.y - yBase1) / ySpread1;
+    float vertFade1 = exp(-yDist1 * yDist1 * 2.0);
+    float dustAlpha1 = dust1 * vertFade1 * 0.28;
+
+    float speed2 = 0.22;
+    float yBase2 = horizon - 0.06;
+    float ySpread2 = 0.10;
+    vec2 dustUV2 = vec2(uv.x * aspect * 3.5 - rawTime * speed2,
+                        (uv.y - yBase2) * 8.0 &#43; 17.0);
+    float dust2 = fbm(dustUV2 &#43; vec2(41.0, 0.0));
+    dust2 = smoothstep(0.35, 0.65, dust2);
+    float yDist2 = (uv.y - yBase2) / ySpread2;
+    float vertFade2 = exp(-yDist2 * yDist2 * 2.5);
+    float dustAlpha2 = dust2 * vertFade2 * 0.22;
+
+    float dustBoost = 1.0 &#43; isDustStorm * weatherStr * 4.0;
+    dustAlpha1 *= dustBoost;
+    dustAlpha2 *= dustBoost;
+    float glowStr = mix(0.7, 1.0, max(nightAmount * 0.6, max(daylight, goldenHour * 0.8)));
+    vec3 dustColDay   = mix(c1, c3, 0.3) * 0.6;
+    vec3 dustColNight = mix(c1, c2, 0.45) * 0.5;
+    vec3 dustCol = mix(dustColNight, dustColDay, daylight);
+    col &#43;= dustCol * dustAlpha1 * glowStr;
+    col &#43;= dustCol * dustAlpha2 * glowStr;
+  }
+
+  // dust halo pulse around the horizon
+  float dustPulse = 0.7 &#43; 0.3 * sin(rawTime * 0.4) * sin(rawTime * 0.27 &#43; 1.3);
+  float dustBand = exp(-pow(abs(uv.y - horizon) / 0.12, 2.0)) * dustPulse;
+  float dustBandNoise = fbm(vec2(uv.x * aspect * 3.0 - rawTime * 0.1, rawTime * 0.05 &#43; 7.0));
+  dustBand *= 0.6 &#43; 0.4 * dustBandNoise;
+  dustBand *= 1.0 &#43; isDustStorm * weatherStr * 2.5;
+  vec3 dustGlowDay   = mix(c1, c2, 0.3) * 0.2;
+  vec3 dustGlowNight = mix(c1, c2, 0.5) * 0.15;
+  col &#43;= mix(dustGlowNight, dustGlowDay, daylight) * dustBand;
+
+  // horizon haze band
+  float hazeStrength = smoothstep(0.18, 0.0, abs(uv.y - horizon));
+  hazeStrength *= 1.0 &#43; isDustStorm * weatherStr * 3.0;
+  vec3 hazeColDay   = mix(c1, c2, 0.3) * 0.18;
+  vec3 hazeColNight = mix(c1, c2, 0.5) * 0.10;
+  col &#43;= mix(hazeColNight, hazeColDay, daylight) * hazeStrength;
+
+  // lightning: 3s strike windows with 45% chance while daylight is up
+  if(isLightning &gt; 0.5 &amp;&amp; weatherStr &gt; 0.05){
+    float strikeWindow = 3.0;
+    float strikeIdx = floor(rawTime / strikeWindow);
+    float strikeSeed = hash(vec2(strikeIdx, cycleIdx * 7.3));
+    float strikeT = fract(rawTime / strikeWindow) * strikeWindow;
+    float hasStrike = step(0.55, strikeSeed) * weatherStr;
+    float flash = hasStrike * exp(-strikeT * 10.0);
+    col &#43;= flash * mix(c3, vec3(1.0), 0.6) * 0.5;
+
+    if(hasStrike &gt; 0.5 &amp;&amp; strikeT &lt; 0.5 &amp;&amp; uv.y &gt; horizon){
+      float boltStartX = 0.15 &#43; hash(vec2(strikeIdx * 3.1, cycleIdx)) * 0.7;
+      float boltCurX = boltStartX;
+      float boltD = 1e10;
+      vec2 prev = vec2(boltCurX, 0.95);
+      for(int seg = 0; seg &lt; 12; seg&#43;&#43;){
+        float fi = float(seg);
+        float segSeed = hash(vec2(fi &#43; strikeIdx * 13.0, strikeSeed * 91.0 &#43; cycleIdx));
+        boltCurX &#43;= (segSeed - 0.5) * 0.05;
+        float ny = 0.95 - (fi &#43; 1.0) / 12.0 * (0.95 - horizon);
+        vec2 next = vec2(boltCurX, ny);
+        vec2 uvA = vec2(uv.x * aspect, uv.y);
+        vec2 prevA = vec2(prev.x * aspect, prev.y);
+        vec2 nextA = vec2(next.x * aspect, next.y);
+        vec2 pa = uvA - prevA;
+        vec2 ba = nextA - prevA;
+        float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+        float segD = length(pa - ba * h);
+        boltD = min(boltD, segD);
+        prev = next;
+      }
+      float boltCore = exp(-boltD * boltD * 50000.0) * exp(-strikeT * 8.0);
+      float boltGlow = exp(-boltD * boltD *  4000.0) * exp(-strikeT * 5.0);
+      col &#43;= boltCore * vec3(1.0) * 0.9;
+      col &#43;= boltGlow * mix(c1, c3, 0.5) * 0.4;
+    }
+  }
+
+  // whole-screen dust-storm haze
+  if(isDustStorm &gt; 0.5 &amp;&amp; weatherStr &gt; 0.05){
+    vec3 stormHaze = mix(c1, c2, 0.2) * 0.3;
+    float stormNoise = fbm(vec2(uv.x * aspect * 1.5 - rawTime * 0.15, uv.y * 2.0 &#43; rawTime * 0.05));
+    col = mix(col, stormHaze, isDustStorm * weatherStr * 0.3 * (0.5 &#43; 0.5 * stormNoise));
+  }
+
+  float scanline = 0.93 &#43; 0.07 * sin(fragCoord.y * 3.0);
+  col *= scanline;
+  vec2 vig = uv - 0.5;
+  col *= 1.0 - dot(vig, vig) * 0.6;
+
+  fragColor = vec4(col * 0.5, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

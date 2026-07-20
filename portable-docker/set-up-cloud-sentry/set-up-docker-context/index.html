@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Configure the sentry context on the Pi · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/" aria-label="Previous: launch-digitalocean-droplet" title="prev: launch-digitalocean-droplet"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/" aria-label="Next: configure-d-rymcg-tech-for-sentry" title="next: configure-d-rymcg-tech-for-sentry"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul><li class="lvl1"><a href="#">set-up-docker-context</a></li><li class="lvl2"><a href="#add-the-sentry-context-on-the-pi">Add the sentry context on the Pi</a></li><li class="lvl2"><a href="#test-the-connection-from-the-pi-to-the-sentry">Test the connection from the Pi to the sentry</a></li><li class="lvl2"><a href="#create-a-new-docker-context-for-the-sentry">Create a new Docker context for the sentry</a></li><li class="lvl2"><a href="#install-docker-on-the-sentry">Install Docker on the sentry</a></li><li class="lvl2"><a href="#test-the-docker-context-is-functional">Test the docker context is functional</a></li><li class="lvl2"><a href="#configure-fail2ban">Configure Fail2Ban</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node open">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a><ul class="sections"><li><a class="" href="/portable-docker/set-up-cloud-sentry/launch-digitalocean-droplet/">launch-digitalocean-droplet</a></li><li><a class="active" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/">set-up-docker-context</a></li><li><a class="" href="/portable-docker/set-up-cloud-sentry/configure-d-rymcg-tech-for-sentry/">configure-d-rymcg-tech-for-sentry</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/set-up-cloud-sentry/">/set-up-cloud-sentry</a><a class="pseg pcur" href="/portable-docker/set-up-cloud-sentry/set-up-docker-context/">/set-up-docker-context</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Configure the sentry context on the Pi</a></h1>
+
+
+<p>You now need to be able to control the sentry&rsquo;s <code>root</code> user from the
+Raspberry Pi&rsquo;s <code>pi</code> user over SSH.</p>
+<figure><img src="/img/portable-docker/configure.webp">
+</figure>
+
+<pre class="mermaid">
+---
+title: The Docker admin controls all Docker servers over SSH including itself
+---
+
+graph TD;
+    classDef dottedBox stroke-dasharray: 5 5;
+    Workstation[Personal Workstation] -->|admin via SSH| RaspberryPi[Raspberry Pi - Docker admin]
+    RaspberryPi -->|admin self via SSH localhost| RaspberryPi
+    RaspberryPi .->|admin via SSH| Docker2[Docker 2]
+    RaspberryPi .->|admin via SSH| Docker3[Docker 3, etc.]
+    RaspberryPi -->|admin via SSH| Sentry[Sentry]
+    class Docker2 dottedBox;
+    class Docker3 dottedBox;
+</pre>
+
+<div class="box notice notice-tip"><div class="label">Designate a single Docker admin machine</div>
+  <div class="body">
+<p>You may want to share a single sentry among several Docker servers at
+various locations, and this is supported, but you should designate
+only <strong>one machine</strong> as the main configuration point (Docker admin) for
+all other contexts. In this example, the Raspberry Pi is the Docker
+admin who controls all of your Docker servers, including the sentry
+and itself.</p>
+  </div>
+</div>
+<pre class="mermaid">
+---
+title: A single sentry can proxy for several private Docker servers connected to the same VPN
+---
+
+graph TD;
+
+WebBrowser["Web Browser client 1"] -->|TLS/TCP/UDP from the Internet| Sentry
+TCPClient["TCP client 1"] -->|TLS/TCP/UDP from the Internet| Sentry["Sentry - Public VPS"]
+
+Sentry .->|Layer 4/7 proxy protocol over Wireguard| Docker2["Docker2"]
+Sentry -->|Layer 4/7 proxy protocol over Wireguard| RaspberryPi["Raspberry Pi - Docker admin"]
+Sentry .->|Layer 4/7 proxy protocol over Wireguard| Docker3["Docker3"]
+
+style Docker2 stroke-dasharray: 5, 5
+style Docker3 stroke-dasharray: 5, 5
+</pre>
+
+<h2 id="add-the-sentry-context-on-the-pi"><a class="heading-anchor" href="#add-the-sentry-context-on-the-pi">Add the sentry context on the Pi</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+d.rymcg.tech context new
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y
+
+? You must specify the SSH config entry to use
+  I already have an SSH host entry in ~/.ssh/config that I want to use
+> I want to make a new SSH host entry in ~/.ssh/config
+
+? Enter the new SSH context name (short host name) : sentry
+
+? Enter the fully qualified SSH Host DNS name : sentry.example.com
+
+## Here is the new SSH config entry:
+Host sentry
+     Hostname sentry.example.com
+     User root
+     ControlMaster auto
+     ControlPersist yes
+     ControlPath /tmp/ssh-%u-%r@%h:%p
+
+? Do you want to append this config to ~/.ssh/config? (y/N)  y
+
+? Do you want to switch to the new sentry context now? (y/N) n
+</pre></div>
+</div>
+
+<p>You can examine the list of your contexts, which you should have
+three by now:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+d.rymcg.tech context list
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+NAME        DESCRIPTION                               DOCKER ENDPOINT               ERROR
+default *   Current DOCKER_HOST based configuration   unix:///var/run/docker.sock
+localhost                                             ssh://localhost
+sentry      Created by 'd.rymcg.tech context new'     ssh://sentry
+</pre></div>
+</div>
+
+<ul>
+<li><code>default</code> is the default context created by Docker itself when it
+is installed. This context is <strong>not used</strong> by this configuration.</li>
+<li><code>localhost</code> is the SSH context of the sworkstation over localhost.
+This is the main context this configuration uses to configure your
+applications.</li>
+<li><code>sentry</code> is the SSH context of the sentry server, entirely remote
+controlled from the Pi.</li>
+</ul>
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>The <code>*</code> next to the default context indicates the current context of
+the <code>docker</code> command. But since you will be using the context aliases
+<code>pi</code> and <code>sentry</code>, you won&rsquo;t be using the <code>docker</code> command directly,
+so the <code>*</code> can be ignored.</p>
+  </div>
+</div>
+<h2 id="test-the-connection-from-the-pi-to-the-sentry"><a class="heading-anchor" href="#test-the-connection-from-the-pi-to-the-sentry">Test the connection from the Pi to the sentry</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh sentry whoami
+</pre></div>
+</div>
+
+
+<p>The first time you connect, you must confirm the host fingerprint (type <code>yes</code>):</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+The authenticity of host 'sentry' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+</pre></div>
+</div>
+
+<p>On the final line, it will print the output of the command you
+requested, which should print the username <code>root</code> :</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+root
+</pre></div>
+</div>
+
+<h2 id="create-a-new-docker-context-for-the-sentry"><a class="heading-anchor" href="#create-a-new-docker-context-for-the-sentry">Create a new Docker context for the sentry</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+d context new
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? This command can help create a new SSH config and Docker context. Proceed? (Y/n) y
+
+? You must specify the SSH config entry to use
+> I already have an SSH host entry in ~/.ssh/config that I want to use
+  I want to make a new SSH host entry in ~/.ssh/config
+
+? Choose an existing SSH Host config
+  pi
+> sentry
+
+> Do you want to switch to the new sentry context now? Yes
+</pre></div>
+</div>
+
+<h2 id="install-docker-on-the-sentry"><a class="heading-anchor" href="#install-docker-on-the-sentry">Install Docker on the sentry</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry install-docker
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? This will install Docker on the host of your remote Docker context.. Proceed? Yes
+</pre></div>
+</div>
+
+<h2 id="test-the-docker-context-is-functional"><a class="heading-anchor" href="#test-the-docker-context-is-functional">Test the docker context is functional</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+d tmp-context sentry docker info | grep Context
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Context:    sentry
+</pre></div>
+</div>
+
+<div class="box notice notice-info"><div class="label">Switch between Docker contexts</div>
+  <div class="body">
+<p>You should now have two configured Docker contexts on your Pi:</p>
+<ul>
+<li><code>pi</code></li>
+<li><code>sentry</code></li>
+</ul>
+<p>You can switch between these two contexts using <code>d context</code>. The
+currently selected context specifies which Docker server is currently
+being operated on.</p>
+  </div>
+</div>
+<h2 id="configure-fail2ban"><a class="heading-anchor" href="#configure-fail2ban">Configure Fail2Ban</a></h2>
+<p><a href="https://github.com/fail2ban/fail2ban?tab=readme-ov-file#readme">Fail2Ban</a> scans log files and temporarily bans IP addresses that have
+too many authentication attempts. Fail2Ban can be configured to
+monitor the host SSH server and the Traefik access log, each with
+configurable rules.</p>
+<p>Configure Fail2Ban via the root context env file:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Save config in $HOME/git/vendor/enigmacurry/d.rymcg.tech/.env_$CONTEXT
+sentry reconfigure var=FAIL2BAN_ENABLED=true
+sentry reconfigure var=FAIL2BAN_IGNORE_IP=
+sentry reconfigure var=FAIL2BAN_SSHD_ENABLED=true
+sentry reconfigure var=FAIL2BAN_SSHD_MAX_RETRY=2
+sentry reconfigure var=FAIL2BAN_SSHD_BAN_TIME=10m
+sentry reconfigure var=FAIL2BAN_SSHD_FIND_TIME=10m
+sentry reconfigure var=FAIL2BAN_SSHD_ALLOW_IPV6=true
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ENABLED=true
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ERROR_LIST=400,403,405,407,429,431
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_MAX_RETRY=5
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_BAN_TIME=10m
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_FIND_TIME=10m
+sentry reconfigure var=FAIL2BAN_TRAEFIK_ACCESS_ALLOW_IPV6=true
+</pre></div>
+</div>
+
+
+<p>If you want to make sure your current IP address does not get banned,
+add it to the default ignore list:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry reconfigure var=FAIL2BAN_IGNORE_IP=$(curl ifconfig.me)/32
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>The IP ranges for localhost (<code>127.0.0.1/8</code>) and the Traefik wireguard
+VPN (by default <code>10.13.16.0/24</code>) are added to this ignore list
+automatically. You don&rsquo;t need to add these ones yourself.</p>
+  </div>
+</div>
+<p>Re-install Fail2Ban:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry fail2ban
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? This will ENABLE and reset Fail2Ban using your config for context sentry. Proceed? (Y/n)  y
+
+? The Traefik access log must be enabled.. Proceed? (Y/n) y
+</pre></div>
+</div>
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  
+  mermaid.initialize({ startOnLoad: false });
+  mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
+</script>
+
+
+</body>
+</html>

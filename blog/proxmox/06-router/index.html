@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Proxmox part 6: Virtualized nftables home LAN router · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/zram/" aria-label="Previous: zram" title="prev: zram"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/proxmox/05-kvm-templates/" aria-label="Next: kvm-templates" title="next: kvm-templates"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">router</a></li><li class="lvl2"><a href="#notice">Notice</a></li><li class="lvl2"><a href="#hardware">Hardware</a></li><li class="lvl2"><a href="#create-the-vmbr1-bridge">Create the vmbr1 bridge</a></li><li class="lvl2"><a href="#create-the-router-vm">Create the router VM</a></li><li class="lvl3"><a href="#add-a-virtual-network-interface-to-vm-bridge-vmbr1">Add a virtual network interface to VM bridge vmbr1</a></li><li class="lvl3"><a href="#add-the-four-physical-nics-to-the-vm">Add the four physical NICs to the VM</a></li><li class="lvl3"><a href="#make-an-initial-snapshot">Make an initial snapshot</a></li><li class="lvl3"><a href="#start-the-vm">Start the VM</a></li><li class="lvl3"><a href="#install-etckeeper-to-track-configuration-changes">Install etckeeper to track configuration changes</a></li><li class="lvl3"><a href="#rename-network-interfaces">Rename network interfaces</a></li><li class="lvl3"><a href="#install-dnsmasq">Install dnsmasq</a></li><li class="lvl3"><a href="#install-dnscrypt-proxy-dns-server">Install dnscrypt-proxy DNS server</a></li><li class="lvl3"><a href="#install-nftables">Install nftables</a></li><li class="lvl3"><a href="#create-nftables-rules">Create nftables rules</a></li><li class="lvl2"><a href="#create-a-test-vm-on-vmbr1">Create a test VM on vmbr1</a></li><li class="lvl2"><a href="#install-prometheus">Install Prometheus</a></li><li class="lvl3"><a href="#install-node-exporter-on-each-vm">Install node-exporter on each VM</a></li><li class="lvl3"><a href="#create-prometheus-config-file">Create prometheus config file</a></li><li class="lvl3"><a href="#create-prometheus-node-exporter-recording-rules">Create prometheus node-exporter recording rules</a></li><li class="lvl3"><a href="#install-prometheus-container">Install prometheus container</a></li><li class="lvl2"><a href="#install-grafana">Install Grafana</a></li><li class="lvl3"><a href="#create-datasources-configuration">Create datasources configuration</a></li><li class="lvl3"><a href="#create-dashboards-configuration">Create dashboards configuration</a></li><li class="lvl3"><a href="#install-grafana-1">Install Grafana</a></li><li class="lvl3"><a href="#todo-setup-nftables-metrics-exporter">TODO: setup nftables metrics exporter</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="active" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/proxmox/06-router/">/router</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Proxmox part 6: Virtualized nftables home LAN router</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2022-05-10">2022-05-10</time></span>
+  <span>updated <time datetime="2022-05-30">2022-05-30</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/proxmox/">proxmox</a>
+  </span>
+</div>
+
+<p>Let&rsquo;s make a network router/firewall/DHCP/DNS server for the home LAN,
+with <a href="https://nftables.org/projects/nftables/index.html">nftables</a>,
+<a href="https://thekelleys.org.uk/dnsmasq/doc.html">dnsmasq</a>, and
+<a href="https://github.com/DNSCrypt/dnscrypt-proxy">dnscrypt-proxy</a>, all
+inside of a Proxmox KVM virtual machine, and a physical four port
+network interface using PCI passthrough. We&rsquo;ll use nftables counters
+on a per-route basis to collect traffic statistics, and export these
+to a separate
+<a href="https://github.com/prometheus/prometheus#readme">prometheus</a>/<a href="https://github.com/grafana/">grafana</a>
+VM in order to monitor bandwidth usage.</p>
+<h2 id="notice"><a class="heading-anchor" href="#notice">Notice</a></h2>
+<p>This blog is written in a <a href="https://en.wikipedia.org/wiki/Literate_programming">Literate
+Programming</a>
+style, if you are new here, please read the section called <a href="http://localhost:1313/blog/k3s/k3s-01-setup/#running-commands">Running
+Commands</a>
+from a previous blog series I wrote (you only need to read that one
+section and then come back here.)</p>
+<p>This is the sixth post in the <a href="/tags/proxmox/">proxmox</a> blog series,
+which at this point contains some non-sequitors. For the purpose of
+creating a router, you can probably skip posts 1-&gt;3. If you have
+already installed Proxmox, then the only required reading is the
+immediately previous post: <a href="05-kvm-templates/">KVM
+Templates</a>, so
+you should start there.</p>
+<p>This blog is subject to constant revision, experimentation, and
+hopefully improvements. If you need a stable set of instructions for
+your own production router, please refer to <a href="https://github.com/EnigmaCurry/blog.rymcg.tech">the git repository
+containing this blog</a>
+and take note of which version you are following, or fork it to make
+it your own.</p>
+<h2 id="hardware"><a class="heading-anchor" href="#hardware">Hardware</a></h2>
+<figure>
+    <img
+        srcset="/img/hpt740_hudaaac1df292101f6b57e30dc01fde5a7_38643_480x0_resize_q75_box.jpg 480w"
+        sizes="(max-width: 480px) 480px, 100vw"
+        src="/img/hpt740.jpg"
+        alt="HP t740 with i350-T4"
+        width="100%"
+        height="auto"/>
+    <figcaption>HP t740 with i350-T4</figcaption>
+</figure>
+
+<p>The Proxmox server hardware used for testing is the <a href="https://www.servethehome.com/hp-t740-thin-client-review-tinyminimicro-with-pcie-slot-amd-ryzen">HP thin client
+t740</a>.
+This unit has a single PCIe slot, and it is populated with an Intel
+i350-T4 (Dell OEM) network adapater with four physical ethernet jacks.
+There is also one on-motherboard ethernet jack (Realtek) for a total
+of five NICs.</p>
+<p>Proxmox is installed with the on-board Realtek NIC as the only
+interface bonded to <code>vmbr0</code> (the default public network bridge in
+Proxmox) and this port is used only for administrative purposes. The
+four ports on the i350-T4 are passed directly to a KVM virutal machine
+via IOMMU (PCI passthrough). This means that the VM is totally in
+control of these four physical NICs, and Proxmox is hands off.</p>
+<p>The VM that uses the i350 ports will become the new router, with the
+ports <code>WAN</code>, <code>LAN</code>, <code>OPT1</code>, <code>OPT2</code>, top to bottom as pictured above.
+The white cable is <code>WAN</code> (internet), the red cable is <code>LAN</code> (local
+area), and the blue cable is <code>VM0</code>, the on-board admin port which
+is bonded to <code>vbmr0</code>.</p>
+<p>Technically, the i350-T4 network interface should be capable of SRIOV
+(PCI multiplexing), which would allow the four ports to be split into
+several virtual interfaces (called &ldquo;functions&rdquo;) mapped to more than
+four VMs at the same time. However, I could not get this to work, as
+it appears that the <a href="https://community.intel.com/t5/Ethernet-Products/Sr-IOV-Server-2012-I350-T4/m-p/218191#M644">Dell variety of this NIC disables
+SRIOV</a>
+(doh! double check it when you buy it if you want this feature!).
+However, for this project, SRIOV is unnecessary and overkill, as the
+entire card will only need to be passed into this one VM, and this is
+fully supported.</p>
+<p>In addition to the physical network ports, a second virtual bridge
+(<code>vmbr1</code>) is used to test routing to other virtual machines in the
+VM_ID 100-&gt;199 block, and this is assigned a virtual interface inside
+the router named <code>VM1</code>. If you don&rsquo;t have a machine with extra NICs
+(or if it does not support IOMMU), you can still play along using this
+virtual interface, but you will only be able to use this router for
+VMs and containers inside Proxmox. (Maybe you could technically make a
+router using VLANs with only one NIC, or you could bond additional
+interfaces to a bridge on the Proxmox host without PCI passthrough,
+and use additional virtual interfaces in router VM bonded to the same
+bridge, but these alternative topics are outside the scope of this
+post.)</p>
+<h2 id="create-the-vmbr1-bridge"><a class="heading-anchor" href="#create-the-vmbr1-bridge">Create the vmbr1 bridge</a></h2>
+<p>By default, Proxmox comes installed with only one bridge defined:
+<code>vmbr0</code>, since this bridge is reserved for our administration port, we
+need a separate bridge just for the <code>VM_ID</code> 100-&gt;199 block of machines
+named <code>vmbr1</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pvesh create /nodes/${HOSTNAME}/network \
+  --iface vmbr1 \
+  --type bridge \
+  --cidr 192.168.1.2/24 \
+  --autostart 1 &amp;&amp; \
+pvesh set /nodes/${HOSTNAME}/network
+</pre></div>
+</div>
+
+
+<p>The proxmox host needs its own IP address on this network, so we will
+choose the IP address <code>192.168.1.2</code>, reserving the honor of
+<code>192.168.1.1</code> for the router VM itself.</p>
+<h2 id="create-the-router-vm"><a class="heading-anchor" href="#create-the-router-vm">Create the router VM</a></h2>
+<p>This post begins with the assumption that you have installed Proxmox
+and are starting fresh with no VMs defined as of yet. The first VM we
+will create will be the virtual router (<code>VM_ID=100</code>).</p>
+<p>Arch Linux seems like a good choice for a router because it has the
+latest kernel, and therefore the latest nftables version. Use the Arch
+Linux template created in <a href="05-kvm-templates">part 5</a>
+(<code>TEMPLATE_ID=9000</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## export the variables needed by proxmox_kvm.sh:</span>
+</span></span><span style="display:flex;"><span>export VM_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>export TEMPLATE_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">9000</span>
+</span></span><span style="display:flex;"><span>export VM_HOSTNAME<span style="color:#f92672">=</span>router
+</span></span><span style="display:flex;"><span>VM1_BRIDGE<span style="color:#f92672">=</span>vmbr1
+</span></span><span style="display:flex;"><span>VM1_IP<span style="color:#f92672">=</span>192.168.1.1
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_kvm.sh clone
+</pre></div>
+</div>
+
+
+<h3 id="add-a-virtual-network-interface-to-vm-bridge-vmbr1"><a class="heading-anchor" href="#add-a-virtual-network-interface-to-vm-bridge-vmbr1">Add a virtual network interface to VM bridge vmbr1</a></h3>
+<p>Add a second network interface to act as the gateway for the VM_ID
+100-&gt;199 block on the vmbr1 network bridge:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set ${VM_ID} \
+   --net1 &#34;virtio,bridge=${VM1_BRIDGE}&#34; \
+   --ipconfig1 ip=${VM1_IP}/24
+</pre></div>
+</div>
+
+
+<h3 id="add-the-four-physical-nics-to-the-vm"><a class="heading-anchor" href="#add-the-four-physical-nics-to-the-vm">Add the four physical NICs to the VM</a></h3>
+<p>On the Proxmox host, the i350-T4 shows up as a single PCI device
+divided into four separate PCI device functions in the output of
+<code>lspci</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>## example lspci excerpt
+</span></span><span style="display:flex;"><span>01:00.0 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+</span></span><span style="display:flex;"><span>01:00.1 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+</span></span><span style="display:flex;"><span>01:00.2 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+</span></span><span style="display:flex;"><span>01:00.3 Ethernet controller: Intel Corporation I350 Gigabit Network Connection (rev 01)
+</span></span></code></pre></div><p>The left most column shows the PCI address of the device (<code>01:00</code>) and
+the four device &ldquo;functions&rdquo; assigned to the four ethernet jacks: <code>.0</code>,
+<code>.1</code>, <code>.2</code>, <code>.3</code>. If you look at <code>ip link</code> you will see these four
+devices as <code>enp1s0f0</code>, <code>enp1s0f1</code>, <code>enp1s0f2</code>, and <code>enp1s0f3</code>.</p>
+<p>(Note: If you have a card that has enabled SRIOV, <code>lspci</code> may list
+more &ldquo;functions&rdquo; than the number of physical ports. This allows you to
+use the same physical ethernet jack with multiple VMs at the same
+time. This is not the case for the the test hardware, as it does not
+have SRIOV, so these functions map exactly 1:1 to the physical
+ethernet jacks on the card being tested, and they are all being passed
+into to the router VM for exclusive use.)</p>
+<p>Assign all of these device functions to the VM with one command
+specifying only the root PCI address (<code>01:00</code>; without the <code>.X</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set ${VM_ID} -machine q35 -hostpci0 01:00,pcie=on
+</pre></div>
+</div>
+
+
+<p>Once you turn on the VM, you will find that <code>ip link</code> no longer shows
+these devices on the Proxmox host, because they have been transferred
+into the VM&rsquo;s control.</p>
+<h3 id="make-an-initial-snapshot"><a class="heading-anchor" href="#make-an-initial-snapshot">Make an initial snapshot</a></h3>
+<p>You&rsquo;re about to start the router VM for the first time, but before you
+do, make a snapshot. This way you will be able to rollback to a
+completely fresh state later if you need to, without needing to
+reclone and reconfigure the VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm snapshot ${VM_ID} init
+</pre></div>
+</div>
+
+
+<h3 id="start-the-vm"><a class="heading-anchor" href="#start-the-vm">Start the VM</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm start ${VM_ID}
+</pre></div>
+</div>
+
+
+<p>cloud-init will run the first time the VM boots. This will install the
+QEMU guest agent, which may take a few minutes.</p>
+<p>Wait a bit for the boot to finish, then find out what the vm0 (admin)
+IP address is:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_kvm.sh get_ip
+</pre></div>
+</div>
+
+
+<p>(If you see <code>QEMU guest agent is not running</code> just wait a few more
+minutes and try again. You can also find the IP address on the VM
+summary page in the GUI once the guest agent is installed.)</p>
+<p>Test that SSH works (replace <code>x.x.x.x</code> with the discovered IP
+address):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh root@x.x.x.x
+</pre></div>
+</div>
+
+
+<p>After the first boot, cloud-init will finish package upgrades and
+other tasks in the background. You should wait for these tasks to
+finish before using the VM. Check the completion of these tasks by
+running:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the VM shell to monitor cloud-init tasks:
+cloud-init status -w
+</pre></div>
+</div>
+
+
+<p>You can also find the full cloud-init log in
+<code>/var/log/cloud-init-output.log</code> (inside the VM).</p>
+<h3 id="install-etckeeper-to-track-configuration-changes"><a class="heading-anchor" href="#install-etckeeper-to-track-configuration-changes">Install etckeeper to track configuration changes</a></h3>
+<p><a href="https://wiki.archlinux.org/title/Etckeeper">etckeeper</a> is a tool to
+track all of the changes you make to the files in <code>/etc/</code> inside of a
+git repository that you can optionally push to a remote server for
+backup.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>GIT_EMAIL<span style="color:#f92672">=</span>root@<span style="color:#e6db74">${</span>HOSTNAME<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>GIT_USER<span style="color:#f92672">=</span>root
+</span></span><span style="display:flex;"><span>GIT_BRANCH<span style="color:#f92672">=</span>master
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+(set -ex
+pacman -S --noconfirm etckeeper
+systemctl enable --now etckeeper.timer
+git config --global init.defaultBranch &#34;${GIT_BRANCH}&#34;
+git config --global user.email &#34;${GIT_EMAIL}&#34;
+git config --global user.name &#34;${GIT_USER}&#34;
+etckeeper init
+etckeeper commit -m init
+)
+</pre></div>
+</div>
+
+
+<p>The above setup will only keep a local git repository. If you wish to
+automatically push to a remote git server, see <a href="https://wiki.archlinux.org/title/Etckeeper#Automatic_push_to_remote_repo">etckepeer: Automatic
+push to remote
+repo</a></p>
+<h3 id="rename-network-interfaces"><a class="heading-anchor" href="#rename-network-interfaces">Rename network interfaces</a></h3>
+<p>In the newly created VM you will find six ethernet devices via <code>ip link</code> (<code>eth0</code>-&gt;<code>eth5</code>). Let&rsquo;s rename these interfaces to make it
+easier to remember what they will be used for:</p>
+<ul>
+<li><code>vm0</code> (originally <code>eth0</code>) - This is the <em>virtual</em> interface
+connected to the <code>vmbr0</code> bridge (the public Proxmox VM bridge) -
+this interface is primarily for administration purposes only. This
+interface will be configured by an external DHCP server that you
+provide.</li>
+<li><code>vm1</code> (originally <code>eth1</code>) - This is the <em>virtual</em> interface
+connected to the <code>vmbr1</code> bridge (the private VM bridge serving the
+VM_ID 100-&gt;199 block.) By convention, the <code>vmbr1</code> bridge will use
+the <code>192.168.1.1/24</code> network, and this VM will have the IP address
+of <code>192.168.1.1</code>.</li>
+<li><code>wan</code> (originally <code>eth2</code>) - The inner most <em>physical</em> port on the
+i350-T4 - this is the public wide-area network (ie. the internet)
+interface of the router. This interface will be configured by
+external DHCP.</li>
+<li><code>lan</code> (originally <code>eth3</code>) - The second inner most <em>physical</em> port
+on the i350-T4 - this is the private local-area network interface
+of the router (ie. the home LAN). This will have a static IP
+address of <code>192.168.100.1</code> and will run a DHCP server for the
+<code>192.168.100.1/24</code> network, serving the home LAN.</li>
+<li><code>opt1</code> originally (<code>eth4</code>) - The second outer most <em>physical</em> port
+on the i350-T4 - this is an additional private network port
+(optional) with a static IP address of <code>192.168.101.1</code>.</li>
+<li><code>opt2</code> originally (<code>eth5</code>) - The outer most <em>physical</em> port on the
+i350-T4 - this is an additional private network port (optional)
+with a static IP address of <code>192.168.102.1</code>.</li>
+</ul>
+<p>Find the MAC addresses for each of the cards. <em>Run all of the
+following from inside the router VM</em>. Gather the four MAC addresses
+into temporary variables:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e"># Run this inside the router VM:</span>
+</span></span><span style="display:flex;"><span>VM0_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth0 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>VM1_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth1 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>WAN_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth2 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>LAN_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth3 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>OPT1_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth4 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>OPT2_MAC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ip link show eth5 | grep <span style="color:#e6db74">&#34;link/ether&#34;</span> | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;VM0  (virtual)        : </span><span style="color:#e6db74">${</span>VM0_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;VM1  (virtual)        : </span><span style="color:#e6db74">${</span>VM1_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;WAN  (physical)       : </span><span style="color:#e6db74">${</span>WAN_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;LAN  (physical)       : </span><span style="color:#e6db74">${</span>LAN_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;OPT1 (physical)       : </span><span style="color:#e6db74">${</span>OPT1_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;OPT2 (physical)       : </span><span style="color:#e6db74">${</span>OPT2_MAC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p>For each interface, double check that the correct MAC addresses are
+printed.</p>
+<p>The initial network configuration was bootstrapped by <code>cloud-init</code>.
+Now we will replace this configuration with
+<a href="https://wiki.archlinux.org/title/Systemd-networkd">systemd-networkd</a>
+to manager all of the network devices (and removing netplan to not
+conflict):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Run this inside the router VM:
+(set -ex
+# Rename all devices:
+(for i in vm0,${VM0_MAC} vm1,${VM1_MAC} wan,${WAN_MAC} lan,${LAN_MAC} opt1,${OPT1_MAC} opt2,${OPT2_MAC};
+    do IFS=&#34;,&#34;; set -- $i; interface=$1; mac=$2;
+    cat &lt;&lt;EOF &gt; /etc/systemd/network/10-${interface}.link
+[Match]
+MACAddress=${mac}
+[Link]
+Description=${interface^^} ethernet link
+Name=${interface}
+EOF
+    done)
+
+## Configure each interface for DHCP or static IP addresses:
+
+cat &lt;&lt;EOF &gt; /etc/systemd/network/20-wan.network
+[Match]
+Name=wan
+[Network]
+DHCP=yes
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/systemd/network/20-lan.network
+[Match]
+Name=lan
+[Network]
+Address=192.168.100.1/24
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/systemd/network/20-vm0.network
+[Match]
+Name=vm0
+[Network]
+DHCP=yes
+[DHCP]
+# Throw away any gateway this dhcp server gives us.
+# Only the wan interface should have a gateway.
+UseRoutes=false
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/systemd/network/20-vm1.network
+[Match]
+Name=vm1
+[Network]
+Address=192.168.1.1/24
+EOF
+
+## Enable systemd-networkd:
+systemctl enable --now systemd-networkd.service
+
+## Ignore as yet unconfigured devices on boot (OPT1 and OPT2):
+sed -i \
+  &#39;s|^ExecStart=.*|ExecStart=/usr/lib/systemd/systemd-networkd-wait-online --ignore=opt1 --ignore=opt2|&#39; \
+  /etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service
+
+## Disable the original cloud-init networking (netplan)
+rm -rf /etc/netplan
+cat &lt;&lt;EOF &gt; /etc/cloud/cloud.cfg.d/disable-netplan.cfg
+network:
+  config: disabled
+EOF
+)
+echo done
+</pre></div>
+</div>
+
+
+<p>Plug in the ethernet cables for <code>WAN</code> and <code>LAN</code>. <code>OPT1</code> and <code>OPT2</code>
+will remain vacant for now.</p>
+<p>Reboot the VM for the new device names to take effect:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+reboot
+</pre></div>
+</div>
+
+
+<p>SSH back in again once it reboots, and double check the new network
+devices:</p>
+<ul>
+<li><code>ip addr</code> should show each device in <code>state UP</code> and have an IPv4
+address (<code>inet x.x.x.x</code>). (all except for opt1 and opt2 which are
+not used yet.)</li>
+<li><code>ip route</code> should show ONLY ONE single default gateway on the <code>WAN</code>
+device (<code>default via x.x.x.x dev wan ...</code>) in addition to several <code>link</code>
+level routes for each configured device.</li>
+</ul>
+<h3 id="install-dnsmasq"><a class="heading-anchor" href="#install-dnsmasq">Install dnsmasq</a></h3>
+<p>You will need a DHCP server and DNS server for the <code>lan</code> and <code>vm1</code> interfaces.</p>
+<p>Install dnsmasq, and create two separate config files for two DHCP
+servers listening on exclusive interfaces:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+( set -e
+if ! command -v dnsmasq &gt;/dev/null; then pacman -S --noconfirm dnsmasq; fi
+
+cat &lt;&lt;EOF &gt; /etc/dnsmasq-vm1.conf
+interface=vm1
+except-interface=lo
+domain=vm1
+bind-interfaces
+listen-address=192.168.1.1
+server=::1
+server=127.0.0.1
+dhcp-range=192.168.1.10,192.168.1.250,255.255.255.0,1h
+dhcp-option=3,192.168.1.1
+dhcp-option=6,192.168.1.1
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/dnsmasq-lan.conf
+interface=lan
+except-interface=lo
+domain=lan
+bind-interfaces
+listen-address=192.168.100.1
+server=::1
+server=127.0.0.1
+dhcp-range=192.168.100.10,192.168.100.250,255.255.255.0,1h
+dhcp-option=3,192.168.100.1
+dhcp-option=6,192.168.100.1
+EOF
+
+cat &lt;&lt;&#39;EOF&#39; &gt; /etc/systemd/system/dnsmasq@.service
+[Unit]
+Description=dnsmasq for %i
+Documentation=man:dnsmasq(8)
+After=network.target
+Before=network-online.target nss-lookup.target
+Wants=nss-lookup.target
+
+[Service]
+ExecStartPre=/usr/bin/dnsmasq -C /etc/dnsmasq-%i.conf --test
+ExecStart=/usr/bin/dnsmasq -C /etc/dnsmasq-%i.conf -d --user=dnsmasq --pid-file
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5
+PrivateDevices=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now dnsmasq@vm1.service
+systemctl enable --now dnsmasq@lan.service
+)
+</pre></div>
+</div>
+
+
+<p><code>dnsmasq</code> will serve as a DHCP server and a caching DNS resolver that
+forwards queries to <code>dnscrypt-proxy</code>, which will be setup in the next
+section.</p>
+<h3 id="install-dnscrypt-proxy-dns-server"><a class="heading-anchor" href="#install-dnscrypt-proxy-dns-server">Install dnscrypt-proxy DNS server</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+(set -ex
+if ! command -v dnscrypt-proxy &gt;/dev/null; then pacman -S --noconfirm dnscrypt-proxy; fi
+sed -i \
+  -e &#34;s/^listen_addresses =.*/listen_addresses = [&#39;127.0.0.1:53&#39;,&#39;[::1]:53&#39;]/&#34; \
+  -e &#34;s/^# server_names =.*/server_names = [&#39;cloudflare&#39;]/&#34; \
+  /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+
+systemctl enable --now dnscrypt-proxy
+
+chattr -i /etc/resolv.conf || true
+rm -f /etc/resolv.conf
+cat &lt;&lt;EOF &gt; /etc/resolv.conf
+nameserver ::1
+nameserver 127.0.0.1
+options edns0
+EOF
+chattr &#43;i /etc/resolv.conf
+)
+</pre></div>
+</div>
+
+
+<p><code>dnscrypt-proxy</code> only listens on localhost port 53. <code>dnsmasq</code> is
+running a small caching DNS server that forwards to <code>dnscrypt-proxy</code>.</p>
+<h3 id="install-nftables"><a class="heading-anchor" href="#install-nftables">Install nftables</a></h3>
+<p>Install and enable nftables:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+pacman -S --noconfirm nftables
+systemctl enable --now nftables
+</pre></div>
+</div>
+
+
+<p>nftables comes installed with a pre-configured firewall ruleset in
+<code>/etc/nftables.conf</code>. You can look at the current configuration with:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+nft list ruleset
+</pre></div>
+</div>
+
+
+<p>The default ruleset is a basic configuration that drops all incoming
+packets except for SSH and ICMP for ping. This configuration is not
+yet suitable for a router, but provides a reasonble place to start.</p>
+<h3 id="create-nftables-rules"><a class="heading-anchor" href="#create-nftables-rules">Create nftables rules</a></h3>
+<p>Overwrite the <code>/etc/nftables.conf</code> and provide the new nftables
+configuration:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Run inside the router VM:
+
+cat &lt;&lt;EOF &gt; /etc/sysctl.d/ip_masquerade.conf
+net.ipv4.ip_forward = 1
+EOF
+
+cat &lt;&lt;&#39;EOF&#39; &gt; /etc/nftables.conf
+#!/usr/bin/nft -f
+
+define VM1_CIDR = 192.168.1.1/24
+define LAN_CIDR = 192.168.100.1/24
+define OPT1_CIDR = 192.168.101.1/24
+define OPT2_CIDR = 192.168.102.1/24
+
+define WAN_INTERFACE = { wan }
+define PRIVATE_INTERFACES = { vm1, lan, opt1, opt2 }
+
+define VM0_ACCEPTED_TCP = { 22 }
+define VM1_ACCEPTED_TCP = { 53, 9100 }
+define VM1_ACCEPTED_UDP = { 53, 67 }
+define LAN_ACCEPTED_TCP = { 53 }
+define LAN_ACCEPTED_UDP = { 53, 67 }
+
+define PUBLIC_ACCEPTED_ICMP = {
+    destination-unreachable,
+    router-advertisement,
+    time-exceeded,
+    parameter-problem }
+define PUBLIC_ACCEPTED_ICMPV6 = {
+    destination-unreachable,
+    packet-too-big,
+    time-exceeded,
+    parameter-problem,
+    nd-router-advert,
+    nd-neighbor-solicit,
+    nd-neighbor-advert }
+
+## Remove all existing rules:
+flush ruleset
+
+## filter IPv4 and IPv6:
+table inet filter {
+  set public_accepted_icmp { type icmp_type; elements = $PUBLIC_ACCEPTED_ICMP }
+  set public_accepted_icmpv6 { type icmpv6_type; elements = $PUBLIC_ACCEPTED_ICMPV6 }
+
+  set private_interfaces { type iface_index; elements = $PRIVATE_INTERFACES }
+  set vm0_accepted_tcp { type inet_service; flags interval; elements = $VM0_ACCEPTED_TCP }
+  set vm1_accepted_tcp { type inet_service; flags interval; elements = $VM1_ACCEPTED_TCP }
+  set vm1_accepted_udp { type inet_service; flags interval; elements = $VM1_ACCEPTED_UDP }
+  set lan_accepted_tcp { type inet_service; flags interval; elements = $LAN_ACCEPTED_TCP }
+  set lan_accepted_udp { type inet_service; flags interval; elements = $LAN_ACCEPTED_UDP }
+
+  ## To ban a host for one day: nft add element ip filter blackhole { 10.0.0.1 }
+  set blackhole { type ipv4_addr; flags timeout; timeout 1d; }
+
+  counter wan-egress { }
+  counter wan-ingress { }
+
+  chain input {
+    type filter hook input priority filter
+    policy drop
+
+    ct state invalid drop comment &#34;early drop of invalid connections&#34;
+    iif lo accept comment &#34;allow from loopback&#34;
+    iif $WAN_INTERFACE counter name wan-ingress;
+    ip saddr @blackhole drop comment &#34;drop banned hosts&#34;
+    ct state {established, related} accept comment &#34;allow tracked connections&#34;
+
+    ### Allow only a subset of ICMP messages:
+    iif @private_interfaces ip protocol icmp accept comment &#34;Allow private unrestricted ICMP&#34;
+    iif @private_interfaces ip6 nexthdr icmpv6 accept comment &#34;Allow private unrestricted ICMPv6&#34;
+    iif $WAN_INTERFACE ip protocol icmp icmp type @public_accepted_icmp limit rate 100/second accept comment &#34;Allow some ICMP&#34;
+    iif $WAN_INTERFACE ip6 nexthdr icmpv6 icmpv6 type @public_accepted_icmpv6 limit rate 100/second accept comment &#34;Allow some ICMPv6&#34;
+
+    tcp dport @vm0_accepted_tcp iifname vm0 ct state new log prefix &#34;Admin connection on VM0:&#34; accept
+    tcp dport @vm1_accepted_tcp iifname vm1 ct state new accept
+    udp dport @vm1_accepted_udp iifname vm1 ct state new accept
+    tcp dport @lan_accepted_tcp iifname lan ct state new accept
+    udp dport @lan_accepted_udp iifname lan ct state new accept
+
+    iif $WAN_INTERFACE drop comment &#34;drop all other packets from WAN&#34;
+    pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited comment &#34;Reject all other packets with rate limit&#34;
+    counter
+  }
+  chain forward {
+    type filter hook forward priority filter; policy drop;
+    ct state invalid drop comment &#34;early drop of invalid connections&#34;
+    ct state {established, related} accept comment &#34;allow tracked connections&#34;
+    iif @private_interfaces oif $WAN_INTERFACE accept comment &#34;allow private network WAN egress&#34;
+  }
+  chain output {
+    type filter hook output priority filter; policy accept;
+    oif $WAN_INTERFACE counter name wan-egress
+  }
+}
+
+table ip nat {
+  set private_interfaces { type iface_index; elements = $PRIVATE_INTERFACES }
+  chain prerouting {
+    type filter hook output priority filter; policy accept;
+  }
+  chain postrouting {
+    type nat hook postrouting priority srcnat;
+    iif @private_interfaces oif $WAN_INTERFACE masquerade
+  }
+}
+EOF
+
+sysctl --load /etc/sysctl.d/ip_masquerade.conf &gt;/dev/null
+systemctl restart nftables
+</pre></div>
+</div>
+
+
+<p>Verify the new ruleset:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+nft list ruleset
+</pre></div>
+</div>
+
+
+<p>To check the <code>nftables.conf</code> syntax run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the router VM:
+## This won&#39;t reload the firewall, but will simply check the syntax:
+nft -f /etc/nftables.conf -c
+</pre></div>
+</div>
+
+
+<p>(If the syntax is 100% correct, this won&rsquo;t print anything.)</p>
+<h2 id="create-a-test-vm-on-vmbr1"><a class="heading-anchor" href="#create-a-test-vm-on-vmbr1">Create a test VM on vmbr1</a></h2>
+<p>In order to test the router, DHCP, and DNS servers, you can create a
+test VM that will connect to the <code>vmbr1</code> bridge, automatically
+retrieve an IP address from the DHCP server, and connect to the
+internet through the router.</p>
+<p>For temporary testing purposes, create a debian host (using
+<code>TEMPLATE_ID=9001</code> created previously in <a href="../05-kvm-templates/#debian-bullseye">KVM
+Templates</a>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## export the variables needed by proxmox_kvm.sh:</span>
+</span></span><span style="display:flex;"><span>export VM_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">199</span>
+</span></span><span style="display:flex;"><span>export TEMPLATE_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">9001</span>
+</span></span><span style="display:flex;"><span>export VM_HOSTNAME<span style="color:#f92672">=</span>test1
+</span></span><span style="display:flex;"><span>export VM_PASSWORD<span style="color:#f92672">=</span>root
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_kvm.sh clone
+</pre></div>
+</div>
+
+
+<p>Configure the networking for <code>vmbr1</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm set ${VM_ID} \
+   --net0 &#34;virtio,bridge=vmbr1&#34; \
+   --ipconfig1 ip=dhcp \
+   --nameserver 192.168.1.1 \
+   --searchdomain vm1
+</pre></div>
+</div>
+
+
+<p>Start the test VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm start ${VM_ID}
+</pre></div>
+</div>
+
+
+<p>Connect to the console:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+qm terminal ${VM_ID}
+</pre></div>
+</div>
+
+
+<p>(<code>Ctrl-o</code> to quit.)</p>
+<p>Wait for the VM to boot and login as <code>root</code> using the temporary
+password (also <code>root</code>). (If you don&rsquo;t see the login prompt, press
+Enter a few times.)</p>
+<p>Check that everything is working from inside the test VM:</p>
+<ul>
+<li>Check <code>ip addr</code>, <code>eth0</code> should have receieved an active IP address
+in the range <code>192.168.1.x</code>. (I have observed that <code>eth0</code>
+erroneously receives TWO ip addresses on the first boot, but only
+one on subsequent reboots.)</li>
+<li>Check <code>ip route</code> should show only one default gateway (<code>default via 192.168.1.1 dev eth0 </code>).</li>
+<li>Check that <code>/etc/resolv.conf</code> shows only one nameserver
+(<code>192.168.1.1</code>) with a search domain of <code>vm1</code>. (If you see more
+than one nameserver, you may have forgot to set the cloud-init
+<code>--nameserver</code> and <code>--searchdomain</code> in the VM settings as shown
+above.)</li>
+<li>Check that you can <code>ping 192.168.1.1</code> to test connectivity to the router.</li>
+<li>Check that you can <code>ping 1.1.1.1</code> to test connectivity to the internet.</li>
+<li>Check that you can <code>ping one.one.one.one</code> to test DNS.</li>
+<li>Check that <code>ssh 192.168.1.1</code> shows <code>No route to host</code> (SSH to the
+router should be blocked from <code>vmbr1</code>.)</li>
+</ul>
+<h2 id="install-prometheus"><a class="heading-anchor" href="#install-prometheus">Install Prometheus</a></h2>
+<p>Let&rsquo;s create a
+<a href="https://github.com/prometheus/prometheus#readme">Prometheus</a> powered
+dashboard to monitor network bandwidth per interface/client. Create a
+new Docker VM (use the Docker <code>TEMPLATE_ID=9998</code> introduced in <a href="../05-kvm-templates/#docker">KVM
+Templates</a>) and configure it for the
+<code>vmbr1</code> network:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## export the variables needed by proxmox_kvm.sh:</span>
+</span></span><span style="display:flex;"><span>export TEMPLATE_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">9998</span>
+</span></span><span style="display:flex;"><span>export VM_ID<span style="color:#f92672">=</span><span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>export VM_HOSTNAME<span style="color:#f92672">=</span>prometheus
+</span></span><span style="display:flex;"><span>unset VM_PASSWORD
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this on the proxmox host:
+./proxmox_kvm.sh clone &amp;&amp; \
+qm set ${VM_ID} \
+   --net0 &#34;virtio,bridge=vmbr1&#34; \
+   --ipconfig1 ip=dhcp \
+   --nameserver 192.168.1.1 \
+   --searchdomain vm1 &amp;&amp; \
+qm start ${VM_ID}
+</pre></div>
+</div>
+
+
+<p>Wait for the Docker VM to boot, and get the IP address:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+./proxmox_kvm.sh get_ip
+</pre></div>
+</div>
+
+
+<p>SSH to the Prometheus VM using the discovered IP address:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh root@x.x.x.x
+</pre></div>
+</div>
+
+
+<p>Docker is preinstalled and running, you can verify it is working:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the prometheus VM:
+docker run hello-world
+</pre></div>
+</div>
+
+
+<p>This will print <code>Hello from Docker!</code> and some additional information.</p>
+<h3 id="install-node-exporter-on-each-vm"><a class="heading-anchor" href="#install-node-exporter-on-each-vm">Install node-exporter on each VM</a></h3>
+<p>You can install
+<a href="https://github.com/prometheus/node_exporter">node-exporter</a> on all
+the VMs and other hosts you wish to monitor with prometheus. Let&rsquo;s
+start by installing node-exporter inside the prometheus VM itself:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run inside the prometheus VM:
+apt-get install -y prometheus-node-exporter
+</pre></div>
+</div>
+
+
+<p>(On debian, the <code>prometheus-node-exporter</code> service is started
+automatically.)</p>
+<p>Also install this in the router VM:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run inside the router VM:
+pacman -S --noconfirm prometheus-node-exporter
+systemctl enable --now prometheus-node-exporter
+</pre></div>
+</div>
+
+
+<h3 id="create-prometheus-config-file"><a class="heading-anchor" href="#create-prometheus-config-file">Create prometheus config file</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the prometheus VM:
+mkdir -p /etc/prometheus
+cat &lt;&lt;EOF &gt; /etc/prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+  external_labels:
+    monitor: &#39;codelab-monitor&#39;
+rule_files:
+  - /etc/prometheus/node-exporter.rules.yml
+scrape_configs:
+  - job_name: &#39;prometheus&#39;
+    scrape_interval: 5s
+    static_configs:
+      - targets: [&#39;localhost:9090&#39;]
+        labels:
+          group: &#39;prometheus&#39;
+  - job_name: &#39;node&#39;
+    static_configs:
+      - targets: [&#39;prometheus:9100&#39;]
+        labels:
+          group: &#39;prometheus&#39;
+      - targets: [&#39;192.168.1.1:9100&#39;]
+        labels:
+          group: &#39;router&#39;
+EOF
+</pre></div>
+</div>
+
+
+<h3 id="create-prometheus-node-exporter-recording-rules"><a class="heading-anchor" href="#create-prometheus-node-exporter-recording-rules">Create prometheus node-exporter recording rules</a></h3>
+<p>Copied from the <a href="https://grafana.com/oss/prometheus/exporters/node-exporter/?tab=recording-rules">grafana node-exporeter
+documentation</a>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the prometheus VM:
+wget https://grafana.com/oss/prometheus/exporters/node-exporter/assets/node_rules.yaml \
+ -O /etc/prometheus/node-exporter.rules.yml
+</pre></div>
+</div>
+
+
+<h3 id="install-prometheus-container"><a class="heading-anchor" href="#install-prometheus-container">Install prometheus container</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the prometheus VM:
+docker run --name prometheus --restart=always -d \
+  -v /etc/prometheus:/etc/prometheus \
+  -p 9090:9090 \
+  prom/prometheus
+</pre></div>
+</div>
+
+
+<h2 id="install-grafana"><a class="heading-anchor" href="#install-grafana">Install Grafana</a></h2>
+<h3 id="create-datasources-configuration"><a class="heading-anchor" href="#create-datasources-configuration">Create datasources configuration</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Run this inside the prometheus VM:
+mkdir -p /etc/grafana/datasources
+cat &lt;&lt;EOF &gt; /etc/grafana/datasources/datasources.yml
+apiVersion: 1
+datasources:
+ - name: Prometheus
+   type: prometheus
+   uid: prometheus
+   url: http://prometheus:9090
+EOF
+</pre></div>
+</div>
+
+
+<h3 id="create-dashboards-configuration"><a class="heading-anchor" href="#create-dashboards-configuration">Create dashboards configuration</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkdir -p /etc/grafana/dashboards /var/lib/grafana/dashboards
+cat &lt;&lt;EOF &gt; /etc/grafana/dashboards/dashboards.yml
+apiVersion: 1
+providers:
+  - name: &#39;local dashboards&#39;
+    disableDeletion: true
+    updateIntervalSeconds: 60
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
+EOF
+
+# https://grafana.com/grafana/dashboards/13978
+wget https://grafana.com/api/dashboards/13978/revisions/2/download \
+  -O /var/lib/grafana/dashboards/node-exporter.dashboard.json
+</pre></div>
+</div>
+
+
+<h3 id="install-grafana-1"><a class="heading-anchor" href="#install-grafana-1">Install Grafana</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+docker run --name=grafana --restart=always -d \
+  -e &#34;GF_INSTALL_PLUGINS=&#34; \
+  -v /etc/grafana/datasources:/etc/grafana/provisioning/datasources \
+  -v /etc/grafana/dashboards:/etc/grafana/provisioning/dashboards \
+  -v /var/lib/grafana/dashboards:/var/lib/grafana/dashboards \
+  -p 3000:3000 \
+  grafana/grafana-oss
+</pre></div>
+</div>
+
+
+<h3 id="todo-setup-nftables-metrics-exporter"><a class="heading-anchor" href="#todo-setup-nftables-metrics-exporter">TODO: setup nftables metrics exporter</a></h3>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

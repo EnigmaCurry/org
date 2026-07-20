@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Forgejo · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/portable-docker/install-core-services/" aria-label="Previous: install-core-services" title="prev: install-core-services"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/portable-docker/install-core-services/traefik-forward-auth/" aria-label="Next: traefik-forward-auth" title="next: traefik-forward-auth"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/portable-docker/install-core-services/">install-core-services</a><ul><li class="lvl1"><a href="#">forgejo</a></li><li class="lvl2"><a href="#configure-forgejo">Configure Forgejo</a></li><li class="lvl2"><a href="#install-forgejo">Install Forgejo</a></li><li class="lvl2"><a href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></li><li class="lvl2"><a href="#finish-forgejo-installation">Finish Forgejo installation</a></li><li class="lvl2"><a href="#which-account-to-use">Which account to use?</a></li><li class="lvl2"><a href="#enable-access-to-repositories-by-ssh">Enable access to repositories by SSH</a></li><li class="lvl3"><a href="#enable-the-traefik-ssh-entrypoint">Enable the Traefik SSH entrypoint</a></li><li class="lvl3"><a href="#create-an-entrypoint-on-the-sentry">Create an entrypoint on the sentry</a></li><li class="lvl3"><a href="#create-a-route-from-the-forgejo-entrytpoint-to-the-pi">Create a route from the forgejo entrytpoint to the Pi</a></li><li class="lvl3"><a href="#test-cloning-a-repository-via-ssh">Test cloning a repository via SSH</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book open">
+        <a href="/portable-docker/">portable-docker</a><ul class="chapters"><li class="">
+                  <a class="" href="/portable-docker/acknowledgements/">acknowledgements</a></li><li class="">
+                  <a class="" href="/portable-docker/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-dns/">set-up-dns</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-raspberry-pi/">set-up-raspberry-pi</a></li><li class="node ">
+                  <a class="" href="/portable-docker/set-up-cloud-sentry/">set-up-cloud-sentry</a></li><li class="node ">
+                  <a class="" href="/portable-docker/configure-wireguard-tunnel/">configure-wireguard-tunnel</a></li><li class="">
+                  <a class="" href="/portable-docker/set-up-public-ssh-reverse-tunnel/">set-up-public-ssh-reverse-tunnel</a></li><li class="node open">
+                  <a class="" href="/portable-docker/install-core-services/">install-core-services</a><ul class="sections"><li><a class="active" href="/portable-docker/install-core-services/forgejo/">forgejo</a></li><li><a class="" href="/portable-docker/install-core-services/traefik-forward-auth/">traefik-forward-auth</a></li><li><a class="" href="/portable-docker/install-core-services/postfix-relay/">postfix-relay</a></li><li><a class="" href="/portable-docker/install-core-services/step-ca/">step-ca</a></li><li><a class="" href="/portable-docker/install-core-services/docker-registry/">docker-registry</a></li></ul></li><li class="node ">
+                  <a class="" href="/portable-docker/install-web-services/">install-web-services</a></li><li class="node ">
+                  <a class="" href="/portable-docker/maintainence/">maintainence</a></li><li class="node ">
+                  <a class="" href="/portable-docker/appendix/">appendix</a></li></ul></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/portable-docker/">/portable-docker</a><a class="pseg" href="/portable-docker/install-core-services/">/install-core-services</a><a class="pseg pcur" href="/portable-docker/install-core-services/forgejo/">/forgejo</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Forgejo</a></h1>
+
+
+<p><a href="https://forgejo.org/">Forgejo</a> is a self-hosted git forge similar to <a href="https://docs.github.com/en/get-started/start-your-journey/about-github-and-git">GitHub</a>. Forgejo is a
+fork of <a href="https://github.com/go-gitea/gitea?tab=readme-ov-file#gitea">Gitea</a>, which is a fork of <a href="https://github.com/gogs/gogs">Gogs</a>.</p>
+<figure><img src="/img/portable-docker/forgejo-home.webp">
+</figure>
+
+<p>Installing Forgejo is useful for two unrelated purposes:</p>
+<ul>
+<li>Self-hosting your own git repositories.</li>
+<li>Providing an OAuth2 identity service for your organization,
+facilitating single-sign on to all of your apps via Traefik&rsquo;s
+<a href="https://doc.traefik.io/traefik/middlewares/http/forwardauth/">forward-auth middleware</a>.</li>
+</ul>
+<div class="box notice notice-info"><div class="label">Forgejo is fundamental infrastructure</div>
+  <div class="body">
+<p>You don&rsquo;t need to install Forgejo on every server you make, but having
+at least one instance in your domain is recommended.</p>
+<p>Even if you (or your users) have no need for storing git repositories,
+Forgejo is part of the fundamental infrastructure of securing other
+d.rymcg.tech apps via OAuth2. You can authenticate and authorize your
+users to access your apps via their Forgejo account (sentry
+authorization), see the next chapter: <a href="/portable-docker/install-core-services/traefik-forward-auth">Traefik Forward Auth</a>.</p>
+  </div>
+</div>
+<h2 id="configure-forgejo"><a class="heading-anchor" href="#configure-forgejo">Configure Forgejo</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make forgejo config
+</pre></div>
+</div>
+
+
+<p>Configure the domain name and service description:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+FORGEJO_TRAEFIK_HOST: Enter your forgejo domain name (eg. git.example.com)
+
+: git.pi.example.com
+
+APP_NAME: Enter the service description (eg. "git thing")
+
+: pi5 git hosting
+
+? Do you want to enable sentry authorization in front of this app (effectively making the entire site private)?
+> No
+  Yes, with Mutual TLS (mTLS)
+</pre></div>
+</div>
+
+<h2 id="install-forgejo"><a class="heading-anchor" href="#install-forgejo">Install Forgejo</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make forgejo install
+</pre></div>
+</div>
+
+
+<h2 id="add-a-new-route-on-the-sentry"><a class="heading-anchor" href="#add-a-new-route-on-the-sentry">Add a new route on the sentry</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry route set --layer7 git.pi.example.com 10.13.16.2 443 --proxy-protocol true
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You may also create the route interactively through the <a href="/portable-docker/appendix/traefik-config-menu/#create-custom-routes">Traefik config
+menu</a>.</p>
+  </div>
+</div>
+<h2 id="finish-forgejo-installation"><a class="heading-anchor" href="#finish-forgejo-installation">Finish Forgejo installation</a></h2>
+<p>Immediately open the Foregjo application to finish the installation.
+Open your web browser to <code>https://git.pi.example.com</code>.</p>
+<p>This should show a page with the title <code>Initial configuration</code> at the
+top. The <strong>only</strong> thing you need to change on this page is the admin
+credentials found at the bottom (all of other settings are instead
+derived from the environment variables found in the Forgejo
+<code>.env_{CONTEXT}_{INSTANCE}</code> file created by d.rymcg.tech):</p>
+<figure><img src="/img/portable-docker/forgejo-admin-account-settings.webp">
+</figure>
+
+<ul>
+<li>You should create a dedicated admin account, separate from your
+personal account.</li>
+<li>Click <code>Administrator account settings</code> to expand the section.</li>
+<li>Enter the <code>Adminstrator username</code>: <code>root</code></li>
+<li>Enter the admin email address.</li>
+<li>Enter a secure passphrase and confirmation.</li>
+<li>Click the <code>Install Forgejo</code> button at the very bottom.</li>
+</ul>
+<p>Once logged in as <code>root</code>, you can create additional user accounts from
+the account icon in the top right, which expands a menu.</p>
+<figure><img src="/img/portable-docker/forgejo-admin-site-settings.webp">
+</figure>
+
+<ul>
+<li>Click <code>Site adminstration</code>.</li>
+<li>Click <code>Identity &amp; access</code>.</li>
+<li>Click <code>User accounts</code>.</li>
+</ul>
+<figure><img src="/img/portable-docker/forgejo-admin-user-accounts.webp">
+</figure>
+
+<ul>
+<li>Click <code>Create User Account</code> and create your own personal account.</li>
+<li>Log out of the root account and test logging into the new account.</li>
+</ul>
+<h2 id="which-account-to-use"><a class="heading-anchor" href="#which-account-to-use">Which account to use?</a></h2>
+<ul>
+<li>You should use the <code>root</code> account for creating new OAuth2 apps and
+for creating new users.</li>
+<li>You should use your personal account for storing your git
+repositories and for your identity when logging into other apps.</li>
+</ul>
+<h2 id="enable-access-to-repositories-by-ssh"><a class="heading-anchor" href="#enable-access-to-repositories-by-ssh">Enable access to repositories by SSH</a></h2>
+<p>By default, Forgejo only supports cloning its hosted git repositories
+via HTTPS. To allow cloning by SSH, you must enable the Traefik SSH
+entrypoint:</p>
+<h3 id="enable-the-traefik-ssh-entrypoint"><a class="heading-anchor" href="#enable-the-traefik-ssh-entrypoint">Enable the Traefik SSH entrypoint</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pi make traefik config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Traefik entrypoint config
+  Show enabled entrypoints
+> Configure stock entrypoints
+  Configure custom entrypoints
+
+? Select entrypoint to configure:
+^ websecure : HTTPS (TLS encrypted HTTP)
+  web_plain : HTTP (unencrypted; specifically NOT redirected to websecure; must use different port than web)
+  mqtt : MQTT (mosquitto) pub-sub service
+> ssh : SSH (forgejo) git (ssh) entrypoint
+  xmpp_c2s : XMPP (ejabberd) client-to-server entrypoint
+  xmpp_s2s : XMPP (ejabberd) server-to-server entrypoint
+v mpd : Music Player Daemon (mopidy) control entrypoint
+
+> Do you want to enable the ssh entrypoint? Yes
+
+TRAEFIK_SSH_ENTRYPOINT_HOST: Enter the host ip address to listen on (0.0.0.0 to listen on all interfaces) (eg. 0.0.0.0)
+
+: 0.0.0.0
+
+TRAEFIK_SSH_ENTRYPOINT_PORT: Enter the host port to listen on (eg. 2222)
+
+: 2222
+
+? Is this entrypoint downstream from another trusted proxy?
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through a trusted server. (Turn on Proxy Protocol)
+</pre></div>
+</div>
+
+<div class="box notice notice-warning"><div class="label">Do not enable Proxy Protocol</div>
+  <div class="body">
+<p>Do not enable Proxy Protocol, because it is not supported by SSH.</p>
+  </div>
+</div>
+<p>Press <code>ESC</code> three times to go back to the main menu, then re-install Traefik:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik:
+  Config
+> Install (make install)
+  Admin
+  Exit (ESC)
+</pre></div>
+</div>
+
+<p>Once reinstalled, press <code>ESC</code> to exit the config tool.</p>
+<h3 id="create-an-entrypoint-on-the-sentry"><a class="heading-anchor" href="#create-an-entrypoint-on-the-sentry">Create an entrypoint on the sentry</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry make traefik config
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+? Traefik:
+> Config
+  Install (make install)
+  Admin
+  Exit (ESC)
+
+? Traefik Configuration:
+  Traefik user
+> Entrypoints (including dashboard)
+  TLS certificates and authorities
+  Middleware (including sentry auth)
+  Advanced Routing (Layer 7 / Layer 4 / Wireguard)
+  Error page template
+v Logging level
+
+? Custom Entrypoints: <canceled>
+
+? Traefik entrypoint config
+  Show enabled entrypoints
+  Configure stock entrypoints
+> Configure custom entrypoints
+
+? Custom Entrypoints:
+  List custom entrypoints
+> Add new custom entrypoint
+  Remove custom entrypoints
+
+Adding a custom TCP/UDP entrypoint -
+
+- Make sure to enable the port in all upstream firewalls.
+- Make sure each entrypoint has a unique lower-case one-word name.
+
+Enter the new entrypoint name:
+
+: forgejo
+
+Enter the entrypoint listen address:
+
+: 0.0.0.0
+
+Enter the entrypoint port:
+
+: 2222
+
+Enter the protocol (tcp or udp):
+
+: tcp
+
+? Is this entrypoint downstream from another trusted proxy?
+> No, clients dial directly to this server. (Turn off Proxy Protocol)
+  Yes, clients are proxied through another trusted proxy. (Turn on Proxoy Protocol)
+</pre></div>
+</div>
+
+<div class="box notice notice-warning"><div class="label">Do not enable Proxy Protocol</div>
+  <div class="body">
+<p>SSH does not support <a href="https://www.haproxy.org/download/2.0/doc/proxy-protocol.txt">Proxy Protocol</a>, so be sure to disable it.</p>
+  </div>
+</div>
+<p>Press <code>ESC</code> four times to quit the config tool.</p>
+<h3 id="create-a-route-from-the-forgejo-entrytpoint-to-the-pi"><a class="heading-anchor" href="#create-a-route-from-the-forgejo-entrytpoint-to-the-pi">Create a route from the forgejo entrytpoint to the Pi</a></h3>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your Raspberry Pi</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sentry route set ssh --layer4 10.13.16.2 2222 --proxy-protocol false
+</pre></div>
+</div>
+
+
+<div class="box notice notice-tip"><div class="label">Tip</div>
+  <div class="body">
+<p>You may also create the route interactively through the <a href="/portable-docker/appendix/traefik-config-menu/#create-custom-routes">Traefik config
+menu</a>.</p>
+  </div>
+</div>
+<h3 id="test-cloning-a-repository-via-ssh"><a class="heading-anchor" href="#test-cloning-a-repository-via-ssh">Test cloning a repository via SSH</a></h3>
+<ul>
+<li>Login to your Forgejo instance</li>
+<li>Create a new repository</li>
+<li>On the repository page, click on SSH and copy the SSH URL.</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone ssh://git@git.pi.example.com:2222/username/repository.git
+</pre></div>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

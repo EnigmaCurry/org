@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Sway · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/config/" aria-label="Previous: config" title="prev: config"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/config/firefox/" aria-label="Next: firefox" title="next: firefox"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/config/">config</a><ul><li class="lvl1"><a href="#">sway</a></li><li class="lvl2"><a href="#sway-config">Sway Config</a></li><li class="lvl3"><a href="#install-nix">Install Nix</a></li><li class="lvl3"><a href="#install-home-manager">Install Home Manager</a></li><li class="lvl2"><a href="#setup-display-resolutions-and-orientation">Setup display resolutions and orientation</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node open">
+                  <a class="" href="/linux-workstation/config/">config</a><ul class="sections"><li><a class="active" href="/linux-workstation/config/sway/">sway</a></li><li><a class="" href="/linux-workstation/config/firefox/">firefox</a></li><li><a class="" href="/linux-workstation/config/distrobox/">distrobox</a></li><li><a class="" href="/linux-workstation/config/emacs-on-fedora/">emacs-on-fedora</a></li><li><a class="" href="/linux-workstation/config/ssh/">ssh</a></li></ul></li><li class="node ">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg" href="/linux-workstation/config/">/config</a><a class="pseg pcur" href="/linux-workstation/config/sway/">/sway</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Sway</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<p><a href="https://github.com/swaywm/sway?tab=readme-ov-file#readme">Sway</a> is a reimagining of <a href="https://i3wm.org/">i3wm</a> (X11), rewritten for Wayland. Sway (like
+i3wm) is a keyboard centric tiling window manager. Although not a
+source fork of i3wm, the configuration and user interface of Sway is
+almost identical to that of i3wm.</p>
+<h2 id="sway-config"><a class="heading-anchor" href="#sway-config">Sway Config</a></h2>
+<p>The Fedora Atomic Sway edition includes a default configuration for
+Sway. It&rsquo;s pretty nice out of the box, and so if you like it, you can
+just use it. However, I use <a href="https://github.com/enigmacurry/sway-home">my own custom configuration</a> that I replace
+it with, and you can do the same if you like.</p>
+<p>Open the default terminal emulator (foot) with the keyboard shortcut:
+<code>Win+Enter</code> (hold down the &ldquo;Windows&rdquo; key on your keyboard, then
+simultaneously press Enter.)</p>
+<h3 id="install-nix"><a class="heading-anchor" href="#install-nix">Install Nix</a></h3>
+<p>First, enable transient root (required for Nix on rpm-ostree systems):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo tee /etc/ostree/prepare-root.conf &lt;&lt;&#39;EOF&#39;
+[composefs]
+enabled = yes
+[root]
+transient = true
+EOF
+</pre></div>
+</div>
+
+
+<p>Track the config in initramfs and reboot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo rpm-ostree initramfs-etc --track=/etc/ostree/prepare-root.conf
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo systemctl reboot
+</pre></div>
+</div>
+
+
+<p>After reboot, install Nix using the Determinate Systems installer:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+curl --proto &#39;=https&#39; --tlsv1.2 -sSf -L https://install.determinate.systems/nix | \
+  sh -s -- install ostree --no-confirm
+</pre></div>
+</div>
+
+
+<p>Restart your terminal session, then verify installation:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+nix --version
+</pre></div>
+</div>
+
+
+<h3 id="install-home-manager"><a class="heading-anchor" href="#install-home-manager">Install Home Manager</a></h3>
+<p>Clone <a href="https://github.com/enigmacurry/sway-home">my customized sway config repository</a>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone https://github.com/enigmacurry/sway-home \
+  ~/git/vendor/enigmacurry/sway-home
+</pre></div>
+</div>
+
+
+<p>Install the configuration using Home Manager:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cd ~/git/vendor/enigmacurry/sway-home
+just hm-install
+</pre></div>
+</div>
+
+
+<p>This will install all dotfiles, packages (including Emacs), and shell
+configuration. Any existing files that conflict will be backed up with
+a <code>.backup</code> suffix.</p>
+<p>During installation, you will be prompted to enter your git user name
+and email if not already configured. This creates a local config file
+at <code>~/.config/git/config.local</code> which is not tracked by the
+repository, allowing each user to have their own identity.</p>
+<p>Once installation completes, press <code>Win+Shift+E</code> and choose Log Out.
+Log back in, and this will load the new config files.</p>
+<h2 id="setup-display-resolutions-and-orientation"><a class="heading-anchor" href="#setup-display-resolutions-and-orientation">Setup display resolutions and orientation</a></h2>
+<p>Fedora Sway Atomic ships with <a href="https://git.sr.ht/~emersion/kanshi">kanshi</a> for display setup. Kanshi does
+not include any GUI for setting it up, so another program called
+<a href="https://github.com/artizirk/wdisplays">wdisplays</a> is useful.</p>
+<p>You can configure all of your displays using the wdisplays GUI
+program, however, the configuration will not persist across login
+sessions. So what you need to do is set it up how you like it, and
+then transfer that information into the Kanshi config file so that it
+sets it up the same way everytime you login.</p>
+<p>For example, on my test system I have two display port monitors, with
+outputs named <code>DP-3</code> and <code>DP-4</code>. These are shown in wdisplays and I
+have set up the size, position, and DPI scaling exactly how I like it:</p>
+<p>DP-3:</p>
+<figure><img src="/img/wdisplays1.webp">
+</figure>
+
+<p>DP-4:</p>
+<figure><img src="/img/wdisplays2.webp">
+</figure>
+
+<p>Open the Kanshi config file <code>~/.config/kanshi/config</code> and copy the
+information into the config file:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/.config/kanshi/config</div>
+    <div class="body"><pre>
+profile {
+   output DP-3 enable mode 2560x1440 position 3840,0 scale 1 transform normal
+   output DP-4 enable mode 3840x2160 position 1920,360 scale 2 transform normal
+}
+</pre></div>
+</div>
+
+<p>Check out <code>man 5 kanshi</code> for more config options. Kanshi is
+<a href="https://github.com/EnigmaCurry/sway-home/blob/9a7af6fbd60a671a7059ba7bd35f35c2ec3cbd1f/config/sway/config.d/autostart_applications#L2">automatically started</a> when sway is, so you can test it by logging out
+and logging back in.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>K3s part 11: Drone · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/k3s/k3s-12-drone-development/" aria-label="Previous: k3s-12-Drone-development" title="prev: k3s-12-Drone-development"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/k3s/k3s-10-openfaas/" aria-label="Next: k3s-10-OpenFaaS" title="next: k3s-10-OpenFaaS"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">k3s-11-Drone</a></li><li class="lvl2"><a href="#create-gitea-oauth2-app-and-keys">Create Gitea OAuth2 app and keys</a></li><li class="lvl2"><a href="#create-drone-namespace">Create drone namespace</a></li><li class="lvl2"><a href="#create-sealed-secret">Create Sealed Secret</a></li><li class="lvl2"><a href="#create-roles-and-rolebindings">Create Roles and RoleBindings</a></li><li class="lvl2"><a href="#create-serviceaccounts">Create ServiceAccounts</a></li><li class="lvl2"><a href="#create-persistentvolumeclaim">Create PersistentVolumeClaim</a></li><li class="lvl2"><a href="#create-statefulset">Create StatefulSet</a></li><li class="lvl2"><a href="#create-ingressroute">Create IngressRoute</a></li><li class="lvl2"><a href="#create-runner">Create Runner</a></li><li class="lvl2"><a href="#create-secrets-plugin">Create Secrets Plugin</a></li><li class="lvl2"><a href="#commit-and-push-new-files">Commit and push new files</a></li><li class="lvl2"><a href="#connect-drone-to-gitea">Connect drone to gitea</a></li><li class="lvl2"><a href="#create-a-simple-job-pipeline">Create a simple Job Pipeline</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="active" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/k3s/k3s-11-drone/">/k3s-11-Drone</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">K3s part 11: Drone</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2020-12-27">2020-12-27</time></span>
+  <span>updated <time datetime="2020-12-30">2020-12-30</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/k3s/">k3s</a>
+  </span>
+</div>
+
+<p><a href="https://www.drone.io/">Drone</a> is a self-hosted Continuous Integration platform,
+an equivalent to GitHub Actions, Jenkins, Travis CI, or similar. Drone will
+automatically run jobs in response to commits to git repositories in Gitea
+(previously setup in <a href="/blog/k3s/k3s-04-git">Part 4</a>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span><span style="color:#75715e">## Same git repo for infrastructure as in prior posts:</span>
+</span></span><span style="display:flex;"><span>FLUX_INFRA_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/git/flux-infra
+</span></span><span style="display:flex;"><span>CLUSTER<span style="color:#f92672">=</span>k3s.example.com
+</span></span><span style="display:flex;"><span>NAMESPACE<span style="color:#f92672">=</span>drone
+</span></span><span style="display:flex;"><span>PVC_SIZE<span style="color:#f92672">=</span>5Gi
+</span></span><span style="display:flex;"><span>GITEA_SERVER<span style="color:#f92672">=</span>https://git.<span style="color:#e6db74">${</span>CLUSTER<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>REGISTRY<span style="color:#f92672">=</span>registry.<span style="color:#e6db74">${</span>CLUSTER<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><h2 id="create-gitea-oauth2-app-and-keys"><a class="heading-anchor" href="#create-gitea-oauth2-app-and-keys">Create Gitea OAuth2 app and keys</a></h2>
+<p>Drone needs to authenticate with Gitea, using OAuth2. Create the OAuth2 app in
+the Gitea settings:</p>
+<ul>
+<li>Go to your personal settings page in Gitea.</li>
+<li>Click <code>Applications</code></li>
+<li>Find <code>Manage OAuth2 Application</code> and <code>Create a new OAuth2 Application</code></li>
+<li>Enter the <code>Application Name</code> (<code>drone</code>)</li>
+<li>Enter the <code>Redirect URI</code> (<code>https://drone.k3s.example.com/login</code>)</li>
+<li>Click <code>Create Application</code></li>
+<li>Find and copy the generated <code>Client ID</code> and <code>Client Secret</code>, you will need to
+enter these values as variables:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>GITEA_CLIENT_ID<span style="color:#f92672">=</span>xxxx
+</span></span><span style="display:flex;"><span>GITEA_CLIENT_SECRET<span style="color:#f92672">=</span>xxxx
+</span></span></code></pre></div><h2 id="create-drone-namespace"><a class="heading-anchor" href="#create-drone-namespace">Create drone namespace</a></h2>
+<p>Create <code>kustomization.yaml</code> to list all of the manifests:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkdir -p ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- namespace.yaml
+- rbac.yaml
+- serviceaccounts.yaml
+- sealed_secret.yaml
+- pvc.yaml
+- statefulset.yaml
+- ingress.yaml
+- secrets-plugin.yaml
+- runner.yaml
+EOF
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${NAMESPACE}
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-sealed-secret"><a class="heading-anchor" href="#create-sealed-secret">Create Sealed Secret</a></h2>
+<p>Generate keys:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+RPC_SECRET=$(head -c 16 /dev/urandom | sha256sum | head -c 32)
+KUBERNETES_SECRET_KEY=$(head -c 16 /dev/urandom | sha256sum | head -c 32)
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+kubectl create secret generic drone \
+   --namespace ${NAMESPACE} --dry-run=client -o json \
+   --from-literal=GITEA_CLIENT_ID=${GITEA_CLIENT_ID} \
+   --from-literal=GITEA_CLIENT_SECRET=${GITEA_CLIENT_SECRET} \
+   --from-literal=GITEA_SERVER=${GITEA_SERVER} \
+   --from-literal=SERVER_HOST=drone.${CLUSTER} \
+   --from-literal=RPC_SECRET=${RPC_SECRET} \
+   --from-literal=REGISTRY_DOMAIN=${REGISTRY_DOMAIN} \
+   --from-literal=KUBERNETES_SECRET_KEY=${KUBERNETES_SECRET_KEY} \
+   | kubeseal -o yaml &gt; \
+  ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/sealed_secret.yaml
+</pre></div>
+</div>
+
+
+<h2 id="create-roles-and-rolebindings"><a class="heading-anchor" href="#create-roles-and-rolebindings">Create Roles and RoleBindings</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/rbac.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: ${NAMESPACE}
+  name: drone-runner
+rules:
+- apiGroups:
+  - &#34;&#34;
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+- apiGroups:
+  - &#34;&#34;
+  resources:
+  - pods
+  - pods/log
+  verbs:
+  - get
+  - create
+  - delete
+  - list
+  - watch
+  - update
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: drone-runner
+  namespace: ${NAMESPACE}
+subjects:
+- kind: ServiceAccount
+  name: drone-runner
+  namespace: ${NAMESPACE}
+roleRef:
+  kind: Role
+  name: drone-runner
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: ${NAMESPACE}
+  name: drone-secrets
+rules:
+- apiGroups:
+  - &#34;&#34;
+  resources:
+  - secrets
+  verbs:
+  - get
+  - watch
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: drone-secrets
+  namespace: ${NAMESPACE}
+subjects:
+- kind: ServiceAccount
+  name: drone-secrets
+  namespace: ${NAMESPACE}
+roleRef:
+  kind: Role
+  name: drone-secrets
+  apiGroup: rbac.authorization.k8s.io
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-serviceaccounts"><a class="heading-anchor" href="#create-serviceaccounts">Create ServiceAccounts</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/serviceaccounts.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: ${NAMESPACE}
+  name: drone-runner
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: ${NAMESPACE}
+  name: drone-secrets
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-persistentvolumeclaim"><a class="heading-anchor" href="#create-persistentvolumeclaim">Create PersistentVolumeClaim</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drone-data
+  namespace: ${NAMESPACE}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: ${PVC_SIZE}
+  storageClassName: local-path
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-statefulset"><a class="heading-anchor" href="#create-statefulset">Create StatefulSet</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/statefulset.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: drone
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+  selector:
+    app: drone
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: drone
+  name: drone
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  serviceName: drone
+  selector:
+    matchLabels:
+      app: drone
+  template:
+    metadata:
+      labels:
+        app: drone
+    spec:
+      containers:
+      - image: drone/drone:1
+        name: drone
+        volumeMounts:
+          - name: data
+            mountPath: /data
+        ## debug:
+        ## command: [&#34;/bin/sh&#34;, &#34;-c&#34;, &#34;sleep 99999999999&#34;]
+        ports:
+        - containerPort: 80
+          name: web
+        env:
+          - name: DRONE_GITEA_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: GITEA_CLIENT_ID
+          - name: DRONE_GITEA_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: GITEA_CLIENT_SECRET
+          - name: DRONE_GITEA_SERVER
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: GITEA_SERVER
+          - name: DRONE_GIT_ALWAYS_AUTH
+            value: &#34;true&#34;
+          - name: DRONE_RPC_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: RPC_SECRET
+          - name: DRONE_SERVER_HOST
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: SERVER_HOST
+          - name: DRONE_SERVER_PROTO
+            value: https
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: drone-data
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-ingressroute"><a class="heading-anchor" href="#create-ingressroute">Create IngressRoute</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF | sed &#39;s/@@@/`/g&#39; &gt; \
+   ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/ingress.yaml
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: drone
+  namespace: ${NAMESPACE}
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(@@@drone.${CLUSTER}@@@)
+    services:
+    - name: drone
+      port: 80
+  tls:
+    certResolver: default
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-runner"><a class="heading-anchor" href="#create-runner">Create Runner</a></h2>
+<p>This is the worker that runs jobs on the cluster.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/runner.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: drone-runner
+  name: drone-runner
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drone-runner
+  template:
+    metadata:
+      labels:
+        app: drone-runner
+    spec:
+      serviceAccountName: drone-runner
+      containers:
+      - image: drone/drone-runner-kube:latest
+        name: drone-runner
+        env:
+          - name: DRONE_NAMESPACE_DEFAULT
+            value: ${NAMESPACE}
+          - name: DRONE_RPC_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: RPC_SECRET
+          - name: DRONE_RPC_HOST
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: SERVER_HOST
+          - name: DRONE_RPC_PROTO
+            value: https
+          - name: DRONE_SECRET_PLUGIN_ENDPOINT
+            value: http://drone-secrets-plugin.${NAMESPACE}.svc.cluster.local:3000
+          - name: DRONE_SECRET_PLUGIN_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: drone
+                key: KUBERNETES_SECRET_KEY
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="create-secrets-plugin"><a class="heading-anchor" href="#create-secrets-plugin">Create Secrets Plugin</a></h2>
+<p>This will allow Drone runners to receive secrets from Kubernetes Secrets.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${FLUX_INFRA_DIR}/${CLUSTER}/${NAMESPACE}/secrets-plugin.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: drone-secrets-plugin
+  namespace: ${NAMESPACE}
+spec:
+  ports:
+  - name: web
+    port: 3000
+    protocol: TCP
+  selector:
+    app: drone-secrets-plugin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: drone-secrets-plugin
+  name: drone-secrets-plugin
+  namespace: ${NAMESPACE}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drone-secrets-plugin
+  template:
+    metadata:
+      labels:
+        app: drone-secrets-plugin
+    spec:
+      serviceAccountName: drone-secrets
+      containers:
+      - name: secrets
+        image: drone/kubernetes-secrets:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: SERVER_ADDRESS
+          value: &#34;:3000&#34;
+        - name: KUBERNETES_NAMESPACE
+          value: ${NAMESPACE}
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: drone
+              key: KUBERNETES_SECRET_KEY
+EOF
+</pre></div>
+</div>
+
+
+<h2 id="commit-and-push-new-files"><a class="heading-anchor" href="#commit-and-push-new-files">Commit and push new files</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ${FLUX_INFRA_DIR} add ${CLUSTER}
+git -C ${FLUX_INFRA_DIR} commit -m &#34;${CLUSTER} ${NAMESPACE}&#34;
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ${FLUX_INFRA_DIR} push
+</pre></div>
+</div>
+
+
+<h2 id="connect-drone-to-gitea"><a class="heading-anchor" href="#connect-drone-to-gitea">Connect drone to gitea</a></h2>
+<p>Open your browser to <a href="https://drone.k3s.example.com">https://drone.k3s.example.com</a> and you should see a
+confirmation dialog to autorize drone to access gitea. Proceed and click
+<code>Authorize Application</code>, and you should be redirected to the drone admin UI,
+which lists gitea repositories.</p>
+<h2 id="create-a-simple-job-pipeline"><a class="heading-anchor" href="#create-a-simple-job-pipeline">Create a simple Job Pipeline</a></h2>
+<p>Create a new git repository, to hold a new example project:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-env" data-lang="env"><span style="display:flex;"><span>TEST_REPO<span style="color:#f92672">=</span>test-drone
+</span></span><span style="display:flex;"><span>TEST_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>HOME<span style="color:#e6db74">}</span>/git/<span style="color:#e6db74">${</span>TEST_REPO<span style="color:#e6db74">}</span>
+</span></span></code></pre></div>
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+tea repo create --private --name ${TEST_REPO}
+CLONE_URL=$(tea repo | grep -o &#34;ssh://.*[ $]&#34; | grep &#34;/${TEST_REPO}.git[ $]&#34;)
+</pre></div>
+</div>
+
+
+<ul>
+<li>Go to your drone instance (<a href="https://drone.k3s.example.com">https://drone.k3s.example.com</a>), and click <code>Sync</code>
+to refresh the list of repositories. Find the new repository called
+<code>test-drone</code> and click <code>Activate</code>, then <code>Activate Repository</code>.</li>
+<li>Clone the repo to your workstation, via SSH:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone ${CLONE_URL} ${TEST_DIR}
+</pre></div>
+</div>
+
+
+<p>Create the drone config file:  <code>.drone.yml</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt;EOF &gt; ${TEST_DIR}/.drone.yml
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+- name: hello-world
+  image: alpine:3
+  commands:
+  - echo hello world
+  - echo bye
+EOF
+</pre></div>
+</div>
+
+
+<p>Note the <code>type: kubernetes</code>, this means that the pipeline will run directly on
+the cluster, as a pod.</p>
+<p>Add, Commit, and Push the change to the gitea repository:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ${TEST_DIR} add .drone.yml
+git -C ${TEST_DIR} commit -m &#34;hello-world&#34;
+git -C ${TEST_DIR} push
+</pre></div>
+</div>
+
+
+<p>Go to your drone instance, and find the <code>test-drone</code> repository again. You
+should see a new job in the Activity Feed called <code>hello-world</code> (Or whatever your
+git commit message was.) At the bottom you should see the step called
+<code>hello-world</code> and in the output you should see the message <code>hello world</code> and
+<code>bye</code>. The job is working!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>+ echo hello world
+</span></span><span style="display:flex;"><span>hello world
+</span></span><span style="display:flex;"><span>+ echo bye
+</span></span><span style="display:flex;"><span>bye
+</span></span></code></pre></div><p>You can find more complex job pipeline examples in the <a href="https://docs.drone.io/pipeline/kubernetes/examples/">drone
+docs</a></p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

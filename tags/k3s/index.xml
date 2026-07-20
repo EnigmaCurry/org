@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>k3s on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/tags/k3s/</link>
+    <description>Recent content in k3s on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 12 Aug 2023 12:27:35 +0100</lastBuildDate>
+    <atom:link href="https://book.rymcg.tech/tags/k3s/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>K3s part 1: Setup your workstation</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-01-setup/</link>
+      <pubDate>Fri, 11 Dec 2020 00:01:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-01-setup/</guid>
+      <description>This is the first post in the K3s series, read the introduction first.&#xA;Prepare your workstation When working with kubernetes, you should resist the urge to directly login into the host server via SSH, unless you have to. Instead, you will create all of the config files on your local laptop, which will be referred to as your workstation, and use kubectl to access the remote cluster API.&#xA;You will need to install several command line tools on your workstation (or follow the guide to build a utility container to use as your virtual &amp;ldquo;workstation&amp;rdquo; environment, which has all of the tools builtin):</description>
+    </item>
+    <item>
+      <title>K3s part 2: Create a single node cluster</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-02-install/</link>
+      <pubDate>Fri, 11 Dec 2020 00:02:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-02-install/</guid>
+      <description>To start testing with k3s, keep it simple, only create one node. You can add more nodes later. You can deploy it anywhere you like, just follow the documentation. Abbreviated notes are below for generic hosts, and detailed instructions for DigitalOcean droplets.&#xA;Install k3s on a generic host If you already have a provisioned Linux server, or Virtual Machine, you can install k3s on it, with a single command.&#xA;Before installing, you should know that pods will store data in volumes created in the directory /var/lib/rancher/k3s/storage.</description>
+    </item>
+    <item>
+      <title>K3s part 3: Traefik proxy</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-03-traefik/</link>
+      <pubDate>Fri, 11 Dec 2020 00:03:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-03-traefik/</guid>
+      <description>Traefik is a proxy service that will allow HTTP and TCP services running inside your cluster to be exposed to the public internet. It follows the standard Kubernetes Ingress API. Traefik handles automatic and transparent TLS (HTTPS) with ACME certificates (Let&amp;rsquo;s Encrypt).&#xA;Create Traefik YAML manifests Configure the git repository directory you created in part 1 along with other config variables:&#xA;## Git directory for cluster config FLUX_INFRA_DIR=${HOME}/git/flux-infra ## Domain name of the cluster CLUSTER=k3s.</description>
+    </item>
+    <item>
+      <title>K3s part 4: Git host</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-04-git/</link>
+      <pubDate>Fri, 11 Dec 2020 00:04:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-04-git/</guid>
+      <description>Gitea is a self-hosted git platform, much like GitHub. You will push your local flux-infra git repository to gitea, for backup, and for continuous delivery (CD) via Flux (Flux to be installed in part 5.&#xA;Configure the git repository directory you created in part 1 along with other config variables:&#xA;FLUX_INFRA_DIR=${HOME}/git/flux-infra CLUSTER=k3s.example.com Install Sealed Secrets bitnami-labs/sealed-secrets allows you to encrypt and decrypt kubernetes secrets, with a key secured by your cluster.</description>
+    </item>
+    <item>
+      <title>K3s part 5: Flux GitOps</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-05-flux/</link>
+      <pubDate>Fri, 11 Dec 2020 00:05:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-05-flux/</guid>
+      <description>Flux is a Continuous Delivery platform for Kubernetes infrastructure. Flux will syncrhonize your git repository containing your YAML manifests, and automatically apply changes to your cluster. Manage your cluster via GitOps!&#xA;Install flux operators Configure the git repository directory you created in part 1 along with other config variables:&#xA;FLUX_INFRA_DIR=${HOME}/git/flux-infra CLUSTER=k3s.example.com GITEA_USER=root GIT_REMOTE=ssh://git@git.${CLUSTER}:2222/${GITEA_USER}/flux-infra.git Create the YAML manifests for flux:&#xA;[bash]: Run this on your workstation: mkdir -p ${FLUX_INFRA_DIR}/${CLUSTER}/flux-system flux install --version=latest --arch=amd64 --export &amp;gt; \ ${FLUX_INFRA_DIR}/${CLUSTER}/flux-system/gotk-components.</description>
+    </item>
+    <item>
+      <title>K3s part 6: Container registry</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-06-registry/</link>
+      <pubDate>Fri, 11 Dec 2020 00:06:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-06-registry/</guid>
+      <description>If you can&amp;rsquo;t access container images, you can&amp;rsquo;t start containers. Self-hosting your own cluster-local container registry is a must.&#xA;Configure the git repository directory you created in part 1 along with other config variables:&#xA;FLUX_INFRA_DIR=${HOME}/git/flux-infra CLUSTER=k3s.example.com REGISTRY_ADMIN=admin REGISTRY_IMAGE=registry:2 REGISTRY_PVC_SIZE=20Gi Create namespace [bash]: Run this on your workstation: mkdir -p ${FLUX_INFRA_DIR}/${CLUSTER}/registry &amp;amp;&amp;amp; \ cat &amp;lt;&amp;lt;&amp;#39;EOF&amp;#39; &amp;gt; ${FLUX_INFRA_DIR}/${CLUSTER}/registry/namespace.yaml apiVersion: v1 kind: Namespace metadata: name: registry EOF Generate passwords [bash]: Run this on your workstation: gen_password() { head -c 16 /dev/urandom | sha256sum | cut -d &amp;#34; &amp;#34; -f 1; } kube_run() { eval &amp;#34;kubectl run --quiet -i --rm --tty kube-run-${RANDOM} \ --image=${1} --restart=Never -- ${@:2}&amp;#34; } htpasswd() { kube_run alpine /bin/sh -c \&amp;#34;&amp;#34;apk add --no-cache apache2-utils \ &amp;amp;&amp;gt; /dev/null &amp;amp;&amp;amp; \ htpasswd -Bbn ${1} ${2} | head -n 1 2&amp;gt; /dev/null\&amp;#34;&amp;#34; } REGISTRY_PASSWORD=$(gen_password) REGISTRY_AUTH=$(htpasswd ${REGISTRY_ADMIN} ${REGISTRY_PASSWORD}) REGISTRY_HTTP_SECRET=$(gen_password) echo &amp;#34;-------------------------------&amp;#34; echo REGISTRY_ADMIN is ${REGISTRY_ADMIN} echo REGISTRY_PASSWORD is ${REGISTRY_PASSWORD} echo REGISTRY_AUTH is ${REGISTRY_AUTH} echo REGISTRY_HTTP_SECRET is ${REGISTRY_HTTP_SECRET} Create sealed secret [bash]: Run this on your workstation: kubectl create secret generic registry \ --namespace registry --dry-run=client -o json \ --from-literal=REGISTRY_ADMIN=${REGISTRY_ADMIN} \ --from-literal=REGISTRY_PASSWORD=${REGISTRY_PASSWORD} \ --from-literal=REGISTRY_HTTP_SECRET=${REGISTRY_HTTP_SECRET} \ --from-literal=REGISTRY_AUTH=${REGISTRY_AUTH} | kubeseal -o yaml &amp;gt; \ ${FLUX_INFRA_DIR}/${CLUSTER}/registry/sealed_secret.</description>
+    </item>
+    <item>
+      <title>K3s part 7: Mutual TLS authentication with Traefik</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-07-mutual-tls/</link>
+      <pubDate>Fri, 11 Dec 2020 00:07:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-07-mutual-tls/</guid>
+      <description>In part 3, the Traefik IngressRoute for the whoami service was configured with TLS certificates from Let&amp;rsquo;s Encrypt. This type of certificate only authenticates the server, not the client, leaving client authentication as a requirement on the application layer. (For example, requiring to submit a username/password via HTTP, before access is granted.) This is enough, and normal, for secure public facing web services, where your clients might be connecting from anywhere, especially using web-browsers.</description>
+    </item>
+    <item>
+      <title>K3s part 8: Wordpress. Or: Running stateful and stateless containers</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-08-wordpress/</link>
+      <pubDate>Fri, 11 Dec 2020 00:08:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-08-wordpress/</guid>
+      <description>The blog you&amp;rsquo;re reading is static, built using hugo. I personally don&amp;rsquo;t have any use for Wordpress, but it is a ubiquitous application which is useful for demonstrating a simple installation.&#xA;You can see from the Wordpress docker-compose quickstart, the installation only requires two containers: MariaDB, and Wordpress itself. MariaDB is stateful, it requires a volume to store data. Wordpress is stateless, it only needs to talk to a database. In kubernetes, stateful apps can be created with StatefulSets and stateless apps can be created with Deployment.</description>
+    </item>
+    <item>
+      <title>K3s part 9: MariaDB backup</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-09-mariadb-backup/</link>
+      <pubDate>Fri, 11 Dec 2020 00:09:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-09-mariadb-backup/</guid>
+      <description>This post directly follows part 8 where you installed Wordpress and MariaDB. To avoid disaster, you now need to schedule backups of your database. You will modify the StatefulSet that runs MariaDB, so as to start two additional containers (called sidecars) in the same pod, woolfg/mysql-backup-sidecar that performs a backup of the database to a new volume, and Lobaro/restic-backup-docker to upload the backup to offsite S3.&#xA;You will need to provide S3 compatible storage bucket, with access and secret keys.</description>
+    </item>
+    <item>
+      <title>K3s part 10: OpenFaaS</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-10-openfaas/</link>
+      <pubDate>Fri, 25 Dec 2020 00:10:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-10-openfaas/</guid>
+      <description>OpenFaaS is a platform for creating serverless functions and microservices on kubernetes.&#xA;## Same git repo for infrastructure as in prior posts: FLUX_INFRA_DIR=${HOME}/git/flux-infra CLUSTER=k3s.example.com Add the flux HelmRepository OpenFaaS is distributed as a helm chart. The easiest way to consume this, is to add the helm repository directly to flux, and let flux handle it. HelmRepository objects must be created in the flux-system namespace, as shown:&#xA;[bash]: Run this on your workstation: cat &amp;lt;&amp;lt;EOF &amp;gt; ${FLUX_INFRA_DIR}/${CLUSTER}/flux-system/helm-repositories.</description>
+    </item>
+    <item>
+      <title>K3s part 11: Drone</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-11-drone/</link>
+      <pubDate>Sun, 27 Dec 2020 00:11:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-11-drone/</guid>
+      <description>Drone is a self-hosted Continuous Integration platform, an equivalent to GitHub Actions, Jenkins, Travis CI, or similar. Drone will automatically run jobs in response to commits to git repositories in Gitea (previously setup in Part 4).&#xA;## Same git repo for infrastructure as in prior posts: FLUX_INFRA_DIR=${HOME}/git/flux-infra CLUSTER=k3s.example.com NAMESPACE=drone PVC_SIZE=5Gi GITEA_SERVER=https://git.${CLUSTER} REGISTRY=registry.${CLUSTER} Create Gitea OAuth2 app and keys Drone needs to authenticate with Gitea, using OAuth2. Create the OAuth2 app in the Gitea settings:</description>
+    </item>
+    <item>
+      <title>K3s part 12: Drone development</title>
+      <link>https://book.rymcg.tech/blog/k3s/k3s-12-drone-development/</link>
+      <pubDate>Mon, 28 Dec 2020 00:12:00 -0600</pubDate>
+      <guid>https://book.rymcg.tech/blog/k3s/k3s-12-drone-development/</guid>
+      <description>This post directly follows the work done in Part 11, where Drone was setup, and test jobs were made to run on the cluster. Still, some workloads are not well suited to running inside of Kubernetes. Ironically, one of these unsuitable workloads is building container images. Generally speaking, container images are built with docker or podman, or some other container builder tool, but these tools need to run on the host system, or require special privileges assigned to the container that they are run in.</description>
+    </item>
+  </channel>
+</rss>

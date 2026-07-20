@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Artix Linux Workstation with Dinit and Sway · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/blog/linux/pipewire-record-firefox-audacity/" aria-label="Previous: pipewire-record-firefox-audacity" title="prev: pipewire-record-firefox-audacity"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/blog/linux/internet-deny/" aria-label="Next: internet-deny" title="next: internet-deny"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/blog/">Blogs</a><ul><li class="lvl1"><a href="#">artix-linux-fde-dinit</a></li><li class="lvl2"><a href="#hardware">Hardware</a></li><li class="lvl2"><a href="#partition-layout">Partition Layout</a></li><li class="lvl2"><a href="#create-bootable-usb">Create Bootable USB</a></li><li class="lvl2"><a href="#boot-live-environment">Boot Live Environment</a></li><li class="lvl3"><a href="#connect-to-wifi">Connect to WiFi</a></li><li class="lvl3"><a href="#enable-ssh">Enable SSH</a></li><li class="lvl2"><a href="#disk-partitioning">Disk Partitioning</a></li><li class="lvl3"><a href="#install-dependencies">Install Dependencies</a></li><li class="lvl3"><a href="#set-variables">Set Variables</a></li><li class="lvl3"><a href="#erase-the-disk">Erase the Disk</a></li><li class="lvl3"><a href="#create-partitions">Create Partitions</a></li><li class="lvl2"><a href="#setup-encryption-and-logical-volumes">Setup Encryption and Logical Volumes</a></li><li class="lvl3"><a href="#luks-setup">LUKS Setup</a></li><li class="lvl3"><a href="#lvm-setup">LVM Setup</a></li><li class="lvl3"><a href="#format-partitions">Format Partitions</a></li><li class="lvl3"><a href="#mount-partitions">Mount Partitions</a></li><li class="lvl2"><a href="#install-base-system">Install Base System</a></li><li class="lvl2"><a href="#system-configuration">System Configuration</a></li><li class="lvl3"><a href="#copy-wifi-config-from-live-environment">Copy WiFi config from live environment</a></li><li class="lvl3"><a href="#generate-fstab">Generate fstab</a></li><li class="lvl3"><a href="#chroot">chroot</a></li><li class="lvl3"><a href="#set-root-password">Set root password</a></li><li class="lvl3"><a href="#initialize-keyring">Initialize keyring</a></li><li class="lvl3"><a href="#locale">Locale</a></li><li class="lvl3"><a href="#timezone">Timezone</a></li><li class="lvl3"><a href="#hostname">Hostname</a></li><li class="lvl3"><a href="#remap-caps-lock-to-control">Remap Caps Lock to Control</a></li><li class="lvl3"><a href="#disable-xonxoff-flow-control">Disable XON/XOFF flow control</a></li><li class="lvl3"><a href="#mkinitcpio">mkinitcpio</a></li><li class="lvl3"><a href="#grub-configuration">GRUB Configuration</a></li><li class="lvl3"><a href="#grub-installation-uefi">GRUB Installation (UEFI)</a></li><li class="lvl2"><a href="#enable-services-dinit">Enable Services (dinit)</a></li><li class="lvl3"><a href="#optional-services">Optional services</a></li><li class="lvl3"><a href="#useful-packages">Useful packages</a></li><li class="lvl2"><a href="#create-user-account">Create User Account</a></li><li class="lvl2"><a href="#finish-installation">Finish Installation</a></li><li class="lvl2"><a href="#first-boot">First Boot</a></li><li class="lvl3"><a href="#disable-ssh-password-authentication">Disable SSH Password Authentication</a></li><li class="lvl2"><a href="#rootless-podman">Rootless Podman</a></li><li class="lvl2"><a href="#qemulibvirt">QEMU/libvirt</a></li><li class="lvl2"><a href="#nix-package-manager">Nix Package Manager</a></li><li class="lvl2"><a href="#sway-desktop-with-nix-home-manager">Sway Desktop with Nix Home Manager</a></li><li class="lvl3"><a href="#install-sway-home">Install sway-home</a></li><li class="lvl3"><a href="#user-level-dinit-for-pipewire">User-level dinit for PipeWire</a></li><li class="lvl2"><a href="#login-manager-greetd--tuigreet">Login Manager (greetd &#43; tuigreet)</a></li><li class="lvl2"><a href="#first-login-to-sway">First Login to Sway</a></li><li class="lvl2"><a href="#flatpak">Flatpak</a></li><li class="lvl2"><a href="#using-sway">Using Sway</a></li><li class="lvl2"><a href="#troubleshooting">Troubleshooting</a></li><li class="lvl3"><a href="#device-devmapperlvmsystem-volroot-not-found-skipping-fsck">&amp;ldquo;device &amp;lsquo;/dev/mapper/lvmSystem-volRoot&amp;rsquo; not found. Skipping fsck.&amp;rdquo;</a></li><li class="lvl3"><a href="#recovery-from-live-usb">Recovery from Live USB</a></li><li class="lvl2"><a href="#appendix-installing-in-a-vm">Appendix: Installing in a VM</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book open">
+        <a href="/blog/">blogs</a><ul class="chapters blog-nav">
+  <li class="node open">
+    <a class="" href="/blog/#by-date">by date</a>
+      <ul class="sections"><li><a class="" href="/blog/linux/nixos-lxc-nas/">2026-06-26 NixOS VMs part 5: A NixOS NAS in a Proxmox LXC container</a></li><li><a class="" href="/blog/migration-announcement/">2026-06-24 Migrating blog.rymcg.tech into book.rymcg.tech</a></li><li><a class="" href="/blog/linux/git-extensions-babashka/">2026-06-02 Git extensions in Babashka</a></li><li><a class="" href="/blog/proxmox/09-vpc/">2026-04-14 Proxmox part 9: Virtual Private Cloud (VPC)</a></li><li><a class="" href="/blog/linux/pipewire-record-firefox-audacity/">2026-04-09 Record Firefox Audio in Audacity with PipeWire</a></li><li><a class="active" href="/blog/linux/artix-linux-fde-dinit/">2026-04-05 Artix Linux Workstation with Dinit and Sway</a></li><li><a class="" href="/blog/linux/internet-deny/">2026-02-19 LAN-Only Internet Kill Switch</a></li><li><a class="" href="/blog/linux/git-extensions/">2026-01-31 Extensions to git</a></li><li><a class="" href="/blog/linux/nixos-vm-home-manager/">2026-01-29 NixOS VMs part 4: Managing VMs with home-manager and sway-home</a></li><li><a class="" href="/blog/linux/mutable-vms/">2026-01-29 NixOS VMs part 3: Mutable VMs are cool too</a></li><li><a class="" href="/blog/linux/traefik_local_auth_proxy/">2026-01-28 Traefik Local Auth Proxy</a></li><li><a class="" href="/blog/linux/just-tab-completion/">2026-01-25 Enhanced tab completion for Justfiles with bash aliases</a></li><li><a class="" href="/blog/linux/nixos-proxmox-vm/">2026-01-23 NixOS VMs part 2: Bootstrapping a Docker server with immutable NixOS on Proxmox</a></li><li><a class="" href="/blog/linux/code-agent-vm/">2026-01-22 NixOS VMs part 1: Running code agents in an immutable NixOS VM</a></li><li><a class="" href="/blog/linux/rclone_webdav/">2025-10-26 WebDAV with Rclone and mTLS</a></li><li><a class="" href="/blog/linux/ssh-remote-xdg-open/">2025-10-19 Make SSH remote xdg-open use your local web browser</a></li><li><a class="" href="/blog/linux/ssh_expose/">2025-04-21 SSH Reverse Tunnel Manager</a></li><li><a class="" href="/blog/linux/wireguard_p2p/">2025-04-20 WireGuard P2P VPN</a></li><li><a class="" href="/blog/proxmox/08-truenas/">2023-11-18 Proxmox part 8: TrueNAS Core</a></li><li><a class="" href="/blog/proxmox/07-proxmox-in-proxmox/">2023-11-18 Proxmox part 7: Proxmox in Proxmox</a></li><li><a class="" href="/pfsense/router-vlans/">2023-11-08 How to configure a pfsense router with split VLANs</a></li><li><a class="" href="/blog/linux/thinkpad-x13s/">2023-03-20 Arch Linux ARM on Thinkpad X13S</a></li><li><a class="" href="/blog/linux/zram/">2023-03-11 Zram: RAM &#39;doubler&#39; on Linux</a></li><li><a class="" href="/blog/proxmox/06-router/">2022-05-10 Proxmox part 6: Virtualized nftables home LAN router</a></li><li><a class="" href="/blog/proxmox/05-kvm-templates/">2022-05-06 Proxmox part 5: KVM and Cloud-Init</a></li><li><a class="" href="/blog/proxmox/04-containers/">2022-05-04 Proxmox part 4: Containers</a></li><li><a class="" href="/blog/proxmox/03-notifications/">2022-05-04 Proxmox part 3: Notifications</a></li><li><a class="" href="/blog/proxmox/02-networking/">2022-05-04 Proxmox part 2: Networking</a></li><li><a class="" href="/blog/proxmox/01-install/">2022-05-04 Proxmox part 1: Installation and Setup</a></li><li><a class="" href="/blog/linux/restic_backup/">2022-01-17 Daily backups to S3 with Restic and systemd timers</a></li><li><a class="" href="/blog/virtual-proxmox/03-port-forwarding/">2021-07-31 Virtual Proxmox part 3: Port Forwarding to a Virtual Proxmox KVM</a></li><li><a class="" href="/blog/virtual-proxmox/02-snapshots/">2021-07-31 Virtual Proxmox part 2: Snapshots</a></li><li><a class="" href="/blog/virtual-proxmox/01-virtual-proxmox/">2021-07-21 Virtual Proxmox part 1: Virtual Proxmox and K3s</a></li><li><a class="" href="/blog/linux/rclone_sync/">2021-03-03 Continuous immediate file sync with Rclone</a></li><li><a class="" href="/blog/k3s/k3s-12-drone-development/">2020-12-28 K3s part 12: Drone development</a></li><li><a class="" href="/blog/k3s/k3s-11-drone/">2020-12-27 K3s part 11: Drone</a></li><li><a class="" href="/blog/k3s/k3s-10-openfaas/">2020-12-25 K3s part 10: OpenFaaS</a></li><li><a class="" href="/blog/k3s/k3s-09-mariadb-backup/">2020-12-11 K3s part 9: MariaDB backup</a></li><li><a class="" href="/blog/k3s/k3s-08-wordpress/">2020-12-11 K3s part 8: Wordpress. Or: Running stateful and stateless containers</a></li><li><a class="" href="/blog/k3s/k3s-07-mutual-tls/">2020-12-11 K3s part 7: Mutual TLS authentication with Traefik</a></li><li><a class="" href="/blog/k3s/k3s-06-registry/">2020-12-11 K3s part 6: Container registry</a></li><li><a class="" href="/blog/k3s/k3s-05-flux/">2020-12-11 K3s part 5: Flux GitOps</a></li><li><a class="" href="/blog/k3s/k3s-04-git/">2020-12-11 K3s part 4: Git host</a></li><li><a class="" href="/blog/k3s/k3s-03-traefik/">2020-12-11 K3s part 3: Traefik proxy</a></li><li><a class="" href="/blog/k3s/k3s-02-install/">2020-12-11 K3s part 2: Create a single node cluster</a></li><li><a class="" href="/blog/k3s/k3s-01-setup/">2020-12-11 K3s part 1: Setup your workstation</a></li></ul>
+  </li><li class="node">
+        <a class="" href="/tags/artix/">artix</a>
+      </li><li class="node">
+        <a class="" href="/tags/audio/">audio</a>
+      </li><li class="node">
+        <a class="" href="/tags/babashka/">babashka</a>
+      </li><li class="node">
+        <a class="" href="/tags/bash/">bash</a>
+      </li><li class="node">
+        <a class="" href="/tags/clojure/">clojure</a>
+      </li><li class="node">
+        <a class="" href="/tags/docker/">docker</a>
+      </li><li class="node">
+        <a class="" href="/tags/git/">git</a>
+      </li><li class="node">
+        <a class="" href="/tags/home-manager/">home-manager</a>
+      </li><li class="node">
+        <a class="" href="/tags/just/">just</a>
+      </li><li class="node">
+        <a class="" href="/tags/k3s/">k3s</a>
+      </li><li class="node">
+        <a class="" href="/tags/libvirt/">libvirt</a>
+      </li><li class="node">
+        <a class="" href="/tags/linux/">linux</a>
+      </li><li class="node">
+        <a class="" href="/tags/lxc/">lxc</a>
+      </li><li class="node">
+        <a class="" href="/tags/nas/">nas</a>
+      </li><li class="node">
+        <a class="" href="/tags/networking/">networking</a>
+      </li><li class="node">
+        <a class="" href="/tags/nfs/">nfs</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos/">nixos</a>
+      </li><li class="node">
+        <a class="" href="/tags/nixos-vm-template/">nixos-vm-template</a>
+      </li><li class="node">
+        <a class="" href="/tags/pfsense/">pfsense</a>
+      </li><li class="node">
+        <a class="" href="/tags/pipewire/">pipewire</a>
+      </li><li class="node">
+        <a class="" href="/tags/proxmox/">proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/rclone/">rclone</a>
+      </li><li class="node">
+        <a class="" href="/tags/samba/">samba</a>
+      </li><li class="node">
+        <a class="" href="/tags/ssh/">ssh</a>
+      </li><li class="node">
+        <a class="" href="/tags/sway/">sway</a>
+      </li><li class="node">
+        <a class="" href="/tags/traefik/">traefik</a>
+      </li><li class="node">
+        <a class="" href="/tags/virtual-proxmox/">virtual-proxmox</a>
+      </li><li class="node">
+        <a class="" href="/tags/webdav/">webdav</a>
+      </li><li class="node">
+        <a class="" href="/tags/wireguard/">wireguard</a>
+      </li><li class="node">
+        <a class="" href="/tags/zfs/">zfs</a>
+      </li></ul>
+</li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/blog/">/Blogs</a><a class="pseg pcur" href="/blog/linux/artix-linux-fde-dinit/">/artix-linux-fde-dinit</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Artix Linux Workstation with Dinit and Sway</a></h1>
+<div class="blog-meta">
+  <span>published <time datetime="2026-04-05">2026-04-05</time></span>
+  <span>updated <time datetime="2026-04-11">2026-04-11</time></span>
+  <span class="blog-tags">
+    tags
+      <a href="/tags/linux/">linux</a>
+      <a href="/tags/artix/">artix</a>
+      <a href="/tags/home-manager/">home-manager</a>
+      <a href="/tags/sway/">sway</a>
+  </span>
+</div>
+
+<blockquote>
+<p><strong>Note:</strong> This post documents the manual installation commands. An
+automated installer is now available:
+<a href="https://github.com/EnigmaCurry/artix-dev">artix-dev</a>.</p>
+</blockquote>
+<p>This guide documents setting up <a href="https://artixlinux.org/">Artix Linux</a>
+with <a href="https://github.com/davmac314/dinit">dinit</a> on a ThinkPad X1
+Carbon laptop. Artix is an Arch-based distribution that does not use systemd. This setup includes full disk encryption with LUKS +
+LVM (including encrypted <code>/boot</code>), a sway Wayland desktop managed by Nix home-manager
+(<a href="https://github.com/EnigmaCurry/sway-home">sway-home</a>), and a
+setup for development with rootless Podman containers and libvirt QEMU
+virtual machines.</p>
+<h2 id="hardware"><a class="heading-anchor" href="#hardware">Hardware</a></h2>
+<ul>
+<li>ThinkPad X1 Carbon (i7-10610U, 16GB RAM)</li>
+<li>1TB NVMe SSD (<code>/dev/nvme0n1</code>)</li>
+</ul>
+<h2 id="partition-layout"><a class="heading-anchor" href="#partition-layout">Partition Layout</a></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>/dev/nvme0n1   - 1TB NVMe SSD with GPT partition table
+</span></span><span style="display:flex;"><span>/dev/nvme0n1p1 - EFI System Partition (ESP), 1 GB, FAT32 (unencrypted)
+</span></span><span style="display:flex;"><span>/dev/nvme0n1p2 - LUKS encrypted → LVM container
+</span></span><span style="display:flex;"><span>  ├── lvm-volBoot - /boot, 1 GB
+</span></span><span style="display:flex;"><span>  ├── lvm-volSwap - swap, 16 GB
+</span></span><span style="display:flex;"><span>  └── lvm-volRoot - / root (remaining ~935 GB)
+</span></span></code></pre></div><p>Only the ESP is unencrypted (required by UEFI firmware). Everything else
+including <code>/boot</code> is inside the LUKS container. On boot, you enter your
+LUKS passphrase <strong>twice</strong>: once for GRUB (to read <code>/boot</code>) and once for
+the initramfs <code>encrypt</code> hook (to mount root).</p>
+<h2 id="create-bootable-usb"><a class="heading-anchor" href="#create-bootable-usb">Create Bootable USB</a></h2>
+<p>Download the base ISO and write it with
+<a href="https://flathub.org/apps/org.fedoraproject.MediaWriter">Fedora Media Writer</a>
+or <code>dd</code>:</p>
+<ul>
+<li>ISO: <code>artix-base-dinit-20260402-x86_64.iso</code></li>
+<li>Mirror: <code>https://mirror.math.princeton.edu/pub/artixlinux/</code></li>
+</ul>
+<h2 id="boot-live-environment"><a class="heading-anchor" href="#boot-live-environment">Boot Live Environment</a></h2>
+<p>Login as <code>artix</code> with password <code>artix</code>.</p>
+<h3 id="connect-to-wifi"><a class="heading-anchor" href="#connect-to-wifi">Connect to WiFi</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo nmtui
+</pre></div>
+</div>
+
+
+<p>Select &ldquo;Activate a connection&rdquo; and configure WiFi.</p>
+<h3 id="enable-ssh"><a class="heading-anchor" href="#enable-ssh">Enable SSH</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo dinitctl start sshd
+</pre></div>
+</div>
+
+
+<p>Find the IP address:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ip a
+</pre></div>
+</div>
+
+
+<p>SSH in from another machine (password <code>artix</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh artix@&lt;ip-address&gt;
+sudo su
+</pre></div>
+</div>
+
+
+<h2 id="disk-partitioning"><a class="heading-anchor" href="#disk-partitioning">Disk Partitioning</a></h2>
+<h3 id="install-dependencies"><a class="heading-anchor" href="#install-dependencies">Install Dependencies</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pacman -Sy --noconfirm gptfdisk parted cryptsetup lvm2 dosfstools
+</pre></div>
+</div>
+
+
+<h3 id="set-variables"><a class="heading-anchor" href="#set-variables">Set Variables</a></h3>
+<p>List available disks and identify your target drive:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+lsblk -d -o NAME,SIZE,MODEL
+</pre></div>
+</div>
+
+
+<p>Set your disk and partition prefix as environment variables. NVMe
+drives use a <code>p</code> separator (e.g. <code>nvme0n1p1</code>), while other drives
+don&rsquo;t (e.g. <code>vda1</code>, <code>sda1</code>):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISK=/dev/nvme0n1
+PART=${DISK}p     # for NVMe: /dev/nvme0n1p1, /dev/nvme0n1p2
+# DISK=/dev/vda
+# PART=${DISK}    # for virtio/SATA: /dev/vda1, /dev/vda2
+</pre></div>
+</div>
+
+
+<h3 id="erase-the-disk"><a class="heading-anchor" href="#erase-the-disk">Erase the Disk</a></h3>
+<p><strong>WARNING: This destroys all data on the target disk.</strong></p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sgdisk --zap-all ${DISK}
+blkdiscard ${DISK}
+</pre></div>
+</div>
+
+
+<p>This wipes the partition table and TRIMs the entire SSD. LUKS encryption
+makes remaining data inaccessible. A full <code>dd if=/dev/urandom</code> overwrite
+is unnecessary for a fresh install and would add significant SSD wear.</p>
+<h3 id="create-partitions"><a class="heading-anchor" href="#create-partitions">Create Partitions</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+parted -s ${DISK} mklabel gpt
+
+# EFI System Partition (1 GB)
+parted -s -a optimal ${DISK} mkpart &#34;ESP&#34; fat32 0% 1024MiB
+parted -s ${DISK} set 1 esp on
+
+# LUKS partition (rest of disk)
+parted -s -a optimal ${DISK} mkpart &#34;LUKS&#34; ext4 1024MiB 100%
+parted -s ${DISK} set 2 lvm on
+
+parted -s ${DISK} print
+</pre></div>
+</div>
+
+
+<h2 id="setup-encryption-and-logical-volumes"><a class="heading-anchor" href="#setup-encryption-and-logical-volumes">Setup Encryption and Logical Volumes</a></h2>
+<h3 id="luks-setup"><a class="heading-anchor" href="#luks-setup">LUKS Setup</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cryptsetup benchmark  # loads kernel crypto modules
+
+cryptsetup --verbose --type luks1 --cipher serpent-xts-plain64 --key-size 512 \
+  --hash sha512 --iter-time 10000 --use-random --verify-passphrase luksFormat ${PART}2
+
+cryptsetup luksOpen ${PART}2 lvm-system
+</pre></div>
+</div>
+
+
+<h3 id="lvm-setup"><a class="heading-anchor" href="#lvm-setup">LVM Setup</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pvcreate /dev/mapper/lvm-system
+vgcreate lvmSystem /dev/mapper/lvm-system
+
+lvcreate --contiguous y --size 1G lvmSystem --name volBoot
+lvcreate --contiguous y --size 16G lvmSystem --name volSwap
+lvcreate --contiguous y --extents &#43;100%FREE lvmSystem --name volRoot
+</pre></div>
+</div>
+
+
+<h3 id="format-partitions"><a class="heading-anchor" href="#format-partitions">Format Partitions</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkfs.fat -F32 -n ESP ${PART}1
+mkfs.ext4 -L BOOT /dev/lvmSystem/volBoot
+mkswap -L SWAP /dev/lvmSystem/volSwap   # note the UUID printed here
+mkfs.ext4 -L ROOT /dev/lvmSystem/volRoot
+</pre></div>
+</div>
+
+
+<h3 id="mount-partitions"><a class="heading-anchor" href="#mount-partitions">Mount Partitions</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+swapon /dev/lvmSystem/volSwap
+mount /dev/lvmSystem/volRoot /mnt
+mkdir /mnt/boot
+mount /dev/lvmSystem/volBoot /mnt/boot
+mkdir /mnt/boot/efi
+mount ${PART}1 /mnt/boot/efi
+</pre></div>
+</div>
+
+
+<h2 id="install-base-system"><a class="heading-anchor" href="#install-base-system">Install Base System</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+basestrap /mnt base base-devel dinit elogind-dinit
+basestrap /mnt linux-hardened linux-hardened-headers linux-firmware
+basestrap /mnt lvm2 lvm2-dinit cryptsetup cryptsetup-dinit device-mapper-dinit
+basestrap /mnt grub efibootmgr dosfstools
+basestrap /mnt networkmanager networkmanager-dinit
+basestrap /mnt openssh openssh-dinit
+basestrap /mnt nano vi less
+</pre></div>
+</div>
+
+
+<h2 id="system-configuration"><a class="heading-anchor" href="#system-configuration">System Configuration</a></h2>
+<h3 id="copy-wifi-config-from-live-environment"><a class="heading-anchor" href="#copy-wifi-config-from-live-environment">Copy WiFi config from live environment</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cp -r /etc/NetworkManager/system-connections /mnt/etc/NetworkManager/
+</pre></div>
+</div>
+
+
+<h3 id="generate-fstab"><a class="heading-anchor" href="#generate-fstab">Generate fstab</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+fstabgen -U /mnt &gt;&gt; /mnt/etc/fstab
+</pre></div>
+</div>
+
+
+<p>Enable TRIM for SSD:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sed -i &#34;s/relatime/relatime,discard/g&#34; /mnt/etc/fstab
+</pre></div>
+</div>
+
+
+<p>tmpfs for /tmp (8G = half RAM):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#39;tmpfs    /tmp    tmpfs    rw,nosuid,nodev,relatime,size=8G,mode=1777    0 0&#39; &gt;&gt; /mnt/etc/fstab
+</pre></div>
+</div>
+
+
+<h3 id="chroot"><a class="heading-anchor" href="#chroot">chroot</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+artix-chroot /mnt /bin/bash --login
+</pre></div>
+</div>
+
+
+<p>You may see <code>tty: ttyname error: No such device</code> — this is harmless
+and can be ignored.</p>
+<p>Re-set the variables from earlier (these are lost when entering the chroot):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+DISK=/dev/nvme0n1
+PART=${DISK}p     # NVMe; use PART=${DISK} for virtio/SATA
+export USERNAME=ryan  # set your desired username
+</pre></div>
+</div>
+
+
+<h3 id="set-root-password"><a class="heading-anchor" href="#set-root-password">Set root password</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+passwd
+</pre></div>
+</div>
+
+
+<h3 id="initialize-keyring"><a class="heading-anchor" href="#initialize-keyring">Initialize keyring</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pacman -Sy --noconfirm
+pacman-key --init
+pacman-key --populate artix
+</pre></div>
+</div>
+
+
+<h3 id="locale"><a class="heading-anchor" href="#locale">Locale</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#34;en_US.UTF-8 UTF-8&#34; &gt;&gt; /etc/locale.gen
+locale-gen
+echo &#34;LANG=en_US.UTF-8&#34; &gt; /etc/locale.conf
+</pre></div>
+</div>
+
+
+<h3 id="timezone"><a class="heading-anchor" href="#timezone">Timezone</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ln -sf /usr/share/zoneinfo/US/Mountain /etc/localtime
+hwclock --systohc
+</pre></div>
+</div>
+
+
+<h3 id="hostname"><a class="heading-anchor" href="#hostname">Hostname</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#34;yourhostname&#34; &gt; /etc/hostname
+</pre></div>
+</div>
+
+
+<h3 id="remap-caps-lock-to-control"><a class="heading-anchor" href="#remap-caps-lock-to-control">Remap Caps Lock to Control</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+# Console/TTY
+echo -e &#39;include &#34;/usr/share/kbd/keymaps/i386/qwerty/us.map.gz&#34;\nkeycode 58 = Control&#39; &gt; /usr/share/kbd/keymaps/personal.map
+echo &#39;KEYMAP=personal&#39; &gt; /etc/vconsole.conf
+
+# X11
+mkdir -p /etc/X11/xorg.conf.d
+cat &gt; /etc/X11/xorg.conf.d/00-keyboard.conf &lt;&lt;&#39;EOF&#39;
+Section &#34;InputClass&#34;
+    Identifier &#34;system-keyboard&#34;
+    MatchIsKeyboard &#34;on&#34;
+    Option &#34;XkbLayout&#34; &#34;us&#34;
+    Option &#34;XkbOptions&#34; &#34;ctrl:nocaps&#34;
+EndSection
+EOF
+</pre></div>
+</div>
+
+
+<p>Wayland compositors (sway, etc.) need their own config added later.</p>
+<h3 id="disable-xonxoff-flow-control"><a class="heading-anchor" href="#disable-xonxoff-flow-control">Disable XON/XOFF flow control</a></h3>
+<p>Prevents <code>Ctrl+S</code> from freezing the terminal:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#39;stty -ixon&#39; &gt;&gt; /etc/profile
+</pre></div>
+</div>
+
+
+<h3 id="mkinitcpio"><a class="heading-anchor" href="#mkinitcpio">mkinitcpio</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sed -i &#39;s/^HOOKS=.*/HOOKS=(base udev autodetect microcode modconf block encrypt keyboard keymap consolefont lvm2 resume filesystems fsck)/&#39; /etc/mkinitcpio.conf
+mkinitcpio -p linux-hardened
+</pre></div>
+</div>
+
+
+<h3 id="grub-configuration"><a class="heading-anchor" href="#grub-configuration">GRUB Configuration</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+LUKS_UUID=$(blkid -s UUID -o value ${PART}2)
+SWAP_UUID=$(blkid -s UUID -o value /dev/lvmSystem/volSwap)
+
+sed -i &#34;s/^GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT=\&#34;cryptdevice=UUID=${LUKS_UUID}:lvm-system:allow-discards loglevel=3 quiet resume=UUID=${SWAP_UUID} net.ifnames=0\&#34;/&#34; /etc/default/grub
+
+echo &#39;GRUB_ENABLE_CRYPTODISK=&#34;y&#34;&#39; &gt;&gt; /etc/default/grub
+sed -i &#39;s/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=&#34;15&#34;/&#39; /etc/default/grub
+sed -i &#39;s/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=&#34;menu&#34;/&#39; /etc/default/grub
+sed -i &#39;s/^GRUB_GFXMODE=.*/GRUB_GFXMODE=&#34;auto&#34;/&#39; /etc/default/grub
+</pre></div>
+</div>
+
+
+<h3 id="grub-installation-uefi"><a class="heading-anchor" href="#grub-installation-uefi">GRUB Installation (UEFI)</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=artix --recheck
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable  # fallback
+grub-mkconfig -o /boot/grub/grub.cfg
+</pre></div>
+</div>
+
+
+<h2 id="enable-services-dinit"><a class="heading-anchor" href="#enable-services-dinit">Enable Services (dinit)</a></h2>
+<p>The <code>dinitctl --offline enable</code> command is broken on the 20260402 live
+ISO, so services are enabled by creating symlinks directly:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ln -s /etc/dinit.d/lvm2 /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/NetworkManager /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/elogind /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/dbus /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/sshd /etc/dinit.d/boot.d/
+</pre></div>
+</div>
+
+
+<h3 id="optional-services"><a class="heading-anchor" href="#optional-services">Optional services</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pacman -S --noconfirm openntpd openntpd-dinit syslog-ng syslog-ng-dinit acpid acpid-dinit cronie cronie-dinit
+ln -s /etc/dinit.d/ntpd /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/syslog-ng /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/acpid /etc/dinit.d/boot.d/
+ln -s /etc/dinit.d/cronie /etc/dinit.d/boot.d/
+</pre></div>
+</div>
+
+
+<h3 id="useful-packages"><a class="heading-anchor" href="#useful-packages">Useful packages</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pacman -S --noconfirm bash-completion lsof strace wget htop zip unzip p7zip unrar
+pacman -S --noconfirm hdparm smartmontools hwinfo dmidecode
+pacman -S --noconfirm rsync nmap inetutils net-tools whois
+</pre></div>
+</div>
+
+
+<h2 id="create-user-account"><a class="heading-anchor" href="#create-user-account">Create User Account</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+: ${USERNAME:?must be set}
+useradd -m -G wheel -s /bin/bash ${USERNAME}
+passwd ${USERNAME}
+</pre></div>
+</div>
+
+
+<p>Enable sudo for the wheel group:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+EDITOR=nano visudo
+</pre></div>
+</div>
+
+
+<p>Uncomment the line: <code>%wheel ALL=(ALL:ALL) ALL</code></p>
+<h2 id="finish-installation"><a class="heading-anchor" href="#finish-installation">Finish Installation</a></h2>
+<p>Exit the chroot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+exit
+</pre></div>
+</div>
+
+
+<p>Then unmount and reboot:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+umount -R /mnt
+swapoff -a
+vgchange -an lvmSystem
+cryptsetup luksClose lvm-system
+sync
+reboot
+</pre></div>
+</div>
+
+
+<h2 id="first-boot"><a class="heading-anchor" href="#first-boot">First Boot</a></h2>
+<p>SSH in with the username and password you set during install:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh ${USERNAME}@&lt;ip-address&gt;
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -Syu --noconfirm
+</pre></div>
+</div>
+
+
+<p>Verify mkinitcpio hooks survived the upgrade:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+grep &#34;^HOOKS&#34; /etc/mkinitcpio.conf
+# Should contain: encrypt lvm2 resume
+# If not, re-add them and run: mkinitcpio -p linux-hardened
+</pre></div>
+</div>
+
+
+<h3 id="disable-ssh-password-authentication"><a class="heading-anchor" href="#disable-ssh-password-authentication">Disable SSH Password Authentication</a></h3>
+<p>Copy your SSH public key to the machine, then disable password login:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+ssh-copy-id ${USERNAME}@&lt;ip-address&gt;
+</pre></div>
+</div>
+
+
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo sed -i &#39;s/^#\?PasswordAuthentication.*/PasswordAuthentication no/&#39; /etc/ssh/sshd_config
+sudo dinitctl restart sshd
+</pre></div>
+</div>
+
+
+<p>If you don&rsquo;t need SSH running on your laptop, disable it entirely:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo dinitctl disable sshd
+sudo dinitctl stop sshd
+</pre></div>
+</div>
+
+
+<h2 id="rootless-podman"><a class="heading-anchor" href="#rootless-podman">Rootless Podman</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm podman crun slirp4netns fuse-overlayfs
+sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 ${USERNAME}
+
+# linux-hardened disables unprivileged user namespaces; rootless podman needs them
+sudo mkdir -p /etc/sysctl.d
+echo &#39;kernel.unprivileged_userns_clone=1&#39; | sudo tee /etc/sysctl.d/userns.conf
+sudo sysctl -w kernel.unprivileged_userns_clone=1
+</pre></div>
+</div>
+
+
+<h2 id="qemulibvirt"><a class="heading-anchor" href="#qemulibvirt">QEMU/libvirt</a></h2>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm qemu-full virt-manager libvirt libvirt-dinit dnsmasq edk2-ovmf
+sudo dinitctl enable libvirtd
+sudo dinitctl start libvirtd
+</pre></div>
+</div>
+
+
+<p>User is not added to the <code>libvirt</code> group. virt-manager will prompt for
+a password via polkit (lxpolkit) when connecting to <code>qemu:///system</code>.</p>
+<h2 id="nix-package-manager"><a class="heading-anchor" href="#nix-package-manager">Nix Package Manager</a></h2>
+<p>Artix repos don&rsquo;t have a nix package, so use the single-user install.
+No daemon or service needed — fine for a personal laptop.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+curl -L https://nixos.org/nix/install | sh -s -- --no-daemon
+</pre></div>
+</div>
+
+
+<p>Source the nix profile:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+. ~/.nix-profile/etc/profile.d/nix.sh
+nix --version
+
+# Make nix available for all login sessions via /etc/profile.d/
+sudo ln -s ~/.nix-profile/etc/profile.d/nix.sh /etc/profile.d/nix.sh
+</pre></div>
+</div>
+
+
+<h2 id="sway-desktop-with-nix-home-manager"><a class="heading-anchor" href="#sway-desktop-with-nix-home-manager">Sway Desktop with Nix Home Manager</a></h2>
+<p>Install sway and audio stack from pacman (they need system-level access):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm sway xorg-xwayland dunst libnotify lxsession ttf-font-awesome
+sudo pacman -S --noconfirm pipewire pipewire-pulse wireplumber pavucontrol sof-firmware
+sudo pacman -S --noconfirm pipewire-dinit wireplumber-dinit
+sudo pacman -S --noconfirm xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr
+</pre></div>
+</div>
+
+
+<h3 id="install-sway-home"><a class="heading-anchor" href="#install-sway-home">Install sway-home</a></h3>
+<p><a href="https://github.com/EnigmaCurry/sway-home">sway-home</a> manages dotfiles
+and user packages declaratively via Nix home-manager:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm git just
+
+mv ~/.config ~/.config.orig 2&gt;/dev/null
+mv ~/.bashrc ~/.bashrc.orig 2&gt;/dev/null
+mv ~/.bash_profile ~/.bash_profile.orig 2&gt;/dev/null
+
+mkdir -p ~/.config/nix
+echo &#39;experimental-features = nix-command flakes&#39; &gt; ~/.config/nix/nix.conf
+
+mkdir -p ~/git/vendor/enigmacurry
+git clone https://github.com/enigmacurry/sway-home \
+  ~/git/vendor/enigmacurry/sway-home
+cd ~/git/vendor/enigmacurry/sway-home
+just hm-install
+</pre></div>
+</div>
+
+
+<p>Restart your shell session to pick up the new environment.</p>
+<h3 id="user-level-dinit-for-pipewire"><a class="heading-anchor" href="#user-level-dinit-for-pipewire">User-level dinit for PipeWire</a></h3>
+<p>sway-home starts a user-level dinit instance automatically on launch.
+Set up the user boot service and symlinks so dinit knows what to run:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+mkdir -p ~/.config/dinit.d/boot.d
+cat &gt; ~/.config/dinit.d/boot &lt;&lt;&#39;EOF&#39;
+type = internal
+waits-for.d = boot.d
+EOF
+ln -s /etc/dinit.d/user/dbus ~/.config/dinit.d/boot.d/
+ln -s /etc/dinit.d/user/pipewire ~/.config/dinit.d/boot.d/
+ln -s /etc/dinit.d/user/wireplumber ~/.config/dinit.d/boot.d/
+</pre></div>
+</div>
+
+
+<p>Create a user dinit service for pipewire-pulse (PulseAudio compatibility):</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo tee /etc/dinit.d/user/pipewire-pulse &lt;&lt;&#39;EOF&#39;
+type = process
+command = /usr/bin/pipewire-pulse
+depends-on = pipewire
+EOF
+ln -s /etc/dinit.d/user/pipewire-pulse ~/.config/dinit.d/boot.d/
+</pre></div>
+</div>
+
+
+<h2 id="login-manager-greetd--tuigreet"><a class="heading-anchor" href="#login-manager-greetd--tuigreet">Login Manager (greetd + tuigreet)</a></h2>
+<p><a href="https://git.sr.ht/~kennylevinsen/greetd">greetd</a> is a minimal login
+daemon, and <a href="https://github.com/apognu/tuigreet">tuigreet</a> gives it a
+clean console TUI where you select your user and session (sway, shell,
+etc.).</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm greetd greetd-tuigreet greetd-dinit
+</pre></div>
+</div>
+
+
+<p>Configure greetd to use tuigreet with sway as the default session:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo tee /etc/greetd/config.toml &lt;&lt;&#39;EOF&#39;
+[terminal]
+vt = 7
+
+[default_session]
+command = &#34;tuigreet --time --remember --remember-session --sessions /usr/share/wayland-sessions&#34;
+user = &#34;greeter&#34;
+EOF
+</pre></div>
+</div>
+
+
+<p>Create a sway desktop entry so tuigreet can discover it:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo mkdir -p /usr/share/wayland-sessions
+sudo tee /usr/share/wayland-sessions/sway.desktop &lt;&lt;&#39;EOF&#39;
+[Desktop Entry]
+Name=Sway
+Exec=bash --login -c sway
+Type=Application
+EOF
+</pre></div>
+</div>
+
+
+<p>Enable and start the service:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo dinitctl enable greetd
+sudo dinitctl start greetd
+</pre></div>
+</div>
+
+
+<p>You should now see the tuigreet login screen. Select <code>Sway</code> as your
+session and log in.</p>
+<h2 id="first-login-to-sway"><a class="heading-anchor" href="#first-login-to-sway">First Login to Sway</a></h2>
+<p>On first login, sway launches Emacs and Firefox side by side. Emacs
+needs a one-time setup to finish installing packages:</p>
+<ol>
+<li>In Emacs, run <code>M-x my/machine-labels-enable-all</code></li>
+<li>Close Emacs with <code>C-x C-c</code></li>
+<li>Relaunch Emacs from rofi (<code>Super+d</code>, type <code>emacs</code>)</li>
+<li>Wait for Emacs to finish installing packages (~5 minutes)</li>
+</ol>
+<h2 id="flatpak"><a class="heading-anchor" href="#flatpak">Flatpak</a></h2>
+<p><a href="https://flatpak.org/">Flatpak</a> is a sandboxed package manager for
+desktop Linux apps. It runs apps in isolated containers with their own
+dependencies, so they work across any distro. Browse and install apps
+from <a href="https://flathub.org/">Flathub</a>, the main Flatpak app store.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo pacman -S --noconfirm flatpak
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+</pre></div>
+</div>
+
+
+<p>Log out and back in so <code>XDG_DATA_DIRS</code> picks up the Flatpak path
+from <code>/etc/profile.d/flatpak.sh</code>. Then install apps by their Flathub
+app ID:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+flatpak install flathub org.fedoraproject.MediaWriter
+flatpak install flathub io.github.kolunmi.Bazaar
+</pre></div>
+</div>
+
+
+<h2 id="using-sway"><a class="heading-anchor" href="#using-sway">Using Sway</a></h2>
+<p>Sway is a tiling Wayland compositor with vim-style keybindings. The
+modifier key (<code>$mod</code>) is <code>Super</code> (the Windows/Logo key). Here are the
+essential shortcuts:</p>
+<table>
+<thead>
+<tr>
+<th>Shortcut</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$mod+Enter</code></td>
+<td>Open terminal</td>
+</tr>
+<tr>
+<td><code>$mod+d</code></td>
+<td>App launcher (rofi)</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+q</code></td>
+<td>Kill focused window</td>
+</tr>
+<tr>
+<td><code>$mod+h/j/k/l</code></td>
+<td>Focus left/down/up/right</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+h/j/k/l</code></td>
+<td>Move window left/down/up/right</td>
+</tr>
+<tr>
+<td><code>$mod+1</code>–<code>$mod+9</code></td>
+<td>Switch to workspace 1–9</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+1</code>–<code>$mod+Shift+9</code></td>
+<td>Move window to workspace 1–9</td>
+</tr>
+<tr>
+<td><code>$mod+b</code></td>
+<td>Split horizontal</td>
+</tr>
+<tr>
+<td><code>$mod+v</code></td>
+<td>Split vertical</td>
+</tr>
+<tr>
+<td><code>$mod+f</code></td>
+<td>Toggle fullscreen</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+Space</code></td>
+<td>Toggle floating</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+c</code></td>
+<td>Reload sway config</td>
+</tr>
+<tr>
+<td><code>$mod+Shift+e</code></td>
+<td>Exit sway</td>
+</tr>
+</tbody>
+</table>
+<p>See the <a href="https://github.com/swaywm/sway/wiki">Sway wiki</a> for the full
+documentation, and <code>man 5 sway</code> for config file reference.</p>
+<h2 id="troubleshooting"><a class="heading-anchor" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="device-devmapperlvmsystem-volroot-not-found-skipping-fsck"><a class="heading-anchor" href="#device-devmapperlvmsystem-volroot-not-found-skipping-fsck">&ldquo;device &lsquo;/dev/mapper/lvmSystem-volRoot&rsquo; not found. Skipping fsck.&rdquo;</a></h3>
+<p>The <code>encrypt</code> hook was lost from <code>/etc/mkinitcpio.conf</code> (can happen
+after upgrades). Boot from live USB, decrypt and mount, chroot, re-add
+<code>encrypt</code> to HOOKS, and run <code>mkinitcpio -p linux-hardened</code>.</p>
+<h3 id="recovery-from-live-usb"><a class="heading-anchor" href="#recovery-from-live-usb">Recovery from Live USB</a></h3>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo su
+cryptsetup benchmark
+cryptsetup luksOpen ${PART}2 lvm-system
+vgchange -ay lvmSystem
+mount /dev/lvmSystem/volRoot /mnt
+mount /dev/lvmSystem/volBoot /mnt/boot
+mount ${PART}1 /mnt/boot/efi
+artix-chroot /mnt /bin/bash
+</pre></div>
+</div>
+
+
+<h2 id="appendix-installing-in-a-vm"><a class="heading-anchor" href="#appendix-installing-in-a-vm">Appendix: Installing in a VM</a></h2>
+<p>This guide targets bare metal, but you can also test it in a VM. When
+creating a VM in virt-manager, check <strong>Customize configuration before
+install</strong>. In the overview screen, change the <strong>Firmware</strong> to
+<code>OVMF_CODE.fd</code> (UEFI without Secure Boot). Do not use
+<code>OVMF_CODE.secboot.fd</code> as Artix does not support Secure Boot. The host
+needs <code>edk2-ovmf</code> installed (<code>pacman -S edk2-ovmf</code>).</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

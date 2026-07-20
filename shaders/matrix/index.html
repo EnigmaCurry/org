@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Matrix · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/shaders/tunnel/" aria-label="Previous: tunnel" title="prev: tunnel"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/shaders/noise/" aria-label="Next: noise" title="next: noise"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/shaders/">shaders</a><ul><li class="lvl1"><a href="#">matrix</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book open">
+        <a href="/shaders/">shaders</a><ul class="chapters"><li class="">
+                  <a class="" href="/shaders/step-function/">step-function</a></li><li class="node ">
+                  <a class="" href="/shaders/whirlpool/">whirlpool</a></li><li class="">
+                  <a class="" href="/shaders/plasma/">plasma</a></li><li class="">
+                  <a class="" href="/shaders/tunnel/">tunnel</a></li><li class="open">
+                  <a class="active" href="/shaders/matrix/">matrix</a></li><li class="">
+                  <a class="" href="/shaders/noise/">noise</a></li><li class="">
+                  <a class="" href="/shaders/retrogrid/">retrogrid</a></li><li class="">
+                  <a class="" href="/shaders/synthwave-trip/">synthwave-trip</a></li><li class="">
+                  <a class="" href="/shaders/giza/">giza</a></li><li class="">
+                  <a class="" href="/shaders/vhs/">vhs</a></li><li class="node ">
+                  <a class="" href="/shaders/letters/">letters</a></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/shaders/">/shaders</a><a class="pseg pcur" href="/shaders/matrix/">/matrix</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Matrix</a></h1>
+
+
+<p>Seven parallax layers of falling-glyph streams over a slowly drifting
+camera. Each layer runs its own column grid, its own scroll speed, and
+its own palette offset; depth-fog dims the far ones. The glyphs are a
+32-symbol procedural font built out of signed distance fields — bars,
+crosses, arcs, dots, a smiley, a dog, a heart, a music note, and a
+couple of random-grid patterns for filler.</p>
+<p>Every stream is periodic: each column carries a <code>(streamLen, gapLen)</code>
+pair, and the y-position is <code>mod(cell.y + speed * time, period)</code> — a
+seamless tile, so the &ldquo;infinite&rdquo; scroll never seams.</p>
+<div class="shader-config" data-effect="takeover" hidden><script type="x-shader/x-fragment" class="shader-glsl">
+// Multi-layer falling-glyph rain over a drifting camera. Seven parallax
+// depths, each with its own column grid and palette offset.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// smooth stroke — 1 inside a signed distance w, fading to 0 outside
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w + 0.03, d);
+}
+
+// procedural glyph: cellUV in [0,1], seed picks one of 32 shapes
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+
+  int tt = int(floor(fract(seed * 7.31) * 32.0));
+  float s = 0.0;
+
+  if(tt == 0){                                       // vertical bar
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){                                // horizontal bar
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){                                // plus
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){                                // X cross
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071, w);
+  } else if(tt == 4){                                // circle
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){                                // filled dot
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){                                // square outline
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){                                // three horizontal bars
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y + 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){                                // double vertical bars
+    s = strokeLine(min(abs(p.x - 0.14), abs(p.x + 0.14)), w);
+  } else if(tt == 9){                                // diamond outline
+    float dd = abs(p.x) + abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 10){                               // asterisk (plus + X)
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x + p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 11){                               // equals
+    float d = min(abs(p.y - 0.12), abs(p.y + 0.12));
+    s = strokeLine(d, w);
+  } else if(tt == 12){                               // top arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 13){                               // L (bottom-left corner)
+    float vert  = strokeLine(abs(p.x + 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 14){                               // reverse-L
+    float vert  = strokeLine(abs(p.x - 0.15), w) * step(p.y, 0.0);
+    float horiz = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    s = max(vert, horiz);
+  } else if(tt == 15){                               // smiley
+    float head  = strokeLine(abs(length(p) - 0.35), w * 0.7);
+    float eyeL  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2(-0.12, 0.1)));
+    float eyeR  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2( 0.12, 0.1)));
+    float smile = strokeLine(abs(length(p - vec2(0.0, 0.04)) - 0.16), w * 0.5)
+                * step(p.y, 0.04);
+    s = max(head, max(max(eyeL, eyeR), smile));
+  } else if(tt == 16){                               // dog face
+    float head = strokeLine(abs(length(p * vec2(1.0, 1.1)) - 0.24), w * 0.7);
+    float earL = 1.0 - smoothstep(0.06, 0.09, length(p - vec2(-0.2, 0.25)));
+    float earR = 1.0 - smoothstep(0.06, 0.09, length(p - vec2( 0.2, 0.25)));
+    float eyeL = 1.0 - smoothstep(0.02, 0.04, length(p - vec2(-0.09, 0.06)));
+    float eyeR = 1.0 - smoothstep(0.02, 0.04, length(p - vec2( 0.09, 0.06)));
+    float nose = 1.0 - smoothstep(0.03, 0.05, length(p - vec2( 0.0,  -0.06)));
+    float tongue = strokeLine(abs(p.x), w * 0.4) * step(-0.22, p.y) * step(p.y, -0.13);
+    s = max(head, max(max(earL, earR), max(max(eyeL, eyeR), max(nose, tongue))));
+  } else if(tt == 17){                               // heart (filled)
+    vec2 hp = (p + vec2(0.0, 0.35)) * 1.5;
+    hp.x = abs(hp.x);
+    float hd;
+    if(hp.y + hp.x > 1.0){
+      hd = length(hp - vec2(0.25, 0.75)) - 0.3536;
+    } else {
+      float a = length(hp - vec2(0.0, 1.0));
+      float b = length(hp - vec2(0.5 * max(hp.x + hp.y, 0.0)));
+      hd = min(a, b) * sign(hp.x - hp.y);
+    }
+    s = 1.0 - smoothstep(-0.02, 0.08, hd);
+  } else if(tt == 18){                               // triangle up outline
+    vec2 tp = vec2(abs(p.x), p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 19){                               // triangle down outline
+    vec2 tp = vec2(abs(p.x), -p.y + 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 + tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 20){                               // arrow up
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) + p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 21){                               // arrow right
+    float stem = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    float chevron = strokeLine(abs(abs(p.y) + p.x - 0.35) * 0.707, w)
+                  * step(0.12, p.x) * step(p.x, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 22){                               // music note
+    float nh = 1.0 - smoothstep(0.08, 0.12, length((p - vec2(-0.05, -0.2)) * vec2(1.0, 1.5)));
+    float stem = strokeLine(abs(p.x - 0.07), w * 0.6) * step(-0.2, p.y) * step(p.y, 0.3);
+    float flag = strokeLine(abs(length(p - vec2(0.18, 0.2)) - 0.14), w * 0.5)
+               * step(0.07, p.x) * step(0.12, p.y);
+    s = max(nh, max(stem, flag));
+  } else if(tt == 23){                               // crescent moon
+    float outer = length(p) - 0.3;
+    float inner = length(p - vec2(0.13, 0.0)) - 0.26;
+    s = 1.0 - smoothstep(-0.02, 0.04, max(outer, -inner));
+  } else if(tt == 24){                               // circle with plus
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 25){                               // square with cross
+    float bx = max(abs(p.x), abs(p.y));
+    float sq = strokeLine(abs(bx - 0.3), w * 0.7);
+    float cr = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5) * step(bx, 0.33);
+    s = max(sq, cr);
+  } else if(tt == 26){                               // T
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 27){                               // Z
+    float topBar = strokeLine(abs(p.y - 0.25), w);
+    float botBar = strokeLine(abs(p.y + 0.25), w);
+    float diag   = strokeLine(abs(p.x + p.y) * 0.707, w) * step(abs(p.y), 0.28);
+    s = max(max(topBar, botBar), diag);
+  } else if(tt == 28){                               // sine wave
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 29){                               // bottom arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else if(tt == 30){                               // dense 4×6 hash grid
+    vec2 g = floor(cellUV * vec2(4.0, 6.0));
+    float on = step(0.4, hash(g + seed * 23.7));
+    vec2 f = fract(cellUV * vec2(4.0, 6.0));
+    float mask = smoothstep(0.0, 0.18, f.x) * smoothstep(1.0, 0.82, f.x)
+               * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.82, f.y);
+    s = on * mask;
+  } else {                                           // 3×5 katakana-ish
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g + seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  // margin so glyphs never touch cell walls
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  float syncTime = iTime * tempo;
+  float beatPulse = exp(-fract(syncTime) * 4.0);
+
+  // cinematic camera drift + tiny rotation
+  float camX = syncTime * 15.0 + sin(syncTime * 0.2) * 60.0;
+  float camY = sin(syncTime * 0.15) * 30.0 + cos(syncTime * 0.1) * 20.0;
+  float angle = sin(syncTime * 0.09) * 0.04;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  vec3 totalColor = vec3(0.0);
+
+  for(int i = 0; i < 7; i++){
+    float fi = float(i);
+    float depth    = 0.4 + fi * 0.45;
+    float invDepth = 1.0 / depth;
+    float fog      = 1.0 / (1.0 + fi * 0.5);
+
+    // more columns (smaller glyphs) at farther depths
+    float cols  = 14.0 + fi * 4.0;
+    float cellW = iResolution.x / cols;
+    float cellH = cellW * 1.6;
+
+    // parallax offset + per-layer rotation about screen center
+    vec2 offset = vec2(camX, camY) * invDepth;
+    float a = angle * invDepth;
+    vec2 centered = fragCoord - iResolution.xy * 0.5;
+    vec2 rotated = vec2(
+      centered.x * cos(a) - centered.y * sin(a),
+      centered.x * sin(a) + centered.y * cos(a));
+    vec2 fragPos = rotated + iResolution.xy * 0.5 + offset;
+
+    vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+    vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+    // per-column stream: length, gap, speed, phase — all hash-derived
+    float colSeed = hash(vec2(cell.x, fi * 73.13));
+    float speed = (1.5 + colSeed * 2.5) * tempo;
+    float phase = colSeed * 100.0;
+    float streamLen = 4.0 + colSeed * 8.0;
+    float gapLen   = 14.0 + colSeed * 20.0;
+    float period   = streamLen + gapLen;
+    // seamless tile: y-position wraps every (streamLen + gapLen)
+    float cyclePos = mod(cell.y + syncTime * speed + phase, period);
+
+    if(cyclePos >= streamLen) continue;
+    float dist = cyclePos;
+
+    // glyph flickers on a hashed clock
+    float charSeed = hash(cell + vec2(fi * 37.0, floor(syncTime * (2.0 + colSeed * 3.0) * tempo)));
+    float g = glyph(cellUV, charSeed);
+
+    // head white-hot, tail fades quadratically
+    float brightness;
+    if(dist < 1.0){
+      brightness = 1.0;
+    } else {
+      brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+      brightness *= brightness;
+    }
+
+    // palette per column, offset per layer
+    int colorIdx = int(mod(cell.x + fi, 4.0));
+    vec3 baseColor;
+    if(colorIdx == 0)      baseColor = c1;
+    else if(colorIdx == 1) baseColor = c2;
+    else if(colorIdx == 2) baseColor = c3;
+    else                   baseColor = c4;
+
+    vec3 neon = baseColor * 1.5;
+    vec3 col = dist < 1.0 ? mix(neon, vec3(1.0), 0.7) : neon * brightness;
+    totalColor += col * g * fog;
+  }
+
+  // beat-ish brightness + filmic tone map
+  totalColor *= 1.0 + beatPulse * 0.15;
+  totalColor = 1.0 - exp(-totalColor * 1.5);
+  fragColor = vec4(totalColor, 1.0);
+}
+</script></div><div class="box run">
+  <div class="label"><span class="lt">[glsl]: shader source</span></div>
+  <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+  <div class="body"><pre>// Multi-layer falling-glyph rain over a drifting camera. Seven parallax
+// depths, each with its own column grid and palette offset.
+// @slider tempo 0.1 3.0 1.0 0.05
+uniform float tempo;
+
+float hash(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// smooth stroke — 1 inside a signed distance w, fading to 0 outside
+float strokeLine(float d, float w){
+  return 1.0 - smoothstep(w - 0.02, w &#43; 0.03, d);
+}
+
+// procedural glyph: cellUV in [0,1], seed picks one of 32 shapes
+float glyph(vec2 cellUV, float seed){
+  vec2 p = cellUV - 0.5;
+  float w = 0.065;
+
+  int tt = int(floor(fract(seed * 7.31) * 32.0));
+  float s = 0.0;
+
+  if(tt == 0){                                       // vertical bar
+    s = strokeLine(abs(p.x), w);
+  } else if(tt == 1){                                // horizontal bar
+    s = strokeLine(abs(p.y), w);
+  } else if(tt == 2){                                // plus
+    s = strokeLine(min(abs(p.x), abs(p.y)), w);
+  } else if(tt == 3){                                // X cross
+    s = strokeLine(min(abs(p.x - p.y), abs(p.x &#43; p.y)) * 0.7071, w);
+  } else if(tt == 4){                                // circle
+    s = strokeLine(abs(length(p) - 0.28), w);
+  } else if(tt == 5){                                // filled dot
+    s = 1.0 - smoothstep(0.15, 0.19, length(p));
+  } else if(tt == 6){                                // square outline
+    float bx = max(abs(p.x), abs(p.y));
+    s = strokeLine(abs(bx - 0.28), w);
+  } else if(tt == 7){                                // three horizontal bars
+    float d = min(min(abs(p.y - 0.22), abs(p.y)), abs(p.y &#43; 0.22));
+    s = strokeLine(d, w * 0.55);
+  } else if(tt == 8){                                // double vertical bars
+    s = strokeLine(min(abs(p.x - 0.14), abs(p.x &#43; 0.14)), w);
+  } else if(tt == 9){                                // diamond outline
+    float dd = abs(p.x) &#43; abs(p.y);
+    s = strokeLine(abs(dd - 0.32), w);
+  } else if(tt == 10){                               // asterisk (plus &#43; X)
+    float d1 = min(abs(p.x), abs(p.y));
+    float d2 = min(abs(p.x - p.y), abs(p.x &#43; p.y)) * 0.7071;
+    s = strokeLine(min(d1, d2), w * 0.75);
+  } else if(tt == 11){                               // equals
+    float d = min(abs(p.y - 0.12), abs(p.y &#43; 0.12));
+    s = strokeLine(d, w);
+  } else if(tt == 12){                               // top arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(-0.05, 0.05, p.y);
+  } else if(tt == 13){                               // L (bottom-left corner)
+    float vert  = strokeLine(abs(p.x &#43; 0.15), w) * step(0.0, p.y);
+    float horiz = strokeLine(abs(p.y), w) * step(-0.15, p.x);
+    s = max(vert, horiz);
+  } else if(tt == 14){                               // reverse-L
+    float vert  = strokeLine(abs(p.x - 0.15), w) * step(p.y, 0.0);
+    float horiz = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    s = max(vert, horiz);
+  } else if(tt == 15){                               // smiley
+    float head  = strokeLine(abs(length(p) - 0.35), w * 0.7);
+    float eyeL  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2(-0.12, 0.1)));
+    float eyeR  = 1.0 - smoothstep(0.03, 0.06, length(p - vec2( 0.12, 0.1)));
+    float smile = strokeLine(abs(length(p - vec2(0.0, 0.04)) - 0.16), w * 0.5)
+                * step(p.y, 0.04);
+    s = max(head, max(max(eyeL, eyeR), smile));
+  } else if(tt == 16){                               // dog face
+    float head = strokeLine(abs(length(p * vec2(1.0, 1.1)) - 0.24), w * 0.7);
+    float earL = 1.0 - smoothstep(0.06, 0.09, length(p - vec2(-0.2, 0.25)));
+    float earR = 1.0 - smoothstep(0.06, 0.09, length(p - vec2( 0.2, 0.25)));
+    float eyeL = 1.0 - smoothstep(0.02, 0.04, length(p - vec2(-0.09, 0.06)));
+    float eyeR = 1.0 - smoothstep(0.02, 0.04, length(p - vec2( 0.09, 0.06)));
+    float nose = 1.0 - smoothstep(0.03, 0.05, length(p - vec2( 0.0,  -0.06)));
+    float tongue = strokeLine(abs(p.x), w * 0.4) * step(-0.22, p.y) * step(p.y, -0.13);
+    s = max(head, max(max(earL, earR), max(max(eyeL, eyeR), max(nose, tongue))));
+  } else if(tt == 17){                               // heart (filled)
+    vec2 hp = (p &#43; vec2(0.0, 0.35)) * 1.5;
+    hp.x = abs(hp.x);
+    float hd;
+    if(hp.y &#43; hp.x &gt; 1.0){
+      hd = length(hp - vec2(0.25, 0.75)) - 0.3536;
+    } else {
+      float a = length(hp - vec2(0.0, 1.0));
+      float b = length(hp - vec2(0.5 * max(hp.x &#43; hp.y, 0.0)));
+      hd = min(a, b) * sign(hp.x - hp.y);
+    }
+    s = 1.0 - smoothstep(-0.02, 0.08, hd);
+  } else if(tt == 18){                               // triangle up outline
+    vec2 tp = vec2(abs(p.x), p.y &#43; 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 &#43; tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 19){                               // triangle down outline
+    vec2 tp = vec2(abs(p.x), -p.y &#43; 0.05);
+    float tri = max(-tp.y - 0.2, tp.x * 0.866 &#43; tp.y * 0.5 - 0.22);
+    s = strokeLine(abs(tri), w);
+  } else if(tt == 20){                               // arrow up
+    float stem = strokeLine(abs(p.x), w) * step(p.y, 0.15);
+    float chevron = strokeLine(abs(abs(p.x) &#43; p.y - 0.35) * 0.707, w)
+                  * step(0.12, p.y) * step(p.y, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 21){                               // arrow right
+    float stem = strokeLine(abs(p.y), w) * step(p.x, 0.15);
+    float chevron = strokeLine(abs(abs(p.y) &#43; p.x - 0.35) * 0.707, w)
+                  * step(0.12, p.x) * step(p.x, 0.4);
+    s = max(stem, chevron);
+  } else if(tt == 22){                               // music note
+    float nh = 1.0 - smoothstep(0.08, 0.12, length((p - vec2(-0.05, -0.2)) * vec2(1.0, 1.5)));
+    float stem = strokeLine(abs(p.x - 0.07), w * 0.6) * step(-0.2, p.y) * step(p.y, 0.3);
+    float flag = strokeLine(abs(length(p - vec2(0.18, 0.2)) - 0.14), w * 0.5)
+               * step(0.07, p.x) * step(0.12, p.y);
+    s = max(nh, max(stem, flag));
+  } else if(tt == 23){                               // crescent moon
+    float outer = length(p) - 0.3;
+    float inner = length(p - vec2(0.13, 0.0)) - 0.26;
+    s = 1.0 - smoothstep(-0.02, 0.04, max(outer, -inner));
+  } else if(tt == 24){                               // circle with plus
+    float circ = strokeLine(abs(length(p) - 0.28), w * 0.7);
+    float pl   = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5);
+    s = max(circ, pl);
+  } else if(tt == 25){                               // square with cross
+    float bx = max(abs(p.x), abs(p.y));
+    float sq = strokeLine(abs(bx - 0.3), w * 0.7);
+    float cr = strokeLine(min(abs(p.x), abs(p.y)), w * 0.5) * step(bx, 0.33);
+    s = max(sq, cr);
+  } else if(tt == 26){                               // T
+    float vert  = strokeLine(abs(p.x), w) * step(p.y, 0.25);
+    float horiz = strokeLine(abs(p.y - 0.25), w);
+    s = max(vert, horiz);
+  } else if(tt == 27){                               // Z
+    float topBar = strokeLine(abs(p.y - 0.25), w);
+    float botBar = strokeLine(abs(p.y &#43; 0.25), w);
+    float diag   = strokeLine(abs(p.x &#43; p.y) * 0.707, w) * step(abs(p.y), 0.28);
+    s = max(max(topBar, botBar), diag);
+  } else if(tt == 28){                               // sine wave
+    float wave = abs(p.y - 0.15 * sin(p.x * 10.0));
+    s = strokeLine(wave, w);
+  } else if(tt == 29){                               // bottom arc
+    float cd = abs(length(p) - 0.3);
+    s = strokeLine(cd, w) * smoothstep(0.05, -0.05, p.y);
+  } else if(tt == 30){                               // dense 4×6 hash grid
+    vec2 g = floor(cellUV * vec2(4.0, 6.0));
+    float on = step(0.4, hash(g &#43; seed * 23.7));
+    vec2 f = fract(cellUV * vec2(4.0, 6.0));
+    float mask = smoothstep(0.0, 0.18, f.x) * smoothstep(1.0, 0.82, f.x)
+               * smoothstep(0.0, 0.18, f.y) * smoothstep(1.0, 0.82, f.y);
+    s = on * mask;
+  } else {                                           // 3×5 katakana-ish
+    vec2 g = floor(cellUV * vec2(3.0, 5.0));
+    float on = step(0.45, hash(g &#43; seed * 17.3));
+    vec2 f = fract(cellUV * vec2(3.0, 5.0));
+    float mask = smoothstep(0.0, 0.15, f.x) * smoothstep(1.0, 0.85, f.x)
+               * smoothstep(0.0, 0.15, f.y) * smoothstep(1.0, 0.85, f.y);
+    s = on * mask;
+  }
+
+  // margin so glyphs never touch cell walls
+  float margin = smoothstep(0.0, 0.08, cellUV.x) * smoothstep(1.0, 0.92, cellUV.x)
+               * smoothstep(0.0, 0.08, cellUV.y) * smoothstep(1.0, 0.92, cellUV.y);
+  return s * margin;
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+  float syncTime = iTime * tempo;
+  float beatPulse = exp(-fract(syncTime) * 4.0);
+
+  // cinematic camera drift &#43; tiny rotation
+  float camX = syncTime * 15.0 &#43; sin(syncTime * 0.2) * 60.0;
+  float camY = sin(syncTime * 0.15) * 30.0 &#43; cos(syncTime * 0.1) * 20.0;
+  float angle = sin(syncTime * 0.09) * 0.04;
+
+  vec3 c1 = iAccent;
+  vec3 c2 = vec3(0.35, 0.75, 1.00);
+  vec3 c3 = vec3(1.00, 0.35, 0.55);
+  vec3 c4 = vec3(0.55, 0.25, 0.85);
+
+  vec3 totalColor = vec3(0.0);
+
+  for(int i = 0; i &lt; 7; i&#43;&#43;){
+    float fi = float(i);
+    float depth    = 0.4 &#43; fi * 0.45;
+    float invDepth = 1.0 / depth;
+    float fog      = 1.0 / (1.0 &#43; fi * 0.5);
+
+    // more columns (smaller glyphs) at farther depths
+    float cols  = 14.0 &#43; fi * 4.0;
+    float cellW = iResolution.x / cols;
+    float cellH = cellW * 1.6;
+
+    // parallax offset &#43; per-layer rotation about screen center
+    vec2 offset = vec2(camX, camY) * invDepth;
+    float a = angle * invDepth;
+    vec2 centered = fragCoord - iResolution.xy * 0.5;
+    vec2 rotated = vec2(
+      centered.x * cos(a) - centered.y * sin(a),
+      centered.x * sin(a) &#43; centered.y * cos(a));
+    vec2 fragPos = rotated &#43; iResolution.xy * 0.5 &#43; offset;
+
+    vec2 cell   = vec2(floor(fragPos.x / cellW), floor(fragPos.y / cellH));
+    vec2 cellUV = vec2(fract(fragPos.x / cellW), fract(fragPos.y / cellH));
+
+    // per-column stream: length, gap, speed, phase — all hash-derived
+    float colSeed = hash(vec2(cell.x, fi * 73.13));
+    float speed = (1.5 &#43; colSeed * 2.5) * tempo;
+    float phase = colSeed * 100.0;
+    float streamLen = 4.0 &#43; colSeed * 8.0;
+    float gapLen   = 14.0 &#43; colSeed * 20.0;
+    float period   = streamLen &#43; gapLen;
+    // seamless tile: y-position wraps every (streamLen &#43; gapLen)
+    float cyclePos = mod(cell.y &#43; syncTime * speed &#43; phase, period);
+
+    if(cyclePos &gt;= streamLen) continue;
+    float dist = cyclePos;
+
+    // glyph flickers on a hashed clock
+    float charSeed = hash(cell &#43; vec2(fi * 37.0, floor(syncTime * (2.0 &#43; colSeed * 3.0) * tempo)));
+    float g = glyph(cellUV, charSeed);
+
+    // head white-hot, tail fades quadratically
+    float brightness;
+    if(dist &lt; 1.0){
+      brightness = 1.0;
+    } else {
+      brightness = max(0.05, 1.0 - (dist - 1.0) / (streamLen - 1.0));
+      brightness *= brightness;
+    }
+
+    // palette per column, offset per layer
+    int colorIdx = int(mod(cell.x &#43; fi, 4.0));
+    vec3 baseColor;
+    if(colorIdx == 0)      baseColor = c1;
+    else if(colorIdx == 1) baseColor = c2;
+    else if(colorIdx == 2) baseColor = c3;
+    else                   baseColor = c4;
+
+    vec3 neon = baseColor * 1.5;
+    vec3 col = dist &lt; 1.0 ? mix(neon, vec3(1.0), 0.7) : neon * brightness;
+    totalColor &#43;= col * g * fog;
+  }
+
+  // beat-ish brightness &#43; filmic tone map
+  totalColor *= 1.0 &#43; beatPulse * 0.15;
+  totalColor = 1.0 - exp(-totalColor * 1.5);
+  fragColor = vec4(totalColor, 1.0);
+}</pre></div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

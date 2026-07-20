@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Sudo with Solokey · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.e0c4a80846213c1b06ca0f73333e3250d85652f7cbc1f5dfd574fecafba5f710.css" integrity="sha256-4MSoCEYhPBsGyg9zMz4yUNhWUvfLwfXf1XT&#43;yvul9xA=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/linux-workstation/sudo-2fa/solo-v1/" aria-label="Previous: solo-v1" title="prev: solo-v1"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/linux-workstation/sudo-2fa/ssh-2fa/" aria-label="Next: ssh-2FA" title="next: ssh-2FA"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/linux-workstation/sudo-2fa/">sudo-2FA</a><ul><li class="lvl1"><a href="#">sudo-2FA</a></li><li class="lvl2"><a href="#open-a-root-session-as-an-anti-lockout-measure">Open a root session as an anti-lockout measure</a></li><li class="lvl3"><a href="#consider-adding-a-root-password">Consider adding a root password</a></li><li class="lvl2"><a href="#register-solokeys">Register Solokeys</a></li><li class="lvl2"><a href="#create-custom-pam-modules-for-u2f">Create custom PAM modules for U2F</a></li><li class="lvl2"><a href="#configure-pam-hook-for-sudo">Configure PAM hook for sudo</a></li><li class="lvl2"><a href="#test-sudo">Test sudo</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="group open"><span class="gname">old</span><ul class="grouped"><li class="book open">
+        <a href="/linux-workstation/">linux-workstation</a><ul class="chapters"><li class="node ">
+                  <a class="" href="/linux-workstation/introduction/">introduction</a></li><li class="">
+                  <a class="" href="/linux-workstation/install/">install</a></li><li class="">
+                  <a class="" href="/linux-workstation/upgrading/">upgrading</a></li><li class="">
+                  <a class="" href="/linux-workstation/layering-packages/">layering-packages</a></li><li class="node ">
+                  <a class="" href="/linux-workstation/config/">config</a></li><li class="node open">
+                  <a class="" href="/linux-workstation/sudo-2fa/">sudo-2FA</a><ul class="sections"><li><a class="" href="/linux-workstation/sudo-2fa/get-your-solokey/">get-your-solokey</a></li><li><a class="" href="/linux-workstation/sudo-2fa/solo-v2/">solo-v2</a></li><li><a class="" href="/linux-workstation/sudo-2fa/solo-v1/">solo-v1</a></li><li><a class="active" href="/linux-workstation/sudo-2fa/sudo-2fa/">sudo-2FA</a></li><li><a class="" href="/linux-workstation/sudo-2fa/ssh-2fa/">ssh-2FA</a></li></ul></li><li class="node ">
+                  <a class="" href="/linux-workstation/app-users/">app-users</a></li><li class="">
+                  <a class="" href="/linux-workstation/kvm-libvirt/">kvm-libvirt</a></li><li class="">
+                  <a class="" href="/linux-workstation/firewall/">firewall</a></li></ul></li></ul></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Jul 20, 2026 at 7:31pm (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/linux-workstation/">/linux-workstation</a><a class="pseg" href="/linux-workstation/sudo-2fa/">/sudo-2FA</a><a class="pseg pcur" href="/linux-workstation/sudo-2fa/sudo-2fa/">/sudo-2FA</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Sudo with Solokey</a></h1>
+
+<div class="box notice notice-warning">
+    <div class="label">Archived</div>
+    <div class="body">I no longer maintain this book. I have moved my own workstations to NixOS, where the entire system is declared in one reproducible Git repo rather than assembled by hand. The Fedora Atomic notes here are left up for reference, but they are no longer updated. For my current setup, read the <a href="/nixos-workstation">NixOS Workstation</a> book instead.</div>
+  </div>
+<p>Having <code>sudo</code> privileges enabled for your normal workstation user
+account is both a convenience and a security concern. The Pluggable
+Authentication Module for Linux (PAM) allows us to strengthen the
+requirements for using <code>sudo</code>, to include several authentication
+methods beyond just asking for a password. This chapter will install
+<a href="https://developers.yubico.com/pam-u2f/">pam_u2f</a>, which enables PAM authentication via FIDO2/U2F compatible
+hardware tokens like the <a href="https://solokeys.com/">Solokey</a>. Each time <code>sudo</code> asks for
+authentication, it will prompt for a Solokey button press <em>and</em> a
+password to be entered.</p>
+<div class="box notice notice-credits"><div class="label">CREDITS</div>
+  <div class="body">
+<p>Some of this guide was adapted from these other guides:</p>
+<ul>
+<li><a href="https://fedoraproject.org/wiki/Using_Solokeys_with_Fedora#Introduction:_Using_Solo_Keys_with_Fedora">Using Solokeys with Fedora</a></li>
+<li><a href="https://docs.fedoraproject.org/en-US/quick-docs/using-yubikeys/">Using YubiKeys with Fedora</a></li>
+</ul>
+<p>Thank you to the Fedora documentation team!</p>
+  </div>
+</div>
+<h2 id="open-a-root-session-as-an-anti-lockout-measure"><a class="heading-anchor" href="#open-a-root-session-as-an-anti-lockout-measure">Open a root session as an anti-lockout measure</a></h2>
+<p>To prevent yourself from being locked out of your own system during
+the setup process, it is recommended to start a new terminal in a root
+session, and to keep it open. That way if you lock yourself out, you
+still have a way you can fix it.</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+## Open root session and leave it alone in another window ....
+sudo su
+</pre></div>
+</div>
+
+
+<h3 id="consider-adding-a-root-password"><a class="heading-anchor" href="#consider-adding-a-root-password">Consider adding a root password</a></h3>
+<p>If you use <code>sudo</code> a lot, you might not actually know the real <code>root</code>
+password of your system (or one might not even be set). As a backup,
+you may want to set a secure long random passphrase for the <code>root</code>
+user and keep it safe (you will rarely need it).</p>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>Reset the root password with a random string:</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+(set -e
+LENGTH=26
+PASSWORD=$(tr -dc &#39;A-Za-z0-9!@#$%^&amp;*()[]~&#43;-_=?&lt;&gt;.,;:&#39; &lt; /dev/urandom | head -c ${LENGTH})
+echo -e &#34;\nSave this ${LENGTH} character long password somewhere safe:    ${PASSWORD}\n&#34;
+read -e -p &#34;Do you want to reset the root password with this value (y/N)? &#34; answer
+(test &#34;${answer,,}&#34; == &#34;y&#34; || test &#34;${answer,,}&#34; == &#34;yes&#34;) &amp;&amp; \
+    sudo sh -c &#34;echo &#39;root:${PASSWORD}&#39; | chpasswd &amp;&amp; echo Done.&#34; || \
+    echo &#34;Cancelled.&#34;
+)
+</pre></div>
+</div>
+<p>Test that the root password works <em>without</em> using <code>sudo</code>:</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+su
+</pre></div>
+</div>
+  </div>
+</div>
+<h2 id="register-solokeys"><a class="heading-anchor" href="#register-solokeys">Register Solokeys</a></h2>
+<p>It is recommended that you register <strong>at least two</strong> solokeys: a primary
+key, and a backup key. That way, if you lose one of the keys, you can
+still use the other one.</p>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>Do the next steps as your <strong>normal workstation user account</strong>, which is
+the account that should already have <code>sudo</code> privileges.</p>
+  </div>
+</div>
+<p>Create a tempory file to capture solo key registrations:</p>
+<div class="box notice env">
+    <div class="label">[bash]: Set env vars</div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+TMP_KEYS=$(mktemp)
+</pre></div>
+</div>
+<ul>
+<li>Plug in the first solokey, then run:</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+pamu2fcfg &gt;&gt; ${TMP_KEYS} &amp;&amp; \
+     echo &gt;&gt; ${TMP_KEYS}
+</pre></div>
+</div>
+
+
+<p>It may ask you to enter the PIN of the solokey:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Enter PIN for /dev/hidraw1:
+</pre></div>
+</div>
+
+<ul>
+<li>
+<p>When the solokey lights up, press the button.</p>
+</li>
+<li>
+<p>Unplug the first solokey and repeat the last command for the second
+solokey.</p>
+</li>
+<li>
+<p>Unplug the second solokey and repeat for additional solokeys.</p>
+</li>
+<li>
+<p>When you&rsquo;ve written all the keys to <code>${TMP_KEYS}</code>, reformat and
+install them into their final destination:</p>
+</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo &#34;${USER}:$(cat ${TMP_KEYS} | \
+    cut -d &#34;:&#34; -f 2 | tr &#39;\n&#39; &#39;:&#39;)&#34; | sed &#39;s/:$//&#39; | \
+    sudo tee /etc/u2f_authorized_keys
+</pre></div>
+</div>
+
+
+<h2 id="create-custom-pam-modules-for-u2f"><a class="heading-anchor" href="#create-custom-pam-modules-for-u2f">Create custom PAM modules for U2F</a></h2>
+<p>You will create two new PAM modules: <code>u2f-required</code> and
+<code>u2f-sufficient</code>. They will both include these required settings:</p>
+<ol>
+<li>The <code>authfile</code> path to our authorized key list file.</li>
+<li>The <code>cue</code> literal to show the <code>Please touch the device</code> prompt
+message for each authentication. (If you omit this, it will print
+nothing, which can be confusing).</li>
+</ol>
+<p>The only difference between the two PAM modules is that one is
+<strong>required</strong>, and the other is merely <strong>sufficient</strong>.</p>
+<ul>
+<li><code>required</code> means to <strong>enable 2FA</strong>: solokey + password required.</li>
+<li><code>sufficient</code> means to <strong>disable 2FA</strong>: solokey OR password is sufficient.</li>
+</ul>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cat &lt;&lt; EOF | sudo tee /etc/pam.d/u2f-required
+#%PAM-1.0
+auth       required     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
+EOF
+cat &lt;&lt; EOF | sudo tee /etc/pam.d/u2f-sufficient
+#%PAM-1.0
+auth       sufficient     pam_u2f.so authfile=/etc/u2f_authorized_keys cue
+EOF
+</pre></div>
+</div>
+
+
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>The PAM modules you just created (<code>/etc/pam.d/u2f-required</code> and
+<code>/etc/pam.d/u2f-sufficient</code>) can be used for extending any of the
+other pam modules found in <code>/etc/pam.d</code>, by adding an appropriate
+<code>include</code> line at the right place. This can affect many more system
+authentication methods than just <code>sudo</code>, so be careful, but only
+<code>sudo</code> will be covered for now.</p>
+  </div>
+</div>
+<h2 id="configure-pam-hook-for-sudo"><a class="heading-anchor" href="#configure-pam-hook-for-sudo">Configure PAM hook for sudo</a></h2>
+<p>As <code>root</code>, edit the file <code>/etc/pam.d/sudo</code>, and insert a new line
+directly after the <code>#%PAM-1.0</code> header. A PAM module follows rules in
+top down order, as they are listed. Therefore your solokey rule needs
+to be the <em>first</em> authentication mechanism, and the existing password
+flow is the <em>second</em> authentication method.</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: /etc/pam.d/sudo</div>
+    <div class="body"><pre>
+#%PAM-1.0
+auth	  include      u2f-required
+auth       include      system-auth
+account    include      system-auth
+password   include      system-auth
+session    optional     pam_keyinit.so revoke
+session    required     pam_limits.so
+session    include      system-auth
+</pre></div>
+</div>
+
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>Line 2 (<code>auth include u2f-required</code>) is the only line that was added
+to this file. Everything else in this file was here originally and is
+left intact.</p>
+  </div>
+</div>
+<div class="box notice notice-warning"><div class="label">warning</div>
+  <div class="body">
+<p>If you change <code>u2f-required</code> to <code>u2f-sufficient</code>, then it will <strong>disable
+2FA</strong> allowing solokey press <strong>OR</strong> user password as sufficient!</p>
+  </div>
+</div>
+<h2 id="test-sudo"><a class="heading-anchor" href="#test-sudo">Test sudo</a></h2>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>When testing sudo, always open a new terminal for <strong>each</strong> test. This is
+to avoid the auth caching mechanism (which is reset for new
+terminals).</p>
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+sudo su
+</pre></div>
+</div>
+<p>The PAM system should now ask for you to touch your solokey (or press
+the button), and afterward prompt for your password.</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Please touch the device.
+[sudo] password for ryan:
+</pre></div>
+</div>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>
