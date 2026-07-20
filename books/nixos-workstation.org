@@ -294,7 +294,7 @@ Your data is left alone -- partitions and home directories are
 untouched. From here your machine is a full sway-home host and the
 rest of this book applies unchanged: skip the [[/nixos-workstation/build-iso][Build a custom installer
 ISO]] section (that whole flow is specific to the custom ISO) and
-continue at [[/nixos-workstation/first-login][First login to sway-home]].
+continue at [[/nixos-workstation/making-changes][Making changes going forward]].
 
 *** Caveats specific to skipping the custom ISO
 
@@ -835,37 +835,6 @@ When it finishes, reboot. The machine comes up fully configured, and your
 config repo is already on disk at =~/nixos=, owned by your user.
 #+end_annotate
 
-* First login to sway-home
-:PROPERTIES:
-:EXPORT_FILE_NAME: first-login
-:EXPORT_HUGO_SLUG: first-login
-:EXPORT_HUGO_WEIGHT: 2500
-:END:
-
-Once sway-home is installed -- either via the custom ISO's =setup
-install= or via the =setup-host= adopt flow on a stock install --
-reboot the machine (or at minimum start a fresh login shell) so the
-sway-home shell environment loads. Then log in as the user you
-created.
-
-The first interactive shell under sway-home runs a one-time
-first-run prompt that sets up your git identity. It asks for:
-
-- =user.name= -- the name that will appear on your commits
-- =user.email= -- the email address for your commits
-- =init.defaultBranch= -- your preferred default branch name (e.g.
-  =main= or =master=)
-
-It shows the values back to you and asks for confirmation before
-writing them to =~/.config/git/config.local=. That file is
-gitignored by the sway-home shared config, so your identity stays
-local to this machine and never gets committed to the =~/nixos=
-repo.
-
-After you answer the prompt once it won't ask again on subsequent
-logins. If you need to change any of these later, edit
-=~/.config/git/config.local= directly.
-
 * Making changes going forward
 :PROPERTIES:
 :EXPORT_FILE_NAME: making-changes
@@ -873,9 +842,9 @@ logins. If you need to change any of these later, edit
 :EXPORT_HUGO_WEIGHT: 3000
 :END:
 
-With the first-login prompt out of the way, the more important habit
-starts now: your machine's entire configuration lives in its own git
-repo in your home directory.
+Once the machine reboots, log in as your user. The installation is
+complete, but the more important habit starts now: your machine's
+entire configuration lives in its own git repo in your home directory.
 
 #+begin_run
 cd ~/nixos
