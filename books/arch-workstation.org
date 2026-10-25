@@ -147,6 +147,35 @@ differently than the book did -- because that file is the only record
 of your machine that will exist.
 #+end_notice
 
+*** ...but it comes with a script
+
+#+attr_shortcode: :style warning :title Speculative
+#+begin_notice
+This section and the [[/arch-workstation/setup][Install with setup]] chapter describe a =setup=
+command that is not written yet. They are a draft of how the book
+would read if it were.
+#+end_notice
+
+Reading the commands is how you learn the system. Typing them is
+mostly how you make mistakes: a shell variable lost to a dropped SSH
+session, a step run twice that should have run once, a command typed
+into the chroot that belonged on the live system.
+
+So the book offers two ways through the install. [[/arch-workstation/setup][Install with setup]]
+runs the whole thing from the BOOMSTICK in four commands, driven by a
+small *host file* that records your choices. The chapters after it
+are the same install written out by hand, and they double as the
+explanation of everything =setup= does. Use the script and read the
+chapters, or skip the script and run the chapters; you end up with the
+same machine either way.
+
+The host file turns out to be the start of something more useful
+than an installer. It grows into a git repository that describes the
+machine, and after the install it is how you keep the machine
+described -- see [[/arch-workstation/maintain][Keeping it maintainable]]. That is still not a
+NixOS flake, but it closes most of the gap the warning above
+describes.
+
 *** What you end up with
 
 The core of this book builds a *minimal, headless base system*: a
@@ -729,9 +758,430 @@ the target's disk mounted early and put swap on it, which the disk
 chapter does.
 
 With the keyring current, the mirrors settled, and the clock correct,
-the live system is ready. The next chapter writes to the disk.
+the live system is ready. From here, either run [[/arch-workstation/setup][setup]] or carry
+on with the next chapter, which writes to the disk by hand.
 
 
+* Install with setup
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: setup
+:END:
+
+** Install with setup
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 350
+:END:
+
+#+attr_shortcode: :style warning :title Speculative
+#+begin_notice
+The =setup= command described in this chapter does not exist yet.
+This is a design sketch, written as though it did, to see whether the
+book reads better with it. Every command it runs is one the by-hand
+chapters already document, so nothing here is new behaviour -- only
+new packaging.
+#+end_notice
+
+The chapters after this one are the install written out by hand, one
+block at a time. =setup= is those same chapters turned into a
+program. It ships on the BOOMSTICK, it runs on the live system, and
+it replaces about ninety copy-pasted blocks with four commands:
+
+| Command         | What it does                                                | By-hand chapter                                                                                                                       |
+|-----------------+-------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
+| =setup host=    | Asks what this machine is, and writes it down              | The =env= blocks scattered through the book                                                                                           |
+| =setup disk=    | Partitions, encrypts, formats, mounts, adds swap           | [[/arch-workstation/disk][Partition and format the disk]]                                                                              |
+| =setup install= | Installs, makes it boot, sets up network, users and SSH   | [[/arch-workstation/install][Install the base system]], [[/arch-workstation/bootloader][Make it boot]], [[/arch-workstation/network][Network and users]] |
+| =setup check=   | The pre-flight check, then (optionally) the reboot          | [[/arch-workstation/network/reboot][Check it, then reboot]]                                                                           |
+
+Run =setup= with no arguments and it shows the same list as a menu,
+with a mark next to each step that is already done.
+
+*** How setup behaves
+
+A handful of rules, each one answering a failure the by-hand path
+has to warn you about:
+
+ - *It reads the host file and nothing else.* There are no shell
+   variables to lose when your SSH session drops. Every subcommand
+   starts by reading =/root/arch/host.env=, so you can reconnect and
+   carry on from wherever you were.
+ - *Every step is safe to run again.* A step that has already been
+   done says so and skips. =fstab= is generated, not appended to, so
+   running it twice gives the same file. The one step that cannot be
+   repeated -- erasing the disk -- makes you type the hostname first.
+ - *It shows you before it does anything.* Each subcommand prints a
+   review screen and asks. =--yes= skips the question, for when you
+   are scripting it.
+ - *It prints what it runs.* Every command is echoed before it runs,
+   in the same words the by-hand chapters use, so the output is a
+   transcript you can check against this book.
+ - *It is one readable file.* =setup= is a single bash script at
+   =/usr/local/bin/setup= on the stick. =less $(which setup)= is the
+   documentation of last resort.
+
+#+attr_shortcode: :style info :title The by-hand chapters stay
+#+begin_notice
+=setup= does not replace the rest of this book; it replaces the
+/typing/. The disk, install, bootloader and network chapters remain
+the explanation of what it did and why, and they still work on their
+own if you would rather run every command yourself -- from the
+official ISO, say, where there is no =setup= at all.
+#+end_notice
+
+** Describe the machine
+:PROPERTIES:
+:EXPORT_FILE_NAME: host
+:EXPORT_HUGO_SLUG: host
+:END:
+
+The first step changes nothing on the target. It asks a few
+questions and writes the answers into a *host file*, which every
+later step reads.
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup host
+#+end_run
+
+*** Answer the prompts
+
+#+begin_annotate
+#+begin_src bash
+== Describe this machine ==
+? Hostname (archlinux) myhost
+#+end_src
+
+The name you will type into =ssh= for the rest of the machine's
+life. It is written to =/etc/hostname= directly, never through
+=hostnamectl=, for the reason given on [[/arch-workstation/network/hostname][Set the hostname]].
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Install to which disk?
+> /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3   238.5G  nvme  (nvme0n1)
+  /dev/disk/by-id/ata-Samsung_SSD_870_S5Y1NG0R    931.5G  sata  (sda)
+  (sdb, the BOOMSTICK you booted from, is not offered)
+#+end_src
+
+A picker in place of the =DISK== line you would otherwise type. Two
+things differ from the by-hand path. The disk is recorded by its
+=/dev/disk/by-id/= name, which belongs to that physical drive, rather
+than =/dev/nvme0n1=, which belongs to whatever order the kernel found
+the drives in. And the stick you booted from is never offered:
+=setup= finds it by its =ARCH_CONFIG= partition label and leaves its
+disk off the list, so the one choice that must never be made cannot
+be.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Encrypt the root filesystem with LUKS? (y/N)
+#+end_src
+
+The same trade as [[/arch-workstation/disk/encrypt][Encrypt the root]]. On a Raspberry Pi the question
+comes with the warning from that page attached -- a headless Pi has
+nobody to type the passphrase -- and the default stays =N=.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Swap file size, or 0 for none (8g)
+? Time zone (America/Denver)
+? Locale (en_US.UTF-8)
+? Console keymap (us)
+#+end_src
+
+Defaults come from the live system where it has an opinion -- the
+time zone is guessed from the public IP the boot webhook already
+looked up -- and from this book where it does not.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
+? Passwordless sudo for admin? (Y/n)
+? Extra packages to install (blank for none) git just tmux
+#+end_src
+
+The =admin= / =user= account split from [[/arch-workstation/network][Network and users]] is not a
+question: it is the shape of this book. Whether =admin= needs a
+password for =sudo= is, and so is anything you want installed beyond
+the base set.
+#+end_annotate
+
+*** What it wrote
+
+The answers land in one small file of shell variables:
+
+#+attr_shortcode: :file /root/arch/host.env
+#+begin_edit
+HOSTNAME=myhost
+DISK=/dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
+ENCRYPT=no
+SWAP_SIZE=8g
+TIMEZONE=America/Denver
+LOCALE=en_US.UTF-8
+KEYMAP=us
+ADMIN_NOPASSWD=yes
+#+end_edit
+
+Open it with =vim /root/arch/host.env= and change anything you
+like; =setup host= again re-asks every question with your current
+answers as the defaults.
+
+=/root/arch= is more than one file. It is a git repository -- the
+*host repo* -- and =setup host= seeds the rest of it too:
+
+| File              | Holds                                                         |
+|-------------------+---------------------------------------------------------------|
+| =host.env=        | The answers above                                             |
+| =packages.txt=    | Every package to install, one per line: the base set plus yours |
+| =units.txt=       | systemd units to enable: =systemd-networkd=, =iwd=, =sshd=, ... |
+| =etc/=            | Files to place under =/etc=: the =.network= files, the sshd drop-in, the sudoers drop-in |
+| =authorized_keys= | The SSH public keys =admin= will accept, copied from the stick |
+| =Justfile=        | The =admin= recipes, used once the machine is running          |
+
+These are exactly the files the by-hand chapters tell you to write,
+collected in one place before they are installed. After the install,
+the repo moves into the new machine, and from then on it is how you
+maintain it -- see [[/arch-workstation/maintain][Keeping it maintainable]].
+
+*** Reinstalling a machine you already have
+
+If the machine has been installed this way before, its host repo
+already exists, and there is nothing to ask. Point =setup= at it:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup host --from git@git.example.com:you/arch-myhost.git
+#+end_run
+
+=--from= also accepts the name of a host file on the stick's config
+partition, at =archiso-config/hosts/myhost.env=, for when you would
+rather not need network access to a git server.
+
+The only answer it re-checks is the disk. A =by-id= name belongs to
+one physical drive, so a reinstall onto a new drive -- the usual
+reason for reinstalling -- has to pick again.
+
+#+attr_shortcode: :style warning :title No secrets in the host repo
+#+begin_notice
+The host repo is meant to be pushed to a git remote, so it never
+holds a secret. Passwords are asked for during =setup install= and
+not written anywhere. WiFi passphrases are copied from the live
+system into the target and never into the repo. The SSH keys it does
+hold are /public/ keys, which is fine.
+#+end_notice
+
+** Prepare the disk
+:PROPERTIES:
+:EXPORT_FILE_NAME: disk
+:EXPORT_HUGO_SLUG: disk
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup disk
+#+end_run
+
+It reads the host file and shows you what it is about to destroy
+before it destroys it:
+
+#+begin_annotate
+#+begin_src bash
+================ Review =================
+Host:         myhost
+Disk:         /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
+              (nvme0n1, 238.5G, XP1000F256G)
+Currently:    2 partitions: ESP (vfat), root (btrfs, label "arch")
+Will create:  1G ESP (vfat) + 237.5G btrfs, no encryption
+Subvolumes:   @ @home @snapshots @log @pkg @swap
+Swap:         8g swapfile
+=========================================
+
+This ERASES the disk. Type the hostname to continue: myhost
+#+end_src
+
+The =Currently:= line is there so that you notice when the disk you
+picked is not the one you thought it was. Typing the hostname rather
+than =y= is deliberate friction: it is the one prompt in =setup= that
+cannot be undone.
+#+end_annotate
+
+Then it runs the whole of the [[/arch-workstation/disk][disk chapter]], echoing each
+command as it goes:
+
+#+begin_stdout
++ sgdisk --zap-all /dev/nvme0n1
++ sgdisk --clear --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP --new=2:0:0 --typecode=2:8300 --change-name=2:root /dev/nvme0n1
++ partprobe /dev/nvme0n1
++ mkfs.fat -F32 -n ESP /dev/nvme0n1p1
++ mkfs.btrfs -L arch /dev/nvme0n1p2
++ btrfs subvolume create /mnt/@ ... /mnt/@swap   (6 subvolumes)
++ mount -o noatime,compress=zstd:1,subvol=@ /dev/nvme0n1p2 /mnt   (+ 6 more mounts)
++ btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
++ swapon /mnt/swap/swapfile
+✓ Disk ready: 7 mounts under /mnt, 8G swap active.
+#+end_stdout
+
+The partition naming question (=p1= or =1=?) and the =ROOTDEV=
+indirection for LUKS disappear: =setup= works them out from the
+device it was given, and the reader never has to.
+
+*** Running it again
+
+If =/mnt= already holds the layout =setup disk= would build, it says
+so and stops before touching anything:
+
+#+begin_stdout
+/mnt already has the layout for myhost (7 mounts, swap on). Nothing to do.
+#+end_stdout
+
+And if the layout exists on the disk but is not mounted -- the live
+system rebooted, or you are coming back to finish a half-done install
+-- =--mount= puts it back without formatting, unlocking LUKS first if
+the host file says the disk is encrypted:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup disk --mount
+#+end_run
+
+That is also the rescue path. Booting the stick and running =setup
+host --from ...= followed by =setup disk --mount= and =arch-chroot
+/mnt= gets you inside a machine that will not boot, in three
+commands.
+
+** Install the system
+:PROPERTIES:
+:EXPORT_FILE_NAME: install
+:EXPORT_HUGO_SLUG: install
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup install
+#+end_run
+
+#+begin_annotate
+#+begin_src bash
+================ Review =================
+Host:         myhost
+Detected:     aarch64, bcm2712 (Raspberry Pi 5)
+Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim
+              linux-rpi-16k firmware-raspberrypi linux-firmware
+              + 3 from packages.txt (git just tmux)
+Boot:         Pi firmware (cmdline.txt, root=UUID=..., subvol=@)
+Network:      networkd + resolved + iwd, 1 WiFi network from the stick
+Accounts:     admin (1000, wheel, passwordless sudo), user (1001)
+SSH keys:     3, from authorized_keys
+Host repo:    /root/arch -> /mnt/home/admin/arch
+=========================================
+
+? Install? (Y/n)
+#+end_src
+
+Everything on this screen was decided either by the hardware or by
+the host file. The kernel and microcode are chosen exactly as on
+[[/arch-workstation/install][Set the package list]], and the bootloader follows from the
+architecture.
+#+end_annotate
+
+After you confirm, it works through the rest of the by-hand install
+in order. Each step is the page it links to:
+
+ 1. *[[/arch-workstation/install/pacstrap][pacstrap]]* the base set plus =packages.txt=. It checks the stick's
+    Arch Linux ARM key first, and drops =-K= on an old Pi stick that
+    needs it dropped, so that warning box becomes something the
+    reader never sees.
+ 2. *[[/arch-workstation/install/fstab][fstab]]*, generated fresh with =genfstab -U= and /written/, not
+    appended -- so running =setup install= twice cannot duplicate an
+    entry. It refuses to continue if the swapfile is missing from the
+    result.
+ 3. *[[/arch-workstation/install/localize][Time zone, locale and keymap]]*, from the host file.
+ 4. *[[/arch-workstation/bootloader/initramfs][The initramfs]]*, adding =sd-encrypt= to =HOOKS= when the host
+    file says the disk is encrypted, and rebuilding with
+    =mkinitcpio -P=.
+ 5. *The bootloader*: [[/arch-workstation/bootloader/x86_64][systemd-boot]] on x86_64, or [[/arch-workstation/bootloader/rpi][cmdline.txt]] on the
+    Pi. Every UUID is read from the devices =setup disk= made -- the
+    LUKS container's for =rd.luks.name=, the filesystem's for
+    =root== -- so the four boot-entry variants become one code path
+    and the hard-coded =/dev/nvme0n1p2= goes away.
+ 6. *[[/arch-workstation/network/network][The host repo, applied to /mnt]]*: the files under =etc/= are
+    copied into =/mnt/etc= with their modes, the units in =units.txt=
+    are enabled, and =/etc/hostname= is written. This is the same
+    =apply= that maintains the machine later, pointed at =/mnt=
+    instead of =/=.
+ 7. *The live-system side*: the =resolv.conf= symlink and the iwd
+    =.psk= files, done from outside the chroot where they have to be.
+ 8. *[[/arch-workstation/network/accounts][Accounts]]*: =admin= and =user=, the sudoers drop-in (checked with
+    =visudo -c=), and =authorized_keys= with the right owner and
+    modes.
+ 9. *Passwords*, the only prompts after the review: root, =admin=,
+    =user=. On a re-run, any account that already has one is skipped.
+ 10. *The host repo moves in*: =/root/arch= is copied to
+     =/mnt/home/admin/arch=, owned by =admin=, with a commit recording
+     the install.
+
+#+attr_shortcode: :style info :title One apply, two places
+#+begin_notice
+Step 6 is the important design choice. Installing the machine and
+maintaining it are the same operation -- "make this root look like
+the host repo" -- run against =/mnt= once and against =/= ever
+after. That is what keeps the install and the running machine from
+drifting apart from day one, and it is the closest Arch gets to the
+NixOS habit of building the system from its configuration.
+#+end_notice
+
+** Check and reboot
+:PROPERTIES:
+:EXPORT_FILE_NAME: check
+:EXPORT_HUGO_SLUG: check
+:END:
+
+=setup install= ends by running the check on its own, but it is also
+a command you can run any time:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup check
+#+end_run
+
+#+begin_stdout
+✓ hostname   myhost
+✓ fstab      7 btrfs/vfat entries + swap, no duplicates
+✓ boot       cmdline.txt: root=UUID=e1445380-... rootflags=subvol=@
+✓ initramfs  /boot/initramfs-linux.img, built 2 minutes ago
+✓ accounts   admin user
+✓ passwords  root=P admin=P user=P
+✓ sudo       visudo -c OK
+✓ units      systemd-networkd systemd-resolved iwd sshd enabled
+✓ ssh        3 key(s) for admin, sshd -t OK (no host keys yet: expected)
+✓ wifi       1 network in /mnt/var/lib/iwd
+All checks passed. Safe to reboot.
+#+end_stdout
+
+It is the [[/arch-workstation/network/reboot][pre-flight check]] from the by-hand path, with one difference
+that matters: it /judges/ the answers rather than printing them for
+you to judge. A =✗= on any line means a machine that will not come
+back, and the command exits non-zero.
+
+When everything passes:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup reboot
+#+end_run
+
+That runs the check again, and only if it passes does it =swapoff=,
+=umount -R /mnt= and reboot. It will not let you skip the check.
+
+Pull the stick once the machine powers down, and connect to the new
+machine exactly as described in [[/arch-workstation/network/reboot][Connecting to the new machine]]. The
+first thing worth doing there is pushing the host repo somewhere off
+the machine, which is where the [[/arch-workstation/maintain][next chapter]] begins.
 * Partition and format the disk
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: disk
@@ -743,6 +1193,13 @@ the live system is ready. The next chapter writes to the disk.
 :EXPORT_HUGO_SLUG: _index
 :EXPORT_HUGO_WEIGHT: 400
 :END:
+
+#+attr_shortcode: :style info :title By hand
+#+begin_notice
+This chapter is what =setup disk= does. If you used it, read on for the
+reasoning and skip the commands; if you are installing by hand, run
+them in order as usual.
+#+end_notice
 
 This is the first chapter that writes to the target machine. Up to
 now everything lived in RAM and a power cycle undid it; from here
@@ -1227,6 +1684,13 @@ installs one.
 :EXPORT_HUGO_WEIGHT: 500
 :END:
 
+#+attr_shortcode: :style info :title By hand
+#+begin_notice
+This chapter is what =setup install= does. If you used it, read on for the
+reasoning and skip the commands; if you are installing by hand, run
+them in order as usual.
+#+end_notice
+
 The disk is partitioned, formatted and mounted under =/mnt=, and
 there is nothing on it. This chapter puts a complete Arch system
 there.
@@ -1697,6 +2161,13 @@ own. That is the next chapter.
 :EXPORT_HUGO_WEIGHT: 600
 :END:
 
+#+attr_shortcode: :style info :title By hand
+#+begin_notice
+This chapter is what =setup install= does. If you used it, read on for the
+reasoning and skip the commands; if you are installing by hand, run
+them in order as usual.
+#+end_notice
+
 There is a complete Arch system on the disk, and nothing on that
 disk knows how to start it. Three things have to line up before a
 machine can bring itself up unattended:
@@ -2109,6 +2580,13 @@ next chapter, and it has to be finished before the first reboot.
 :EXPORT_HUGO_SLUG: _index
 :EXPORT_HUGO_WEIGHT: 700
 :END:
+
+#+attr_shortcode: :style info :title By hand
+#+begin_notice
+This chapter is what =setup install= does. If you used it, read on for the
+reasoning and skip the commands; if you are installing by hand, run
+them in order as usual.
+#+end_notice
 
 This is the chapter that decides whether you ever see the machine
 again.
@@ -2613,6 +3091,231 @@ opposite kinds of investigation.
 Once you are in as =admin=, the install is finished. Everything from
 here on is a running system you can change at will, and the next
 chapter is about keeping it that way.
+* Keeping it maintainable
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: maintain
+:END:
+
+** Keeping it maintainable
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 800
+:END:
+
+#+attr_shortcode: :style warning :title Speculative
+#+begin_notice
+Like [[/arch-workstation/setup][Install with setup]], this chapter describes tools that do not
+exist yet. It is a sketch of how the host repo that =setup= creates
+would be used once the machine is running.
+#+end_notice
+
+The introduction made a promise about Arch: the running system is the
+source of truth, it drifts, and nothing but your own discipline
+records how it got that way. This chapter is that discipline, written
+down as a git repository and four commands, so that it does not have
+to live in your head.
+
+Log in as =admin=. The host repo that =setup= built the machine from
+is already there:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+cd ~/arch
+git log --oneline
+#+end_run
+
+#+begin_stdout
+3f9c2e1 setup install: myhost (aarch64, Raspberry Pi 5)
+a14b07d setup host: myhost
+#+end_stdout
+
+| File              | Holds                                             | Changed by                    |
+|-------------------+---------------------------------------------------+-------------------------------|
+| =host.env=        | The install answers                               | You, rarely                   |
+| =packages.txt=    | Every package you asked for                       | You, or =admin save=          |
+| =units.txt=       | Every unit you enabled                            | You, or =admin save=          |
+| =etc/=            | Your files under =/etc=, with their modes         | You, or =admin save=          |
+| =authorized_keys= | Public keys =admin= accepts                       | You                           |
+| =Justfile=        | The =admin= recipes                               | Nobody, usually               |
+
+The =admin= alias runs =just= against =~/arch/Justfile= from any
+directory, the same convention as the [[/nixos-workstation/making-changes][NixOS book]]:
+
+| Command         | Direction        | What it does                                                    |
+|-----------------+------------------+-----------------------------------------------------------------|
+| =admin diff=    | look only        | Lists every difference between the repo and the machine         |
+| =admin apply=   | repo → machine   | Makes the machine match the repo                                 |
+| =admin save=    | machine → repo   | Copies the machine's drift into the repo, for you to review      |
+| =admin upgrade= | both             | Snapshot, =pacman -Syu=, apply, report =.pacnew= files            |
+
+*** Push it somewhere
+
+The host repo is the only record of this machine that exists off its
+own disk -- or it will be, once you push it. Make it a *private*
+repository: it holds no secrets, but it describes your machine in
+detail.
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+git -C ~/arch remote add origin git@git.example.com:you/arch-myhost.git
+git -C ~/arch push -u origin main
+#+end_run
+
+That URL is what =setup host --from= takes the next time you
+reinstall this machine.
+
+** See what drifted
+:PROPERTIES:
+:EXPORT_FILE_NAME: diff
+:EXPORT_HUGO_SLUG: diff
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin diff
+#+end_run
+
+#+begin_stdout
+packages:
+  + htop                  installed, not in packages.txt
+  - tmux                  in packages.txt, not installed
+units:
+  + podman.socket         enabled, not in units.txt
+etc:
+  M ssh/sshd_config.d/10-hardening.conf    differs from etc/
+  ? pacman.conf                            changed from package default, not tracked
+#+end_stdout
+
+Three sources, each read the way pacman and systemd already expose
+them, without any database of its own:
+
+ - *Packages* compare =packages.txt= against =pacman -Qqe=, the list
+   of packages installed explicitly. Dependencies are never listed and
+   never reported: pacman tracks those itself.
+ - *Units* compare =units.txt= against =systemctl list-unit-files
+   --state=enabled=, ignoring units that packages enable by default.
+ - *Files* come in two kinds. =M= is a file the repo owns that no
+   longer matches. =?= is the interesting one: a file under =/etc= that
+   belongs to a package, has been edited since it was installed, and
+   is not in the repo. pacman already knows which files those are --
+   =pacman -Qkk= reports a backup file whose checksum changed -- so
+   nothing you edit by hand can go unnoticed.
+
+=admin diff= changes nothing and exits non-zero when there is drift,
+so it is also a sensible thing to run from a timer and send to the
+same webhook the BOOMSTICK uses.
+
+** Apply and save
+:PROPERTIES:
+:EXPORT_FILE_NAME: apply
+:EXPORT_HUGO_SLUG: apply
+:END:
+
+Every line of drift has two possible fixes: change the machine to
+match the repo, or change the repo to match the machine. These are
+the two commands.
+
+*** Change the machine: admin apply
+
+Edit the repo, commit, and apply:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+echo ripgrep >> ~/arch/packages.txt
+git -C ~/arch commit -am "Add ripgrep"
+admin apply
+#+end_run
+
+#+begin_stdout
++ pacman -S --needed ripgrep tmux
++ install -m 0644 etc/ssh/sshd_config.d/10-hardening.conf /etc/ssh/sshd_config.d/
++ systemctl reload sshd
+not removed (run 'admin apply --prune' to remove):
+  htop
+#+end_stdout
+
+=apply= installs what is missing, puts files back, and enables units.
+It does *not* remove packages that are installed but unlisted unless
+you ask with =--prune=. On a rolling release, a package you installed
+in a hurry five minutes ago is more often something to keep than
+something to delete, and pacman removals are not undone by a rebuild.
+
+This is the same code that ran as step 6 of [[/arch-workstation/setup/install][setup install]],
+pointed at =/= rather than =/mnt=.
+
+*** Change the repo: admin save
+
+When the drift is something you meant -- you installed =htop= and
+want to keep it, or you edited =pacman.conf= on purpose -- pull it
+into the repo instead:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin save
+git -C ~/arch diff
+#+end_run
+
+#+begin_src diff
+--- a/packages.txt
++++ b/packages.txt
+@@
++htop
+--- /dev/null
++++ b/etc/pacman.conf
+#+end_src
+
+=save= writes, and never commits. Read the diff, keep what you meant,
+=git checkout= what you did not, and commit the rest. That review is
+the whole point: it is the moment the machine's history gets a
+reason attached to it.
+
+#+attr_shortcode: :style info :title Underneath
+#+begin_notice
+These recipes could be a few dozen lines of bash in the =Justfile=,
+or a thin wrapper over an existing tool. [[https://github.com/CyberShadow/aconfmgr][aconfmgr]] already does both
+directions (=save= and =apply=) for packages and =/etc=, and
+=decman= takes the stricter, config-is-truth approach. Either would
+keep the commands on this page the same; whichever is chosen should
+first be tried on Arch Linux ARM.
+#+end_notice
+
+** Upgrade
+:PROPERTIES:
+:EXPORT_FILE_NAME: upgrade
+:EXPORT_HUGO_SLUG: upgrade
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin upgrade
+#+end_run
+
+One command for the thing you will do most often, in an order worth
+not having to remember:
+
+ 1. Refuse to start if =admin diff= reports drift. Upgrading a machine
+    you cannot describe makes it harder to describe.
+ 2. Take a btrfs snapshot of =@= into =/.snapshots=, which is why that
+    subvolume exists.
+ 3. =pacman -Syu=.
+ 4. =admin apply=, so that anything a package update reset comes back.
+ 5. List any new =.pacnew= files, because on Arch that is how new
+    configuration options arrive -- the [[/arch-workstation/bootloader/rpi][Pi's cmdline.txt]] is one.
+ 6. Say whether a reboot is needed, by comparing the running kernel
+    with the installed one.
+
+#+attr_shortcode: :style warning :title What this is not
+#+begin_notice
+This is not NixOS. A snapshot is a way back, but not an atomic one:
+booting an older snapshot from systemd-boot, or from the Pi's
+firmware, needs more setup than this chapter describes. The host repo
+reproduces your package /list/ and your files, not the versions
+pacman installed on the day. Two machines built from the same repo a
+month apart will differ in every package that moved. That is the
+trade the introduction described, made smaller -- not made to go
+away.
+#+end_notice
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -3145,8 +3848,9 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Keeping it maintainable -- pacman hygiene, package manifest,
-   /etc in git, AUR, snapshots, updates.
+ - Keeping it maintainable -- drafted speculatively on the setup
+   branch (host repo, admin diff/apply/save/upgrade). Still to cover:
+   snapper setup, booting a snapshot, AUR.
  - Desktop (optional) -- sway and friends.
  - Hardware-key sudo (optional) -- Solokey, mirroring the NixOS book.
 
