@@ -794,11 +794,11 @@ Check that those came out the way you expect before continuing:
 
 #+attr_shortcode: :style secondary
 #+begin_run
-echo "ESP=$ESP  ROOT=$ROOT"
+echo "DISK=$DISK  ESP=$ESP  ROOT=$ROOT"
 #+end_run
 
 #+begin_stdout
-ESP=/dev/nvme0n1p1  ROOT=/dev/nvme0n1p2
+DISK=/dev/nvme0n1  ESP=/dev/nvme0n1p1  ROOT=/dev/nvme0n1p2
 #+end_stdout
 
 #+attr_shortcode: :style warning :title Shell variables live in one shell
@@ -822,15 +822,24 @@ does both in one pass:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
-sgdisk --zap-all "$DISK"
+: "${DISK:?set DISK on the previous page first}" &&
+sgdisk --zap-all "$DISK" &&
 sgdisk --clear \
   --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP \
   --new=2:0:0   --typecode=2:8300 --change-name=2:root \
-  "$DISK"
+  "$DISK" &&
 partprobe "$DISK"
 #+end_run
 
-Reading that across: =--zap-all= destroys the old GPT /and/ any
+The first line is a guard, not a command: =${DISK:?...}= aborts with
+that message if =DISK= is unset or empty, and the =&&= chain means
+nothing after it runs. Without it, an empty =$DISK= sends =sgdisk=
+off into four lines of =Problem opening '' for writing= before the
+remaining commands try anyway. Since the whole chapter hangs off one
+variable set in a shell that may not be the one you are in, it is
+worth the line.
+
+Reading the rest across: =--zap-all= destroys the old GPT /and/ any
 leftover MBR, which matters when you are reinstalling over a disk
 that had something else on it. =--new=1:0:+1G= creates partition 1,
 starting at the first aligned sector (=0= means "wherever is next")
@@ -975,7 +984,8 @@ both firmwares can read, and btrfs on everything else.
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
-mkfs.fat -F32 -n ESP "$ESP"
+: "${ESP:?set ESP first}" "${ROOTDEV:?set ROOTDEV on the previous page}" &&
+mkfs.fat -F32 -n ESP "$ESP" &&
 mkfs.btrfs -L arch "$ROOTDEV"
 #+end_run
 
@@ -984,12 +994,13 @@ than a requirement -- they make =lsblk= readable and give you a
 fallback way to identify a disk whose UUID you do not have in front
 of you.
 
-#+attr_shortcode: :style warning :title Check $ROOTDEV first
+#+attr_shortcode: :style warning :title The guard checks that it is set, not that it is right
 #+begin_notice
-=mkfs.btrfs= writes to whatever =$ROOTDEV= points at. If you set up
-LUKS on the previous page it must be =/dev/mapper/cryptroot=; if you
-skipped it, the bare partition. Running =echo "$ROOTDEV"= costs
-nothing and formatting the wrong device costs an afternoon.
+=mkfs.btrfs= writes to whatever =$ROOTDEV= points at, and the guard
+on the first line only stops it being /empty/. If you set up LUKS on
+the previous page it must be =/dev/mapper/cryptroot=; if you skipped
+it, the bare partition. Running =echo "$ROOTDEV"= costs nothing and
+formatting the wrong device costs an afternoon.
 #+end_notice
 
 *** Create the subvolumes
@@ -1247,38 +1258,51 @@ The same goes for =iwd= on a machine that has no ethernet.
 Start with what both architectures share:
 
 #+begin_env
-PKGS="base btrfs-progs sudo openssh iwd vim"
+PKGS=(base btrfs-progs sudo openssh iwd vim)
 #+end_env
+
+#+attr_shortcode: :style info :title Why an array
+#+begin_notice
+The live system's shell is *zsh*, not bash. zsh does not split an
+unquoted =$PKGS= into separate words the way bash does, so a plain
+string would arrive at =pacstrap= as one enormous package name. An
+array expanded as ="${PKGS[@]}"= behaves identically in both
+shells.
+#+end_notice
 
 Then add the kernel and firmware for the machine you are installing.
 On an *x86_64 PC*:
 
 #+begin_env
-PKGS="$PKGS linux linux-firmware"
+PKGS+=(linux linux-firmware)
 # ...and the microcode for your CPU -- one of these:
-PKGS="$PKGS intel-ucode"   # Intel
-# PKGS="$PKGS amd-ucode"   # AMD
+PKGS+=(intel-ucode)   # Intel
+# PKGS+=(amd-ucode)   # AMD
 #+end_env
 
 On a *Raspberry Pi 5*:
 
 #+begin_env
-PKGS="$PKGS linux-rpi-16k firmware-raspberrypi linux-firmware"
+PKGS+=(linux-rpi-16k firmware-raspberrypi linux-firmware)
 #+end_env
 
 And if you set up LUKS in the previous chapter, on either
 architecture:
 
 #+begin_env
-PKGS="$PKGS cryptsetup"
+PKGS+=(cryptsetup)
 #+end_env
 
 Check what you ended up with before installing it:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
-echo $PKGS
+echo "${PKGS[@]}"
 #+end_run
+
+#+begin_stdout
+base btrfs-progs sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
+#+end_stdout
 
 ** Run pacstrap
 :PROPERTIES:
@@ -1288,7 +1312,7 @@ echo $PKGS
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
-pacstrap -K /mnt $PKGS
+pacstrap -K /mnt "${PKGS[@]}"
 #+end_run
 
 This downloads a little over a gigabyte and takes a few minutes on a
@@ -1308,7 +1332,8 @@ none of the local state that has accumulated on the installer.
 On a BOOMSTICK Pi image that predates the Arch Linux ARM signing
 keys, the trust you had to add by hand lives only in the live
 system's keyring, so =-K= would discard it and the install would
-fail on the kernel. Use plain =pacstrap /mnt $PKGS= there instead.
+fail on the kernel. Use plain =pacstrap /mnt "${PKGS[@]}"= there
+instead.
 See [[/arch-workstation/boot/pacman][Prepare pacman]] for how to tell which stick you have. On a
 current stick, either form works.
 #+end_notice
