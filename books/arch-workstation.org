@@ -780,18 +780,19 @@ Set it once here, and every later block picks it up:
 
 #+attr_shortcode: :shell zsh
 #+begin_env
-# The disk to install to -- CHECK THIS
-DISK=/dev/nvme0n1
-
-# NVMe, SD and eMMC devices name their partitions p1, p2...
-# SATA and USB disks use 1, 2... Work out which, so the rest
-# of this chapter does not care:
-case "$DISK" in *[0-9]) P=p;; *) P="";; esac
+DISK=/dev/nvme0n1                                  # CHECK THIS -- it gets erased
+case "$DISK" in *[0-9]) P=p;; *) P="";; esac       # p1/p2 or 1/2?
 ESP="${DISK}${P}1"
 ROOT="${DISK}${P}2"
 #+end_env
 
-Check that those came out the way you expect before continuing:
+That =case= line exists because disks disagree about how partitions
+are named. NVMe, SD and eMMC devices append =p1=, =p2= to the device
+name; SATA and USB disks append =1=, =2=. Working it out once here
+means no later command in this chapter has to care which kind of
+disk you picked.
+
+Check that all three came out the way you expect before continuing:
 
 #+attr_shortcode: :style secondary
 #+begin_run
@@ -1259,9 +1260,29 @@ The same goes for =iwd= on a machine that has no ethernet.
 
 *** Set the package list
 
-Pick the block for the machine you are installing and run it. These
-are complete lists, not additions to each other -- you run exactly
-one.
+The live system is running on the machine you are installing, so it
+can simply look at the hardware and decide for itself. Run this
+once, whatever you are installing on:
+
+#+attr_shortcode: :shell zsh
+#+begin_env
+PKGS=(base btrfs-progs cryptsetup sudo openssh iwd vim)
+
+case "$(uname -m)" in
+  x86_64)
+    PKGS+=(linux linux-firmware)
+    case "$(grep -m1 '^vendor_id' /proc/cpuinfo)" in   # CPU microcode
+      *GenuineIntel*) PKGS+=(intel-ucode) ;;
+      *AuthenticAMD*) PKGS+=(amd-ucode)   ;;
+    esac ;;
+  aarch64)
+    if grep -qa bcm2712 /proc/device-tree/compatible 2>/dev/null; then
+      PKGS+=(linux-rpi-16k firmware-raspberrypi linux-firmware)
+    else
+      echo "Unrecognised aarch64 board: pick a kernel yourself" >&2
+    fi ;;
+esac
+#+end_env
 
 #+attr_shortcode: :style info :title Why an array
 #+begin_notice
@@ -1273,39 +1294,25 @@ words the way bash does, so a plain string would arrive at
 ="${PKGS[@]}"= behaves identically in both shells.
 #+end_notice
 
-On an *x86_64 PC*:
+*** What it decided, and why
 
-#+attr_shortcode: :shell zsh
-#+begin_env
-PKGS=(
-  base linux linux-firmware intel-ucode
-  btrfs-progs cryptsetup
-  sudo openssh iwd vim
-)
-#+end_env
+ - *The kernel* follows =uname -m=. There is no single =linux=
+   package that covers both.
+ - *Microcode* is read from =/proc/cpuinfo=. Intel and AMD ship
+   errata fixes that the bootloader loads before the kernel starts,
+   and the two are different packages. Any other x86_64 vendor gets
+   none, which is correct -- there is nothing to install.
+ - *The Pi kernel* is chosen by SoC rather than by model name. The
+   test looks for =bcm2712= in the device tree, which is exactly
+   what =linux-rpi-16k= supports, and so it covers the Pi 5, the Pi
+   500 and the CM5 alike. An aarch64 board that is none of those
+   says so instead of installing a kernel that cannot boot it.
+ - *=cryptsetup=* is included unconditionally. You only need it if
+   you encrypted the disk, but it costs a couple of megabytes and
+   forgetting it on an encrypted system is a far worse afternoon
+   than carrying it on an unencrypted one.
 
-On a *Raspberry Pi 5*:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-PKGS=(
-  base linux-rpi-16k firmware-raspberrypi linux-firmware
-  btrfs-progs cryptsetup
-  sudo openssh iwd vim
-)
-#+end_env
-
-Two lines in those lists are worth editing before you run them:
-
- - =intel-ucode= is for Intel CPUs. On AMD, replace it with
-   =amd-ucode=. The Pi has no microcode package at all, which is why
-   its list has none.
- - =cryptsetup= is only needed if you encrypted the disk in the
-   previous chapter. Leaving it in otherwise costs a couple of
-   megabytes and nothing else, so it is in both lists by default --
-   drop it if you prefer a strictly minimal system.
-
-Check what you ended up with before installing it:
+Check what it picked before installing it:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -1313,8 +1320,11 @@ echo "${PKGS[@]}"
 #+end_run
 
 #+begin_stdout
-base linux-rpi-16k firmware-raspberrypi linux-firmware btrfs-progs cryptsetup sudo openssh iwd vim
+base btrfs-progs cryptsetup sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
 #+end_stdout
+
+That output is from a Raspberry Pi. On an Intel PC the tail reads
+=linux linux-firmware intel-ucode= instead.
 
 ** Run pacstrap
 :PROPERTIES:
