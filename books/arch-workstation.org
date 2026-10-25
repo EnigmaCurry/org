@@ -448,9 +448,12 @@ timedatectl
 #+end_run
 
 #+begin_stdout
-               Local time: Sat 2026-10-25 18:04:11 UTC
-           System clock synchronized: yes
-                         NTP service: active
+               Local time: Sun 2026-10-25 17:55:22 UTC
+           Universal time: Sun 2026-10-25 17:55:22 UTC
+                 RTC time: Sun 2026-10-25 17:55:22
+                Time zone: UTC (UTC, +0000)
+System clock synchronized: yes
+              NTP service: active
 #+end_stdout
 
 The live system syncs the clock over NTP by itself, so this is
@@ -472,10 +475,14 @@ ip route
 #+end_run
 
 #+begin_stdout
-lo       UNKNOWN  127.0.0.1/8
-enp1s0   UP       192.168.1.50/24
-wg0      UNKNOWN  10.0.0.2/32
-default via 192.168.1.1 dev enp1s0
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp1s0           DOWN
+wlan0            UP             192.168.1.140/24 metric 600 fe80::aef2:3cff:fe34:25b7/64
+wg0              UNKNOWN        10.13.17.9/24
+
+default via 192.168.1.1 dev wlan0 proto dhcp src 192.168.1.140 metric 600
+10.13.17.0/24 dev wg0 proto kernel scope link src 10.13.17.9
+192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.140 metric 600
 #+end_stdout
 
 You should see an address on a real interface and a default route. If
@@ -505,24 +512,28 @@ df -h /run/archiso/cowspace
 #+end_run
 
 #+begin_stdout
-               total        used        free
-Mem:            15Gi       1.1Gi        14Gi
+               total        used        free      shared  buff/cache   available
+Mem:            28Gi       1.7Gi        26Gi       1.0Gi       1.4Gi        26Gi
 
 Filesystem      Size  Used Avail Use% Mounted on
-cowspace        7.7G  180M  7.6G   3% /run/archiso/cowspace
+cowspace        256M  9.1M  247M   4% /run/archiso/cowspace
 #+end_stdout
 
 The live system has no disk of its own: it runs from a read-only
-image with a writable layer in RAM, and that layer -- the *cowspace*
--- defaults to half the machine's memory. Anything you install into
-the live environment comes out of it.
+image with a writable layer in RAM. That layer -- the *cowspace* --
+is where every file you create or modify in the live environment
+actually lands.
 
-This is rarely a problem during a normal install, because the packages
-for the new system are downloaded onto the target's disk rather than
-into RAM. It becomes a problem on low-memory machines when you add
-tools to the live system itself, and the symptom is a sudden "no
-space left on device" from pacman. The next page shows how to enlarge
-it if you need to.
+Note the size. The cowspace is *256 MiB by default no matter how much
+memory the machine has*: the example above is from a box with 28 GiB
+of RAM. It is not a share of your memory, it is a fixed cap, and the
+symptom of exceeding it is a sudden "no space left on device" from a
+command that looks like it should have had room to spare.
+
+A normal install does not come close, because =pacstrap= downloads
+the new system's packages onto the target's disk rather than into
+RAM. You run into it when you install extra tools into the live
+system itself. The next page shows how to raise the cap.
 
 ** Prepare pacman
 :PROPERTIES:
@@ -543,8 +554,11 @@ pacman -Sy --needed --noconfirm archlinux-keyring
 
 #+attr_shortcode: :style secondary :title Run this on the live system (Raspberry Pi):
 #+begin_run
-pacman -Sy --needed --noconfirm archlinuxarm-keyring
+pacman -Sy --needed --noconfirm archlinuxarm-keyring archlinux-keyring
 #+end_run
+
+Arch Linux ARM's =core= repository carries both keyrings, and
+refreshing the pair costs nothing.
 
 Every package pacman installs is checked against a set of developer
 signing keys, and the copy of those keys on the stick is as old as
@@ -557,21 +571,63 @@ The error when this happens names a signature rather than a stale
 keyring, which sends people down the wrong path. Updating the keyring
 first costs a few seconds and removes the whole category.
 
+On a stick you built last week this is a no-op, and says so -- which
+is the answer you want:
+
+#+begin_stdout
+:: Synchronizing package databases...
+ core downloading...
+ extra downloading...
+warning: archlinux-keyring-20260909-1 is up to date -- skipping
+ there is nothing to do
+#+end_stdout
+
 *** Sort the mirrors
 
 Package downloads are the slowest part of the install, and which
-mirror you draw them from decides how slow. The live system runs
-[[https://wiki.archlinux.org/title/Reflector][reflector]] at boot to rank mirrors for you, so check whether it has
-already finished before doing anything:
+mirror you draw them from decides how slow.
+
+The good news is that the default is already sensible, and you can
+usually skip this page's second half. The live system ships the full
+Arch mirrorlist with every HTTPS mirror enabled -- around 425 of them
+-- and the first two entries are Arch's own CDNs:
 
 #+attr_shortcode: :style secondary
 #+begin_run
-systemctl status reflector --no-pager
+grep '^Server' /etc/pacman.d/mirrorlist | head -2
 #+end_run
 
-If it succeeded, you have a sorted mirrorlist and nothing to do. If
-it failed, or it picked mirrors on the wrong continent, run it again
-with your own country and refresh the package databases afterward:
+#+begin_stdout
+Server = https://fastly.mirror.pkgbuild.com/$repo/os/$arch
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+#+end_stdout
+
+pacman tries them in order, so unless you have a reason to prefer
+something else, a geo-routed CDN is a fine first choice anywhere in
+the world.
+
+#+attr_shortcode: :style warning :title Nothing ranks the mirrors for you
+#+begin_notice
+=reflector= is installed on the x86_64 live system, but -- contrary
+to what you might expect, and to what a lot of install guides imply
+-- it is *not enabled*, and it does not run at boot:
+
+#+begin_src bash
+# systemctl is-enabled reflector.service
+disabled
+#+end_src
+
+The only mirror-related unit that is enabled is
+=choose-mirror.service=, and it does nothing unless you booted with a
+=mirror== kernel parameter. So the order you see is the order the
+mirrorlist shipped in, not a measured ranking.
+#+end_notice
+
+*** Rank them yourself, if you want to
+
+If you would rather draw from a measured-fastest mirror near you than
+from the CDN, run [[https://wiki.archlinux.org/title/Reflector][reflector]] yourself and refresh the package databases
+afterward:
 
 #+attr_shortcode: :style secondary
 #+begin_run
@@ -587,29 +643,37 @@ measured download rate.
 
 #+attr_shortcode: :style info :title Not on the Raspberry Pi
 #+begin_notice
-Arch Linux ARM does not use reflector, and does not need it. Its
-mirrorlist points at a single geographically balanced address that
-resolves to a nearby mirror on its own, so leave it alone.
+Skip this on the Pi: =reflector= is in archiso's x86_64 package list
+only, so it is not installed on the Arch Linux ARM image, and it
+knows nothing about ALARM's mirrors in any case. Leave that
+mirrorlist as it is.
 #+end_notice
 
 *** Make room, if you need it
 
-Only if the survey showed an uncomfortably small cowspace -- on a
-machine with 4 GB of RAM or less -- give the live system's writable
-layer more room:
+The 256 MiB cowspace from the survey is a cap, not a measure of free
+memory, so on any machine with RAM to spare you can simply raise it:
 
 #+attr_shortcode: :style secondary
 #+begin_run
 mount -o remount,size=4G /run/archiso/cowspace
 #+end_run
 
-This is still RAM, so you cannot conjure space that does not exist;
-it only raises the cap below the physical limit. On a machine with
-very little memory, the real fix is to get the target's disk mounted
-early and add swap on it, which the disk chapter does.
+#+begin_stdout
+Filesystem      Size  Used Avail Use% Mounted on
+cowspace        4.0G  9.7M  4.0G   1% /run/archiso/cowspace
+#+end_stdout
 
-With the keyring current, the mirrors sorted, and the clock correct,
+This is still RAM, so you cannot conjure space that does not exist;
+it only raises the cap, and you should stay well under the physical
+limit. On a machine with very little memory, the real fix is to get
+the target's disk mounted early and put swap on it, which the disk
+chapter does.
+
+With the keyring current, the mirrors settled, and the clock correct,
 the live system is ready. The next chapter writes to the disk.
+
+
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
