@@ -69,25 +69,22 @@ the image to a USB stick once, drop your WiFi, WireGuard and SSH
 settings onto it, and from then on you just plug it in, power on, and
 SSH in from wherever you are.
 
-** What's on the stick
-
-BOOMSTICK is the stock Arch Linux installer, archiso's =releng=
-profile, with a few additions layered on top: iwd joins your WiFi
-networks automatically, =wg-quick= brings up a WireGuard tunnel to
-your own server, and sshd lets you in as root with your
-=authorized_keys=. Once it is up, an optional boot webhook sends you a
-notification (to [[https://ntfy.sh][ntfy]], for example) with the stick's LAN, public
-and WireGuard addresses, so you know it is ready and where to find
-it. One image boots both x86_64 PCs (UEFI) and the
-Raspberry Pi 5, so a single stick in your bag covers every machine you
-are likely to meet.
+It is the stock Arch Linux installer -- archiso's =releng= profile --
+with a few additions layered on top: iwd joins your WiFi networks
+automatically, =wg-quick= brings up a WireGuard tunnel to your own
+server, and sshd lets you in as root with your =authorized_keys=.
+Once it is up, an optional boot webhook sends you a notification (to
+[[https://ntfy.sh][ntfy]], for example) with the stick's LAN, public and WireGuard
+addresses, so you know it is ready and where to find it. One image
+boots both x86_64 PCs (UEFI) and the Raspberry Pi 5, so a single
+stick in your bag covers every machine you are likely to meet.
 
 The image itself is generic and contains no secrets, so you can build
 it once, and so can anyone else. Your WiFi passwords, WireGuard key,
-SSH keys and webhook URL go into an =archiso-config/= directory on the stick's
-FAT32 partition, which you fill in /after/ writing the image. That
-partition is readable from any computer, so you edit those files with
-whatever editor you like, and the live system reads them again on
+SSH keys and webhook URL go into an =archiso-config/= directory on the
+stick's FAT32 partition, which you fill in /after/ writing the image.
+That partition is readable from any computer, so you edit those files
+with whatever editor you like, and the live system reads them again on
 every boot.
 
 #+attr_shortcode: :style warning :title A configured stick is a key
@@ -99,292 +96,26 @@ WireGuard key so that you can revoke a lost one without touching the
 others.
 #+end_notice
 
-** Building the image
+** Where the instructions live
 
-You don't need archiso, or any Arch packages at all, on your
-workstation: the build runs inside an =archlinux= container, so any
-Linux distro will do. You need rootless [[https://podman.io/][Podman]], [[https://github.com/casey/just][just]], about 8 GB
-of free disk space, and an internet connection. Since the image holds
-both an x86_64 and an ARM system, whichever half doesn't match your
-own machine gets built under qemu-user emulation, so you also need the
-static qemu-user emulators registered with binfmt_misc. On Arch Linux,
-that's all of:
+I have made the [[/arch-workstation/boomstick][BOOMSTICK appendix]] of my [[/arch-workstation][Arch Workstation]] book the
+canonical home for the full walkthrough, so that it stays next to the
+install it feeds into, and so there is only one copy of it to keep
+correct. It covers:
 
-#+begin_src bash
-sudo pacman -S --needed podman just git qemu-user-static qemu-user-static-binfmt
-#+end_src
+ - [[/arch-workstation/boomstick/build][Build the image]] -- the container build, and writing it to a stick.
+ - [[/arch-workstation/boomstick/wireguard][Configure WireGuard]] -- giving the stick its own peer, and why the
+   keepalive matters.
+ - [[/arch-workstation/boomstick/secrets][SSH keys, WiFi and the webhook]] -- the rest of the config files.
+ - [[/arch-workstation/boomstick/provision][Provision the stick]] -- copying it all onto the stick, and changing
+   it later.
+ - [[/arch-workstation/boomstick/internals][How it works under the hood]] -- what happens at boot, and why the
+   partition label matters.
 
-(On Debian, Ubuntu or Fedora, the emulator package is called
-=qemu-user-static=.) Then clone the repo and build the image:
+From there, the book carries straight on into [[/arch-workstation/boot][booting the target
+machine and connecting to it]], and then into installing Arch on it.
 
-#+begin_src bash
-git clone https://github.com/EnigmaCurry/boomstick.git
-cd boomstick
-just build-usb
-#+end_src
-
-The build takes no input, because there is nothing to configure yet:
-the result is the same for everybody. The first run pulls the
-=archlinux= container image and downloads about 1 GB of packages;
-later builds reuse a package cache and finish in a few minutes. You
-end up with =out/arch-usb-<date>-x86_64+rpi5.img=, about 2.7 GB.
-
-If you only ever install on one kind of machine, =just build= (x86_64
-only) and =just build-rpi5= (Raspberry Pi 5 only) build smaller images
-that need no emulation on a matching host. On x86_64, the stick boots
-UEFI only; legacy BIOS isn't supported.
-
-Find your USB stick with =lsblk=, then write the image to it. Double
-check the device name, because this erases the whole stick:
-
-#+begin_src bash
-sudo dd if=out/arch-usb-<date>-x86_64+rpi5.img \
-  of=/dev/sdX bs=4M status=progress oflag=sync
-#+end_src
-
-** Configuring WireGuard
-
-You can edit the config files directly on the stick, but I prefer to
-keep them in the repo, next to the build, and copy them over. Running
-=just config= creates a =secrets/= directory (git-ignored, and readable
-only by you) full of commented-out templates:
-
-#+begin_src bash
-just config
-#+end_src
-
-#+begin_example
-created: secrets/ssh/authorized_keys  (edit it)
-created: secrets/webhook.env  (edit it)
-created: secrets/wifi/EXAMPLE.psk.example  (edit it)
-created: secrets/wireguard/wg0.conf  (edit it)
-#+end_example
-
-The stick is a WireGuard client of a server you already run. Most VPN
-servers and routers will provision a client for you: you add a new
-peer on the server, and it hands you a ready-made config with the
-client's private key, its address, and the server's public key and
-endpoint. Give the stick a peer of its own (don't reuse your laptop's),
-and paste that config into =secrets/wireguard/wg0.conf=:
-
-#+begin_src ini
-[Interface]
-PrivateKey = <the stick's private key>
-Address = 10.0.0.2/32
-
-[Peer]
-PublicKey = <your server's public key>
-Endpoint = vpn.example.com:51820
-AllowedIPs = 10.0.0.0/24
-PersistentKeepalive = 25
-#+end_src
-
-Check that the config has a =PersistentKeepalive= line, and add one if
-your server left it out. The stick is the one behind NAT, usually on
-some network you don't control, so it has to keep the tunnel open
-itself; without the keepalive, the server can't reach the stick until
-the stick happens to send it something, and you can't SSH in. The
-=Endpoint= may be a DNS name: the tunnel keeps retrying until it
-resolves, which helps when the stick boots before the network is
-fully up. If you want to resolve names through the VPN, a =DNS= line
-works too.
-
-If your server doesn't provision clients for you, =just keygen= makes
-a fresh key pair for the stick. Put the private key in =wg0.conf=, and
-add the public key to your server as a new peer, with =AllowedIPs= set
-to the stick's address (=10.0.0.2/32= here).
-
-** SSH, WiFi and the boot webhook
-
-The rest of the files in =secrets/= are short. The only other one you
-must fill in is =secrets/ssh/authorized_keys=: put the public key(s)
-you will log in with, one per line, exactly as in any other
-=authorized_keys= file. Without at least one key, nobody can log in
-over SSH at all, because the stick never allows password logins.
-
-If your keys are on GitHub, you can fetch them straight from your
-profile, since GitHub publishes every user's public keys at
-=https://github.com/<username>.keys=:
-
-#+begin_src bash
-curl -fsSL https://github.com/YOUR_USERNAME.keys >> secrets/ssh/authorized_keys
-#+end_src
-
-Read the file afterwards to make sure you got the keys you expected,
-and remove any you don't want to have root on the stick.
-
-WiFi is optional; without it, the stick is wired-only. Add one file
-per network to =secrets/wifi/=, in iwd's own format, named after the
-SSID:
-
-#+begin_src ini
-# secrets/wifi/My Network.psk
-[Security]
-Passphrase=your wifi password
-#+end_src
-
-You can add as many networks as you like, and iwd joins whichever one
-is in range (wired ethernet wins when both are available). An SSID
-with characters other than letters, digits, spaces, =-= and =_= needs
-a hex-encoded filename; the =EXAMPLE.psk.example= template explains
-how.
-
-To get the notification when the stick boots, set a URL in
-=secrets/webhook.env=:
-
-#+begin_src bash
-WEBHOOK_URL=https://ntfy.sh/a-long-random-topic
-#+end_src
-
-Once the network is up and WireGuard connects (or gives up after two
-minutes), the stick POSTs a plain-text message there, which works with
-[[https://ntfy.sh][ntfy]] or a [[https://github.com/matrix-org/matrix-hookshot][matrix-hookshot]] generic webhook. The message includes
-your IP addresses, and anyone who knows an ntfy.sh topic name can read
-it, so pick a long random topic or use a server with access control.
-
-** Provisioning the stick
-
-With the files filled in, plug in the stick you wrote earlier and copy
-them onto it:
-
-#+begin_src bash
-just provision
-#+end_src
-
-=just provision= finds the stick by its =ARCH_CONFIG= partition label,
-mounts it if it has to, writes =archiso-config/=, and unmounts it again
-so it's ready to pull. Before copying anything, it checks the files
-for the mistakes that would leave a headless machine unreachable: a
-=wg0.conf= without a private key or a =PersistentKeepalive=, or an
-=authorized_keys= with no keys in it. Those fail here, at your desk,
-instead of later on the other side of the room.
-
-If you'd rather skip =secrets/= and edit the stick by hand, mount its
-partition with =udisksctl mount -b /dev/sdX1= rather than =sudo mount=.
-FAT stores no file ownership, so a plain =sudo mount= makes every file
-look like it belongs to root, and you can't edit them as yourself.
-=udisksctl= mounts it as your own user, at
-=/run/media/$USER/ARCH_CONFIG=.
-
-** Boot and connect
-
-Now walk over to the target machine, plug in the stick, and power it
-on. Plug in ethernet, or make sure it's in range of one of your WiFi
-networks. You don't need a monitor or keyboard: there's no boot menu
-to answer and no prompt to type into. (A PC may still need to be told
-to boot from USB once in its firmware settings, if it doesn't already.)
-
-Then walk back to your desk and wait for the notification. Once the
-network is up and the tunnel is connected, the webhook delivers
-something like this:
-
-#+begin_example
-arch-iso is up (arch-iso 2026.10.24)
-LAN: 192.168.1.50/24 on enp1s0
-Public: 203.0.113.4
-WireGuard: 10.0.0.2/32 on wg0 (handshake 3s ago)
-#+end_example
-
-If WireGuard didn't come up, that last line says why instead, which
-is much more useful than silence.
-
-Whatever machine you plug the stick into, it comes up with the same
-hostname, =arch-iso=, the same WireGuard address and the same SSH host
-key, so it behaves like one fixed host on your VPN. It's worth giving
-it a name in your workstation's =~/.ssh/config=, ideally before the
-first boot:
-
-#+begin_src text
-Host arch-iso
-    HostName 10.0.0.2
-    User root
-    HostKeyAlias arch-iso
-#+end_src
-
-=HostKeyAlias= files the host key in =known_hosts= under the name
-=arch-iso= rather than under an IP address. From here, SSH in over
-the VPN, no matter which network the machine landed on:
-
-#+begin_src bash
-ssh arch-iso
-#+end_src
-
-Without WireGuard, use the LAN address from the notification instead.
-Overriding just the address keeps the name, so SSH still checks the
-same host key:
-
-#+begin_src bash
-ssh -o HostName=192.168.1.50 arch-iso
-#+end_src
-
-That takes care of the last chore on the list, too. On its first boot,
-the live system generates its SSH host keys and saves them back onto
-the stick, in =archiso-config/ssh/host/=. Every later boot presents the
-same keys, so the fingerprint stays the same from one boot to the
-next, and from one machine to the next. You accept it once, and you
-never have to clean =known_hosts= for this stick again. If you want to
-check the fingerprint on that first connection, compute it from the
-stick:
-
-#+begin_src bash
-ssh-keygen -lf /run/media/$USER/ARCH_CONFIG/archiso-config/ssh/host/ssh_host_ed25519_key.pub
-#+end_src
-
-From there, you're in an ordinary Arch Linux live environment, and you
-install the usual way, with =archinstall= or by following the
-[[https://wiki.archlinux.org/title/Installation_guide][installation guide]], only now from your own desk.
-
-** How it works under the hood
-
-There is very little magic involved. Early in boot, before iwd,
-WireGuard, sshd or the webhook start, a small service called
-=arch-iso-config= finds the config partition and copies
-=archiso-config/= into the live system, which runs entirely in RAM.
-Each file lands where the stock tools expect it, readable only by
-root:
-
-| On the stick          | In the live system              |
-|-----------------------+---------------------------------|
-| =wifi/*.psk=          | =/var/lib/iwd/=                 |
-| =wireguard/wg0.conf=  | =/etc/wireguard/wg0.conf=       |
-| =ssh/authorized_keys= | =/root/.ssh/authorized_keys=    |
-| =webhook.env=         | =/etc/arch-iso/webhook.env=     |
-| =ssh/host/*=          | =/etc/ssh/=                     |
-
-Nothing else is ever written back to the stick. The one exception is
-the SSH host keys on the first boot: the partition is remounted
-read-write just long enough to save them, then read-only again.
-
-The service finds the partition by its =ARCH_CONFIG= label, and that
-label matters more than it looks. The Arch live system boots with
-=copytoram=: on a machine with enough memory, it copies itself into RAM
-and lets go of the boot partition before any of this runs. So the
-service can't simply look at "the partition I booted from"; it
-searches for a filesystem labelled =ARCH_CONFIG=, mounts it, and
-unmounts it again. If you relabel the partition, the stick still boots,
-but unconfigured.
-
-A nice side effect is that the configuration doesn't have to be on
-the stick you booted from. Any FAT32 USB stick labelled =ARCH_CONFIG=
-with an =archiso-config/= directory on it works too (start from a copy
-of the repo's =config-templates/=). Just don't plug in two of them at
-once, because the first one found wins. And a stick with no
-configuration at all still boots: it just has no WiFi, no VPN, no SSH
-login and no webhook, and says so on the console.
-
-** Wrapping up
-
-The image only has to be built and written once. Everything that makes
-the stick yours lives in a handful of plain files, so when you move to
-a new WiFi network, rotate a WireGuard key, or add someone's SSH key,
-you edit a file on the stick (or in =secrets/=, then run
-=just provision=) and you're done, with nothing to rebuild.
-
-The chores from the top of this post haven't gone away, they just
-happen once, at your desk, instead of every time you reinstall
-something. Plug the stick into the next machine, PC or Raspberry Pi,
-power it on, wait for the notification, and =ssh arch-iso=. The source
-is at [[https://github.com/EnigmaCurry/boomstick][github.com/EnigmaCurry/boomstick]].
+The source is at [[https://github.com/EnigmaCurry/boomstick][github.com/EnigmaCurry/boomstick]].
 
 BOOMSTICK is an independent project, not affiliated with or endorsed
 by the Arch Linux project. Arch Linux is a trademark of the Arch Linux
