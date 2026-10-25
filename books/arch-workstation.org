@@ -557,8 +557,9 @@ pacman -Sy --needed --noconfirm archlinux-keyring
 pacman -Sy --needed --noconfirm archlinuxarm-keyring archlinux-keyring
 #+end_run
 
-Arch Linux ARM's =core= repository carries both keyrings, and
-refreshing the pair costs nothing.
+The Pi image ships both keyrings pre-installed and trusted, so that
+second command is a refresh rather than a first install. Arch Linux
+ARM's =core= carries the pair, and updating both costs nothing.
 
 Every package pacman installs is checked against a set of developer
 signing keys, and the copy of those keys on the stick is as old as
@@ -581,6 +582,39 @@ is the answer you want:
 warning: archlinux-keyring-20260909-1 is up to date -- skipping
  there is nothing to do
 #+end_stdout
+
+#+attr_shortcode: :style warning :title Unknown-trust errors on an older Pi stick
+#+begin_notice
+Early BOOMSTICK Pi images shipped without Arch Linux ARM's signing
+keys. On one of those, /every/ ALARM-built package fails -- including
+the kernel, which means the install cannot proceed at all:
+
+#+begin_src text
+error: linux-rpi-16k: signature from "Arch Linux ARM Build System
+       <builder@archlinuxarm.org>" is unknown trust
+#+end_src
+
+Check which kind of stick you have:
+
+#+begin_src bash
+pacman-key --list-keys 68B3537F39A313B3E574D06777193F152BDBE6A6 | grep uid
+#+end_src
+
+A current stick reports =[  full  ]=. If it says =[ unknown ]=,
+rebuild the stick if you can. You cannot install your way out of it
+on the spot, because =archlinuxarm-keyring= is itself signed by the
+very key that is not trusted. The escape is to sign it locally:
+
+#+begin_src bash
+pacman-key --lsign-key 68B3537F39A313B3E574D06777193F152BDBE6A6
+#+end_src
+
+On a stick in that state you must also use plain =pacstrap= in the
+next chapter rather than =pacstrap -K=, because =-K= implies =-G=
+("do not copy the host's keyring to the target") and would build the
+target without the trust you just added. On a current stick either
+form works.
+#+end_notice
 
 *** Sort the mirrors
 
