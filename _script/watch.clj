@@ -40,7 +40,7 @@
 
 ;; Org sources (and the build engine) consumed by `make build-md`.
 (def watch-globs
-  ["books.org" "license.org" "notes.org"
+  ["books.org" "license.org" "notes.org" "blog.org" "blog-tags.org"
    "books/**" "notes/**"
    "src/**"
    "emacs.d/init.el"])
