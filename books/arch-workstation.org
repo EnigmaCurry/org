@@ -277,10 +277,16 @@ whatever system you can currently boot on that Pi:
 rpi-eeprom-config --edit     # set BOOT_ORDER=0xf641, then reboot
 #+end_run
 
-=0xf641= is the same list with USB moved ahead of NVMe: SD, then USB,
-then NVMe. The setting lives in the Pi's EEPROM, so you only do this
-once -- and with the stick removed, the Pi goes back to booting its
-NVMe as usual.
+Those numbers are easier to read once you know the trick: each hex
+digit names one boot device, and the Pi works through them *right to
+left*. =1= is the SD card, =4= is USB, =6= is NVMe, and the leading
+=f= means "start the list over again".
+
+So the factory =0xf461= is SD → NVMe → USB, and =0xf641= is SD → USB
+→ NVMe: the same three devices, with USB promoted above NVMe.
+
+The setting lives in the Pi's EEPROM, so you only do this once. With
+the stick removed, the Pi goes back to booting its NVMe as usual.
 
 *** Wait for the notification
 
