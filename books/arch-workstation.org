@@ -1570,6 +1570,82 @@ And a stick with no configuration at all still boots. It simply has
 no WiFi, no VPN, no SSH login and no webhook, and says so on the
 console.
 
+*** One stick, two architectures
+
+The combined image boots an x86_64 PC and a Raspberry Pi 5 from the
+same partition, which sounds like it ought to need something clever.
+It does not. There is one MBR disk image with a single FAT32
+partition on it, and the whole trick is that the two firmwares never
+look at the same files:
+
+#+begin_src text
+config.txt cmdline.txt kernel8.img initramfs-linux.img *.dtb overlays/   # Pi 5 firmware
+EFI/BOOT/BOOTx64.EFI  loader/  arch/boot/x86_64/                         # x86_64 UEFI (systemd-boot)
+arch/x86_64/airootfs.sfs   arch/aarch64/airootfs.sfs                     # the two live systems
+archiso-config/                                                          # your configuration
+boot/<uuid>.uuid                                                         # how each initramfs finds the stick
+#+end_src
+
+The Pi's firmware reads only the top-level files. There is no boot
+loader on the Pi at all: the firmware itself loads =kernel8.img=, the
+initramfs and the device trees straight off the FAT partition, and
+takes its kernel command line from =cmdline.txt=. UEFI firmware, for
+its part, looks only in =EFI/= and =loader/=, where it finds
+systemd-boot. Neither one has any idea the other's files are sitting
+next to it.
+
+Once a kernel is running, its initramfs mounts
+=arch/<its own architecture>/airootfs.sfs=. That is why there are two
+=airootfs.sfs= files: they are two complete live systems, one per
+architecture, and each boot only ever touches one of them.
+
+*** How each half finds the stick
+
+archiso normally identifies the medium it booted from by the ISO's
+volume UUID -- which a FAT32 stick does not have, because there is no
+ISO filesystem involved. So it falls back to a second method: it
+searches the attached disks for a file at =boot/<uuid>.uuid= and uses
+whichever one matches the UUID it was told to expect. The Pi gets
+told through =cmdline.txt=:
+
+#+begin_src text
+archisobasedir=arch archisosearchuuid=1234-5678 console=serial0,115200 console=tty1
+#+end_src
+
+This is the same mechanism archiso provides for copying an ISO onto a
+FAT32 stick, used here for both halves.
+
+It is worth noticing that this is a /different/ search from the one
+that finds =archiso-config/=. The live system looks for its
+configuration by the =ARCH_CONFIG= filesystem label, as described
+above, because by then it may have let go of the boot device
+entirely. The two lookups are independent, which is exactly why the
+configuration can live on a second stick.
+
+*** How the combined image is built
+
+=just build-usb= builds an x86_64 ISO first, then builds the Pi image
+and merges the ISO's UEFI boot files and live system into the Pi
+image's FAT32 partition. The ISO is only an intermediate -- it is
+where systemd-boot and the x86_64 kernel come from -- and it is
+deleted once the combined image exists.
+
+#+attr_shortcode: :style warning :title What the combined image costs
+#+begin_notice
+ - *x86_64 is UEFI only*, and Secure Boot must be off.
+ - The partition is FAT32 with MBR type =0x0c=, because that is what
+   the Pi requires. UEFI firmware is /supposed/ to boot from an EFI
+   System Partition (type =0xef=), and although nearly all of it will
+   also boot a FAT32 USB stick carrying =EFI/BOOT/BOOTx64.EFI=, a
+   strict implementation is entitled not to.
+ - Both halves read the same =archiso-config/=, so a PC and a Pi
+   booted from this stick present the *same* SSH host key and claim
+   the *same* WireGuard address. That is a feature when you use them
+   one at a time, and a problem if you boot two at once -- they will
+   fight over the peer address. Install one machine at a time, or
+   give the second stick its own key.
+#+end_notice
+
 *** Source and trademark
 
 The source is at [[https://github.com/EnigmaCurry/boomstick][github.com/EnigmaCurry/boomstick]].
