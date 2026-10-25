@@ -13,7 +13,7 @@
 .tree .sections a{ color:var(--fg); text-decoration:none; display:block; padding:1px 0; }
 .tree .sections a:hover{ color:var(--accent); }
 .tree .sections a.active{ color:var(--accent); }
-.tree .sections a.active::before{ content:"\203A "; color:var(--accent); }   /* › */
+.tree .sections a.active::before{ content:"\203A\00a0"; color:var(--accent); }   /* › */
 
 /* --- "old" group: a non-clickable header nesting archived books. Shown only
        while the current page is inside it (always rendered .open). --- */
@@ -481,3 +481,14 @@ html.js .diffbox .box-ctl{ display:inline-flex; }
    the run boxes (.ch.sel uses --sel-bg/--sel-fg), not the page's ::selection block */
 .diffbox ::selection{ background:var(--sel-bg); color:var(--sel-fg); }
 .diffbox ::-moz-selection{ background:var(--sel-bg); color:var(--sel-fg); }
+
+/* blog sidebar: long dated titles wrapped into cramped ragged blocks. Put the date
+   on its own dim line under the marker, hang the title 2ch in so wrapped lines
+   align, and space the entries apart so each post reads as one unit. */
+.tree .blog-nav .sections li{ margin:0 0 .5rem; }
+.tree .blog-nav .sections a{ padding-left:2ch; text-indent:-2ch; line-height:1.35; }
+.tree .blog-nav .sections .pdate{ color:var(--fg-dim); font-size:.88em; }
+.tree .blog-nav .sections .pdate::after{ content:"\A"; white-space:pre; }
+.tree .blog-nav .sections a.active .pdate{ color:inherit; }
+.tree .blog-nav .sections{ padding-left:.8ch; }   /* two nesting levels deep: give the titles the width back */
+.tree .blog-nav .sections a{ font-size:.94em; }
