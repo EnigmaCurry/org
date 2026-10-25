@@ -1694,22 +1694,33 @@ live system. The commands below write to the installed system, and
 several of them read =/etc/fstab=, which only exists inside it.
 #+end_notice
 
-*** Which pages apply to you
+*** Read two pages, in this order
 
-The initramfs is built the same way on both architectures, so
-everyone reads the next page. After that the two diverge completely,
-and you read *one* of the two:
+*Step 1, everybody:* [[/arch-workstation/bootloader/initramfs][Build the initramfs]]. This is the same work on
+both architectures and it is not optional -- it is what finds and
+mounts your root filesystem at boot. Do this first.
 
-| Machine        | How it boots                                                      |
-|----------------+-------------------------------------------------------------------|
-| x86_64 PC      | UEFI firmware runs a *bootloader* from the ESP: [[/arch-workstation/bootloader/x86_64][systemd-boot]]     |
-| Raspberry Pi 5 | There is *no bootloader*: the firmware reads [[/arch-workstation/bootloader/rpi][config.txt]] directly |
+*Step 2, pick one* to match the machine:
 
-That difference is the single biggest split in this book. A PC has
-firmware that knows how to run an EFI program, and systemd-boot is
-that program. The Pi has firmware that reads a few text files off a
-FAT partition and jumps straight into the kernel -- there is nothing
-in between to install or configure.
+| Machine        | Read                                     | Because                                                   |
+|----------------+------------------------------------------+-----------------------------------------------------------|
+| x86_64 PC      | [[/arch-workstation/bootloader/x86_64][Install systemd-boot]]       | UEFI firmware runs a boot loader from the ESP              |
+| Raspberry Pi 5 | [[/arch-workstation/bootloader/rpi][Configure the Pi firmware]]  | There is no boot loader; the firmware reads =config.txt=   |
+
+#+attr_shortcode: :style warning
+#+begin_notice
+Do not jump straight to step 2. A boot entry that names a kernel and
+a root filesystem is useless if the initramfs cannot reach the disk,
+and that failure looks identical to a bad boot entry -- you get an
+emergency shell either way, with nothing to say which of the two is
+wrong.
+#+end_notice
+
+That split in step 2 is the biggest in this book. A PC has firmware
+that knows how to run an EFI program, and systemd-boot is that
+program. The Pi has firmware that reads a few text files off a FAT
+partition and jumps straight into the kernel -- there is nothing in
+between to install or configure.
 
 ** Build the initramfs
 :PROPERTIES:
@@ -1814,6 +1825,9 @@ to find out than after the reboot.
 #+begin_notice
 This page is for *x86_64 PCs*. On a Raspberry Pi, skip it and go to
 [[/arch-workstation/bootloader/rpi][Configure the Pi firmware]] instead.
+
+Either way, [[/arch-workstation/bootloader/initramfs][Build the initramfs]] comes first. If you have not done
+that yet, go back and do it now.
 #+end_notice
 
 UEFI firmware boots an EFI program from the EFI System Partition.
@@ -1914,6 +1928,9 @@ machine boot.
 #+begin_notice
 This page is for the *Raspberry Pi*. On an x86_64 PC, skip it and go
 to [[/arch-workstation/bootloader/x86_64][Install systemd-boot]] instead.
+
+Either way, [[/arch-workstation/bootloader/initramfs][Build the initramfs]] comes first. If you have not done
+that yet, go back and do it now.
 #+end_notice
 
 There is no bootloader to install. The Pi's own firmware reads a
