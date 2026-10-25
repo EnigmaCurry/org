@@ -1661,6 +1661,402 @@ nothing now and is annoying to discover you need at a rescue prompt.
 With a system installed, an fstab describing it, and a shell inside
 it, what remains is to make the machine capable of starting on its
 own. That is the next chapter.
+* Make it boot
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: bootloader
+:END:
+
+** Make it boot
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 600
+:END:
+
+There is a complete Arch system on the disk, and nothing on that
+disk knows how to start it. Three things have to line up before a
+machine can bring itself up unattended:
+
+ 1. The *firmware* has to find something to run, without your help.
+ 2. That something has to load a *kernel* and an *initramfs*.
+ 3. The kernel has to be told *where its root filesystem is*, and how
+    to mount it.
+
+The second and third steps are where an install usually fails, and
+they fail in a specific way: the machine powers on, prints a little,
+and drops to an emergency shell because it cannot find a root to
+mount. Everything on these pages exists to prevent that.
+
+#+attr_shortcode: :style secondary :title Everything in this chapter runs inside the chroot
+#+begin_notice
+If you have left it, get back in with =arch-chroot /mnt= from the
+live system. The commands below write to the installed system, and
+several of them read =/etc/fstab=, which only exists inside it.
+#+end_notice
+
+*** Which pages apply to you
+
+The initramfs is built the same way on both architectures, so
+everyone reads the next page. After that the two diverge completely,
+and you read *one* of the two:
+
+| Machine        | How it boots                                                      |
+|----------------+-------------------------------------------------------------------|
+| x86_64 PC      | UEFI firmware runs a *bootloader* from the ESP: [[/arch-workstation/bootloader/x86_64][systemd-boot]]     |
+| Raspberry Pi 5 | There is *no bootloader*: the firmware reads [[/arch-workstation/bootloader/rpi][config.txt]] directly |
+
+That difference is the single biggest split in this book. A PC has
+firmware that knows how to run an EFI program, and systemd-boot is
+that program. The Pi has firmware that reads a few text files off a
+FAT partition and jumps straight into the kernel -- there is nothing
+in between to install or configure.
+
+** Build the initramfs
+:PROPERTIES:
+:EXPORT_FILE_NAME: initramfs
+:EXPORT_HUGO_SLUG: initramfs
+:END:
+
+The initramfs solves a chicken-and-egg problem. To mount the root
+filesystem the kernel needs drivers -- for the disk controller, for
+btrfs, maybe for unlocking LUKS -- and those drivers live on the
+root filesystem it cannot mount yet.
+
+So the bootloader loads a second, tiny filesystem into memory
+alongside the kernel. That image contains just enough to find the
+real root, mount it, and hand over. Arch builds it with
+[[https://wiki.archlinux.org/title/Mkinitcpio][mkinitcpio]], and =pacstrap= already generated one when it installed
+the kernel.
+
+*** Look at what it is doing
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+grep -E '^(MODULES|HOOKS)' /etc/mkinitcpio.conf
+#+end_run
+
+#+begin_stdout
+MODULES=()
+HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)
+#+end_stdout
+
+Those defaults are already correct for an unencrypted btrfs system,
+so if you did not encrypt the disk there is nothing to change here.
+The hooks that matter:
+
+| Hook         | What it does                                                            |
+|--------------+-------------------------------------------------------------------------|
+| =systemd=    | Uses systemd as the early-boot init, rather than busybox shell scripts   |
+| =autodetect= | Trims the image to the modules /this/ machine actually loads             |
+| =microcode=  | Folds CPU microcode into the initramfs                                   |
+| =block=      | Block-device drivers, so the disk is visible                             |
+| =filesystems= | The filesystem drivers needed to mount the root                         |
+
+btrfs needs no entry in =MODULES=: the kernel has the driver and
+=filesystems= pulls it in.
+
+#+attr_shortcode: :style info :title The microcode hook changes the old advice
+#+begin_notice
+Guides written before mkinitcpio 38 tell you to add a separate
+=initrd /intel-ucode.img= line to your bootloader entry. The
+=microcode= hook in the default =HOOKS= does that job now, so that
+line is no longer needed and is not used later in this chapter.
+#+end_notice
+
+*** If you encrypted the disk
+
+The initramfs is what prompts for the passphrase, and it can only do
+that if it is built to. Add =sd-encrypt= to =HOOKS=, after =block=:
+
+#+attr_shortcode: :file /etc/mkinitcpio.conf
+#+begin_edit
+HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)
+#+end_edit
+
+#+attr_shortcode: :style warning :title sd-encrypt, not encrypt
+#+begin_notice
+There are two LUKS hooks, and they are not interchangeable.
+=sd-encrypt= belongs with the =systemd= hook; plain =encrypt=
+belongs to the older busybox-based initramfs. Since the default
+=HOOKS= above starts with =base systemd=, the one you want is
+=sd-encrypt=. Mixing =encrypt= into a systemd initramfs produces an
+image that builds without complaint and then cannot unlock the disk.
+#+end_notice
+
+*** Rebuild it
+
+Only necessary if you changed =HOOKS=, but it is harmless to run
+either way and it confirms the image builds:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+mkinitcpio -P
+#+end_run
+
+#+begin_stdout
+==> Creating gzip-compressed initcpio image: '/boot/initramfs-linux.img'
+  -> Early uncompressed CPIO image generation successful
+==> Initcpio image generation successful
+#+end_stdout
+
+Read the output rather than skimming it. Warnings about missing
+firmware for hardware you do not have are normal; an actual error
+here means the machine will not boot, and now is a much better time
+to find out than after the reboot.
+
+** Install systemd-boot (x86_64)
+:PROPERTIES:
+:EXPORT_FILE_NAME: x86_64
+:EXPORT_HUGO_SLUG: x86_64
+:END:
+
+#+attr_shortcode: :style info
+#+begin_notice
+This page is for *x86_64 PCs*. On a Raspberry Pi, skip it and go to
+[[/arch-workstation/bootloader/rpi][Configure the Pi firmware]] instead.
+#+end_notice
+
+UEFI firmware boots an EFI program from the EFI System Partition.
+[[https://wiki.archlinux.org/title/Systemd-boot][systemd-boot]] is that program: it is part of systemd, already
+installed, and it is a menu and nothing else -- no modules, no
+scripting, no second config language to learn.
+
+*** Install it
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+bootctl install
+#+end_run
+
+That copies the EFI binary onto the ESP mounted at =/boot= and
+registers it with the firmware as a boot entry, which is the step
+that makes the machine choose it without being asked.
+
+*** Configure the menu
+
+#+attr_shortcode: :file /boot/loader/loader.conf
+#+begin_edit
+default  arch.conf
+timeout  3
+console-mode keep
+editor   no
+#+end_edit
+
+=timeout 3= gives you three seconds to interrupt; a headless machine
+could use =0=, but a short pause is worth having the first time you
+boot. =editor no= matters more than it looks: with the editor
+enabled, anyone at the keyboard can append =init=/bin/sh= to the
+kernel command line and get a root shell without a password.
+
+*** Write the boot entry
+
+This is the step that tells the kernel where its root is. Generate
+it rather than typing the UUID by hand:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat > /boot/loader/entries/arch.conf <<EOF
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=$(findmnt -no UUID /) rootflags=subvol=@ rw
+EOF
+cat /boot/loader/entries/arch.conf
+#+end_run
+
+=findmnt -no UUID /= reads the UUID of the filesystem currently
+mounted at =/=, which inside the chroot is the one you are
+installing onto. =rootflags=subvol=@= is the part specific to this
+book's layout: without it the kernel mounts the top of the btrfs
+filesystem, finds the subvolumes sitting there as directories, and
+fails to boot.
+
+*** If you encrypted the disk
+
+The root device is now the unlocked mapper device, and the initramfs
+needs to be told which partition to unlock. Use the *LUKS
+partition's* UUID -- not the filesystem UUID above:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat > /boot/loader/entries/arch.conf <<EOF
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options rd.luks.name=$(blkid -s UUID -o value /dev/nvme0n1p2)=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
+EOF
+cat /boot/loader/entries/arch.conf
+#+end_run
+
+Substitute your own root *partition* for =/dev/nvme0n1p2=. The two
+UUIDs are easy to confuse: =blkid= on the partition gives the LUKS
+container's UUID, while =findmnt= gives the UUID of the btrfs
+filesystem inside it.
+
+*** Check it
+
+#+attr_shortcode: :style secondary
+#+begin_run
+bootctl list
+#+end_run
+
+It should show your entry as the default. If it reports no entries,
+=/boot= is not the ESP, and nothing you do later will make the
+machine boot.
+
+** Configure the Pi firmware (Raspberry Pi)
+:PROPERTIES:
+:EXPORT_FILE_NAME: rpi
+:EXPORT_HUGO_SLUG: rpi
+:END:
+
+#+attr_shortcode: :style info
+#+begin_notice
+This page is for the *Raspberry Pi*. On an x86_64 PC, skip it and go
+to [[/arch-workstation/bootloader/x86_64][Install systemd-boot]] instead.
+#+end_notice
+
+There is no bootloader to install. The Pi's own firmware reads a
+handful of files from the FAT partition at =/boot=, loads the kernel
+and initramfs itself, and jumps straight in. Everything you need is
+already on that partition:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+ls /boot
+#+end_run
+
+#+begin_stdout
+bcm2712-d-rpi-5-b.dtb      fixup4db.dat          start4.elf
+bcm2712-rpi-500.dtb        fixup4x.dat           start4cd.elf
+bcm2712-rpi-5-b.dtb        fixup_cd.dat          start4db.elf
+bcm2712-rpi-cm5-cm4io.dtb  fixup_db.dat          start4x.elf
+bcm2712-rpi-cm5-cm5io.dtb  fixup_x.dat           start.elf
+bcm2712-rpi-cm5l-cm4io.dtb initramfs-linux.img   start_cd.elf
+bcm2712d0-rpi-5-b.dtb      kernel8.img           start_db.elf
+bootcode.bin               overlays              start_x.elf
+cmdline.txt                config.txt
+fixup.dat                  fixup4.dat
+fixup4cd.dat
+#+end_stdout
+
+=kernel8.img= is the kernel and =initramfs-linux.img= is the image
+you just built. The =.dtb= files are device trees -- one per board,
+so the firmware can tell the kernel what hardware it is running on,
+which is why a Pi 500 and a CM5 can share one installation. The
+=start*.elf= and =fixup*.dat= files are the Pi's own firmware, and
+=overlays/= holds device-tree overlays for add-on hardware.
+
+*** config.txt is already correct
+
+=config.txt= is the firmware's own configuration, and the one line
+that matters here is already in it:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+grep initramfs /boot/config.txt
+#+end_run
+
+#+begin_stdout
+initramfs initramfs-linux.img followkernel
+#+end_stdout
+
+That is what makes the firmware load the initramfs alongside the
+kernel. It ships that way, so leave the file alone.
+
+*** cmdline.txt is not
+
+=cmdline.txt= is the kernel command line, and it ships pointing at an
+SD card:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+cat /boot/cmdline.txt
+#+end_run
+
+#+begin_stdout
+root=/dev/mmcblk0p2 rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
+#+end_stdout
+
+Two things are wrong with that for this install: the root device is
+whatever disk you actually used, and there is no =rootflags=, so even
+the right device would mount the top of the btrfs filesystem rather
+than the =@= subvolume. Replace it:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat > /boot/cmdline.txt <<EOF
+root=UUID=$(findmnt -no UUID /) rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
+EOF
+cat /boot/cmdline.txt
+#+end_run
+
+#+attr_shortcode: :style warning :title It must stay one line
+#+begin_notice
+The firmware reads only the *first line* of =cmdline.txt=. Wrapping
+the parameters across two lines silently drops everything after the
+first, which usually means the kernel never learns where its root
+is. If you edit this file by hand afterwards, make sure your editor
+has not wrapped it.
+#+end_notice
+
+=rootwait= is doing real work on a Pi booting from USB or NVMe: it
+tells the kernel to wait for the device to appear rather than giving
+up, and those buses can take a moment to enumerate.
+
+*** If you encrypted the disk
+
+Point the command line at the unlocked mapper device, and tell the
+initramfs which partition to unlock, using the *LUKS partition's*
+UUID:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat > /boot/cmdline.txt <<EOF
+rd.luks.name=$(blkid -s UUID -o value /dev/nvme0n1p2)=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
+EOF
+#+end_run
+
+Substitute your own root partition for =/dev/nvme0n1p2=.
+
+#+attr_shortcode: :style warning :title Unlocking a headless Pi
+#+begin_notice
+This gets you a passphrase prompt on the Pi's console and serial
+line -- which is of no use at all if the machine has neither a
+keyboard nor a serial cable attached. Unlocking an encrypted
+headless Pi over the network needs an initramfs that brings up
+networking and runs an SSH server, which this book does not set up.
+
+If the Pi is headless, the honest advice from the [[/arch-workstation/disk/encrypt][disk chapter]]
+stands: leave encryption off.
+#+end_notice
+
+*** Your edits will survive updates
+
+Both files belong to the kernel package, which would normally mean a
+kernel update overwrites them. It does not, because both are
+declared as pacman /backup/ files:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+pacman -Qii linux-rpi-16k | grep -A2 'Backup Files'
+#+end_run
+
+#+begin_stdout
+Backup Files    : /boot/config.txt [unmodified]
+                  /boot/cmdline.txt [modified]
+#+end_stdout
+
+pacman keeps a modified backup file and writes the new version
+alongside it as =cmdline.txt.pacnew=. So your boot configuration is
+safe, but it also means genuinely new firmware options arrive in a
+file you have to go and read. Check for =.pacnew= files after kernel
+updates.
+
+With the kernel locatable and the root filesystem findable, the
+machine can start itself. What it cannot yet do is let you log in --
+there is no user account and no network configuration. That is the
+next chapter, and it has to be finished before the first reboot.
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -2193,7 +2589,6 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Make it boot -- bootloader (UEFI vs Pi 5), initramfs, LUKS unlock.
  - Network and users -- hostname, systemd-networkd/iwd, user account,
    sudo, SSH keys, lock down sshd, first reboot.
  - Keeping it maintainable -- pacman hygiene, package manifest,
