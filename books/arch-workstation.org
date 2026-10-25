@@ -778,6 +778,7 @@ stick -- that is the one entry you must never pick.
 
 Set it once here, and every later block picks it up:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
 # The disk to install to -- CHECK THIS
 DISK=/dev/nvme0n1
@@ -915,6 +916,7 @@ set.
 
 Point the rest of the chapter at the unlocked device:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
 ROOTDEV=/dev/mapper/cryptroot
 #+end_env
@@ -931,6 +933,7 @@ before you reboot, not after.
 Skip both commands and point everything at the bare partition
 instead:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
 ROOTDEV="$ROOT"
 #+end_env
@@ -1058,6 +1061,7 @@ system will see, rooted at =/mnt=.
 
 Pick the mount options once:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
 OPTS="noatime,compress=zstd:1"
 #+end_env
@@ -1255,43 +1259,51 @@ The same goes for =iwd= on a machine that has no ethernet.
 
 *** Set the package list
 
-Start with what both architectures share:
-
-#+begin_env
-PKGS=(base btrfs-progs sudo openssh iwd vim)
-#+end_env
+Pick the block for the machine you are installing and run it. These
+are complete lists, not additions to each other -- you run exactly
+one.
 
 #+attr_shortcode: :style info :title Why an array
 #+begin_notice
-The live system's shell is *zsh*, not bash. zsh does not split an
-unquoted =$PKGS= into separate words the way bash does, so a plain
-string would arrive at =pacstrap= as one enormous package name. An
-array expanded as ="${PKGS[@]}"= behaves identically in both
-shells.
+The live system's shell is *zsh*, not bash -- that is upstream
+archiso, not something BOOMSTICK chose, so it is equally true of the
+official ISO. zsh does not split an unquoted =$PKGS= into separate
+words the way bash does, so a plain string would arrive at
+=pacstrap= as one enormous package name. An array expanded as
+="${PKGS[@]}"= behaves identically in both shells.
 #+end_notice
 
-Then add the kernel and firmware for the machine you are installing.
 On an *x86_64 PC*:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
-PKGS+=(linux linux-firmware)
-# ...and the microcode for your CPU -- one of these:
-PKGS+=(intel-ucode)   # Intel
-# PKGS+=(amd-ucode)   # AMD
+PKGS=(
+  base linux linux-firmware intel-ucode
+  btrfs-progs cryptsetup
+  sudo openssh iwd vim
+)
 #+end_env
 
 On a *Raspberry Pi 5*:
 
+#+attr_shortcode: :shell zsh
 #+begin_env
-PKGS+=(linux-rpi-16k firmware-raspberrypi linux-firmware)
+PKGS=(
+  base linux-rpi-16k firmware-raspberrypi linux-firmware
+  btrfs-progs cryptsetup
+  sudo openssh iwd vim
+)
 #+end_env
 
-And if you set up LUKS in the previous chapter, on either
-architecture:
+Two lines in those lists are worth editing before you run them:
 
-#+begin_env
-PKGS+=(cryptsetup)
-#+end_env
+ - =intel-ucode= is for Intel CPUs. On AMD, replace it with
+   =amd-ucode=. The Pi has no microcode package at all, which is why
+   its list has none.
+ - =cryptsetup= is only needed if you encrypted the disk in the
+   previous chapter. Leaving it in otherwise costs a couple of
+   megabytes and nothing else, so it is in both lists by default --
+   drop it if you prefer a strictly minimal system.
 
 Check what you ended up with before installing it:
 
@@ -1301,7 +1313,7 @@ echo "${PKGS[@]}"
 #+end_run
 
 #+begin_stdout
-base btrfs-progs sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
+base linux-rpi-16k firmware-raspberrypi linux-firmware btrfs-progs cryptsetup sudo openssh iwd vim
 #+end_stdout
 
 ** Run pacstrap
