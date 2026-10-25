@@ -1,7 +1,7 @@
 #+hugo_base_dir: ../hugo
 #+hugo_section: /arch-workstation
 #+hugo_weight: auto
-#+hugo_paired_shortcodes: %notice %annotate badge button %children %index run stdout edit math mermaid openapi %env toc
+#+hugo_paired_shortcodes: %notice %annotate badge button %children %index run stdout edit math mermaid openapi toc env
 #+STARTUP: align
 
 * Arch Workstation
@@ -1175,6 +1175,445 @@ make a new one rather than trying to debug it.
 With the disk partitioned, formatted, mounted under =/mnt= and
 swapped on, the target is ready to receive a system. The next chapter
 installs one.
+* Install the base system
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: install
+:END:
+
+** Install the base system
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 500
+:END:
+
+The disk is partitioned, formatted and mounted under =/mnt=, and
+there is nothing on it. This chapter puts a complete Arch system
+there.
+
+It will not boot yet -- nothing has been told how to load a kernel,
+which is the next chapter -- but by the end of this one you can
+=chroot= into the new system and work inside it as though it were
+running.
+
+Unless a block says otherwise, every command in this chapter runs as
+root on the live system, over SSH.
+
+*** What pacstrap actually is
+
+=pacstrap= is pacman pointed at a different root. It installs
+packages into =/mnt= rather than =/=, sets up a pacman keyring
+inside the target, and copies the live system's mirrorlist across so
+the new system starts out with working package sources.
+
+There is no image, no installer and no magic. When it finishes,
+=/mnt= contains an ordinary directory tree that happens to be a
+Linux system.
+
+*** Choosing what to install
+
+The =base= package is the floor, and it is lower than people expect:
+glibc, bash, coreutils, pacman, systemd, and little else. It has no
+kernel, no editor, no bootloader and no SSH server. Everything the
+machine needs beyond that is an explicit choice, which is the part
+of Arch worth leaning into.
+
+| Package                     | Why it is here                                                      |
+|-----------------------------+---------------------------------------------------------------------|
+| =base=                      | The minimum system: glibc, bash, coreutils, pacman, systemd          |
+| =linux= / =linux-rpi-16k=   | A kernel, which =base= does not include                              |
+| =linux-firmware=            | Firmware blobs for WiFi, GPUs and other devices                      |
+| =firmware-raspberrypi=      | Pi only: VideoCore firmware and the files its bootloader reads       |
+| =btrfs-progs=               | Required -- the root filesystem is btrfs and cannot be checked without it |
+| =cryptsetup=                | Only if you encrypted the disk                                       |
+| =sudo=                      | Administration from your own account                                 |
+| =openssh=                   | The whole point of a headless machine                                |
+| =iwd=                       | WiFi, configured in a later chapter                                  |
+| =vim=                       | An editor that exists inside the chroot                              |
+| =intel-ucode= / =amd-ucode= | x86_64 only: CPU microcode errata fixes, loaded at boot              |
+
+#+attr_shortcode: :style warning :title Do not leave out openssh
+#+begin_notice
+You are installing a machine you reach over the network. If
+=openssh= is missing when you reboot, a headless box simply never
+comes back, and recovering it means walking over with a monitor and
+keyboard -- the exact chore this whole book exists to avoid.
+
+The same goes for =iwd= on a machine that has no ethernet.
+#+end_notice
+
+*** Set the package list
+
+Start with what both architectures share:
+
+#+begin_env
+PKGS="base btrfs-progs sudo openssh iwd vim"
+#+end_env
+
+Then add the kernel and firmware for the machine you are installing.
+On an *x86_64 PC*:
+
+#+begin_env
+PKGS="$PKGS linux linux-firmware"
+# ...and the microcode for your CPU -- one of these:
+PKGS="$PKGS intel-ucode"   # Intel
+# PKGS="$PKGS amd-ucode"   # AMD
+#+end_env
+
+On a *Raspberry Pi 5*:
+
+#+begin_env
+PKGS="$PKGS linux-rpi-16k firmware-raspberrypi linux-firmware"
+#+end_env
+
+And if you set up LUKS in the previous chapter, on either
+architecture:
+
+#+begin_env
+PKGS="$PKGS cryptsetup"
+#+end_env
+
+Check what you ended up with before installing it:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+echo $PKGS
+#+end_run
+
+** Run pacstrap
+:PROPERTIES:
+:EXPORT_FILE_NAME: pacstrap
+:EXPORT_HUGO_SLUG: pacstrap
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+pacstrap -K /mnt $PKGS
+#+end_run
+
+This downloads a little over a gigabyte and takes a few minutes on a
+reasonable connection. The packages land in
+=/mnt/var/cache/pacman/pkg= -- on the target's disk, inside the
+=@pkg= subvolume you made for exactly this -- so the live system's
+small RAM filesystem is not involved.
+
+The =-K= flag tells pacstrap to initialise a *fresh* pacman keyring
+inside the target rather than copying the live system's. That is the
+cleaner default: the new machine gets the distribution's keys and
+none of the local state that has accumulated on the installer.
+
+#+attr_shortcode: :style info :title On an older Pi stick, drop the -K
+#+begin_notice
+=-K= implies =-G=, "do not copy the host's keyring to the target".
+On a BOOMSTICK Pi image that predates the Arch Linux ARM signing
+keys, the trust you had to add by hand lives only in the live
+system's keyring, so =-K= would discard it and the install would
+fail on the kernel. Use plain =pacstrap /mnt $PKGS= there instead.
+See [[/arch-workstation/boot/pacman][Prepare pacman]] for how to tell which stick you have. On a
+current stick, either form works.
+#+end_notice
+
+*** When it finishes
+
+The last thing pacstrap does is build an initramfs for the kernel
+you installed, so the tail of the output looks like this:
+
+#+begin_stdout
+  -> Early uncompressed CPIO image generation successful
+==> Initcpio image generation successful
+(14/14) Reloading system bus configuration...
+  Skipped: Running in chroot.
+#+end_stdout
+
+=Skipped: Running in chroot= is expected and is not an error.
+pacstrap is installing into a directory, so there is no running
+system bus for the package's hook to reload. On a Raspberry Pi 5
+over WiFi, the whole run took about a minute and a half.
+
+*** Check it landed
+
+#+attr_shortcode: :style secondary
+#+begin_run
+du -sh /mnt
+#+end_run
+
+#+attr_shortcode: :style secondary
+#+begin_run
+df -h /mnt | tail -1
+#+end_run
+
+#+begin_stdout
+3.3G	/mnt
+/dev/nvme0n1p2  238G  2.5G  235G   1% /mnt
+#+end_stdout
+
+Those two numbers disagree on purpose, and the gap is the =zstd=
+compression you mounted with back in the disk chapter: =du= adds up
+3.3 GiB of file contents, while =df= reports the 2.5 GiB those files
+actually occupy. About a quarter of the base system compressed
+away, for free.
+
+A couple of gigabytes, give or take your package choices. If that
+number is in megabytes, something went wrong and you should read
+back through pacstrap's output rather than continuing.
+
+** Generate the fstab
+:PROPERTIES:
+:EXPORT_FILE_NAME: fstab
+:EXPORT_HUGO_SLUG: fstab
+:END:
+
+The new system needs to know how to mount its own filesystems at
+boot. Right now that knowledge exists only in the live system's
+mount table -- which is exactly what =genfstab= reads:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+genfstab -U /mnt >> /mnt/etc/fstab
+#+end_run
+
+=-U= writes *UUIDs* rather than device paths. This matters more than
+it looks: =/dev/sda= is assigned in whatever order the kernel
+happens to find disks, so adding a second drive later can rename the
+first one and leave a machine that no longer boots. A UUID belongs
+to the filesystem and never moves.
+
+#+attr_shortcode: :style warning :title Append, do not overwrite -- and only once
+#+begin_notice
+Note the =>>=. =pacstrap= already created =/mnt/etc/fstab= with a
+header comment in it, and a single =>= would replace it.
+
+More importantly, running this command twice appends a *second* copy
+of every entry. Duplicate mounts are a confusing failure at boot. If
+you are unsure whether you already ran it, read the file before
+running it again -- not after.
+#+end_notice
+
+*** Read what it wrote
+
+This file is worth actually reading, because a mistake here is a
+machine that does not come up:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+cat /mnt/etc/fstab
+#+end_run
+
+#+begin_stdout
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/         	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@	0 0
+
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/home     	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@home	0 0
+
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/.snapshots	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@snapshots	0 0
+
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/var/log  	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@log	0 0
+
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/var/cache/pacman/pkg	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@pkg	0 0
+
+# /dev/nvme0n1p2 LABEL=arch
+UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/swap     	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@swap	0 0
+
+# /dev/nvme0n1p1 LABEL=ESP
+UUID=4B65-AADD      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,errors=remount-ro	0 2
+
+/swap/swapfile      	none      	swap      	defaults  	0 0
+#+end_stdout
+
+Three things to check:
+
+ 1. *Every btrfs line carries the same UUID*, and they differ only
+    by =subvol=. That is one filesystem mounted six times, which is
+    what subvolumes are.
+ 2. *The boot partition has its own UUID* and is =vfat=. Its UUID is
+    short -- FAT volume IDs are 32-bit, so they look like =A1B2-C3D4=
+    rather than the long form used by btrfs.
+ 3. *The swapfile has a line* if you created one.
+
+#+attr_shortcode: :style info :title Options you did not ask for
+#+begin_notice
+=genfstab= records the mount options the kernel is /actually/ using,
+not the ones you typed, so you will see extras like =ssd= and
+=space_cache=v2= that btrfs selected for itself. That is correct and
+should be left alone.
+#+end_notice
+
+#+attr_shortcode: :style warning :title No swap line?
+#+begin_notice
+=genfstab= finds swap by looking at what is currently *active*, not
+at what exists on disk. If you created a swapfile but never ran
+=swapon=, there will be no swap line here and the installed system
+will come up without swap, silently.
+
+Fix it by running =swapon /mnt/swap/swapfile= and generating the
+file again -- after deleting the entries you already wrote.
+#+end_notice
+
+** Enter the new system
+:PROPERTIES:
+:EXPORT_FILE_NAME: chroot
+:EXPORT_HUGO_SLUG: chroot
+:END:
+
+Everything from here on happens *inside* the system you just
+installed:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+arch-chroot /mnt
+#+end_run
+
+The prompt changes, and from that moment =/= means the new system,
+=pacman= installs into it, and configuration files you edit are its
+files rather than the installer's.
+
+*** What arch-chroot does
+
+A bare =chroot= would give you the new filesystem and nothing else,
+and most package scripts would fail. =arch-chroot= is a wrapper that
+also bind-mounts =/proc=, =/sys=, =/dev= and =/run= from the live
+system into the target, and copies =/etc/resolv.conf= across so that
+name resolution works inside.
+
+The practical result is that the chroot behaves like a running
+system for the purposes of installing packages and writing config.
+
+*** What it is not
+
+It is *not* booted. The new system's =systemd= is not running --
+the =systemd= you can see belongs to the live environment. That
+distinction has one consequence you will meet immediately:
+
+| Command                    | Inside the chroot                                    |
+|----------------------------+------------------------------------------------------|
+| =systemctl enable foo=     | *Works.* It only creates symlinks on disk            |
+| =systemctl start foo=      | *Does not work.* There is no running init to ask      |
+| =systemctl status foo=     | Reports on the /live/ system, not the target          |
+
+So you enable services now and they start on the first real boot.
+Nothing you enable in this chapter runs until the machine reboots.
+
+*** Getting back out
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+exit
+#+end_run
+
+=Ctrl-D= does the same thing. You can re-enter with =arch-chroot
+/mnt= as often as you like -- it is not a one-shot operation, and
+nothing is lost by leaving and coming back.
+
+*** Confirm where you are
+
+It is worth being certain which system you are typing into, because
+every remaining chapter depends on getting that right:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat /etc/os-release | head -2
+pacman -Q | wc -l
+#+end_run
+
+#+begin_stdout
+NAME="Arch Linux ARM"
+PRETTY_NAME="Arch Linux ARM"
+166
+#+end_stdout
+
+On an x86_64 machine the name is =Arch Linux=. Either way the
+package count is the interesting part: a fresh install of the set
+above is a couple of hundred packages.
+
+The live system has a far longer package list than a fresh install,
+so that count alone tells you which side of the chroot you are on.
+
+** Set the time zone and locale
+:PROPERTIES:
+:EXPORT_FILE_NAME: localize
+:EXPORT_HUGO_SLUG: localize
+:END:
+
+These are the first settings that belong to the new machine rather
+than to the installer. All of them run *inside the chroot*.
+
+*** Time zone
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+ln -sf /usr/share/zoneinfo/America/Denver /etc/localtime
+hwclock --systohc
+#+end_run
+
+Substitute your own zone; =ls /usr/share/zoneinfo= lists the
+regions, and each is a directory of cities. =/etc/localtime= is
+simply a symlink into that tree, which is why this is a one-line
+setting with no configuration file behind it.
+
+=hwclock --systohc= writes the current system time to the hardware
+clock in UTC.
+
+#+attr_shortcode: :style info :title Clocks on the Raspberry Pi
+#+begin_notice
+A Pi 5 has a real-time clock, but it only keeps time across a power
+cut if you have fitted the optional battery. Without one the machine
+boots with a meaningless date every time and waits for NTP to
+correct it, which is harmless as long as the network comes up. It is
+the reason the [[/arch-workstation/boot/survey][survey]] step checked the clock in the first place.
+#+end_notice
+
+*** Locale
+
+Arch ships every locale commented out and generates only the ones
+you ask for. Uncomment the line you want:
+
+#+attr_shortcode: :file /etc/locale.gen
+#+begin_edit
+en_US.UTF-8 UTF-8
+#+end_edit
+
+Then generate it and record the choice as the system default:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+locale-gen
+echo "LANG=en_US.UTF-8" > /etc/locale.conf
+#+end_run
+
+#+begin_stdout
+Generating locales...
+  en_US.UTF-8... done
+Generation complete.
+#+end_stdout
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Pick a UTF-8 locale. A non-UTF-8 default is the reason box-drawing
+characters in programs like =lsblk= degrade into =|-= and =`-=, and
+it causes stranger problems than that in anything handling text.
+#+end_notice
+
+*** Console keymap
+
+If your keyboard is not US layout, set it for the text console --
+this is separate from any graphical keyboard setting later:
+
+#+attr_shortcode: :file /etc/vconsole.conf
+#+begin_edit
+KEYMAP=us
+#+end_edit
+
+=localectl list-keymaps= lists the options. On a machine you only
+ever reach over SSH this setting never comes up, but it costs
+nothing now and is annoying to discover you need at a rescue prompt.
+
+With a system installed, an fstab describing it, and a shell inside
+it, what remains is to make the machine capable of starting on its
+own. That is the next chapter.
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -1692,7 +2131,6 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Install the base system -- pacstrap, fstab, chroot.
  - Make it boot -- bootloader (UEFI vs Pi 5), initramfs, LUKS unlock.
  - Network and users -- hostname, systemd-networkd/iwd, user account,
    sudo, SSH keys, lock down sshd, first reboot.
