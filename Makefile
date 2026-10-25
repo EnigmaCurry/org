@@ -38,6 +38,10 @@ serve: build
 watch: build
 	@HUGO="$(HUGO)" _script/watch.clj
 
+.PHONY: check # Verify copy-pasteable code blocks survived the Org -> Hugo pipeline
+check:
+	@_script/check_code_blocks.py
+
 .PHONY: pull
 pull:
 	@git pull --ff-only

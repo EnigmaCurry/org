@@ -72,14 +72,20 @@
           ("math" :raw t)
           ("shader" :raw t)))
 
-  ;; Make `run'/`stdout' blocks robust for arbitrary embedded scripts.
+  ;; Make the copy-pasteable blocks robust for arbitrary embedded content.
   ;; These render as <pre> via a paired Hugo shortcode, but Org otherwise
-  ;; parses their bodies as markup -- so shell syntax like `[[ -f x ]]' or
-  ;; awk `[[:space:]]' is misread as an Org [[link]] and aborts the export
-  ;; ("Unable to resolve link"). Rewrite them into verbatim
-  ;; `#+begin_export hugo' blocks (which Org never parses for markup)
-  ;; emitting the same shortcode, before ox-hugo parses the buffer.
-  (defvar my/verbatim-special-blocks '("run" "shader")
+  ;; parses their bodies as markup, which corrupts them two ways:
+  ;;   - shell syntax like `[[ -f x ]]' or awk `[[:space:]]' is misread as
+  ;;     an Org [[link]] and aborts the export ("Unable to resolve link");
+  ;;   - a line whose first non-whitespace character is `#' is an Org
+  ;;     comment and is silently dropped, eating shell and config-file
+  ;;     comments. (The ,# escape does not help: it survives literally.)
+  ;; Rewrite them into verbatim `#+begin_export hugo' blocks (which Org
+  ;; never parses for markup) emitting the same shortcode, before ox-hugo
+  ;; parses the buffer. This also pins them to the `{{< >}}' form, so a
+  ;; `%name' entry in #+hugo_paired_shortcodes cannot send the body
+  ;; through Hugo's Markdown typographer and curl its quotes.
+  (defvar my/verbatim-special-blocks '("run" "stdout" "env" "edit" "shader")
     "Special-block types whose bodies must be emitted verbatim.")
 
   (defun my/rawify-verbatim-special-blocks (&rest _)
