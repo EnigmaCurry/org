@@ -2074,6 +2074,498 @@ With the kernel locatable and the root filesystem findable, the
 machine can start itself. What it cannot yet do is let you log in --
 there is no user account and no network configuration. That is the
 next chapter, and it has to be finished before the first reboot.
+* Network and users
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: network
+:END:
+
+** Network and users
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 700
+:END:
+
+This is the chapter that decides whether you ever see the machine
+again.
+
+Every other step in this book fails loudly: a disk that will not
+format, a package that will not install, a kernel that drops to an
+emergency shell. This one fails quietly and politely. The machine
+reboots, comes up perfectly, runs beautifully -- and does not let
+you in, because there is no account, or no network, or sshd was
+never enabled. On a headless box in another room, that means
+fetching a monitor and a keyboard, which is the chore this entire
+book exists to avoid.
+
+So this chapter does all of it *before* the reboot, and ends with a
+checklist.
+
+Unless a block says otherwise, every command runs *inside the
+chroot*. Get back in with =arch-chroot /mnt= if you have left it.
+
+*** Two accounts
+
+| Account | UID  | Groups        | What it is for                            |
+|---------+------+---------------+-------------------------------------------|
+| =admin= | 1000 | =admin=, =wheel= | Administration. Passwordless =sudo=.    |
+| =user=  | 1001 | =user=        | Everything else. No special privileges.   |
+
+The split is the point. Day-to-day work -- editing, browsing,
+building, running other people's code -- happens as =user=, an
+account that cannot reconfigure the system even by accident. When
+you actually intend to administer the machine, you log in as
+=admin=, where =sudo= does not argue.
+
+#+attr_shortcode: :style warning :title What passwordless sudo costs
+#+begin_notice
+=admin= can become root with no further check, so anything that
+gets a shell as =admin= has root. That is a real reduction in
+depth, and worth being deliberate about rather than copying it from
+a tutorial.
+
+The reasoning here: SSH is key-only, root login is disabled, and
+=admin= exists to administer. A sudo password in that arrangement
+mostly protects against someone who already has an =admin= shell --
+at which point they can also wait and capture the password. It is
+the same trade cloud images make by default.
+
+If you would rather keep the prompt, skip the one file that grants
+=NOPASSWD= and =wheel= membership alone gives =admin= ordinary
+password-prompting =sudo=.
+#+end_notice
+
+*** What has to be true before rebooting
+
+ 1. A *hostname*, so the machine knows what it is called.
+ 2. *Networking* that comes up by itself, including WiFi credentials
+    if there is no ethernet.
+ 3. *Accounts* that exist and have passwords.
+ 4. *SSH*: your key installed, sshd enabled, passwords refused.
+
+The last page turns that list into commands you can run to check
+each one, and only then reboots.
+
+** Set the hostname
+:PROPERTIES:
+:EXPORT_FILE_NAME: hostname
+:EXPORT_HUGO_SLUG: hostname
+:END:
+
+Pick a name for the machine and write it down in the one file that
+defines it:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+echo myhost > /etc/hostname
+#+end_run
+
+Substitute your own name. It is the name you will type into =ssh=
+for the rest of the machine's life, so something short and
+memorable beats something descriptive.
+
+*** You do not need to edit /etc/hosts
+
+Older guides tell you to add a =127.0.1.1 myhost= line. On a current
+Arch system that is unnecessary, because systemd's =myhostname=
+resolver answers for the local hostname already:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+grep '^hosts:' /etc/nsswitch.conf
+#+end_run
+
+#+begin_stdout
+hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
+#+end_stdout
+
+=myhostname= in that list is what resolves =myhost= and
+=localhost= without any help from =/etc/hosts=. Leave the file
+alone.
+
+** Configure the network
+:PROPERTIES:
+:EXPORT_FILE_NAME: network
+:EXPORT_HUGO_SLUG: network
+:END:
+
+The machine needs to be on the network before you can reach it, and
+it has to get there without you. This book uses *systemd-networkd*
+for addressing, *systemd-resolved* for DNS, and *iwd* for WiFi --
+the same combination the live system you are typing into is running.
+
+They are already installed, configured in plain files you can read,
+and need no extra packages. If you would rather have NetworkManager
+for its roaming and GUI integration, it is a perfectly good choice
+and this is the page to deviate on.
+
+*** Describe the interfaces
+
+Two files, matching by interface-name prefix rather than by exact
+name, so that this works on any machine without checking what the
+kernel decided to call the hardware:
+
+#+attr_shortcode: :file /etc/systemd/network/20-wired.network
+#+begin_edit
+[Match]
+Name=en*
+
+[Network]
+DHCP=yes
+#+end_edit
+
+#+attr_shortcode: :file /etc/systemd/network/25-wireless.network
+#+begin_edit
+[Match]
+Name=wl*
+
+[Network]
+DHCP=yes
+#+end_edit
+
+Writing both is the right move even on a machine with only one kind
+of interface: the unused file matches nothing and costs nothing, and
+it means plugging in a USB ethernet adapter later just works.
+
+*** Turn the services on
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+systemctl enable systemd-networkd systemd-resolved iwd sshd
+#+end_run
+
+This prints nothing at all, which is not a failure -- it is just
+quiet. Confirm it took:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+systemctl is-enabled systemd-networkd systemd-resolved iwd sshd
+#+end_run
+
+#+begin_stdout
+enabled
+enabled
+enabled
+enabled
+#+end_stdout
+
+Four =enabled= lines. Anything else here is a machine that will not
+come back, so do not move on until you see them.
+
+*** Point resolv.conf at resolved
+
+#+attr_shortcode: :style warning :title This one runs on the live system
+#+begin_notice
+=arch-chroot= bind-mounts the live system's =/etc/resolv.conf= over
+the target's, so that name resolution works while you are installing
+packages. The side effect is that =/etc/resolv.conf= inside the
+chroot is not the target's file at all, and trying to replace it
+there fails with /are the same file/.
+
+Leave the chroot first, and do it from the live system against
+=/mnt=.
+#+end_notice
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+ln -sf /run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
+ls -l /mnt/etc/resolv.conf
+#+end_run
+
+#+begin_stdout
+lrwxrwxrwx 1 root root 37 /mnt/etc/resolv.conf -> /run/systemd/resolve/stub-resolv.conf
+#+end_stdout
+
+*** Carry the WiFi credentials across
+
+If the machine has ethernet, skip this. If it is on WiFi, the stick
+you are connected through already knows the network -- and the
+installed system does not. Copy iwd's credentials over rather than
+retyping them:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+install -d -m 0700 /mnt/var/lib/iwd
+cp /var/lib/iwd/*.psk /mnt/var/lib/iwd/
+ls /mnt/var/lib/iwd/
+#+end_run
+
+#+begin_stdout
+869iot.psk
+#+end_stdout
+
+One file per network, named after the SSID. This is the single most
+commonly forgotten step in a headless install: the machine boots,
+the disk is perfect, and it never joins the network because nothing
+ever told it the passphrase.
+
+** Create the accounts
+:PROPERTIES:
+:EXPORT_FILE_NAME: accounts
+:EXPORT_HUGO_SLUG: accounts
+:END:
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+useradd -m -u 1000 -G wheel -c "Administrator" admin
+useradd -m -c "Daily driver" user
+#+end_run
+
+=-m= creates the home directory, =-u 1000= pins =admin= to the
+first ordinary UID, and =-G wheel= puts it in the group =sudo=
+recognises. =user= takes the next UID on its own and joins no groups
+but its own.
+
+#+attr_shortcode: :style secondary
+#+begin_run
+id admin
+id user
+#+end_run
+
+#+begin_stdout
+uid=1000(admin) gid=1000(admin) groups=1000(admin),998(wheel)
+uid=1001(user) gid=1001(user) groups=1001(user)
+#+end_stdout
+
+The shell is =/usr/bin/bash= for both, from =/etc/default/useradd=.
+Note that this is *not* the zsh you have been typing into -- that
+belongs to the live system, and the installed system has only what
+you installed.
+
+*** Set the passwords
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+passwd root
+passwd admin
+passwd user
+#+end_run
+
+All three matter, for different reasons. =admin= and =user= are
+login accounts. The *root* password is the one people skip, and it
+is what systemd's emergency and rescue targets ask for when
+something goes wrong at boot -- without it, a machine that fails to
+mount its root leaves you with a prompt you cannot answer.
+
+Root cannot log in over SSH regardless; that gets switched off on
+the next page.
+
+*** Grant passwordless sudo
+
+=sudo= reads drop-in files from =/etc/sudoers.d=, which is safer
+than editing =/etc/sudoers= itself: a syntax error in one small file
+is easier to find and undo.
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+install -m 0440 /dev/null /etc/sudoers.d/10-admin
+echo "admin ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-admin
+#+end_run
+
+=install -m 0440= creates the file with the permissions sudo
+insists on before it will read it. Then check the whole
+configuration parses -- including the file you just wrote:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+visudo -c
+#+end_run
+
+#+begin_stdout
+/etc/sudoers: parsed OK
+/etc/sudoers.d/10-admin: parsed OK
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Do not skip visudo -c
+#+begin_notice
+A malformed sudoers file does not degrade gracefully: =sudo= refuses
+to run at all rather than guess. On a machine where =sudo= is your
+only route to root, and root cannot log in over SSH, that is a lockout
+you can only fix from the console. The check costs a second.
+#+end_notice
+
+** Set up SSH
+:PROPERTIES:
+:EXPORT_FILE_NAME: ssh
+:EXPORT_HUGO_SLUG: ssh
+:END:
+
+Your key is already on the stick -- it is how you are logged in
+right now. Copy it to =admin= rather than pasting it again:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+arch-chroot /mnt install -d -m 0700 -o admin -g admin /home/admin/.ssh
+install -m 0600 /root/.ssh/authorized_keys /mnt/home/admin/.ssh/authorized_keys
+arch-chroot /mnt chown admin:admin /home/admin/.ssh/authorized_keys
+arch-chroot /mnt ls -la /home/admin/.ssh/
+#+end_run
+
+#+begin_stdout
+drwx------ 1 admin admin  30 .
+drwx------ 1 admin admin  72 ..
+-rw------- 1 admin admin 347 authorized_keys
+#+end_stdout
+
+The ownership and the modes are not decoration. sshd refuses to use
+an =authorized_keys= file that other users could write to, and it
+does so silently from the client's point of view -- you simply get
+asked for a password that will not be accepted.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+=user= gets no key here, because =admin= is the account you
+administer from. If you also want to SSH in as =user= day to day,
+repeat the three commands with =user= in place of =admin=.
+#+end_notice
+
+*** Refuse everything except keys
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+cat > /etc/ssh/sshd_config.d/10-hardening.conf <<EOF
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+EOF
+#+end_run
+
+Arch's =sshd_config= ends with =Include /etc/ssh/sshd_config.d/*.conf=,
+so a drop-in overrides the defaults without touching the shipped
+file -- which means package updates never conflict with your
+changes.
+
+All three lines matter. =PasswordAuthentication no= alone is not
+enough: on a system with PAM, keyboard-interactive is a second route
+to the same password prompt, which is why it is switched off
+explicitly.
+
+*** Check the config parses
+
+#+attr_shortcode: :style secondary
+#+begin_run
+sshd -t
+#+end_run
+
+#+begin_stdout
+sshd: no hostkeys available -- exiting.
+#+end_stdout
+
+That message is the *success* case here. The installed system has no
+host keys yet -- they are generated on first boot -- and =sshd=
+checks the configuration before it looks for them. So a complaint
+about host keys means the config parsed; a complaint naming a line
+or an option means it did not, and you should fix that now.
+
+** Check it, then reboot
+:PROPERTIES:
+:EXPORT_FILE_NAME: reboot
+:EXPORT_HUGO_SLUG: reboot
+:END:
+
+Everything is in place. Before you give up your shell, confirm it --
+each of these is something that has locked someone out of a headless
+machine.
+
+*** The pre-flight check
+
+#+attr_shortcode: :style secondary :title Run this inside the chroot:
+#+begin_run
+echo "hostname : $(cat /etc/hostname)"
+echo "accounts : $(getent passwd admin user | cut -d: -f1 | tr '\n' ' ')"
+echo "passwords: $(passwd -S admin | awk '{print $2}') $(passwd -S user | awk '{print $2}')"
+echo "sudo     : $(visudo -c >/dev/null 2>&1 && echo OK || echo BROKEN)"
+echo "units    : $(systemctl is-enabled systemd-networkd systemd-resolved iwd sshd | tr '\n' ' ')"
+echo "ssh key  : $(wc -l < /home/admin/.ssh/authorized_keys) key(s)"
+echo "fstab    : $(grep -c '^UUID' /etc/fstab) entries"
+#+end_run
+
+#+begin_stdout
+hostname : myhost
+accounts : admin user
+passwords: P P
+sudo     : OK
+units    : enabled enabled enabled enabled
+ssh key  : 3 key(s)
+fstab    : 7 entries
+#+end_stdout
+
+=P= from =passwd -S= means a usable password is set; =L= means
+locked and =NP= means none at all. Both accounts must read =P=.
+
+#+attr_shortcode: :style warning :title On WiFi, check this too
+#+begin_notice
+The credentials live outside the chroot's view, so check them from
+the live system:
+
+#+begin_src bash
+ls /mnt/var/lib/iwd/
+#+end_src
+
+An empty directory on a machine with no ethernet means it will boot
+and never appear on the network.
+#+end_notice
+
+*** Unmount and reboot
+
+Leave the chroot, release everything cleanly, and go:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+exit
+swapoff /mnt/swap/swapfile
+umount -R /mnt
+reboot
+#+end_run
+
+=umount -R= unmounts the whole tree in the right order. If it
+complains that the target is busy, something still has a file open
+there -- often a shell sitting in a directory under =/mnt=. Find it
+with =fuser -m /mnt= rather than forcing it; a lazy unmount can
+leave btrfs with writes that never landed.
+
+Pull the stick out once the machine has powered down, or it will
+boot the installer again.
+
+*** Connecting to the new machine
+
+The installed system is a *different host* from the stick, and it
+will say so. On its first boot it generates its own SSH host keys,
+which have nothing to do with the ones on the USB stick, so the
+=arch-iso= entry in your SSH config no longer describes it.
+
+Give the real machine its own entry:
+
+#+attr_shortcode: :file ~/.ssh/config
+#+begin_edit
+Host myhost
+    HostName 192.168.1.50
+    User admin
+#+end_edit
+
+#+attr_shortcode: :style secondary :title Run this on your workstation:
+#+begin_run
+ssh myhost
+#+end_run
+
+You will be asked to accept a new host key, which is correct and
+expected -- this really is a machine you have never spoken to
+before. The address may also have changed: the machine is asking
+for its own DHCP lease now, under its own hostname, rather than the
+stick's.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If it does not answer, the fastest thing to check is whether it is
+on the network at all -- look at your router's lease table, or
+=ping= the address. A machine that has an address but refuses SSH is
+a different problem from one that never appeared, and the two want
+opposite kinds of investigation.
+#+end_notice
+
+Once you are in as =admin=, the install is finished. Everything from
+here on is a running system you can change at will, and the next
+chapter is about keeping it that way.
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -2606,8 +3098,6 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Network and users -- hostname, systemd-networkd/iwd, user account,
-   sudo, SSH keys, lock down sshd, first reboot.
  - Keeping it maintainable -- pacman hygiene, package manifest,
    /etc in git, AUR, snapshots, updates.
  - Desktop (optional) -- sway and friends.
