@@ -674,6 +674,473 @@ With the keyring current, the mirrors settled, and the clock correct,
 the live system is ready. The next chapter writes to the disk.
 
 
+* Partition and format the disk
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: disk
+:END:
+
+** Partition and format the disk
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 400
+:END:
+
+This is the first chapter that writes to the target machine. Up to
+now everything lived in RAM and a power cycle undid it; from here
+on, the commands destroy whatever was on the disk before.
+
+Unless a block says otherwise, every command in this chapter runs as
+root on the live system, over SSH.
+
+*** What you are building
+
+A single GPT disk with two partitions:
+
+| Partition | Size | Format | Mounted at | Holds                               |
+|-----------+------+--------+------------+-------------------------------------|
+| 1         | 1 GiB | FAT32 | =/boot=    | The bootloader, kernel and initramfs |
+| 2         | rest  | btrfs | =/= etc.   | Everything else, optionally encrypted |
+
+The same two partitions serve both architectures, for different
+reasons. On an x86_64 PC the first one is the *EFI System Partition*
+that the firmware reads. On a Raspberry Pi 5 it is the *firmware
+partition*, where the Pi's bootloader expects to find =config.txt=,
+the kernel and the device trees. Either way it is FAT32, one gigabyte,
+and mounted at =/boot=.
+
+Everything else goes on btrfs, split into *subvolumes*. A subvolume
+is an independently mountable tree inside one filesystem: they all
+draw from the same pool of free space, so there is no partitioning
+decision to regret later, but each can be snapshotted, mounted, or
+rolled back on its own. That is what makes it possible, later, to
+roll back a bad update without taking your home directory with it.
+
+#+attr_shortcode: :style warning :title This erases the disk
+#+begin_notice
+Everything below destroys all existing data on the disk you pick.
+There is no undo and no confirmation prompt beyond the ones you type
+yourself. Check the device name twice -- on a machine you are
+operating blind, over SSH, from another room, it is worth being
+slower than feels necessary.
+#+end_notice
+
+*** Choose the target disk
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+lsblk -dpno NAME,SIZE,MODEL,TRAN,ROTA
+#+end_run
+
+#+begin_stdout
+/dev/sda       28.9G  USB 2.0 FD   usb   1
+/dev/nvme0n1  238.5G  XP1000F256G  nvme  0
+#+end_stdout
+
+The last column is =ROTA=: =1= means rotational (a spinning disk, or
+in this case the USB stick you booted from), =0= means solid state.
+Find the disk you mean to install to, and be certain it is not the
+stick -- that is the one entry you must never pick.
+
+Set it once here, and every later block picks it up:
+
+#+begin_env
+# The disk to install to -- CHECK THIS
+DISK=/dev/nvme0n1
+
+# NVMe, SD and eMMC devices name their partitions p1, p2...
+# SATA and USB disks use 1, 2... Work out which, so the rest
+# of this chapter does not care:
+case "$DISK" in *[0-9]) P=p;; *) P="";; esac
+ESP="${DISK}${P}1"
+ROOT="${DISK}${P}2"
+#+end_env
+
+Check that those came out the way you expect before continuing:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+echo "ESP=$ESP  ROOT=$ROOT"
+#+end_run
+
+#+begin_stdout
+ESP=/dev/nvme0n1p1  ROOT=/dev/nvme0n1p2
+#+end_stdout
+
+#+attr_shortcode: :style warning :title Shell variables live in one shell
+#+begin_notice
+=DISK=, =ESP= and =ROOT= are ordinary shell variables, so they exist
+only in the SSH session you set them in. If your connection drops --
+or you open a second terminal -- set them again before running
+anything else in this chapter. A later block that silently sees an
+empty =$DISK= is exactly the kind of mistake this chapter cannot
+afford.
+#+end_notice
+
+** Partition the disk
+:PROPERTIES:
+:EXPORT_FILE_NAME: partition
+:EXPORT_HUGO_SLUG: partition
+:END:
+
+Wipe the existing partition table and write the new one. =sgdisk=
+does both in one pass:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+sgdisk --zap-all "$DISK"
+sgdisk --clear \
+  --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP \
+  --new=2:0:0   --typecode=2:8300 --change-name=2:root \
+  "$DISK"
+partprobe "$DISK"
+#+end_run
+
+Reading that across: =--zap-all= destroys the old GPT /and/ any
+leftover MBR, which matters when you are reinstalling over a disk
+that had something else on it. =--new=1:0:+1G= creates partition 1,
+starting at the first aligned sector (=0= means "wherever is next")
+and running one gibibyte; =--new=2:0:0= gives partition 2 all the
+remaining space. Type code =ef00= marks the first as an EFI System
+Partition and =8300= marks the second as a plain Linux filesystem.
+=partprobe= then asks the kernel to re-read the table, so the new
+=/dev/...p1= and =p2= nodes appear.
+
+Confirm the result:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+lsblk -o NAME,SIZE,TYPE,FSTYPE,PARTLABEL "$DISK"
+#+end_run
+
+#+begin_stdout
+NAME          SIZE TYPE FSTYPE PARTLABEL
+nvme0n1     238.5G disk
+├─nvme0n1p1     1G part        ESP
+└─nvme0n1p2   237.5G part      root
+#+end_stdout
+
+#+attr_shortcode: :style info :title Why one gibibyte
+#+begin_notice
+A gibibyte is far more than a single kernel needs, and that is the
+point. On x86_64 the kernel and initramfs are copied onto this
+partition on every update, and keeping a few generations around is
+what lets you boot an older one when a new kernel misbehaves. On the
+Pi it also holds the firmware blobs and every model's device tree.
+Disks are large; boot partitions that are too small are a well-worn
+regret.
+#+end_notice
+
+#+attr_shortcode: :style info :title On the Raspberry Pi
+#+begin_notice
+The =ef00= type code is an x86_64 convention, and the Pi's bootloader
+does not read partition types at all -- it looks for the first FAT
+partition on the device. Partition 1 is that partition, so the same
+command works unchanged, and tagging it =ef00= keeps the two
+architectures telling the same story.
+#+end_notice
+
+** Encrypt the root (optional)
+:PROPERTIES:
+:EXPORT_FILE_NAME: encrypt
+:EXPORT_HUGO_SLUG: encrypt
+:END:
+
+Full-disk encryption protects the data on a machine that is stolen,
+resold, or returned under warranty. It does nothing for a machine
+that is already running and unlocked, which is worth being clear
+about: the threat it addresses is physical possession of the disk.
+
+The cost is a passphrase at every boot. That is a real cost on a
+headless machine in another room -- there is nobody there to type
+it -- so think about where this machine lives before enabling it. A
+laptop is an obvious yes. A home server that must come back up after
+a power cut, unattended, is an obvious no.
+
+*** If you want encryption
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+cryptsetup luksFormat --type luks2 "$ROOT"
+cryptsetup open "$ROOT" cryptroot
+#+end_run
+
+The first command asks you to type =YES= in capitals, then to set and
+confirm the passphrase. The second unlocks it, which is what makes
+=/dev/mapper/cryptroot= appear; it asks for the passphrase you just
+set.
+
+Point the rest of the chapter at the unlocked device:
+
+#+begin_env
+ROOTDEV=/dev/mapper/cryptroot
+#+end_env
+
+#+attr_shortcode: :style warning :title The passphrase cannot be recovered
+#+begin_notice
+There is no backdoor and no reset. If you forget it, the data is
+gone -- that is the entire purpose. Put it in a password manager
+before you reboot, not after.
+#+end_notice
+
+*** If you do not
+
+Skip both commands and point everything at the bare partition
+instead:
+
+#+begin_env
+ROOTDEV="$ROOT"
+#+end_env
+
+*** What was just created
+
+LUKS2 is the current on-disk format, and its defaults are good ones:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+cryptsetup luksDump "$ROOT" | head -8
+#+end_run
+
+#+begin_stdout
+Version:        2
+Epoch:          3
+Metadata area:  16384 [bytes]
+Keyslots area:  16744448 [bytes]
+UUID:           0c06bb95-...
+Label:          (no label)
+Subsystem:      (no subsystem)
+Flags:          (no flags)
+#+end_stdout
+
+The cipher is =aes-xts-plain64= and the key derivation function is
+=argon2id=, which is memory-hard and therefore expensive to attack
+with GPUs. You do not need to choose any of this; the defaults are
+what you want.
+
+#+attr_shortcode: :style warning :title Encryption on the Pi needs more work
+#+begin_notice
+Everything on this page works the same on a Raspberry Pi -- but
+partitioning an encrypted disk and *booting* one are different
+problems. The Pi has no UEFI and no bootloader that can prompt for a
+passphrase, so an encrypted Pi needs an initramfs built to unlock the
+root, and some way to answer the prompt on a machine with no
+keyboard.
+
+I have not verified that path end to end, so if this is your first
+Pi install, leave encryption off for now.
+#+end_notice
+
+** Create the filesystems
+:PROPERTIES:
+:EXPORT_FILE_NAME: filesystems
+:EXPORT_HUGO_SLUG: filesystems
+:END:
+
+Two filesystems: FAT32 on the boot partition, because that is what
+both firmwares can read, and btrfs on everything else.
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+mkfs.fat -F32 -n ESP "$ESP"
+mkfs.btrfs -L arch "$ROOTDEV"
+#+end_run
+
+=-n= and =-L= set filesystem labels, which are a convenience rather
+than a requirement -- they make =lsblk= readable and give you a
+fallback way to identify a disk whose UUID you do not have in front
+of you.
+
+#+attr_shortcode: :style warning :title Check $ROOTDEV first
+#+begin_notice
+=mkfs.btrfs= writes to whatever =$ROOTDEV= points at. If you set up
+LUKS on the previous page it must be =/dev/mapper/cryptroot=; if you
+skipped it, the bare partition. Running =echo "$ROOTDEV"= costs
+nothing and formatting the wrong device costs an afternoon.
+#+end_notice
+
+*** Create the subvolumes
+
+Mount the new filesystem at its top level for a moment, create the
+subvolumes, and unmount it again. Nothing lives at the top level
+afterwards -- it exists only as a container for the subvolumes:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+mount "$ROOTDEV" /mnt
+btrfs subvolume create /mnt/@
+btrfs subvolume create /mnt/@home
+btrfs subvolume create /mnt/@snapshots
+btrfs subvolume create /mnt/@log
+btrfs subvolume create /mnt/@pkg
+btrfs subvolume create /mnt/@swap
+umount /mnt
+#+end_run
+
+The leading =@= is a naming convention, not a requirement. It makes
+subvolumes obvious at a glance and is what most Arch and Debian
+tooling expects to find.
+
+| Subvolume    | Mounted at               | Why it is separate                                      |
+|--------------+--------------------------+---------------------------------------------------------|
+| =@=          | =/=                      | The system itself -- the thing you roll back              |
+| =@home=      | =/home=                  | Your data, which must /survive/ a rollback of the system |
+| =@snapshots= | =/.snapshots=            | Where snapshots are kept; cannot live inside =@=          |
+| =@log=       | =/var/log=               | Logs of what went wrong should outlive the rollback       |
+| =@pkg=       | =/var/cache/pacman/pkg=  | A re-downloadable cache, not worth snapshotting           |
+| =@swap=      | =/swap=                  | A swapfile cannot sit on a subvolume that gets snapshotted |
+
+The reasoning behind all six is the same: anything you would want to
+/keep/ when rolling the system back, and anything you would never want
+to copy /into/ a snapshot, has to be outside =@=. Deciding this now
+costs one command each; deciding it later means moving data around on
+a running system.
+
+#+attr_shortcode: :style info
+#+begin_notice
+This chapter only creates the subvolumes. Taking actual snapshots
+needs a tool to manage them, which is a later chapter -- but the
+layout has to be right from the start, so it is done here.
+#+end_notice
+
+** Mount the filesystems
+:PROPERTIES:
+:EXPORT_FILE_NAME: mount
+:EXPORT_HUGO_SLUG: mount
+:END:
+
+Now assemble the subvolumes into the directory tree that the new
+system will see, rooted at =/mnt=.
+
+Pick the mount options once:
+
+#+begin_env
+OPTS="noatime,compress=zstd:1"
+#+end_env
+
+=noatime= stops the filesystem from writing an access timestamp every
+time a file is *read*, which is a pure write amplification with
+almost no upside on a workstation. =compress=zstd:1= compresses data
+transparently; level 1 is deliberate, because btrfs compression is
+fast enough at low levels to be effectively free, while higher levels
+cost noticeably more CPU for a few percent more space.
+
+*** Mount everything
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+mount -o "$OPTS,subvol=@" "$ROOTDEV" /mnt
+mkdir -p /mnt/{home,.snapshots,var/log,var/cache/pacman/pkg,swap,boot}
+mount -o "$OPTS,subvol=@home"      "$ROOTDEV" /mnt/home
+mount -o "$OPTS,subvol=@snapshots" "$ROOTDEV" /mnt/.snapshots
+mount -o "$OPTS,subvol=@log"       "$ROOTDEV" /mnt/var/log
+mount -o "$OPTS,subvol=@pkg"       "$ROOTDEV" /mnt/var/cache/pacman/pkg
+mount -o "noatime,subvol=@swap"    "$ROOTDEV" /mnt/swap
+mount "$ESP" /mnt/boot
+#+end_run
+
+Order matters: =@= has to be mounted first, because the =mkdir= that
+follows creates the mount points *inside* it, and each later mount
+lands on one of those directories.
+
+=@swap= is mounted without =compress=, deliberately. A swapfile has
+to be a plain, uncompressed, un-copy-on-write extent, and giving the
+subvolume compressed mount options would conflict with that.
+
+*** Check it
+
+#+attr_shortcode: :style secondary
+#+begin_run
+findmnt -nR /mnt -o TARGET,SOURCE,FSTYPE
+#+end_run
+
+#+begin_stdout
+/mnt                        /dev/mapper/cryptroot[/@]          btrfs
+├─/mnt/home                 /dev/mapper/cryptroot[/@home]      btrfs
+├─/mnt/.snapshots           /dev/mapper/cryptroot[/@snapshots] btrfs
+├─/mnt/var/log              /dev/mapper/cryptroot[/@log]       btrfs
+├─/mnt/var/cache/pacman/pkg /dev/mapper/cryptroot[/@pkg]       btrfs
+├─/mnt/swap                 /dev/mapper/cryptroot[/@swap]      btrfs
+└─/mnt/boot                 /dev/nvme0n1p1                     vfat
+#+end_stdout
+
+Seven lines, with the subvolume in brackets after each source. If one
+is missing, or two targets show the same subvolume, fix it now --
+this tree is exactly what gets written into =/etc/fstab= in the next
+chapter, and a mistake here becomes a system that does not boot.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+Without LUKS the =SOURCE= column shows the partition
+(=/dev/nvme0n1p2[/@]=) rather than =/dev/mapper/cryptroot=.
+Everything else is identical.
+#+end_notice
+
+** Add swap (optional)
+:PROPERTIES:
+:EXPORT_FILE_NAME: swap
+:EXPORT_HUGO_SLUG: swap
+:END:
+
+Swap is worth adding even on a machine with plenty of memory. It
+gives the kernel somewhere to put pages that genuinely are not being
+used, which frees real memory for the page cache, and it turns "the
+machine froze solid" into "the machine got slow" when something runs
+away with allocations.
+
+On btrfs a *swapfile* is easier to live with than a swap partition:
+it costs no partitioning decision and can be resized or deleted
+later with ordinary file commands. It does have requirements --
+no copy-on-write, no compression, fully allocated -- and
+=btrfs filesystem mkswapfile= handles all of them:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
+swapon /mnt/swap/swapfile
+#+end_run
+
+#+begin_stdout
+create swapfile /mnt/swap/swapfile size 8.00GiB (8589934592) page size 4096
+#+end_stdout
+
+Size it to taste. Matching your RAM is the traditional advice and is
+only strictly necessary for hibernation, which this book does not
+set up; 8 GiB is a reasonable default on a machine with enough disk
+to spare.
+
+Turning it on now, during the install, is not ceremony -- =pacstrap=
+in the next chapter unpacks a few hundred megabytes, and on a
+low-memory machine the swap you just created is what keeps that from
+failing.
+
+Confirm it:
+
+#+attr_shortcode: :style secondary
+#+begin_run
+swapon --show
+#+end_run
+
+#+begin_stdout
+NAME               TYPE SIZE USED PRIO
+/mnt/swap/swapfile file   8G   0B   -2
+#+end_stdout
+
+#+attr_shortcode: :style info :title Page size on the Raspberry Pi
+#+begin_notice
+On the Pi the same command reports =page size 16384= rather than
+=4096=, because =linux-rpi-16k= is built with 16 KiB pages. That is
+expected and nothing to fix.
+
+It does leave one trap: a swapfile records the page size it was made
+with, and a kernel with a different page size refuses to enable it.
+So if you ever move this disk to a generic 4 KiB-page arm64 kernel,
+=swapon= will fail with =Invalid argument= -- delete the swapfile and
+make a new one rather than trying to debug it.
+#+end_notice
+
+With the disk partitioned, formatted, mounted under =/mnt= and
+swapped on, the target is ready to receive a system. The next chapter
+installs one.
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -1115,8 +1582,6 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Partition and format the disk -- GPT, ESP, btrfs subvolumes,
-   optional LUKS, optional swap, mount under /mnt. Pi 5 differences.
  - Install the base system -- pacstrap, fstab, chroot.
  - Make it boot -- bootloader (UEFI vs Pi 5), initramfs, LUKS unlock.
  - Network and users -- hostname, systemd-networkd/iwd, user account,
