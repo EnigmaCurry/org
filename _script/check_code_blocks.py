@@ -98,6 +98,31 @@ def verbatim_lines(path, skip_drafts=False):
             yield n, line
 
 
+def check_block_balance():
+    """3. Every #+begin_X has a matching #+end_X, in order."""
+    bad = []
+    for src in org_sources():
+        stack = []
+        for n, line in enumerate(src.read_text(encoding="utf-8").splitlines(), 1):
+            if m := BEGIN.match(line):
+                stack.append((m.group(1).lower(), n))
+            elif m := END.match(line):
+                kind = m.group(1).lower()
+                if not stack:
+                    bad.append((rel(src), n, f"#+end_{kind} with no matching begin"))
+                elif stack[-1][0] != kind:
+                    open_kind, open_n = stack.pop()
+                    bad.append((rel(src), n,
+                                f"#+end_{kind} closes #+begin_{open_kind} from line {open_n}"))
+                else:
+                    stack.pop()
+        for kind, n in stack:
+            bad.append((rel(src), n, f"#+begin_{kind} is never closed"))
+    for path, n, why in bad:
+        print(f"  {path}:{n}: {why}")
+    return not bad
+
+
 def rendered_pre_blocks():
     """Yield (path, unescaped_text, raw_html) for every <pre> on the site."""
     for f in sorted(PUBLIC.rglob("*.html")):
@@ -163,6 +188,7 @@ def main():
     checks = [
         ("rendered code blocks are clean", lambda: check_rendered_clean(pres)),
         ("no verbatim line silently dropped", lambda: check_nothing_dropped(pres)),
+        ("every block is closed", check_block_balance),
     ]
 
     failed = 0

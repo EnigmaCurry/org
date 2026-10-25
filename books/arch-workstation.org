@@ -14,6 +14,30 @@
 This book describes how I setup a Linux Workstation using Arch Linux,
 installed remotely over SSH from a [[/arch-workstation/boomstick][BOOMSTICK]] live USB.
 
+#+attr_shortcode: :style warning :title Work in progress
+#+begin_notice
+This book is unfinished and under active development. Chapters will
+move, commands will change, and pages may contradict each other
+while I am still working through them.
+
+What is written takes a machine from an unplugged box to one that
+boots on its own and accepts an SSH login: the disk, the base
+system, the bootloader, networking and accounts. The chapters on
+keeping the system maintainable, the graphical desktop, and
+hardware-key =sudo= are not written yet.
+
+Be aware of what "tested" means here. The commands have been run on
+real hardware -- a Raspberry Pi 5 -- but against loopback disk
+images rather than a machine that was then rebooted, so the install
+has not yet been walked end to end on a disk that had to boot
+afterwards. The x86_64 bootloader page is the least exercised part
+of the book, because I develop this on the Pi. Specific caveats are
+flagged in place.
+
+Read it as notes becoming a book rather than as a recipe that is
+known to work start to finish.
+#+end_notice
+
 #+attr_shortcode: :depth 999
 #+begin_index
 index
@@ -2163,6 +2187,29 @@ echo myhost > /etc/hostname
 Substitute your own name. It is the name you will type into =ssh=
 for the rest of the machine's life, so something short and
 memorable beats something descriptive.
+
+#+attr_shortcode: :style warning :title Not hostnamectl -- not yet
+#+begin_notice
+On a running system, =hostnamectl hostname myhost= is the right
+tool. In a chroot it is actively dangerous, because =arch-chroot=
+bind-mounts the live system's =/run= -- including the D-Bus socket
+-- so =hostnamectl= talks to the *installer's* systemd rather than
+the target's:
+
+#+begin_src bash
+# arch-chroot /mnt hostnamectl status
+ Static hostname: arch-iso
+#+end_src
+
+That is the stick answering, not the machine you are installing.
+Setting the hostname that way renames the live environment and
+leaves the target with no =/etc/hostname= at all. Nothing warns
+you.
+
+Writing the file directly is what the [[https://wiki.archlinux.org/title/Installation_guide][Arch installation guide]]
+specifies for exactly this reason, and =hostnamectl= writes the same
+file once the machine is up and running on its own.
+#+end_notice
 
 *** You do not need to edit /etc/hosts
 
