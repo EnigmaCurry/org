@@ -1729,6 +1729,9 @@ WireGuard key so that you can revoke a lost one without touching the
 others.
 #+end_notice
 
+The rest of this appendix goes through it in order, beginning with
+[[/arch-workstation/boomstick/build][Build the image]].
+
 ** Build the image
 :PROPERTIES:
 :EXPORT_FILE_NAME: build
@@ -1813,8 +1816,9 @@ sudo dd if=out/arch-usb-<date>-x86_64+rpi5.img of=/dev/rdiskN bs=4m
 #+end_src
 
 The image only has to be built and written once. Everything that
-makes the stick yours is configuration, added in the next three
-pages, and changing it later never requires another build.
+makes the stick yours is configuration, and changing it later never
+requires another build. That starts on the next page,
+[[/arch-workstation/boomstick/secrets][SSH keys, WiFi and the webhook]].
 
 ** SSH keys, WiFi and the webhook
 :PROPERTIES:
@@ -1899,8 +1903,8 @@ server with access control.
 #+end_notice
 
 With those in place, the stick is already usable on a network you
-control. The next page adds WireGuard, which is what makes it usable
-on one you do not.
+control. The next page adds [[/arch-workstation/boomstick/wireguard][WireGuard]], which is what makes it
+usable on one you do not.
 
 ** Configure WireGuard
 :PROPERTIES:
@@ -1991,6 +1995,9 @@ resolves, which helps when the stick boots before the network is
 fully up. If you want to resolve names through the VPN, a =DNS= line
 works too.
 
+With the configuration written, [[/arch-workstation/boomstick/provision][Provision the stick]] copies it onto
+the stick itself.
+
 ** Provision the stick
 :PROPERTIES:
 :EXPORT_FILE_NAME: provision
@@ -2039,7 +2046,10 @@ or add someone's SSH key, you edit a file on the stick -- or in
 =secrets/=, then run =just provision= again -- and you are done, with
 nothing to rebuild.
 
-The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use it.
+The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use
+it -- or, if you would rather know what the stick does at boot
+before you trust it with a machine, read
+[[/arch-workstation/boomstick/internals][How it works under the hood]] first.
 
 ** How it works under the hood
 :PROPERTIES:
@@ -2165,6 +2175,11 @@ deleted once the combined image exists.
    fight over the peer address. Install one machine at a time, or
    give the second stick its own key.
 #+end_notice
+
+*** Where to go next
+
+That is the whole of the stick. With one built and provisioned, the
+book proper starts at [[/arch-workstation/boot][Boot the stick and connect]].
 
 *** Source and trademark
 
