@@ -89,6 +89,21 @@ html.js .content .highlight pre{ overflow:hidden; text-overflow:ellipsis; }
 :root[data-theme="mono"] .content .highlight pre *,
 :root[data-theme="lite"] .content .highlight pre,
 :root[data-theme="lite"] .content .highlight pre *{ color:var(--fg-bright) !important; }
+/* Chroma's error token (monokai: purple on a maroon chip) fires on valid code the
+   lexers misread (e.g. nix's `=`), so render it as plain text on every theme. */
+.content .highlight span[style*="background-color:#1e0010"]{ color:inherit !important; background:none !important; }
+/* green: remap the inline monokai hues onto the palette (attribute selectors,
+   since Chroma bakes colors inline) -- keywords green, constants/builtins cyan
+   like links, strings amber like inline code, plain text in the prose color. */
+:root[data-theme="green"] .content .highlight pre{ color:var(--prose) !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#f92672"]{ color:var(--accent) !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#66d9ef"]{ color:var(--link) !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#e6db74"]{ color:var(--code-fg) !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#a6e22e"]{ color:#c8e6a0 !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#ae81ff"]{ color:#c9a0e8 !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#fd971f"]{ color:#f0a868 !important; }
+:root[data-theme="green"] .content .highlight span[style*="color:#75715e"]{ color:var(--fg-dim) !important; font-style:italic; }
+:root[data-theme="green"] .content .highlight span[style*="color:#f8f8f2"]{ color:var(--prose) !important; }
 .content pre code{ background:none; padding:0; color:inherit; border-radius:0; cursor:auto; }
 .content pre code:hover{ background:none; }
 /* match the fenced-code size (.7em above) for run-box text */
