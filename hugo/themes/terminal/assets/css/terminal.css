@@ -23,13 +23,17 @@
   --sel-bg:    #fff;      /* copy select-all reverse video (bg) */
   --sel-fg:    #000;      /* ...and text */
   --sec:       #db9e51;   /* secondary run box hue (another machine); per-theme below */
+  --prose:     var(--fg);     /* reading-column text; per-theme below */
+  --link:      var(--accent); /* link hue; per-theme below */
+  --code-fg:   var(--accent); /* inline code hue; per-theme below */
   --col: 74ch;            /* reading column width */
   --font-mono: "Inconsolata", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-read: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;  /* proportional reading face for prose */
   color-scheme:dark;      /* native UI (scrollbars, etc.) match the dark themes */
 }
 /* palette variants -------------------------------------------------*/
-:root[data-theme="green"]{ --accent:#5fd75f; --accent-2:#5fd75f; --fg:#b4deac; --fg-bright:#c8f5c8; --selection:#16320f; --sec:#1ce59a; }
+:root[data-theme="green"]{ --accent:#5fd75f; --accent-2:#5fd75f; --fg:#b4deac; --fg-bright:#eef5ea; --selection:#16320f; --sec:#1ce59a;
+  --prose:#d9dccf; --link:#62c6d6; --code-fg:#e2b864; }   /* green chrome; neutral prose + cyan links + amber code for contrast */
 :root[data-theme="mono"]{  --accent:#cdd3c8; --accent-2:#9aa394; --fg:#d2d5cd; --fg-bright:#e6ebe2; --selection:#2c2f29; --sec:#fff; }
 /* lite: mono, but reverse video (light bg / dark text). reverse-video bits flip back. */
 :root[data-theme="lite"]{
@@ -105,6 +109,7 @@ body{
   flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain; }   /* the only scrolling region */
 .tree li{ overflow-wrap:anywhere; }   /* long slugs wrap instead of overflowing */
 .tree a{ color:var(--fg); text-decoration:none; display:block; padding:1px 0; }
+.tree a, .tree a:hover{ border-bottom:none; }   /* no per-item underline in the nav */
 .tree a:hover{ color:var(--accent); }
 .tree .book::before{ content:"▸ "; color:var(--fg-dim); }
 .tree .book.open::before{ content:"▾ "; color:var(--accent); }
@@ -274,7 +279,7 @@ html.js .iconbtn.js-only{ display:inline-flex; }
 
 /* reading column -------------------------------------------------- */
 main{ padding:0.5rem 1rem 6rem; }
-.content{ max-width:var(--col); margin:0 auto;
+.content{ max-width:var(--col); margin:0 auto; color:var(--prose);
   overflow-wrap:anywhere; }   /* break-less scramble tokens still wrap -> page width never grows */
 
 /* Running prose reads in a proportional face; the terminal chrome, headings, and
@@ -296,14 +301,14 @@ h1,h2,h3{ scroll-margin-top:4.5rem; }   /* anchor jumps clear the sticky header 
 h3{ scroll-margin-top:5.3rem; }         /* h3 lacks h2's border-top + .8rem padding, so add that clearance or its text tucks under the header */
 
 p{ margin:.9rem 0; }
-a{ color:var(--accent); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-a:hover{ border-bottom-color:var(--accent); }
+a{ color:var(--link); text-decoration:none; border-bottom:1px solid color-mix(in srgb, var(--link) 35%, transparent); }
+a:hover{ border-bottom-color:var(--link); }
 
 ul{ margin:.9rem 0; padding-left:0; list-style:none; }
 ul li{ padding-left:2.2ch; position:relative; }
 ul li::before{ content:"–"; position:absolute; left:0; color:var(--fg-dim); }
 
-code{ color:var(--accent); background:color-mix(in srgb, var(--fg) 14%, var(--bg)); padding:.05em .45em; border-radius:2px; }
+code{ color:var(--code-fg); background:color-mix(in srgb, var(--fg) 14%, var(--bg)); padding:.05em .45em; border-radius:2px; }
 
 /* ox-hugo shortcode boxes as TUI framed dialogs -------------------- */
 .box{
