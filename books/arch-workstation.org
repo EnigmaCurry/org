@@ -1781,12 +1781,13 @@ into a snapshot from the boot menu is not set up by this book.
 
 #+attr_shortcode: :style warning :title Partly tested
 #+begin_notice
-BOOMSTICK's =DESKTOP=1 just test-vm= does the [[/arch-workstation/desktop/system][system half]] of this
-chapter on a test VM: it adds the files below to the host repo, runs
-=admin apply=, reboots, and checks that greetd is greeting on the
-console, that =user= can reach the Nix daemon, and that =admin diff=
-still finds no drift. Logging in to sway, the [[/arch-workstation/desktop/sway-home][sway-home]] half, and
-GPU drivers for Nix programs have not been tested.
+BOOMSTICK's =DESKTOP=1 just test-vm= does this chapter on a test VM
+(x86_64, under emulation): the [[/arch-workstation/desktop/system][system half]], a reboot into greetd,
+then the [[/arch-workstation/desktop/sway-home][sway-home]] half as =user= -- =hm-install=, the GPU driver
+setup, firefox from Nix -- and an =admin diff= that finds no drift.
+What it cannot do is log in to sway: the VM has no screen, so
+whether sway, its bar and firefox actually /draw/, with the GPU, is
+untested.
 #+end_notice
 
 The base system is headless on purpose. A desktop is something you
@@ -1802,9 +1803,9 @@ comes from Nix.*
 | From pacman, via the host repo                                        | From Nix, via Home Manager and sway-home                  |
 |-----------------------------------------------------------------------+-----------------------------------------------------------|
 | sway, swaylock, swayidle, kanshi, the Wayland portal                   | foot, waybar, rofi, screenshot and clipboard tools, fonts |
-| PipeWire and WirePlumber, pamixer, playerctl, brightnessctl           | emacs, and the command-line toolbox                       |
-| greetd and tuigreet, the login screen                                 | every dotfile: sway, waybar, foot, bash, git ...          |
-| polkit, firefox, Nix itself                                            |                                                           |
+| PipeWire and WirePlumber, pamixer, playerctl, brightnessctl           | firefox, with its add-ons and settings                    |
+| greetd and tuigreet, the login screen                                 | emacs, and the command-line toolbox                       |
+| polkit, Nix itself                                                     | every dotfile: sway, waybar, foot, bash, git ...          |
 
 The left column is the part that is tangled up with the system: sway
 needs logind and the system's Mesa drivers, swaylock authenticates
@@ -1836,13 +1837,13 @@ Add a block to =packages.txt=:
 #+attr_shortcode: :file ~/arch/packages.txt
 #+begin_edit
 # Desktop: sway and what it needs from the system. The rest of the
-# desktop -- terminal, bar, launcher, fonts, dotfiles -- comes from Nix,
-# with Home Manager and sway-home.
+# desktop -- terminal, bar, launcher, firefox, fonts, dotfiles -- comes
+# from Nix, with Home Manager and sway-home.
 nix
 sway swaylock swayidle kanshi xdg-desktop-portal-wlr
 pipewire pipewire-pulse pipewire-jack wireplumber pamixer playerctl brightnessctl
 greetd greetd-tuigreet polkit
-firefox noto-fonts just
+noto-fonts just
 #+end_edit
 
  - *sway*, *swaylock* and *swayidle* are the compositor, the screen
@@ -1859,9 +1860,10 @@ firefox noto-fonts just
    first console that starts sway once you have logged in.
  - *polkit* lets programs ask for privileges without being run as
    root.
- - *firefox* from Arch rather than from Nix, so that it uses the
-   system's GPU drivers (see [[/arch-workstation/desktop/sway-home][sway-home]]), with *noto-fonts* for it
-   to draw text with. *just* runs sway-home's install recipe.
+ - *noto-fonts* is the font the system's own programs draw with --
+   sway's title bars, swaylock -- named because something among them
+   asks for /a/ font (see below). *just* runs sway-home's install
+   recipe.
 #+attr_shortcode: :style info :title Name the providers
 #+begin_notice
 =pipewire-jack= and =noto-fonts= are there because something else
@@ -1958,14 +1960,29 @@ yet.
 
 The rest of the desktop is =user='s, installed by =user=. =user= has
 no SSH key and no =sudo=, so get a shell as =user= from your =admin=
-session:
+session -- a full login, with =user='s own systemd user manager and
+session bus:
 
 #+attr_shortcode: :style secondary :title Run this on the new machine:
 #+begin_run
-sudo -iu user
+sudo machinectl shell user@
 #+end_run
 
+Not =sudo -iu user=: that gives a shell without a session bus, and
+Home Manager's step that writes GNOME settings (dark mode, here) then
+starts a D-Bus daemon of its own from Nix, which looks for its
+configuration in =/etc/dbus-1/= -- where NixOS keeps it and Arch does
+not -- and fails. Logged in at tuigreet, =user= has a bus already.
+
 Then clone sway-home and let Home Manager install it:
+
+#+attr_shortcode: :style info :title On a branch, for now
+#+begin_notice
+sway-home's support for non-NixOS hosts -- GPU drivers, nm-applet
+only where NetworkManager runs, a working =hm-install= -- is on its
+=arch= branch until it is merged. Until then, clone with =--branch
+arch=.
+#+end_notice
 
 #+attr_shortcode: :style secondary :title Run this on the new machine, as user:
 #+begin_run
@@ -1991,56 +2008,56 @@ From then on, as =user=:
 | =hm-generations= | List previous versions of the environment              |
 | =hm-rollback=    | Go back to the previous one                            |
 
+Programs from Nix are updated the Nix way, not by pacman: =admin
+upgrade= moves sway, greetd and the rest of the system forward, while
+firefox, foot, emacs and everything else in sway-home move when its
+=flake.lock= does -- =hm-update= then =hm-switch=, or =hm-pull= to
+take the lock sway-home's repository has. Each switch is a new
+generation, so =hm-rollback= undoes one.
+
 sway-home's own [[https://github.com/EnigmaCurry/sway-home/blob/master/HOME_MANAGER.md][HOME_MANAGER.md]] describes the rest. This is the
 user's half of the "two halves" in the [[/arch-workstation/desktop][chapter introduction]]: =admin=
 keeps the system in step with =~admin/arch=, and Home Manager keeps
 =user='s environment in step with sway-home, each with its own
 history and its own way back.
 
-*** Log in
-
-Log out of the =user= shell, and at the machine itself, log in as
-=user= at tuigreet. It starts sway, with sway-home's configuration.
-
 *** GPU drivers for programs from Nix
 
 Programs from Nix are linked against Nix's own copy of Mesa, which
-cannot use the drivers Arch installed. Most of sway-home's GUI
-programs -- foot, waybar, rofi -- draw in software and do not care.
-Anything that wants OpenGL or Vulkan does: that is why =firefox=
-comes from pacman above.
-
-For the rest, Home Manager has an answer for non-NixOS systems:
-=targets.genericLinux.enable = true;= in the Home Manager
-configuration builds the GPU drivers from Nix, and asks for one
-command to be run as root, which links them into place as
-=/run/opengl-driver= through a file in =/etc/tmpfiles.d=. =user= has
-no =sudo=, so =admin= runs it:
+cannot load the drivers Arch installed: without help, firefox and
+anything else that draws with OpenGL or Vulkan falls back to the CPU.
+Home Manager's answer for non-NixOS systems is
+=targets.genericLinux=, which sway-home turns on outside NixOS: it
+builds the GPU drivers from Nix, to match, and asks for one command
+to be run as root to link them into place as =/run/opengl-driver=.
+=user= has no =sudo=, so =admin= runs it, from =user='s profile:
 
 #+attr_shortcode: :style secondary :title Run this on the new machine, as admin:
 #+begin_run
 sudo /home/user/.nix-profile/bin/non-nixos-gpu-setup
 #+end_run
 
-That file is a link into the Nix store, which changes whenever the
-drivers do, so tell aconfmgr to leave it alone:
+It installs a link in =/etc/tmpfiles.d=, so that the drivers are linked
+again at every boot. Run it once more whenever =hm-switch= says the
+drivers changed. The link points into the Nix store and moves with
+every update, so =setup= seeds =90-ignore.sh= with a line that has
+aconfmgr leave it alone. (A host repo seeded before that needs the
+line added: =IgnorePath '/etc/tmpfiles.d/non-nixos-gpu.conf'=.)
 
-#+attr_shortcode: :file ~/arch/aconfmgr/90-ignore.sh
-#+begin_edit
-# Home Manager's GPU drivers for Nix programs (non-nixos-gpu-setup).
-IgnorePath '/etc/tmpfiles.d/non-nixos-gpu.conf'
-#+end_edit
+*** Log in
 
-sway-home does not turn =targets.genericLinux= on yet.
+Log out of the =user= shell, and at the machine itself, log in as
+=user= at tuigreet. It starts sway, with sway-home's configuration.
 
 *** Networking
 
-sway-home installs =nm-applet=, the NetworkManager tray icon, and
-sway starts it when it is there. This machine does not run
-NetworkManager -- it uses systemd-networkd and iwd, as the [[/arch-workstation/setup/install][install]]
-set up -- so the applet has nothing to manage: it is harmless, but
-useless. For WiFi, =iwctl= does the same job from a terminal. If you would rather have NetworkManager, the [[/arch-workstation/setup/host][host page]]
-shows how to switch the host repo over to it.
+This machine does not run NetworkManager -- it uses systemd-networkd
+and iwd, as the [[/arch-workstation/setup/install][install]] set up -- so sway-home leaves out =nm-applet=,
+the NetworkManager tray icon: it installs it only where
+=NetworkManager.service= exists. For WiFi, =iwctl= does the same job
+from a terminal. If you would rather have NetworkManager, the [[/arch-workstation/setup/host][host
+page]] shows how to switch the host repo over to it; run =hm-switch=
+afterwards and the applet comes back.
 
 * Appendix: BOOMSTICK
 :PROPERTIES:
