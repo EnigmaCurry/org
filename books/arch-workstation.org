@@ -1945,16 +1945,33 @@ to SSH in as =user= too, copy the file there yourself later.
 
 *** 9. Passwords
 
-The only prompts after the review: a password for =root=, =admin=
-and =user=, each typed twice. On a re-run, any account that already
+The only prompts after the review: a password for =admin= and one for
+the daily user, each typed twice. On a re-run, an account that already
 has one is skipped.
 
-All three matter, for different reasons. =admin= and =user= are login
-accounts. The *root* password is the one people skip, and it is what
-systemd's emergency and rescue targets ask for when something goes
-wrong at boot -- without it, a machine that fails to mount its root
-leaves you at a prompt you cannot answer. Root still cannot log in
-over SSH.
+=root= is not among them. It is *locked* instead -- no password at all,
+so there is none to guess, leak, or forget to rotate. Nothing needs it:
+=admin= is in =wheel=, administration happens through =sudo=, and sshd
+refuses root whatever its password is. =setup check= expects
+=root=L=.
+
+#+attr_shortcode: :style warning :title What a locked root costs
+#+begin_notice
+systemd's emergency and rescue targets ask for the root password, and
+=sulogin= will not open a shell for a locked account -- it says so and
+reboots. A machine that cannot mount its root filesystem therefore
+cannot be rescued from its own keyboard.
+
+This book makes that trade on purpose, because the stick is the
+recovery tool and a better one: boot it, then =setup host --from= and
+=setup disk --mount= as in [[/arch-workstation/setup/disk][Prepare the disk]], and =arch-chroot /mnt=
+gives you a root shell inside the broken system -- over SSH, which a
+keyboard attached to a machine in another room does not offer.
+
+If you would rather have the console, =sudo passwd root= on the running
+machine sets one. =setup check= accepts a root password that exists; it
+objects only to an account with none.
+#+end_notice
 
 *** 10. aconfmgr
 
@@ -2112,7 +2129,7 @@ setup check
 ✓ boot       systemd-boot, entries/arch.conf: root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6
 ✓ initramfs  initramfs-linux.img
 ✓ accounts   admin user
-✓ passwords  root=P admin=P user=P
+✓ passwords  root=L admin=P user=P
 ✓ sudo       visudo -c OK
 ✓ units      systemd-networkd systemd-resolved iwd sshd snapper-cleanup.timer enabled
 ✓ ssh        3 key(s) for admin, sshd config parses
@@ -2128,7 +2145,7 @@ All checks passed. Safe to reboot: setup reboot
 | =boot=      | the systemd-boot entry or =cmdline.txt= lacks =rootflags=subvol=@=, or =cmdline.txt= is more than one line |
 | =initramfs= | there is no initramfs image in =/boot=                                                      |
 | =accounts=  | =admin= or =user= does not exist                                                            |
-| =passwords= | any of the three is not =P= (set); =L= is locked, =NP= is none                              |
+| =passwords= | =admin= or the daily user is not =P= (set), or =root= is =NP=: no password at all. =root=L= is what setup leaves, and =root=P= is allowed |
 | =sudo=      | =visudo -c= fails                                                                           |
 | =units=     | anything in =units.txt= is not enabled                                                      |
 | =ssh=       | =admin= has no keys, the file has the wrong owner or mode, or =sshd -t= rejects the config   |
