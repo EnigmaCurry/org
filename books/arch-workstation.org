@@ -139,11 +139,26 @@ admin apply     # make the machine match the repo again
 admin upgrade   # pacman -Syu, snapshotted, then apply
 #+end_run
 
-=setup= is not a black box. It is one bash script that prints every
-command before it runs it, and the pages that follow explain what
-each of those commands is for and why it is there. The aim is the
-same as a literate install -- you should understand every choice made
-on your behalf -- without making you the interpreter.
+Be clear about what that trades away. =setup= is a long bash script
+-- some fourteen hundred lines -- and it makes a great many choices
+on your behalf, most of which you will never look at. In that sense
+it /is/ a box you are asked to trust, and this book no longer walks
+you through every command it runs. What it does instead is keep the
+box open:
+
+ - *It prints every command before it runs it*, so its output is a
+   transcript of exactly what was done to the machine.
+ - *Everything it leaves behind is plain text*: the host repo, and the
+   aconfmgr configuration that describes the machine, are files you
+   can read, diff and change.
+ - *The pages that follow explain each stage* -- what it is for and
+   why it is there -- rather than what to type.
+ - *It is one file*, so when you do want to know exactly how
+   something is done, =less $(which setup)= answers it.
+
+That is less than a literate install, where you type every command
+and understand each one as you go. It is more than an installer you
+cannot read, and it does not mistype.
 
 The description it works from is a small git repository, the *host
 repo*: a file of answers (hostname, disk, encryption, time zone), a
