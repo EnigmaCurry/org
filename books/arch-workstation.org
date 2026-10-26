@@ -491,9 +491,23 @@ next to each step already done, and offers to run the next one.
  - *It shows you before it does anything.* Each step prints a review
    screen and asks. =setup --yes <step>= answers yes for you, except
    to erasing a disk.
+ - *It walks you through.* =setup= with no arguments shows which steps
+   are done and offers to run the next one, then the one after that,
+   so an install is one command and a series of questions rather than
+   four commands typed from the book. Declining stops there, and so
+   does a step that fails. The reboot at the end is the exception:
+   pressing Enter /declines/ it, because wanting a look around before
+   the machine goes down is the normal case.
  - *It prints what it runs.* Every command is echoed with a leading
    =+= before it runs, so the output is a transcript of exactly what
    was done to the machine.
+ - *It keeps that transcript.* All of it is written to
+   =logs/000_SETUP.txt= in the host repo, committed, and copied to the
+   installed machine, with a header per step recording the time,
+   whether the clock was synchronised, and which image did the
+   installing. Months later, =git log= in =~/arch= still answers "how
+   was this machine built?". Passwords and passphrases are not in it:
+   they are read from the terminal, never printed.
  - *It is one readable file.* =setup= is a bash script at
    =/usr/local/bin/setup=. =less $(which setup)= is the documentation
    of last resort, and the pages that follow say which part of it does
