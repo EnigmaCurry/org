@@ -1635,6 +1635,70 @@ the habit of =admin apply --yes=.
 This is also how a second machine picks up a change: pull the repo
 there and apply.
 
+*** Packages from the AUR
+
+The [[https://wiki.archlinux.org/title/Arch_User_Repository][AUR]] is not a repository of packages but of /build recipes/,
+contributed by users and reviewed by nobody. Nothing in =packages.txt=
+can come from it, because =pacstrap= and =pacman= only know the
+official repositories. aconfmgr calls anything pacman did not install
+from a repository a *foreign* package, and describes it with a
+=--foreign= flag:
+
+#+attr_shortcode: :file ~/arch/aconfmgr/50-packages.sh
+#+begin_edit
+AddPackage --foreign yay          # Yet another yogurt. Pacman wrapper and AUR helper written in go.
+AddPackage --foreign solo2-cli    # A CLI for SoloKeys Solo 2 devices
+#+end_edit
+
+You rarely type those lines yourself. Install something from the AUR by
+hand and =admin save= writes them for you, comment and all, exactly as
+it does for a package from the repos -- which is the point: a foreign
+package that is not described is drift, and =admin apply= would remove
+it.
+
+What makes this work without any setting of your own is how aconfmgr
+finds a builder. It looks for =aurman=, =pacaur=, =yaourt=, =yay=,
+=paru=, =aura= and then =makepkg=, in that order, and uses the first
+one on =PATH=; =--aur-helper HELPER= overrides the choice. And if one of
+those names is itself in the list of foreign packages it is about to
+install, it builds /that/ one first, with =makepkg=, and then uses it
+for the rest. So a single =AddPackage --foreign yay= bootstraps itself
+on a machine that has never had an AUR helper.
+
+#+attr_shortcode: :style warning :title base-devel is not installed
+#+begin_notice
+=makepkg= is what every one of those helpers ultimately runs, and it
+needs the toolchain in =base-devel= -- which =setup= does not install,
+because a machine that builds nothing does not need a compiler. Add it
+before the first foreign package, or the build fails on a missing
+=fakeroot=:
+
+#+begin_src bash
+echo base-devel >> ~/arch/packages.txt
+#+end_src
+
+=makepkg= also refuses to run as root, which is why =admin apply= runs
+aconfmgr as =admin= and lets it call =sudo= for the parts that need it.
+#+end_notice
+
+#+attr_shortcode: :style warning :title admin upgrade does not upgrade them
+#+begin_notice
+=admin upgrade= runs =pacman -Syu=, which has never heard of the AUR,
+and then =admin apply=, which installs foreign packages that are
+/missing/ but does not rebuild ones that are merely out of date. So
+foreign packages stay at whatever version you built, including when
+that version grows a security hole. Upgrading them is a separate habit
+-- =yay -Sua= -- and the honest reason to keep the =--foreign= list
+short.
+#+end_notice
+
+#+attr_shortcode: :style info :title Untested
+#+begin_notice
+No machine built by this book has installed an AUR package yet. The
+behaviour above is read from the pinned aconfmgr (=96ab414=) rather
+than observed.
+#+end_notice
+
 ** Upgrade
 :PROPERTIES:
 :EXPORT_FILE_NAME: upgrade
@@ -1783,8 +1847,70 @@ the package cache -- so that its hooks rewrite =/boot= to match:
 
 When the system no longer boots at all, boot the stick, then =setup
 host --from= and =setup disk --mount= as in [[/arch-workstation/setup/disk][Prepare the disk]], and
-=arch-chroot /mnt snapper --no-dbus undochange 1..2= from there. Booting straight
-into a snapshot from the boot menu is not set up by this book.
+=arch-chroot /mnt snapper --no-dbus undochange 1..2= from there.
+
+*** Booting a snapshot
+
+=setup= does not write boot entries for snapshots, because a menu that
+grows an entry every time pacman runs is worse than no menu. But
+systemd-boot will boot one if you write the entry, and it is the
+quickest way to answer "was the machine still good at snapshot 1?"
+before you undo anything.
+
+An entry is the ordinary one with a different =subvol=. The ESP is
+mounted =fmask=0077=, so it takes =sudo= even to read:
+
+#+attr_shortcode: :file /boot/loader/entries/snapshot-1.conf
+#+begin_edit
+title   Arch Linux snapshot 1
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=<the same UUID as arch.conf> rootflags=subvol=@snapshots/1/snapshot ro
+#+end_edit
+
+=@snapshots/1/snapshot= is where snapper keeps snapshot 1, as seen from
+the /top/ of the btrfs filesystem -- the same place =@= is seen from,
+which is why =arch.conf= says =subvol=@=. Then boot it exactly once,
+rather than making it the default:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo bootctl set-oneshot snapshot-1.conf
+sudo systemctl reboot
+#+end_run
+
+What you get is a system you can log into, with =/= the snapshot:
+=findmnt -no SOURCE /= reads =/dev/vda2[/@snapshots/1/snapshot]=, and
+=snapper list= marks the booted snapshot with a =-=. Reading works --
+=pacman -Q= answers from the snapshot's database, which is the whole
+point of looking.
+
+#+attr_shortcode: :style warning :title It boots read-only, whatever the mount says
+#+begin_notice
+A snapper snapshot is a read-only subvolume (=btrfs property get -ts
+.../snapshot= says =ro=true=), and that, not the =ro= on the kernel
+command line, is what stops writes. =findmnt= cheerfully reports =rw=
+and =touch /etc/anything= still fails. In the test VM six units failed
+for that reason, all of them pacman's gnupg sockets
+(=gpg-agent@etc-pacman.d-gnupg.socket= and friends), which want to
+create sockets under =/etc/pacman.d/gnupg=.
+
+=@home=, =@log=, =@pkg= and =@nix= are separate subvolumes that no
+snapshot covers, so they are still writable -- your home directory in
+a snapshot boot is today's, not the snapshot's.
+
+So this is for /looking/, not repairing: you cannot =snapper
+undochange= into a read-only root. Do the repair from the stick, as
+above. And the kernel and initramfs come from the ESP, which no
+snapshot covers, so a snapshot from before a kernel upgrade boots
+today's kernel -- the module mismatch described above applies here
+too.
+#+end_notice
+
+Because it was a one-shot, the next boot is the normal system again,
+with nothing to undo and no failed units. The entry file stays until
+you delete it; =admin diff= will not mention it, since =/boot= is not
+in the host repo.
 
 * Desktop
 :PROPERTIES:
@@ -2612,8 +2738,6 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Maintenance, later: booting a snapshot from systemd-boot, and AUR
-   packages (aconfmgr's AddPackage --foreign needs base-devel).
  - Hardware-key sudo (optional) -- Solokey, mirroring the NixOS book.
 
 * COMMENT Local Variables                                         :ARCHIVE:
