@@ -12,7 +12,8 @@
 :END:
 
 This book describes how I setup a Linux Workstation using Arch Linux,
-installed remotely over SSH from a [[/arch-workstation/boomstick][BOOMSTICK]] live USB.
+installed remotely over SSH from a [[/arch-workstation/boomstick][BOOMSTICK]] live USB with its
+=setup= command.
 
 #+attr_shortcode: :style warning :title Work in progress
 #+begin_notice
@@ -22,17 +23,15 @@ while I am still working through them.
 
 What is written takes a machine from an unplugged box to one that
 boots on its own and accepts an SSH login: the disk, the base
-system, the bootloader, networking and accounts. The chapters on
-keeping the system maintainable, the graphical desktop, and
-hardware-key =sudo= are not written yet.
+system, the bootloader, networking and accounts, all done by =setup=.
+The chapters on keeping the system maintainable, the graphical
+desktop, and hardware-key =sudo= are not written yet.
 
-Be aware of what "tested" means here. The commands have been run on
-real hardware -- a Raspberry Pi 5 -- but against loopback disk
-images rather than a machine that was then rebooted, so the install
-has not yet been walked end to end on a disk that had to boot
-afterwards. The x86_64 bootloader page is the least exercised part
-of the book, because I develop this on the Pi. Specific caveats are
-flagged in place.
+Be aware of what "tested" means here. =setup disk= has been run
+against loopback disks; =setup install= has not yet installed a
+machine that was then rebooted. The x86_64 bootloader is the least
+exercised part, because I develop this on a Raspberry Pi 5. Specific
+caveats are flagged in place.
 
 Read it as notes becoming a book rather than as a recipe that is
 known to work start to finish.
@@ -110,79 +109,52 @@ layer between you and every upstream manual. Neither answer is wrong.
 Pick the one whose failure mode you would rather live with.
 #+end_notice
 
-*** This book is literate, not declarative
+*** The install is a command, and a file
 
-Because Arch has no mechanism that captures a machine's configuration
-for you, this book supplies the next best thing: it /is/ the install,
-written out in order, with the reasoning next to each step.
+The official Arch install is a long sequence of commands typed into a
+live system, and most of the ways it goes wrong come from typing them:
+a value lost when an SSH session drops, a step run twice that should
+have run once, a command typed into the chroot that belonged outside
+it. This book does not ask you to type them. It uses =setup=, an
+installer that ships on the BOOMSTICK and runs those commands for you,
+in order, from a small description of the machine:
 
-Every command in these pages is a copy-pasteable block. They are
-meant to be run as whole blocks, top to bottom, in the order they
-appear. Where a step can safely be run twice, it is written so that
-it can be. Where it cannot, the book says so.
+#+begin_run
+setup host      # describe the machine
+setup disk      # partition, format and mount it
+setup install   # install, make it boot, network, accounts, SSH
+setup reboot    # check everything, then reboot
+#+end_run
 
-Blocks also tell you /where/ to run them. Three machines are in play
-during an install, and confusing them is the easiest way to have a
-bad afternoon:
+=setup= is not a black box. It is one bash script that prints every
+command before it runs it, and the pages that follow explain what
+each of those commands is for and why it is there. The aim is the
+same as a literate install -- you should understand every choice made
+on your behalf -- without making you the interpreter.
 
-| Machine         | What it is                                                     |
-|-----------------+----------------------------------------------------------------|
-| your workstation | The computer you are already sitting at, running your editor and SSH client. |
-| the live system | The target machine booted from the BOOMSTICK, running in RAM.  |
-| the target      | The system being installed, mounted under =/mnt= until it boots on its own. |
-
-Configuration values that several steps need are carried between
-blocks in ordinary shell variables, set in their own blocks, so that
-you fill in a hostname or a disk path once rather than editing it
-into a dozen commands.
+The description it works from is a small git repository, the *host
+repo*: a file of answers (hostname, disk, encryption, time zone), a
+package list, a list of services, and the handful of files that go
+under =/etc=. It holds no secrets, and it ends up inside the installed
+machine, where it is the start of a record of how that machine was
+built.
 
 #+attr_shortcode: :style warning :title What this does and does not buy you
 #+begin_notice
-Following this book again on another machine reproduces the /steps/,
-not the /bytes/. Packages will have moved on, and nothing here
-verifies that the result matches a previous build. That is weaker
-than a pinned flake and considerably stronger than memory. Keep your
-own copy of the commands you actually ran -- the ones where you chose
-differently than the book did -- because that file is the only record
-of your machine that will exist.
+Running =setup= again on another machine from the same host repo
+reproduces the /steps/ and the /files/, not the /bytes/. Packages
+will have moved on, and nothing here verifies that the result matches
+a previous build. That is weaker than a pinned flake and considerably
+stronger than memory.
 #+end_notice
-
-*** ...but it comes with a script
-
-#+attr_shortcode: :style warning :title Untested
-#+begin_notice
-The =setup= command this section and the [[/arch-workstation/setup][Install with setup]] chapter
-describe is written but has not yet installed a machine end to end.
-#+end_notice
-
-Reading the commands is how you learn the system. Typing them is
-mostly how you make mistakes: a shell variable lost to a dropped SSH
-session, a step run twice that should have run once, a command typed
-into the chroot that belonged on the live system.
-
-So the book offers two ways through the install. [[/arch-workstation/setup][Install with setup]]
-runs the whole thing from the BOOMSTICK in four commands, driven by a
-small *host file* that records your choices. The chapters after it
-are the same install written out by hand, and they double as the
-explanation of everything =setup= does. Use the script and read the
-chapters, or skip the script and run the chapters; you end up with the
-same machine either way.
-
-The host file turns out to be the start of something more useful
-than an installer. It grows into a git repository that describes the
-machine, and after the install it is how you keep the machine
-described -- see [[/arch-workstation/maintain][Keeping it maintainable]]. That is still not a
-NixOS flake, but it closes most of the gap the warning above
-describes.
 
 *** What you end up with
 
 The core of this book builds a *minimal, headless base system*: a
 partitioned and formatted disk, a bootloader, networking, your user
-account, SSH, =sudo=, and enough pacman hygiene to keep the machine
-maintainable. That base is deliberately the same work on a desktop PC
-as on a Raspberry Pi, and it is a perfectly good stopping point if
-what you wanted was a small server.
+accounts, SSH and =sudo=. That base is deliberately the same work on
+a desktop PC as on a Raspberry Pi, and it is a perfectly good
+stopping point if what you wanted was a small server.
 
 The graphical desktop comes later, as its own optional chapter, built
 on top of that base.
@@ -194,24 +166,16 @@ machine over SSH, with no monitor or keyboard attached to it.
 [[/arch-workstation/boomstick][BOOMSTICK]] is how I get there: an Arch live USB that joins my WiFi,
 brings up a WireGuard tunnel to my own server, and lets me in over
 SSH with my own keys -- so the target machine needs nothing but power
-and a USB port, and the install is driven from my own desk. The
-[[/arch-workstation/boomstick][appendix]] explains how to build one and fill it in.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-BOOMSTICK is a convenience, not a requirement. If you boot the
-official [[https://archlinux.org/download/][Arch Linux ISO]] with a monitor and keyboard attached and work
-at the console, everything after this chapter is identical -- the
-only thing BOOMSTICK changes is how you get that root shell.
-#+end_notice
+and a USB port, and the install is driven from my own desk. It is
+also where =setup= lives. The [[/arch-workstation/boomstick][appendix]] explains how to build one and
+fill it in.
 
 *** Hardware this book covers
 
  - *x86_64 PCs*, booting *UEFI*. Legacy BIOS is not covered.
  - *Raspberry Pi 5*, which is the same work with a different
-   bootloader and kernel. Where the two architectures diverge, the
-   book says so in place rather than sending you to a separate
-   chapter.
+   bootloader and kernel. =setup= detects which one it is running on,
+   and where the two differ, this book says so in place.
 
 #+attr_shortcode: :style warning :title aarch64 means Arch Linux ARM
 #+begin_notice
@@ -279,9 +243,8 @@ chapter is reversible by pulling the power.
 
 What you need before starting:
 
- - A [[/arch-workstation/boomstick][BOOMSTICK]] you have already written and provisioned, or the
-   official [[https://archlinux.org/download/][Arch Linux ISO]] on a USB stick if you intend to work at the
-   target's console instead.
+ - A [[/arch-workstation/boomstick][BOOMSTICK]] you have already written and provisioned. It carries
+   =setup=, which the rest of the book uses.
  - The target machine, with power and a network connection.
  - Your own workstation, with an SSH client.
 
@@ -311,8 +274,9 @@ this machine again.
 #+begin_notice
 This book installs UEFI systems. If the machine's firmware is set to
 legacy BIOS or "CSM" mode, switch it to UEFI before going any
-further, because the bootloader chapter assumes an EFI System
-Partition. The [[/arch-workstation/boot/survey][survey]] page checks which mode you actually booted in.
+further, because =setup= installs systemd-boot onto an EFI System
+Partition. =setup disk= checks which mode you actually booted in,
+and refuses to touch the disk if it was legacy BIOS.
 #+end_notice
 
 On a *Raspberry Pi 5* there is no boot menu, and the factory boot
@@ -363,10 +327,13 @@ thirty seconds or so after power-on and try to connect.
 
 #+attr_shortcode: :style tip
 #+begin_notice
-If you are working at the console rather than over SSH -- from the
-official ISO, or because the network did not come up -- everything
-from the next chapter onward is identical. Only the [[/arch-workstation/boot/ssh][Connect over
-SSH]] page is specific to the headless path; skip it and read on.
+If the network did not come up and you are working at the console
+instead, everything from the next chapter onward is identical: log in
+as root and run =setup= there. Only the [[/arch-workstation/boot/ssh][Connect over SSH]] page is
+specific to the headless path.
+
+=setup= is a single script, so the official [[https://archlinux.org/download/][Arch Linux ISO]] can run it
+too, once you copy it across. That path is not tested.
 #+end_notice
 
 ** Connect over SSH
@@ -445,322 +412,6 @@ system -- the machine you build in this book generates its own host
 key, unique to it.
 #+end_notice
 
-** Survey the live system
-:PROPERTIES:
-:EXPORT_FILE_NAME: survey
-:EXPORT_HUGO_SLUG: survey
-:END:
-
-Before touching the disk, confirm five things about the machine you
-have just logged into. Every command on this page only *reads* -- none
-of them change anything -- and each one prevents a failure that is
-annoying to diagnose later.
-
-*** Which architecture is this?
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-uname -m
-#+end_run
-
-#+begin_stdout
-x86_64
-#+end_stdout
-
-Either =x86_64= or =aarch64=. This decides which half of the
-architecture-specific steps later in the book apply to you, and on
-=aarch64= it is a reminder that the distribution is Arch Linux ARM
-rather than Arch Linux.
-
-*** Did it boot UEFI?
-
-#+attr_shortcode: :style secondary
-#+begin_run
-cat /sys/firmware/efi/fw_platform_size
-#+end_run
-
-#+begin_stdout
-64
-#+end_stdout
-
-On an *x86_64 PC* this must print =64=. If the file does not exist,
-you booted in legacy BIOS mode: go back into the firmware setup,
-disable CSM, enable UEFI, and boot again. Installing now would
-produce a machine that cannot boot itself.
-
-On a *Raspberry Pi 5* the file does not exist and that is correct. The
-Pi has no UEFI firmware; its own bootloader loads the kernel
-directly, which is why the bootloader chapter treats it separately.
-
-*** Is the clock right?
-
-#+attr_shortcode: :style secondary
-#+begin_run
-timedatectl
-#+end_run
-
-#+begin_stdout
-               Local time: Sun 2026-10-25 17:55:22 UTC
-           Universal time: Sun 2026-10-25 17:55:22 UTC
-                 RTC time: Sun 2026-10-25 17:55:22
-                Time zone: UTC (UTC, +0000)
-System clock synchronized: yes
-              NTP service: active
-#+end_stdout
-
-The live system syncs the clock over NTP by itself, so this is
-normally already true. Check it anyway: pacman verifies package
-signatures and talks to mirrors over TLS, and both fail in confusing,
-unrelated-looking ways when the clock is wrong. A Raspberry Pi has no
-battery-backed clock at all and starts every boot with a nonsense
-date until NTP fixes it, so this check matters most there.
-
-If it says =no=, the network is not up yet -- check the next step
-first and come back.
-
-*** Is the network up?
-
-#+attr_shortcode: :style secondary
-#+begin_run
-ip -brief address
-ip route
-#+end_run
-
-#+begin_stdout
-lo               UNKNOWN        127.0.0.1/8 ::1/128
-enp1s0           DOWN
-wlan0            UP             192.168.1.140/24 metric 600 fe80::aef2:3cff:fe34:25b7/64
-wg0              UNKNOWN        10.13.17.9/24
-
-default via 192.168.1.1 dev wlan0 proto dhcp src 192.168.1.140 metric 600
-10.13.17.0/24 dev wg0 proto kernel scope link src 10.13.17.9
-192.168.1.0/24 dev wlan0 proto kernel scope link src 192.168.1.140 metric 600
-#+end_stdout
-
-You should see an address on a real interface and a default route. If
-you are reading this over SSH then obviously something is working,
-but it is worth seeing whether you arrived over =wg0= or over the
-LAN, and whether the machine has a route to the internet at all --
-the install downloads several hundred megabytes of packages.
-
-Confirm that outbound HTTPS actually works, which is what pacman
-needs:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-curl -fsS -o /dev/null -w '%{http_code}\n' https://archlinux.org
-#+end_run
-
-#+begin_stdout
-200
-#+end_stdout
-
-*** How much room is there?
-
-#+attr_shortcode: :style secondary
-#+begin_run
-free -h
-df -h /run/archiso/cowspace
-#+end_run
-
-#+begin_stdout
-               total        used        free      shared  buff/cache   available
-Mem:            28Gi       1.7Gi        26Gi       1.0Gi       1.4Gi        26Gi
-
-Filesystem      Size  Used Avail Use% Mounted on
-cowspace        256M  9.1M  247M   4% /run/archiso/cowspace
-#+end_stdout
-
-The live system has no disk of its own: it runs from a read-only
-image with a writable layer in RAM. That layer -- the *cowspace* --
-is where every file you create or modify in the live environment
-actually lands.
-
-Note the size. The cowspace is *256 MiB by default no matter how much
-memory the machine has*: the example above is from a box with 28 GiB
-of RAM. It is not a share of your memory, it is a fixed cap, and the
-symptom of exceeding it is a sudden "no space left on device" from a
-command that looks like it should have had room to spare.
-
-A normal install does not come close, because =pacstrap= downloads
-the new system's packages onto the target's disk rather than into
-RAM. You run into it when you install extra tools into the live
-system itself. The next page shows how to raise the cap.
-
-** Prepare pacman
-:PROPERTIES:
-:EXPORT_FILE_NAME: pacman
-:EXPORT_HUGO_SLUG: pacman
-:END:
-
-The survey only looked. This page makes three small changes to the
-live system, so that the long package download in the next chapter
-does not fail halfway through. None of them touch the target's disk.
-
-*** Refresh the keyring
-
-#+attr_shortcode: :style secondary :title Run this on the live system (x86_64):
-#+begin_run
-pacman -Sy --needed --noconfirm archlinux-keyring
-#+end_run
-
-#+attr_shortcode: :style secondary :title Run this on the live system (Raspberry Pi):
-#+begin_run
-pacman -Sy --needed --noconfirm archlinuxarm-keyring archlinux-keyring
-#+end_run
-
-The Pi image ships both keyrings pre-installed and trusted, so that
-second command is a refresh rather than a first install. Arch Linux
-ARM's =core= carries the pair, and updating both costs nothing.
-
-Every package pacman installs is checked against a set of developer
-signing keys, and the copy of those keys on the stick is as old as
-the image you built. Keys get added, rotated and revoked; a stick
-that has been in a drawer for six months will eventually meet a
-package signed by a key it has never heard of, and refuse to install
-it.
-
-The error when this happens names a signature rather than a stale
-keyring, which sends people down the wrong path. Updating the keyring
-first costs a few seconds and removes the whole category.
-
-On a stick you built last week this is a no-op, and says so -- which
-is the answer you want:
-
-#+begin_stdout
-:: Synchronizing package databases...
- core downloading...
- extra downloading...
-warning: archlinux-keyring-20260909-1 is up to date -- skipping
- there is nothing to do
-#+end_stdout
-
-#+attr_shortcode: :style warning :title Unknown-trust errors on an older Pi stick
-#+begin_notice
-Early BOOMSTICK Pi images shipped without Arch Linux ARM's signing
-keys. On one of those, /every/ ALARM-built package fails -- including
-the kernel, which means the install cannot proceed at all:
-
-#+begin_src text
-error: linux-rpi-16k: signature from "Arch Linux ARM Build System
-       <builder@archlinuxarm.org>" is unknown trust
-#+end_src
-
-Check which kind of stick you have:
-
-#+begin_src bash
-pacman-key --list-keys 68B3537F39A313B3E574D06777193F152BDBE6A6 | grep uid
-#+end_src
-
-A current stick reports =[  full  ]=. If it says =[ unknown ]=,
-rebuild the stick if you can. You cannot install your way out of it
-on the spot, because =archlinuxarm-keyring= is itself signed by the
-very key that is not trusted. The escape is to sign it locally:
-
-#+begin_src bash
-pacman-key --lsign-key 68B3537F39A313B3E574D06777193F152BDBE6A6
-#+end_src
-
-On a stick in that state you must also use plain =pacstrap= in the
-next chapter rather than =pacstrap -K=, because =-K= implies =-G=
-("do not copy the host's keyring to the target") and would build the
-target without the trust you just added. On a current stick either
-form works.
-#+end_notice
-
-*** Sort the mirrors
-
-Package downloads are the slowest part of the install, and which
-mirror you draw them from decides how slow.
-
-The good news is that the default is already sensible, and you can
-usually skip this page's second half. The live system ships the full
-Arch mirrorlist with every HTTPS mirror enabled -- around 425 of them
--- and the first two entries are Arch's own CDNs:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-grep '^Server' /etc/pacman.d/mirrorlist | head -2
-#+end_run
-
-#+begin_stdout
-Server = https://fastly.mirror.pkgbuild.com/$repo/os/$arch
-Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
-#+end_stdout
-
-pacman tries them in order, so unless you have a reason to prefer
-something else, a geo-routed CDN is a fine first choice anywhere in
-the world.
-
-#+attr_shortcode: :style warning :title Nothing ranks the mirrors for you
-#+begin_notice
-=reflector= is installed on the x86_64 live system, but -- contrary
-to what you might expect, and to what a lot of install guides imply
--- it is *not enabled*, and it does not run at boot:
-
-#+begin_src bash
-# systemctl is-enabled reflector.service
-disabled
-#+end_src
-
-The only mirror-related unit that is enabled is
-=choose-mirror.service=, and it does nothing unless you booted with a
-=mirror== kernel parameter. So the order you see is the order the
-mirrorlist shipped in, not a measured ranking.
-#+end_notice
-
-*** Rank them yourself, if you want to
-
-If you would rather draw from a measured-fastest mirror near you than
-from the CDN, run [[https://wiki.archlinux.org/title/Reflector][reflector]] yourself and refresh the package databases
-afterward:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-reflector --country US --protocol https --age 12 --sort rate \
-  --save /etc/pacman.d/mirrorlist
-pacman -Sy
-#+end_run
-
-Replace =US= with your own country name as reflector spells it
-(=reflector --list-countries= prints them all). The other flags ask
-for HTTPS mirrors that synced within the last 12 hours, ordered by
-measured download rate.
-
-#+attr_shortcode: :style info :title Not on the Raspberry Pi
-#+begin_notice
-Skip this on the Pi: =reflector= is in archiso's x86_64 package list
-only, so it is not installed on the Arch Linux ARM image, and it
-knows nothing about ALARM's mirrors in any case. Leave that
-mirrorlist as it is.
-#+end_notice
-
-*** Make room, if you need it
-
-The 256 MiB cowspace from the survey is a cap, not a measure of free
-memory, so on any machine with RAM to spare you can simply raise it:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-mount -o remount,size=4G /run/archiso/cowspace
-#+end_run
-
-#+begin_stdout
-Filesystem      Size  Used Avail Use% Mounted on
-cowspace        4.0G  9.7M  4.0G   1% /run/archiso/cowspace
-#+end_stdout
-
-This is still RAM, so you cannot conjure space that does not exist;
-it only raises the cap, and you should stay well under the physical
-limit. On a machine with very little memory, the real fix is to get
-the target's disk mounted early and put swap on it, which the disk
-chapter does.
-
-With the keyring current, the mirrors settled, and the clock correct,
-the live system is ready. From here, either run [[/arch-workstation/setup][setup]] or carry
-on with the next chapter, which writes to the disk by hand.
-
-
 * Install with setup
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: setup
@@ -770,67 +421,69 @@ on with the next chapter, which writes to the disk by hand.
 :PROPERTIES:
 :EXPORT_FILE_NAME: _index
 :EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 350
+:EXPORT_HUGO_WEIGHT: 400
 :END:
 
 #+attr_shortcode: :style warning :title Untested
 #+begin_notice
-=setup= is written, on the =setup= branch of [[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]], but only
-=setup disk= has been run so far, against a loopback disk. Treat
-=setup install= as a draft until it has installed a machine that then
-booted. Every command it runs is one the by-hand chapters already
-document, so nothing here is new behaviour -- only new packaging.
+=setup= is on the =setup= branch of [[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]], and so far only
+=setup disk= has been run, against a loopback disk. Treat =setup
+install= as a draft until it has installed a machine that then
+booted.
 #+end_notice
 
-The chapters after this one are the install written out by hand, one
-block at a time. =setup= is those same chapters turned into a
-program. It ships on the BOOMSTICK, it runs on the live system, and
-it replaces about ninety copy-pasted blocks with four commands:
+You have a root shell on the live system. Four commands install the
+machine, each one a page of this chapter:
 
-| Command         | What it does                                                | By-hand chapter                                                                                                                       |
-|-----------------+-------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
-| =setup host=    | Asks what this machine is, and writes it down              | The =env= blocks scattered through the book                                                                                           |
-| =setup disk=    | Partitions, encrypts, formats, mounts, adds swap           | [[/arch-workstation/disk][Partition and format the disk]]                                                                              |
-| =setup install= | Installs, makes it boot, sets up network, users and SSH   | [[/arch-workstation/install][Install the base system]], [[/arch-workstation/bootloader][Make it boot]], [[/arch-workstation/network][Network and users]] |
-| =setup check=   | The pre-flight check, then (optionally) the reboot          | [[/arch-workstation/network/reboot][Check it, then reboot]]                                                                           |
+| Command         | What it does                                                 | Changes the target? |
+|-----------------+--------------------------------------------------------------+---------------------|
+| [[/arch-workstation/setup/host][setup host]]      | Asks what this machine is, and writes it down                | No                  |
+| [[/arch-workstation/setup/disk][setup disk]]      | Partitions, encrypts, formats and mounts the disk, adds swap | Erases the disk     |
+| [[/arch-workstation/setup/install][setup install]]   | Installs, makes it boot, sets up network, accounts and SSH  | Writes to =/mnt=    |
+| [[/arch-workstation/setup/check][setup reboot]]    | Checks everything, then unmounts and reboots                 | No                  |
 
-Run =setup= with no arguments and it shows the same list as a menu,
-with a mark next to each step that is already done.
+Run =setup= with no arguments and it shows the same list, with a mark
+next to each step already done, and offers to run the next one.
 
 *** How setup behaves
 
-A handful of rules, each one answering a failure the by-hand path
-has to warn you about:
-
- - *It reads the host file and nothing else.* There are no shell
-   variables to lose when your SSH session drops. Every subcommand
-   starts by reading =/root/arch/host.env=, so you can reconnect and
-   carry on from wherever you were.
+ - *It reads the host repo and nothing else.* Every step starts by
+   reading =/root/arch/host.env=, never a shell variable, so a dropped
+   SSH session loses nothing: reconnect and run the step again.
  - *Every step is safe to run again.* A step that has already been
-   done says so and skips. =fstab= is generated, not appended to, so
-   running it twice gives the same file. The one step that cannot be
-   repeated -- erasing the disk -- makes you type the hostname first.
- - *It shows you before it does anything.* Each subcommand prints a
-   review screen and asks. =--yes= skips the question, for when you
-   are scripting it.
- - *It prints what it runs.* Every command is echoed before it runs,
-   in the same words the by-hand chapters use, so the output is a
-   transcript you can check against this book.
- - *It is one readable file.* =setup= is a single bash script at
-   =/usr/local/bin/setup= on the stick. =less $(which setup)= is the
-   documentation of last resort. =just provision= copies it onto the
-   stick's config partition too, and the live system prefers that
-   copy, so a fix to =setup= reaches a stick without rebuilding the
-   image.
+   done says so and skips, or only does what is missing. The one step
+   that cannot be repeated -- erasing the disk -- makes you type the
+   hostname first.
+ - *It shows you before it does anything.* Each step prints a review
+   screen and asks. =setup --yes <step>= answers yes for you, except
+   to erasing a disk.
+ - *It prints what it runs.* Every command is echoed with a leading
+   =+= before it runs, so the output is a transcript of exactly what
+   was done to the machine.
+ - *It is one readable file.* =setup= is a bash script at
+   =/usr/local/bin/setup=. =less $(which setup)= is the documentation
+   of last resort, and the pages that follow say which part of it does
+   what.
 
-#+attr_shortcode: :style info :title The by-hand chapters stay
-#+begin_notice
-=setup= does not replace the rest of this book; it replaces the
-/typing/. The disk, install, bootloader and network chapters remain
-the explanation of what it did and why, and they still work on their
-own if you would rather run every command yourself -- from the
-official ISO, say, where there is no =setup= at all.
-#+end_notice
+=just provision= copies the current =setup= onto the stick's config
+partition, and the live system prefers that copy to the one built
+into the image, so a fix to =setup= reaches a stick without
+rebuilding it.
+
+*** Three machines
+
+Three machines are in play during an install, and the command blocks
+in this chapter say which one each runs on:
+
+| Machine          | What it is                                                                |
+|------------------+---------------------------------------------------------------------------|
+| your workstation | The computer you are already sitting at, running your editor and SSH client. |
+| the live system  | The target machine booted from the BOOMSTICK, running in RAM. =setup= runs here. |
+| the target       | The system being installed, mounted under =/mnt= until it boots on its own. |
+
+=setup= works on the target from the live system, using =arch-chroot
+/mnt= for each command that has to run inside it, so you never have to
+keep track of which side of the chroot you are on.
 
 ** Describe the machine
 :PROPERTIES:
@@ -839,7 +492,7 @@ official ISO, say, where there is no =setup= at all.
 :END:
 
 The first step changes nothing on the target. It asks a few
-questions and writes the answers into a *host file*, which every
+questions and writes the answers into the *host repo*, which every
 later step reads.
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
@@ -849,15 +502,21 @@ setup host
 
 *** Answer the prompts
 
+Each prompt is pre-filled with its default, which you can edit in
+place or accept with Enter.
+
 #+begin_annotate
 #+begin_src bash
 == Describe this machine ==
-? Hostname (archlinux) myhost
+Machine: Raspberry Pi 5 (aarch64, bcm2712)
+? Hostname archlinux
 #+end_src
 
 The name you will type into =ssh= for the rest of the machine's
-life. It is written to =/etc/hostname= directly, never through
-=hostnamectl=, for the reason given on [[/arch-workstation/network/hostname][Set the hostname]].
+life, so something short and memorable beats something descriptive.
+=setup= writes it straight into the target's =/etc/hostname= rather
+than using =hostnamectl=, which inside a chroot talks to the /live
+system's/ systemd and would rename the stick instead.
 #+end_annotate
 
 #+begin_annotate
@@ -869,14 +528,12 @@ life. It is written to =/etc/hostname= directly, never through
 ? Number (1)
 #+end_src
 
-A picker in place of the =DISK== line you would otherwise type. Two
-things differ from the by-hand path. The disk is recorded by its
-=/dev/disk/by-id/= name, which belongs to that physical drive, rather
-than =/dev/nvme0n1=, which belongs to whatever order the kernel found
-the drives in. And the stick you booted from is never offered:
-=setup= finds it by its =ARCH_CONFIG= partition label and leaves its
-disk off the list, so the one choice that must never be made cannot
-be.
+The disk is recorded by its =/dev/disk/by-id/= name, which belongs to
+that physical drive, rather than =/dev/nvme0n1=, which belongs to
+whatever order the kernel found the drives in this time. The stick you
+booted from is never offered: =setup= finds it by its =ARCH_CONFIG=
+partition label and leaves it off the list, and refuses it later even
+if you write it into the host file by hand.
 #+end_annotate
 
 #+begin_annotate
@@ -884,24 +541,51 @@ be.
 ? Encrypt the root filesystem with LUKS? (yes/no) no
 #+end_src
 
-The same trade as [[/arch-workstation/disk/encrypt][Encrypt the root]]. On a Raspberry Pi the question
-comes with the warning from that page attached -- a headless Pi has
-nobody to type the passphrase -- and the default stays =no=.
+Full-disk encryption protects the data on a machine that is stolen,
+resold, or returned under warranty. It does nothing for a machine
+that is already running and unlocked: the threat it addresses is
+physical possession of the disk.
+
+The cost is a passphrase at every boot, which is a real cost on a
+headless machine in another room. A laptop is an obvious yes; a home
+server that must come back up unattended after a power cut is an
+obvious no.
+
+On a Raspberry Pi, =setup= warns before asking. The Pi has no
+bootloader that can prompt for a passphrase, so the prompt comes from
+the initramfs on the console and serial line -- of no use on a Pi
+with neither attached. Unlocking a headless Pi over the network needs
+an initramfs with networking and SSH, which this book does not set
+up. If the Pi is headless, leave encryption off.
 #+end_annotate
 
 #+begin_annotate
 #+begin_src bash
 ? Swap file size, or 0 for none 8g
+#+end_src
+
+Swap is worth having even with plenty of memory: it gives the kernel
+somewhere to put pages that genuinely are not being used, freeing real
+memory for the page cache, and it turns "the machine froze solid" into
+"the machine got slow" when something runs away with allocations.
+Matching your RAM is only strictly necessary for hibernation, which
+this book does not set up.
+#+end_annotate
+
+#+begin_annotate
+#+begin_src bash
 ? Time zone America/Denver
 ? Locale en_US.UTF-8
 ? Console keymap us
 #+end_src
 
-Each prompt is pre-filled with its default, which you edit in place:
-the book's choices, except the time zone, which is the live
-system's (UTC unless you changed it). The time zone and locale are
-checked against =/usr/share/zoneinfo= and =/etc/locale.gen=, so a
-typo is caught here rather than at the end of the install.
+The time zone defaults to the live system's (UTC unless you changed
+it); =ls /usr/share/zoneinfo= lists them. The locale is checked
+against =/etc/locale.gen=. Pick a UTF-8 one: a non-UTF-8 default is
+why box-drawing characters in programs like =lsblk= degrade into =|-=,
+and it causes stranger problems than that in anything handling text.
+The keymap is for the text console only, which on a machine you reach
+over SSH you may never see -- until a rescue prompt.
 #+end_annotate
 
 #+begin_annotate
@@ -910,10 +594,25 @@ typo is caught here rather than at the end of the install.
 ? Extra packages to install (blank for none) git just tmux
 #+end_src
 
-The =admin= / =user= account split from [[/arch-workstation/network][Network and users]] is not a
-question: it is the shape of this book. Whether =admin= needs a
-password for =sudo= is, and so is anything you want installed beyond
-the base set.
+=setup= always creates two accounts:
+
+| Account | UID  | Groups           | What it is for                          |
+|---------+------+------------------+-----------------------------------------|
+| =admin= | 1000 | =admin=, =wheel= | Administration, and SSH login           |
+| =user=  | 1001 | =user=           | Everything else. No special privileges. |
+
+The split is the point. Day-to-day work -- editing, browsing,
+building, running other people's code -- happens as =user=, an
+account that cannot reconfigure the system even by accident. When
+you intend to administer the machine, you log in as =admin=.
+
+Whether =admin= needs a password for =sudo= is the question. Saying
+yes means anything that gets a shell as =admin= has root, which is a
+real reduction in depth. The reasoning for it here: SSH is key-only,
+root cannot log in, and a sudo password mostly protects against
+someone who already has an =admin= shell -- at which point they can
+wait and capture it. It is the same trade cloud images make. Say no
+and =admin= gets ordinary, password-prompting =sudo= through =wheel=.
 #+end_annotate
 
 *** What it wrote
@@ -932,30 +631,52 @@ KEYMAP=us
 ADMIN_NOPASSWD=yes
 #+end_edit
 
-Open it with =vim /root/arch/host.env= and change anything you
-like, or run =setup host= again, which re-asks every question with
-your current answers as the defaults.
+Edit it with =vim /root/arch/host.env=, or run =setup host= again,
+which re-asks every question with your current answers as the
+defaults.
 
-=/root/arch= is more than one file. It is a git repository -- the
-*host repo* -- and =setup host= seeds the rest of it too:
+=/root/arch= is a git repository, and =setup host= seeds the rest of
+it too:
 
-| File              | Holds                                                         |
-|-------------------+---------------------------------------------------------------|
-| =host.env=        | The answers above                                             |
-| =packages.txt=    | Packages beyond the base set, which =setup= picks from the hardware |
-| =units.txt=       | systemd units to enable: =systemd-networkd=, =iwd=, =sshd=, ... |
-| =etc/=            | Files to place under =/etc=: the =.network= files, the sshd drop-in, the sudoers drop-in |
-| =authorized_keys= | The SSH public keys =admin= will accept, copied from the stick |
+| File                                     | Holds                                                     |
+|------------------------------------------+-----------------------------------------------------------|
+| =host.env=                               | The answers above                                         |
+| =packages.txt=                           | Packages beyond the base set, which =setup= picks from the hardware |
+| =units.txt=                              | systemd units to enable: =systemd-networkd=, =systemd-resolved=, =iwd=, =sshd= |
+| =etc/systemd/network/*.network=          | DHCP on any wired (=en*=) and wireless (=wl*=) interface  |
+| =etc/ssh/sshd_config.d/10-hardening.conf= | Keys only, no root login                                 |
+| =etc/sudoers.d/10-admin=                 | Passwordless sudo for =admin=, if you said yes            |
+| =authorized_keys=                        | The SSH public keys =admin= will accept, copied from the stick |
 
-These are exactly the files the by-hand chapters tell you to write,
-collected in one place before they are installed. After the install,
-the repo moves into the new machine, and from then on it is how you
-maintain it -- see [[/arch-workstation/maintain][Keeping it maintainable]].
+Once seeded, these files are yours: =setup= never overwrites them,
+except for the sudoers drop-in, which follows your answer about
+passwordless sudo.
+
+*** Change anything before installing
+
+Everything =setup install= puts on the machine beyond the base system
+comes from those files, so this is where you deviate from the book.
+Add packages to =packages.txt=. Add files under =etc/= and they are
+installed at the same path under =/etc=. Add or remove units in
+=units.txt=.
+
+For example, to use NetworkManager instead of systemd-networkd and
+iwd -- a perfectly good choice if you want its roaming and GUI
+integration -- add =networkmanager= to =packages.txt=, replace the
+first three lines of =units.txt= with =NetworkManager=, and delete
+the two =.network= files. Commit when you are done:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+git -C /root/arch commit -am "Use NetworkManager"
+#+end_run
 
 *** Reinstalling a machine you already have
 
 If the machine has been installed this way before, its host repo
-already exists, and there is nothing to ask. Point =setup= at it:
+already exists -- inside the old installation at =~admin/arch=, and
+anywhere you pushed it. Point =setup= at it instead of answering the
+questions again:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -964,11 +685,11 @@ setup host --from git@git.example.com:you/arch-myhost.git
 
 The live system has no private key of its own, so cloning a private
 repo over SSH uses yours: connect with =ssh -A arch-iso= to forward
-your agent for that one command.
+your agent.
 
-=--from= also accepts the name of a host file on the stick's config
-partition, at =archiso-config/hosts/myhost.env=, for when you would
-rather not need network access to a git server.
+=--from= also takes a path to a =host.env= file, or a name, which is
+looked up as =archiso-config/hosts/<name>.env= on the stick's config
+partition -- handy when the machine has no route to your git server.
 
 The only answer it re-checks is the disk. A =by-id= name belongs to
 one physical drive, so a reinstall onto a new drive -- the usual
@@ -976,11 +697,12 @@ reason for reinstalling -- has to pick again.
 
 #+attr_shortcode: :style warning :title No secrets in the host repo
 #+begin_notice
-The host repo is meant to be pushed to a git remote, so it never
-holds a secret. Passwords are asked for during =setup install= and
-not written anywhere. WiFi passphrases are copied from the live
-system into the target and never into the repo. The SSH keys it does
-hold are /public/ keys, which is fine.
+The host repo is meant to be pushed to a git remote, so it holds no
+secrets. Passwords are asked for during =setup install= and written
+nowhere else. WiFi passphrases are copied from the live system into
+the target, never into the repo. The SSH keys it does hold are
+/public/ keys. Even so, make any remote you push it to private: it
+describes your machine in detail.
 #+end_notice
 
 ** Prepare the disk
@@ -988,6 +710,52 @@ hold are /public/ keys, which is fine.
 :EXPORT_FILE_NAME: disk
 :EXPORT_HUGO_SLUG: disk
 :END:
+
+This is the first step that writes to the target machine. Up to now
+everything lived in RAM and a power cycle undid it; this step
+destroys whatever was on the disk you picked.
+
+*** What it builds
+
+A single GPT disk with two partitions:
+
+| Partition | Size  | Format | Mounted at | Holds                                  |
+|-----------+-------+--------+------------+----------------------------------------|
+| 1         | 1 GiB | FAT32  | =/boot=    | The bootloader, kernel and initramfs   |
+| 2         | rest  | btrfs  | =/= etc.   | Everything else, optionally encrypted  |
+
+The same two partitions serve both architectures, for different
+reasons. On an x86_64 PC the first is the *EFI System Partition* the
+firmware reads. On a Raspberry Pi 5 it is the *firmware partition*,
+where the Pi's bootloader expects =config.txt=, the kernel and the
+device trees; the Pi ignores partition type codes and simply uses the
+first FAT partition. A gibibyte is far more than one kernel needs, and
+that is the point: boot partitions that are too small are a well-worn
+regret.
+
+Everything else goes on btrfs, split into *subvolumes*. A subvolume is
+an independently mountable tree inside one filesystem: they all draw
+from the same free space, so there is no sizing decision to regret,
+but each can be snapshotted, mounted or rolled back on its own.
+
+| Subvolume    | Mounted at              | Why it is separate                                         |
+|--------------+-------------------------+------------------------------------------------------------|
+| =@=          | =/=                     | The system itself -- the thing you roll back               |
+| =@home=      | =/home=                 | Your data, which must /survive/ a rollback of the system   |
+| =@snapshots= | =/.snapshots=           | Where snapshots are kept; cannot live inside =@=           |
+| =@log=       | =/var/log=              | Logs of what went wrong should outlive the rollback        |
+| =@pkg=       | =/var/cache/pacman/pkg= | A re-downloadable cache, not worth snapshotting            |
+| =@swap=      | =/swap=                 | A swapfile cannot sit on a subvolume that gets snapshotted |
+
+Every subvolume except =@swap= is mounted =noatime,compress=zstd:1=.
+=noatime= stops a write on every /read/, which is pure write
+amplification on a workstation. zstd at level 1 is fast enough to be
+effectively free, while higher levels cost noticeably more CPU for a
+few percent more space. =@swap= is mounted without compression,
+because a swapfile must be a plain, uncompressed, un-copy-on-write
+extent.
+
+*** Run it
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -1002,25 +770,29 @@ before it destroys it:
 ================ Review =================
 Host:         myhost
 Disk:         /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
-              (nvme0n1, 238.5G, XP1000F256G)
-Currently:    2 partitions: ESP (vfat), root (btrfs, label "arch")
-Will create:  1G ESP (vfat) + 237.5G btrfs, no encryption
+              (nvme0n1 238.5G XP1000F256G)
+Currently:    2 partition(s): nvme0n1p1 vfat ESP; nvme0n1p2 btrfs arch;
+Will create:  1G ESP (vfat) + rest btrfs, no encryption
 Subvolumes:   @ @home @snapshots @log @pkg @swap
 Swap:         8g swapfile
 =========================================
 
-This ERASES the disk. Type the hostname to continue: myhost
+This ERASES /dev/nvme0n1. Type the hostname to continue: myhost
 #+end_src
 
 The =Currently:= line is there so that you notice when the disk you
-picked is not the one you thought it was. Typing the hostname rather
-than =y= is deliberate friction: it is the one prompt in =setup= that
-cannot be undone, and =--yes= does not answer it. To script it, pass
-=--confirm-wipe myhost=.
+picked is not the one you thought it was -- on a machine you are
+operating blind, over SSH, from another room, it is worth being slower
+than feels necessary. Typing the hostname rather than =y= is
+deliberate friction, and =--yes= does not answer it. To script it,
+pass =--confirm-wipe myhost=.
+
+Before it gets this far, =setup disk= refuses to run at all if the
+machine booted in legacy BIOS mode, if any partition on the disk is
+mounted or in use as swap, or if the disk is the stick itself.
 #+end_annotate
 
-Then it runs the whole of the [[/arch-workstation/disk][disk chapter]], echoing each
-command as it goes:
+Then it runs, echoing each command as it goes:
 
 #+begin_stdout
 + sgdisk --zap-all /dev/nvme0n1
@@ -1032,7 +804,7 @@ command as it goes:
 + mkfs.btrfs --quiet -L arch /dev/nvme0n1p2
 + mount /dev/nvme0n1p2 /mnt
 + btrfs subvolume create /mnt/@
-  ... (five more subvolumes, then the seven mounts)
+  ... five more subvolumes, then umount /mnt and the seven mounts
 + btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
 + swapon /mnt/swap/swapfile
 
@@ -1040,28 +812,75 @@ command as it goes:
 Next: setup install
 #+end_stdout
 
-One step here is not in the by-hand chapter: =wipefs=. The new
-partitions start exactly where the old ones did, so on a reinstall the
-old btrfs signature is still sitting at the start of partition 2, and
-=mkfs.btrfs= refuses to format over it. Clearing the signatures first
-is what makes reinstalling over the same layout work.
+Reading it across:
 
-The partition naming question (=p1= or =1=?) and the =ROOTDEV=
-indirection for LUKS disappear: =setup= works them out from the
-device it was given, and the reader never has to.
+ - =sgdisk --zap-all= destroys the old GPT /and/ any leftover MBR.
+   =--new=1:0:+1G= makes partition 1 a gibibyte from the first aligned
+   sector, =--new=2:0:0= gives partition 2 the rest, and the type codes
+   mark them as an EFI System Partition (=ef00=) and a Linux
+   filesystem (=8300=).
+ - =wipefs= is the step most install guides leave out. The new
+   partitions start exactly where the old ones did, so on a reinstall
+   the old btrfs signature is still sitting at the start of partition
+   2, and =mkfs.btrfs= refuses to format over it.
+ - The filesystem labels (=ESP=, =arch=) are a convenience: they make
+   =lsblk= readable.
+ - The subvolumes are created at the top level of the filesystem,
+   which is then unmounted and never used again except as their
+   container. =@= is mounted first, because the mount points for the
+   others are directories inside it.
+ - The swap is turned on now, not just created, for two reasons: on a
+   low-memory machine it is what keeps the install from running out,
+   and the fstab is generated from what is /active/, so a swapfile that
+   is not on would be silently left out of it.
+
+#+attr_shortcode: :style info :title Page size on the Raspberry Pi
+#+begin_notice
+On the Pi, =mkswapfile= reports =page size 16384= rather than =4096=,
+because =linux-rpi-16k= is built with 16 KiB pages. That is expected.
+It does leave one trap: a swapfile records the page size it was made
+with, and a kernel with a different page size refuses it. If you ever
+move this disk to a generic 4 KiB-page arm64 kernel, =swapon= fails
+with =Invalid argument=; delete the swapfile and make a new one.
+#+end_notice
+
+*** With encryption
+
+If the host file says =ENCRYPT=yes=, two commands join the list before
+=mkfs.btrfs=:
+
+#+begin_stdout
++ cryptsetup luksFormat --type luks2 --batch-mode --verify-passphrase /dev/nvme0n1p2
++ cryptsetup open /dev/nvme0n1p2 cryptroot
+#+end_stdout
+
+The first asks you to set and confirm the passphrase; the second asks
+for it again to unlock the container, which makes
+=/dev/mapper/cryptroot= appear, and everything after that formats and
+mounts the mapper device instead of the partition. LUKS2's defaults
+are good ones -- =aes-xts-plain64=, and =argon2id= as the key
+derivation function, which is memory-hard and therefore expensive to
+attack with GPUs -- so =setup= does not choose any of them for you.
+
+#+attr_shortcode: :style warning :title The passphrase cannot be recovered
+#+begin_notice
+There is no backdoor and no reset. If you forget it, the data is
+gone -- that is the entire purpose. Put it in a password manager
+before you reboot, not after.
+#+end_notice
 
 *** Running it again
 
 If =/mnt= already holds the layout =setup disk= would build, it says
-so and stops before touching anything:
+so and touches nothing:
 
 #+begin_stdout
 /mnt already has the layout for myhost. Nothing to do.
 #+end_stdout
 
-And if the layout exists on the disk but is not mounted -- the live
-system rebooted, or you are coming back to finish a half-done install
--- =--mount= puts it back without formatting, unlocking LUKS first if
+If the layout exists on the disk but is not mounted -- the live system
+rebooted, or you are coming back to finish a half-done install --
+=--mount= puts it back without formatting, unlocking LUKS first if
 the host file says the disk is encrypted:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
@@ -1069,16 +888,19 @@ the host file says the disk is encrypted:
 setup disk --mount
 #+end_run
 
-That is also the rescue path. Booting the stick and running =setup
-host --from ...= followed by =setup disk --mount= and =arch-chroot
-/mnt= gets you inside a machine that will not boot, in three
-commands.
+That is also the rescue path for a machine that will not boot: boot
+the stick, run =setup host --from ...= and =setup disk --mount=, and
+=arch-chroot /mnt= puts you inside it.
 
 ** Install the system
 :PROPERTIES:
 :EXPORT_FILE_NAME: install
 :EXPORT_HUGO_SLUG: install
 :END:
+
+The disk is partitioned, formatted and mounted under =/mnt=, and there
+is nothing on it. This step puts a complete Arch system there, makes
+it able to boot itself, and makes sure you can log in when it does.
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -1103,60 +925,269 @@ Host repo:    /root/arch -> /mnt/home/admin/arch
 #+end_src
 
 Everything on this screen was decided either by the hardware or by
-the host file. The kernel and microcode are chosen exactly as on
-[[/arch-workstation/install][Set the package list]], and the bootloader follows from the
-architecture.
+the host repo. If any of it is not what you want, answer =n=, change
+the host repo, and run it again.
 #+end_annotate
 
-After you confirm, it works through the rest of the by-hand install
-in order. Each step is the page it links to:
+After you confirm, it works through ten stages. Apart from the
+passwords near the end, it asks nothing more.
 
- 1. *[[/arch-workstation/install/pacstrap][pacstrap]]* the base set plus =packages.txt=, after refreshing the
-    keyring. On a Pi it first checks that the stick trusts Arch Linux
-    ARM's key, and stops with the fix if it does not; on a stick that
-    did not ship that keyring it drops =-K=, so that warning box
-    becomes something the reader never sees. On a re-run, when the
-    base system is already there, it only installs what is missing.
- 2. *[[/arch-workstation/install/fstab][fstab]]*, generated fresh with =genfstab -U= and /written/, not
-    appended -- so running =setup install= twice cannot duplicate an
-    entry. It refuses to continue if the swapfile is missing from the
-    result.
- 3. *[[/arch-workstation/install/localize][Time zone, locale and keymap]]*, from the host file, and
-    =/etc/hostname=.
- 4. *[[/arch-workstation/bootloader/initramfs][The initramfs]]*, adding =sd-encrypt= to =HOOKS= when the host
-    file says the disk is encrypted, and rebuilding with
-    =mkinitcpio -P=.
- 5. *The bootloader*: [[/arch-workstation/bootloader/x86_64][systemd-boot]] on x86_64, or [[/arch-workstation/bootloader/rpi][cmdline.txt]] on the
-    Pi. Every UUID is read from the devices =setup disk= made -- the
-    LUKS container's for =rd.luks.name=, the filesystem's for
-    =root== -- so the four boot-entry variants become one code path
-    and the hard-coded =/dev/nvme0n1p2= goes away.
- 6. *[[/arch-workstation/network/network][The host repo, applied to /mnt]]*: the files under =etc/= are
-    copied into =/mnt/etc= with their modes, the units in =units.txt=
-    are enabled. git does not keep file modes, so they are set by place:
-    sudoers drop-ins =0440=, everything else =0644=. This is the
-    operation that will maintain the machine later, pointed at =/mnt=
-    instead of =/=.
- 7. *The live-system side*: the =resolv.conf= symlink and the iwd
-    =.psk= files, done from outside the chroot where they have to be.
- 8. *[[/arch-workstation/network/accounts][Accounts]]*: =admin= and =user=, the sudoers drop-in (checked with
-    =visudo -c=), and =authorized_keys= with the right owner and
-    modes.
- 9. *Passwords*, the only prompts after the review: root, =admin=,
-    =user=. On a re-run, any account that already has one is skipped.
- 10. *The host repo moves in*: a commit records the install, and
-     =/root/arch= is copied to =/mnt/home/admin/arch=, owned by
-     =admin=.
+*** 1. Packages
 
-#+attr_shortcode: :style info :title One apply, two places
+=setup= refreshes the live system's pacman keyring, then installs the
+base set and everything in =packages.txt= into =/mnt= with =pacstrap=
+-- pacman pointed at a different root. There is no image and no magic:
+when it finishes, =/mnt= is an ordinary directory tree that happens to
+be a Linux system.
+
+The base set is chosen from the hardware:
+
+| Package                     | Why it is there                                                     |
+|-----------------------------+---------------------------------------------------------------------|
+| =base=                      | The minimum system: glibc, bash, coreutils, pacman, systemd          |
+| =linux= / =linux-rpi-16k=   | A kernel, which =base= does not include; picked by =uname -m=, and on aarch64 only for a =bcm2712= board |
+| =linux-firmware=            | Firmware blobs for WiFi, GPUs and other devices                      |
+| =firmware-raspberrypi=      | Pi only: VideoCore firmware and the files its bootloader reads       |
+| =intel-ucode= / =amd-ucode= | x86_64 only, by CPU vendor: microcode errata fixes, loaded at boot   |
+| =btrfs-progs=               | The root filesystem is btrfs and cannot be checked without it        |
+| =cryptsetup=                | Always: a couple of megabytes, and forgetting it on an encrypted disk is a far worse afternoon |
+| =sudo=                      | Administration from =admin=                                          |
+| =openssh=                   | The whole point of a headless machine                                |
+| =iwd=                       | WiFi                                                                 |
+| =vim=                       | An editor that exists inside the installed system                    |
+
+The keyring refresh matters more than it looks. Every package is
+checked against developer signing keys, and the copy of those keys on
+the stick is as old as the image; a stick that has been in a drawer
+for six months will eventually meet a package signed by a key it has
+never heard of. The resulting error names a signature rather than a
+stale keyring, which sends people down the wrong path.
+
+pacstrap uses the live system's mirror list, which by default starts
+with Arch's own geo-routed CDN -- a fine first choice anywhere. If you
+would rather draw from a measured-fastest mirror near you, run
+=reflector --country US --protocol https --age 12 --sort rate --save
+/etc/pacman.d/mirrorlist= before =setup install= (x86_64 only;
+reflector is not on the Pi image and knows nothing about Arch Linux
+ARM's mirrors).
+
+#+attr_shortcode: :style warning :title On an older Pi stick
 #+begin_notice
-Step 6 is the important design choice. Installing the machine and
-maintaining it are the same operation -- "make this root look like
-the host repo" -- run against =/mnt= once and against =/= ever
-after. That is what keeps the install and the running machine from
-drifting apart from day one, and it is the closest Arch gets to the
-NixOS habit of building the system from its configuration.
+Early BOOMSTICK Pi images shipped without Arch Linux ARM's signing
+keys, and on one of those every ALARM package -- including the
+kernel -- fails as =unknown trust=. =setup= checks before it starts,
+and stops with the fix: rebuild the stick, or sign the key locally
+with =pacman-key --lsign-key 68B3537F39A313B3E574D06777193F152BDBE6A6=.
+On such a stick it also runs =pacstrap= without =-K=, because =-K=
+gives the target a fresh keyring and would leave that hand-made trust
+behind.
 #+end_notice
+
+On a re-run, when the base system is already there, this stage only
+installs what is missing.
+
+*** 2. fstab
+
+The new system needs to know how to mount its own filesystems at boot,
+and right now that knowledge exists only in the live system's mount
+table, which is what =genfstab -U= reads. =-U= writes UUIDs rather
+than device paths, because =/dev/sda= is assigned in whatever order
+the kernel finds disks, while a UUID belongs to the filesystem and
+never moves.
+
+=setup= /writes/ the file rather than appending to it, so running it
+twice cannot duplicate an entry, and it stops if the swapfile is
+missing from the result.
+
+*** 3. Time zone, locale, keymap and hostname
+
+=/etc/localtime= becomes a symlink into =/usr/share/zoneinfo=, and the
+hardware clock is set from the system clock. Your locale is uncommented
+in =/etc/locale.gen= and generated, and written to =/etc/locale.conf=
+as the default. The keymap goes into =/etc/vconsole.conf= and the
+hostname into =/etc/hostname=. There is no need for a =127.0.1.1=
+line in =/etc/hosts=: systemd's =myhostname= resolver answers for the
+local hostname already.
+
+#+attr_shortcode: :style info :title Clocks on the Raspberry Pi
+#+begin_notice
+A Pi 5 has a real-time clock, but it only keeps time across a power
+cut if you have fitted the optional battery. Without one it boots
+with a meaningless date and waits for NTP to correct it, which is
+harmless as long as the network comes up. The same is true of the
+live system, and a wrong clock makes pacman's signature checks and
+TLS fail in confusing ways -- so if =setup install= fails on
+signatures on a Pi, check =timedatectl= first.
+#+end_notice
+
+*** 4. initramfs
+
+To mount the root filesystem the kernel needs drivers -- for the disk
+controller, for btrfs, maybe for unlocking LUKS -- and those drivers
+live on the root filesystem it cannot mount yet. The initramfs is a
+second, tiny filesystem loaded into memory alongside the kernel with
+just enough in it to find the real root, mount it and hand over.
+Arch builds it with =mkinitcpio=.
+
+The default =HOOKS= are already right for an unencrypted btrfs root,
+including the =microcode= hook that folds CPU microcode into the
+image (which is why the boot entry below has no separate
+=intel-ucode.img= line, unlike older guides). On an encrypted disk
+=setup= adds =sd-encrypt= after =block=. It has to be =sd-encrypt=,
+not plain =encrypt=: the default initramfs is systemd-based, and the
+older hook builds without complaint into an image that cannot unlock
+the disk.
+
+=mkinitcpio -P= then rebuilds every image. Warnings about missing
+firmware for hardware you do not have are normal.
+
+*** 5. Bootloader
+
+A machine can only start itself if three things line up: the firmware
+finds something to run, that something loads a kernel and the
+initramfs, and the kernel is told where its root filesystem is. The
+last part is where installs usually fail, and they fail the same way:
+the machine powers on, prints a little, and drops to an emergency
+shell.
+
+On an *x86_64 PC*, =setup= runs =bootctl install=, which copies
+[[https://wiki.archlinux.org/title/Systemd-boot][systemd-boot]] onto the ESP and registers it with the firmware, then
+writes its menu and one entry:
+
+#+attr_shortcode: :file /boot/loader/loader.conf
+#+begin_edit
+default  arch.conf
+timeout  3
+console-mode keep
+editor   no
+#+end_edit
+
+#+attr_shortcode: :file /boot/loader/entries/arch.conf
+#+begin_edit
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6 rootflags=subvol=@ rw
+#+end_edit
+
+=editor no= matters more than it looks: with the editor enabled,
+anyone at the keyboard can append =init=/bin/sh= to the kernel command
+line and get a root shell without a password.
+
+On a *Raspberry Pi 5* there is no bootloader to install. The Pi's
+firmware reads =config.txt= and =cmdline.txt= from the FAT partition,
+loads the kernel and initramfs itself, and jumps straight in.
+=config.txt= already loads the initramfs, so =setup= leaves it alone
+and rewrites only the kernel command line, which ships pointing at an
+SD card:
+
+#+attr_shortcode: :file /boot/cmdline.txt
+#+begin_edit
+root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6 rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
+#+end_edit
+
+The firmware reads only the /first line/ of that file, so if you edit
+it by hand, make sure your editor has not wrapped it. =rootwait= tells
+the kernel to wait for a USB or NVMe disk to appear rather than give
+up. Both files are pacman /backup/ files of the kernel package, so a
+kernel update keeps your version and writes its own alongside as
+=cmdline.txt.pacnew= -- which is how new firmware options arrive, and
+why =.pacnew= files are worth checking after kernel updates.
+
+Either way, the part that is specific to this book's layout is
+=rootflags=subvol=@=. Without it the kernel mounts the /top/ of the
+btrfs filesystem, finds the subvolumes sitting there as directories,
+and fails to boot. The UUID is read from the filesystem =setup disk=
+made, never typed. On an encrypted disk, the root becomes
+=rd.luks.name=<LUKS UUID>=cryptroot root=/dev/mapper/cryptroot= --
+the UUID of the LUKS /container/, which is a different UUID from the
+btrfs filesystem inside it, and the easiest thing to get wrong when
+doing this by hand.
+
+#+attr_shortcode: :style warning :title The least tested page
+#+begin_notice
+The x86_64 half of this stage is the least exercised part of the
+book, because I develop on the Pi.
+#+end_notice
+
+*** 6. The host repo, applied
+
+The files under the host repo's =etc/= are installed at the same paths
+under =/mnt/etc=, owned by root. git does not keep file modes, so
+=setup= sets them by place: =0440= for sudoers drop-ins, which =sudo=
+insists on before it will read them, and =0644= for everything else.
+Then every unit in =units.txt= is enabled.
+
+Enabling works inside the chroot because it only creates symlinks on
+disk. Nothing /starts/ until the machine reboots: the =systemd= you
+can see from the chroot belongs to the live system, not the target.
+
+The network this sets up by default is *systemd-networkd* for
+addresses, *systemd-resolved* for DNS and *iwd* for WiFi -- the same
+combination the live system is running. The two =.network= files
+match by name prefix (=en*=, =wl*=) rather than exact name, so they
+work on any machine without checking what the kernel called the
+hardware, and a USB ethernet adapter plugged in later just works.
+
+The sshd drop-in is three lines, and all three matter.
+=PasswordAuthentication no= alone is not enough: with PAM,
+keyboard-interactive is a second route to the same password prompt,
+so it is switched off explicitly, along with root login. Arch's
+=sshd_config= includes =/etc/ssh/sshd_config.d/*.conf=, so the drop-in
+overrides the defaults without touching the shipped file, and package
+updates never conflict with it.
+
+*** 7. The live system's side
+
+Two things can only be done from outside the chroot, so =setup= does
+them from the live system against =/mnt=:
+
+ - =/etc/resolv.conf= becomes a symlink to resolved's stub. Inside the
+   chroot that file is the live system's own, bind-mounted over the
+   target's so that package downloads can resolve names, and replacing
+   it there fails.
+ - The live system's iwd network files -- the WiFi passphrases the
+   stick joined with -- are copied into =/mnt/var/lib/iwd=. This is the
+   single most commonly forgotten step of a headless install: the
+   machine boots, the disk is perfect, and it never joins the network
+   because nothing told it the passphrase.
+
+*** 8. Accounts
+
+=admin= and =user= are created, if they do not exist yet, with
+=admin= in =wheel=. =visudo -c= then checks that the whole sudo
+configuration parses. That check is not optional: a malformed sudoers
+file does not degrade gracefully -- =sudo= refuses to run at all --
+and on a machine where =sudo= is the only route to root, that is a
+lockout you can only fix from the console.
+
+=admin='s =~/.ssh/authorized_keys= is installed from the host repo,
+owned by =admin=, mode =0600=, in a =0700= directory. Those modes are
+not decoration: sshd silently refuses an =authorized_keys= file that
+other users could write to, and from the client's side you are just
+asked for a password that will never be accepted. =user= gets no key;
+to SSH in as =user= too, copy the file there yourself later.
+
+*** 9. Passwords
+
+The only prompts after the review: a password for =root=, =admin=
+and =user=, each typed twice. On a re-run, any account that already
+has one is skipped.
+
+All three matter, for different reasons. =admin= and =user= are login
+accounts. The *root* password is the one people skip, and it is what
+systemd's emergency and rescue targets ask for when something goes
+wrong at boot -- without it, a machine that fails to mount its root
+leaves you at a prompt you cannot answer. Root still cannot log in
+over SSH.
+
+*** 10. The host repo moves in
+
+A commit records the install in the host repo, which is then copied
+to =/mnt/home/admin/arch= and handed to =admin=. From the first boot,
+the description of the machine lives on the machine.
+
+=setup install= finishes by running the [[/arch-workstation/setup/check][check]].
 
 ** Check and reboot
 :PROPERTIES:
@@ -1164,8 +1195,12 @@ NixOS habit of building the system from its configuration.
 :EXPORT_HUGO_SLUG: check
 :END:
 
-=setup install= ends by running the check on its own, but it is also
-a command you can run any time:
+Every step so far fails loudly if it fails at all. The last way an
+install goes wrong fails quietly: the machine reboots, comes up
+perfectly -- and does not let you in, because there is no account, or
+no network, or sshd was never enabled. On a headless box in another
+room, that means fetching a monitor and a keyboard. The check exists
+so that you find out before the reboot rather than after.
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -1186,1903 +1221,45 @@ setup check
 All checks passed. Safe to reboot: setup reboot
 #+end_stdout
 
-It is the [[/arch-workstation/network/reboot][pre-flight check]] from the by-hand path, with one difference
-that matters: it /judges/ the answers rather than printing them for
-you to judge. A =✗= on any line means a machine that will not come
-back, and the command exits non-zero.
+| Line        | Fails when                                                                                  |
+|-------------+---------------------------------------------------------------------------------------------|
+| =hostname=  | =/etc/hostname= does not match the host file                                                |
+| =fstab=     | fewer than seven entries, a duplicated mount point, or no swap line when there should be one |
+| =boot=      | the systemd-boot entry or =cmdline.txt= lacks =rootflags=subvol=@=, or =cmdline.txt= is more than one line |
+| =initramfs= | there is no initramfs image in =/boot=                                                      |
+| =accounts=  | =admin= or =user= does not exist                                                            |
+| =passwords= | any of the three is not =P= (set); =L= is locked, =NP= is none                              |
+| =sudo=      | =visudo -c= fails                                                                           |
+| =units=     | anything in =units.txt= is not enabled                                                      |
+| =ssh=       | =admin= has no keys, the file has the wrong owner or mode, or =sshd -t= rejects the config   |
+| =wifi=      | there are no WiFi credentials /and/ no ethernet interface: it would never join a network   |
 
-When everything passes:
+Any =✗= means a machine that will not come back, and =setup check=
+exits non-zero. One thing it reports as fine looks like an error if
+you run =sshd -t= yourself: =no hostkeys available=. The installed
+system has no host keys yet -- it generates its own on first boot --
+and sshd only looks for them after the configuration has parsed.
+
+*** Reboot
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
 setup reboot
 #+end_run
 
-That runs the check again, and only if it passes does it =swapoff=,
-=umount -R /mnt= and reboot. It will not let you skip the check.
-
-Pull the stick once the machine powers down, and connect to the new
-machine exactly as described in [[/arch-workstation/network/reboot][Connecting to the new machine]]. The
-first thing worth doing there is pushing the host repo somewhere off
-the machine, which is where the [[/arch-workstation/maintain][next chapter]] begins.
-* Partition and format the disk
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: disk
-:END:
-
-** Partition and format the disk
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 400
-:END:
-
-#+attr_shortcode: :style info :title By hand
-#+begin_notice
-This chapter is what =setup disk= does. If you used it, read on for the
-reasoning and skip the commands; if you are installing by hand, run
-them in order as usual.
-#+end_notice
-
-This is the first chapter that writes to the target machine. Up to
-now everything lived in RAM and a power cycle undid it; from here
-on, the commands destroy whatever was on the disk before.
-
-Unless a block says otherwise, every command in this chapter runs as
-root on the live system, over SSH.
-
-*** What you are building
-
-A single GPT disk with two partitions:
-
-| Partition | Size | Format | Mounted at | Holds                               |
-|-----------+------+--------+------------+-------------------------------------|
-| 1         | 1 GiB | FAT32 | =/boot=    | The bootloader, kernel and initramfs |
-| 2         | rest  | btrfs | =/= etc.   | Everything else, optionally encrypted |
-
-The same two partitions serve both architectures, for different
-reasons. On an x86_64 PC the first one is the *EFI System Partition*
-that the firmware reads. On a Raspberry Pi 5 it is the *firmware
-partition*, where the Pi's bootloader expects to find =config.txt=,
-the kernel and the device trees. Either way it is FAT32, one gigabyte,
-and mounted at =/boot=.
-
-Everything else goes on btrfs, split into *subvolumes*. A subvolume
-is an independently mountable tree inside one filesystem: they all
-draw from the same pool of free space, so there is no partitioning
-decision to regret later, but each can be snapshotted, mounted, or
-rolled back on its own. That is what makes it possible, later, to
-roll back a bad update without taking your home directory with it.
-
-#+attr_shortcode: :style warning :title This erases the disk
-#+begin_notice
-Everything below destroys all existing data on the disk you pick.
-There is no undo and no confirmation prompt beyond the ones you type
-yourself. Check the device name twice -- on a machine you are
-operating blind, over SSH, from another room, it is worth being
-slower than feels necessary.
-#+end_notice
-
-*** Choose the target disk
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-lsblk -dpno NAME,SIZE,MODEL,TRAN,ROTA
-#+end_run
-
-#+begin_stdout
-/dev/sda       28.9G  USB 2.0 FD   usb   1
-/dev/nvme0n1  238.5G  XP1000F256G  nvme  0
-#+end_stdout
-
-The last column is =ROTA=: =1= means rotational (a spinning disk, or
-in this case the USB stick you booted from), =0= means solid state.
-Find the disk you mean to install to, and be certain it is not the
-stick -- that is the one entry you must never pick.
-
-Set it once here, and every later block picks it up:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-DISK=/dev/nvme0n1                                  # CHECK THIS -- it gets erased
-case "$DISK" in *[0-9]) P=p;; *) P="";; esac       # p1/p2 or 1/2?
-ESP="${DISK}${P}1"
-ROOT="${DISK}${P}2"
-#+end_env
-
-That =case= line exists because disks disagree about how partitions
-are named. NVMe, SD and eMMC devices append =p1=, =p2= to the device
-name; SATA and USB disks append =1=, =2=. Working it out once here
-means no later command in this chapter has to care which kind of
-disk you picked.
-
-Check that all three came out the way you expect before continuing:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-echo "DISK=$DISK  ESP=$ESP  ROOT=$ROOT"
-#+end_run
-
-#+begin_stdout
-DISK=/dev/nvme0n1  ESP=/dev/nvme0n1p1  ROOT=/dev/nvme0n1p2
-#+end_stdout
-
-#+attr_shortcode: :style warning :title Shell variables live in one shell
-#+begin_notice
-=DISK=, =ESP= and =ROOT= are ordinary shell variables, so they exist
-only in the SSH session you set them in. If your connection drops --
-or you open a second terminal -- set them again before running
-anything else in this chapter. A later block that silently sees an
-empty =$DISK= is exactly the kind of mistake this chapter cannot
-afford.
-#+end_notice
-
-** Partition the disk
-:PROPERTIES:
-:EXPORT_FILE_NAME: partition
-:EXPORT_HUGO_SLUG: partition
-:END:
-
-Wipe the existing partition table and write the new one. =sgdisk=
-does both in one pass:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-: "${DISK:?set DISK on the previous page first}" &&
-sgdisk --zap-all "$DISK" &&
-sgdisk --clear \
-  --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP \
-  --new=2:0:0   --typecode=2:8300 --change-name=2:root \
-  "$DISK" &&
-partprobe "$DISK"
-#+end_run
-
-The first line is a guard, not a command: =${DISK:?...}= aborts with
-that message if =DISK= is unset or empty, and the =&&= chain means
-nothing after it runs. Without it, an empty =$DISK= sends =sgdisk=
-off into four lines of =Problem opening '' for writing= before the
-remaining commands try anyway. Since the whole chapter hangs off one
-variable set in a shell that may not be the one you are in, it is
-worth the line.
-
-Reading the rest across: =--zap-all= destroys the old GPT /and/ any
-leftover MBR, which matters when you are reinstalling over a disk
-that had something else on it. =--new=1:0:+1G= creates partition 1,
-starting at the first aligned sector (=0= means "wherever is next")
-and running one gibibyte; =--new=2:0:0= gives partition 2 all the
-remaining space. Type code =ef00= marks the first as an EFI System
-Partition and =8300= marks the second as a plain Linux filesystem.
-=partprobe= then asks the kernel to re-read the table, so the new
-=/dev/...p1= and =p2= nodes appear.
-
-Confirm the result:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-lsblk -o NAME,SIZE,TYPE,FSTYPE,PARTLABEL "$DISK"
-#+end_run
-
-#+begin_stdout
-NAME          SIZE TYPE FSTYPE PARTLABEL
-nvme0n1     238.5G disk
-├─nvme0n1p1     1G part        ESP
-└─nvme0n1p2   237.5G part      root
-#+end_stdout
-
-#+attr_shortcode: :style info :title Why one gibibyte
-#+begin_notice
-A gibibyte is far more than a single kernel needs, and that is the
-point. On x86_64 the kernel and initramfs are copied onto this
-partition on every update, and keeping a few generations around is
-what lets you boot an older one when a new kernel misbehaves. On the
-Pi it also holds the firmware blobs and every model's device tree.
-Disks are large; boot partitions that are too small are a well-worn
-regret.
-#+end_notice
-
-#+attr_shortcode: :style info :title On the Raspberry Pi
-#+begin_notice
-The =ef00= type code is an x86_64 convention, and the Pi's bootloader
-does not read partition types at all -- it looks for the first FAT
-partition on the device. Partition 1 is that partition, so the same
-command works unchanged, and tagging it =ef00= keeps the two
-architectures telling the same story.
-#+end_notice
-
-** Encrypt the root (optional)
-:PROPERTIES:
-:EXPORT_FILE_NAME: encrypt
-:EXPORT_HUGO_SLUG: encrypt
-:END:
-
-Full-disk encryption protects the data on a machine that is stolen,
-resold, or returned under warranty. It does nothing for a machine
-that is already running and unlocked, which is worth being clear
-about: the threat it addresses is physical possession of the disk.
-
-The cost is a passphrase at every boot. That is a real cost on a
-headless machine in another room -- there is nobody there to type
-it -- so think about where this machine lives before enabling it. A
-laptop is an obvious yes. A home server that must come back up after
-a power cut, unattended, is an obvious no.
-
-*** If you want encryption
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-cryptsetup luksFormat --type luks2 "$ROOT"
-cryptsetup open "$ROOT" cryptroot
-#+end_run
-
-The first command asks you to type =YES= in capitals, then to set and
-confirm the passphrase. The second unlocks it, which is what makes
-=/dev/mapper/cryptroot= appear; it asks for the passphrase you just
-set.
-
-Point the rest of the chapter at the unlocked device:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-ROOTDEV=/dev/mapper/cryptroot
-#+end_env
-
-#+attr_shortcode: :style warning :title The passphrase cannot be recovered
-#+begin_notice
-There is no backdoor and no reset. If you forget it, the data is
-gone -- that is the entire purpose. Put it in a password manager
-before you reboot, not after.
-#+end_notice
-
-*** If you do not
-
-Skip both commands and point everything at the bare partition
-instead:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-ROOTDEV="$ROOT"
-#+end_env
-
-*** What was just created
-
-LUKS2 is the current on-disk format, and its defaults are good ones:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-cryptsetup luksDump "$ROOT" | head -8
-#+end_run
-
-#+begin_stdout
-Version:        2
-Epoch:          3
-Metadata area:  16384 [bytes]
-Keyslots area:  16744448 [bytes]
-UUID:           0c06bb95-...
-Label:          (no label)
-Subsystem:      (no subsystem)
-Flags:          (no flags)
-#+end_stdout
-
-The cipher is =aes-xts-plain64= and the key derivation function is
-=argon2id=, which is memory-hard and therefore expensive to attack
-with GPUs. You do not need to choose any of this; the defaults are
-what you want.
-
-#+attr_shortcode: :style warning :title Encryption on the Pi needs more work
-#+begin_notice
-Everything on this page works the same on a Raspberry Pi -- but
-partitioning an encrypted disk and *booting* one are different
-problems. The Pi has no UEFI and no bootloader that can prompt for a
-passphrase, so an encrypted Pi needs an initramfs built to unlock the
-root, and some way to answer the prompt on a machine with no
-keyboard.
-
-I have not verified that path end to end, so if this is your first
-Pi install, leave encryption off for now.
-#+end_notice
-
-** Create the filesystems
-:PROPERTIES:
-:EXPORT_FILE_NAME: filesystems
-:EXPORT_HUGO_SLUG: filesystems
-:END:
-
-Two filesystems: FAT32 on the boot partition, because that is what
-both firmwares can read, and btrfs on everything else.
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-: "${ESP:?set ESP first}" "${ROOTDEV:?set ROOTDEV on the previous page}" &&
-mkfs.fat -F32 -n ESP "$ESP" &&
-mkfs.btrfs -L arch "$ROOTDEV"
-#+end_run
-
-=-n= and =-L= set filesystem labels, which are a convenience rather
-than a requirement -- they make =lsblk= readable and give you a
-fallback way to identify a disk whose UUID you do not have in front
-of you.
-
-#+attr_shortcode: :style warning :title The guard checks that it is set, not that it is right
-#+begin_notice
-=mkfs.btrfs= writes to whatever =$ROOTDEV= points at, and the guard
-on the first line only stops it being /empty/. If you set up LUKS on
-the previous page it must be =/dev/mapper/cryptroot=; if you skipped
-it, the bare partition. Running =echo "$ROOTDEV"= costs nothing and
-formatting the wrong device costs an afternoon.
-#+end_notice
-
-*** Create the subvolumes
-
-Mount the new filesystem at its top level for a moment, create the
-subvolumes, and unmount it again. Nothing lives at the top level
-afterwards -- it exists only as a container for the subvolumes:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-mount "$ROOTDEV" /mnt
-btrfs subvolume create /mnt/@
-btrfs subvolume create /mnt/@home
-btrfs subvolume create /mnt/@snapshots
-btrfs subvolume create /mnt/@log
-btrfs subvolume create /mnt/@pkg
-btrfs subvolume create /mnt/@swap
-umount /mnt
-#+end_run
-
-The leading =@= is a naming convention, not a requirement. It makes
-subvolumes obvious at a glance and is what most Arch and Debian
-tooling expects to find.
-
-| Subvolume    | Mounted at               | Why it is separate                                      |
-|--------------+--------------------------+---------------------------------------------------------|
-| =@=          | =/=                      | The system itself -- the thing you roll back              |
-| =@home=      | =/home=                  | Your data, which must /survive/ a rollback of the system |
-| =@snapshots= | =/.snapshots=            | Where snapshots are kept; cannot live inside =@=          |
-| =@log=       | =/var/log=               | Logs of what went wrong should outlive the rollback       |
-| =@pkg=       | =/var/cache/pacman/pkg=  | A re-downloadable cache, not worth snapshotting           |
-| =@swap=      | =/swap=                  | A swapfile cannot sit on a subvolume that gets snapshotted |
-
-The reasoning behind all six is the same: anything you would want to
-/keep/ when rolling the system back, and anything you would never want
-to copy /into/ a snapshot, has to be outside =@=. Deciding this now
-costs one command each; deciding it later means moving data around on
-a running system.
-
-#+attr_shortcode: :style info
-#+begin_notice
-This chapter only creates the subvolumes. Taking actual snapshots
-needs a tool to manage them, which is a later chapter -- but the
-layout has to be right from the start, so it is done here.
-#+end_notice
-
-** Mount the filesystems
-:PROPERTIES:
-:EXPORT_FILE_NAME: mount
-:EXPORT_HUGO_SLUG: mount
-:END:
-
-Now assemble the subvolumes into the directory tree that the new
-system will see, rooted at =/mnt=.
-
-Pick the mount options once:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-OPTS="noatime,compress=zstd:1"
-#+end_env
-
-=noatime= stops the filesystem from writing an access timestamp every
-time a file is *read*, which is a pure write amplification with
-almost no upside on a workstation. =compress=zstd:1= compresses data
-transparently; level 1 is deliberate, because btrfs compression is
-fast enough at low levels to be effectively free, while higher levels
-cost noticeably more CPU for a few percent more space.
-
-*** Mount everything
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-mount -o "$OPTS,subvol=@" "$ROOTDEV" /mnt
-mkdir -p /mnt/{home,.snapshots,var/log,var/cache/pacman/pkg,swap,boot}
-mount -o "$OPTS,subvol=@home"      "$ROOTDEV" /mnt/home
-mount -o "$OPTS,subvol=@snapshots" "$ROOTDEV" /mnt/.snapshots
-mount -o "$OPTS,subvol=@log"       "$ROOTDEV" /mnt/var/log
-mount -o "$OPTS,subvol=@pkg"       "$ROOTDEV" /mnt/var/cache/pacman/pkg
-mount -o "noatime,subvol=@swap"    "$ROOTDEV" /mnt/swap
-mount "$ESP" /mnt/boot
-#+end_run
-
-Order matters: =@= has to be mounted first, because the =mkdir= that
-follows creates the mount points *inside* it, and each later mount
-lands on one of those directories.
-
-=@swap= is mounted without =compress=, deliberately. A swapfile has
-to be a plain, uncompressed, un-copy-on-write extent, and giving the
-subvolume compressed mount options would conflict with that.
-
-*** Check it
-
-#+attr_shortcode: :style secondary
-#+begin_run
-findmnt -nR /mnt -o TARGET,SOURCE,FSTYPE
-#+end_run
-
-#+begin_stdout
-/mnt                        /dev/mapper/cryptroot[/@]          btrfs
-├─/mnt/home                 /dev/mapper/cryptroot[/@home]      btrfs
-├─/mnt/.snapshots           /dev/mapper/cryptroot[/@snapshots] btrfs
-├─/mnt/var/log              /dev/mapper/cryptroot[/@log]       btrfs
-├─/mnt/var/cache/pacman/pkg /dev/mapper/cryptroot[/@pkg]       btrfs
-├─/mnt/swap                 /dev/mapper/cryptroot[/@swap]      btrfs
-└─/mnt/boot                 /dev/nvme0n1p1                     vfat
-#+end_stdout
-
-Seven lines, with the subvolume in brackets after each source. If one
-is missing, or two targets show the same subvolume, fix it now --
-this tree is exactly what gets written into =/etc/fstab= in the next
-chapter, and a mistake here becomes a system that does not boot.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-Without LUKS the =SOURCE= column shows the partition
-(=/dev/nvme0n1p2[/@]=) rather than =/dev/mapper/cryptroot=.
-Everything else is identical.
-#+end_notice
-
-** Add swap (optional)
-:PROPERTIES:
-:EXPORT_FILE_NAME: swap
-:EXPORT_HUGO_SLUG: swap
-:END:
-
-Swap is worth adding even on a machine with plenty of memory. It
-gives the kernel somewhere to put pages that genuinely are not being
-used, which frees real memory for the page cache, and it turns "the
-machine froze solid" into "the machine got slow" when something runs
-away with allocations.
-
-On btrfs a *swapfile* is easier to live with than a swap partition:
-it costs no partitioning decision and can be resized or deleted
-later with ordinary file commands. It does have requirements --
-no copy-on-write, no compression, fully allocated -- and
-=btrfs filesystem mkswapfile= handles all of them:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
-swapon /mnt/swap/swapfile
-#+end_run
-
-#+begin_stdout
-create swapfile /mnt/swap/swapfile size 8.00GiB (8589934592) page size 4096
-#+end_stdout
-
-Size it to taste. Matching your RAM is the traditional advice and is
-only strictly necessary for hibernation, which this book does not
-set up; 8 GiB is a reasonable default on a machine with enough disk
-to spare.
-
-Turning it on now, during the install, is not ceremony -- =pacstrap=
-in the next chapter unpacks a few hundred megabytes, and on a
-low-memory machine the swap you just created is what keeps that from
-failing.
-
-Confirm it:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-swapon --show
-#+end_run
-
-#+begin_stdout
-NAME               TYPE SIZE USED PRIO
-/mnt/swap/swapfile file   8G   0B   -2
-#+end_stdout
-
-#+attr_shortcode: :style info :title Page size on the Raspberry Pi
-#+begin_notice
-On the Pi the same command reports =page size 16384= rather than
-=4096=, because =linux-rpi-16k= is built with 16 KiB pages. That is
-expected and nothing to fix.
-
-It does leave one trap: a swapfile records the page size it was made
-with, and a kernel with a different page size refuses to enable it.
-So if you ever move this disk to a generic 4 KiB-page arm64 kernel,
-=swapon= will fail with =Invalid argument= -- delete the swapfile and
-make a new one rather than trying to debug it.
-#+end_notice
-
-With the disk partitioned, formatted, mounted under =/mnt= and
-swapped on, the target is ready to receive a system. The next chapter
-installs one.
-* Install the base system
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: install
-:END:
-
-** Install the base system
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 500
-:END:
-
-#+attr_shortcode: :style info :title By hand
-#+begin_notice
-This chapter is what =setup install= does. If you used it, read on for the
-reasoning and skip the commands; if you are installing by hand, run
-them in order as usual.
-#+end_notice
-
-The disk is partitioned, formatted and mounted under =/mnt=, and
-there is nothing on it. This chapter puts a complete Arch system
-there.
-
-It will not boot yet -- nothing has been told how to load a kernel,
-which is the next chapter -- but by the end of this one you can
-=chroot= into the new system and work inside it as though it were
-running.
-
-Unless a block says otherwise, every command in this chapter runs as
-root on the live system, over SSH.
-
-*** What pacstrap actually is
-
-=pacstrap= is pacman pointed at a different root. It installs
-packages into =/mnt= rather than =/=, sets up a pacman keyring
-inside the target, and copies the live system's mirrorlist across so
-the new system starts out with working package sources.
-
-There is no image, no installer and no magic. When it finishes,
-=/mnt= contains an ordinary directory tree that happens to be a
-Linux system.
-
-*** Choosing what to install
-
-The =base= package is the floor, and it is lower than people expect:
-glibc, bash, coreutils, pacman, systemd, and little else. It has no
-kernel, no editor, no bootloader and no SSH server. Everything the
-machine needs beyond that is an explicit choice, which is the part
-of Arch worth leaning into.
-
-| Package                     | Why it is here                                                      |
-|-----------------------------+---------------------------------------------------------------------|
-| =base=                      | The minimum system: glibc, bash, coreutils, pacman, systemd          |
-| =linux= / =linux-rpi-16k=   | A kernel, which =base= does not include                              |
-| =linux-firmware=            | Firmware blobs for WiFi, GPUs and other devices                      |
-| =firmware-raspberrypi=      | Pi only: VideoCore firmware and the files its bootloader reads       |
-| =btrfs-progs=               | Required -- the root filesystem is btrfs and cannot be checked without it |
-| =cryptsetup=                | Only if you encrypted the disk                                       |
-| =sudo=                      | Administration from your own account                                 |
-| =openssh=                   | The whole point of a headless machine                                |
-| =iwd=                       | WiFi, configured in a later chapter                                  |
-| =vim=                       | An editor that exists inside the chroot                              |
-| =intel-ucode= / =amd-ucode= | x86_64 only: CPU microcode errata fixes, loaded at boot              |
-
-#+attr_shortcode: :style warning :title Do not leave out openssh
-#+begin_notice
-You are installing a machine you reach over the network. If
-=openssh= is missing when you reboot, a headless box simply never
-comes back, and recovering it means walking over with a monitor and
-keyboard -- the exact chore this whole book exists to avoid.
-
-The same goes for =iwd= on a machine that has no ethernet.
-#+end_notice
-
-*** Set the package list
-
-The live system is running on the machine you are installing, so it
-can simply look at the hardware and decide for itself. Run this
-once, whatever you are installing on:
-
-#+attr_shortcode: :shell zsh
-#+begin_env
-PKGS=(base btrfs-progs cryptsetup sudo openssh iwd vim)
-
-case "$(uname -m)" in
-  x86_64)
-    PKGS+=(linux linux-firmware)
-    case "$(grep -m1 '^vendor_id' /proc/cpuinfo)" in   # CPU microcode
-      *GenuineIntel*) PKGS+=(intel-ucode) ;;
-      *AuthenticAMD*) PKGS+=(amd-ucode)   ;;
-    esac ;;
-  aarch64)
-    if grep -qa bcm2712 /proc/device-tree/compatible 2>/dev/null; then
-      PKGS+=(linux-rpi-16k firmware-raspberrypi linux-firmware)
-    else
-      echo "Unrecognised aarch64 board: pick a kernel yourself" >&2
-    fi ;;
-esac
-#+end_env
-
-#+attr_shortcode: :style info :title Why an array
-#+begin_notice
-The live system's shell is *zsh*, not bash -- that is upstream
-archiso, not something BOOMSTICK chose, so it is equally true of the
-official ISO. zsh does not split an unquoted =$PKGS= into separate
-words the way bash does, so a plain string would arrive at
-=pacstrap= as one enormous package name. An array expanded as
-="${PKGS[@]}"= behaves identically in both shells.
-#+end_notice
-
-*** What it decided, and why
-
- - *The kernel* follows =uname -m=. There is no single =linux=
-   package that covers both.
- - *Microcode* is read from =/proc/cpuinfo=. Intel and AMD ship
-   errata fixes that the bootloader loads before the kernel starts,
-   and the two are different packages. Any other x86_64 vendor gets
-   none, which is correct -- there is nothing to install.
- - *The Pi kernel* is chosen by SoC rather than by model name. The
-   test looks for =bcm2712= in the device tree, which is exactly
-   what =linux-rpi-16k= supports, and so it covers the Pi 5, the Pi
-   500 and the CM5 alike. An aarch64 board that is none of those
-   says so instead of installing a kernel that cannot boot it.
- - *=cryptsetup=* is included unconditionally. You only need it if
-   you encrypted the disk, but it costs a couple of megabytes and
-   forgetting it on an encrypted system is a far worse afternoon
-   than carrying it on an unencrypted one.
-
-Check what it picked before installing it:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-echo "${PKGS[@]}"
-#+end_run
-
-#+begin_stdout
-base btrfs-progs cryptsetup sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
-#+end_stdout
-
-That output is from a Raspberry Pi. On an Intel PC the tail reads
-=linux linux-firmware intel-ucode= instead.
-
-** Run pacstrap
-:PROPERTIES:
-:EXPORT_FILE_NAME: pacstrap
-:EXPORT_HUGO_SLUG: pacstrap
-:END:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-pacstrap -K /mnt "${PKGS[@]}"
-#+end_run
-
-This downloads a little over a gigabyte and takes a few minutes on a
-reasonable connection. The packages land in
-=/mnt/var/cache/pacman/pkg= -- on the target's disk, inside the
-=@pkg= subvolume you made for exactly this -- so the live system's
-small RAM filesystem is not involved.
-
-The =-K= flag tells pacstrap to initialise a *fresh* pacman keyring
-inside the target rather than copying the live system's. That is the
-cleaner default: the new machine gets the distribution's keys and
-none of the local state that has accumulated on the installer.
-
-#+attr_shortcode: :style info :title On an older Pi stick, drop the -K
-#+begin_notice
-=-K= implies =-G=, "do not copy the host's keyring to the target".
-On a BOOMSTICK Pi image that predates the Arch Linux ARM signing
-keys, the trust you had to add by hand lives only in the live
-system's keyring, so =-K= would discard it and the install would
-fail on the kernel. Use plain =pacstrap /mnt "${PKGS[@]}"= there
-instead.
-See [[/arch-workstation/boot/pacman][Prepare pacman]] for how to tell which stick you have. On a
-current stick, either form works.
-#+end_notice
-
-*** When it finishes
-
-The last thing pacstrap does is build an initramfs for the kernel
-you installed, so the tail of the output looks like this:
-
-#+begin_stdout
-  -> Early uncompressed CPIO image generation successful
-==> Initcpio image generation successful
-(14/14) Reloading system bus configuration...
-  Skipped: Running in chroot.
-#+end_stdout
-
-=Skipped: Running in chroot= is expected and is not an error.
-pacstrap is installing into a directory, so there is no running
-system bus for the package's hook to reload. On a Raspberry Pi 5
-over WiFi, the whole run took about a minute and a half.
-
-*** Check it landed
-
-#+attr_shortcode: :style secondary
-#+begin_run
-du -sh /mnt
-#+end_run
-
-#+attr_shortcode: :style secondary
-#+begin_run
-df -h /mnt | tail -1
-#+end_run
-
-#+begin_stdout
-3.3G	/mnt
-/dev/nvme0n1p2  238G  2.5G  235G   1% /mnt
-#+end_stdout
-
-Those two numbers disagree on purpose, and the gap is the =zstd=
-compression you mounted with back in the disk chapter: =du= adds up
-3.3 GiB of file contents, while =df= reports the 2.5 GiB those files
-actually occupy. About a quarter of the base system compressed
-away, for free.
-
-A couple of gigabytes, give or take your package choices. If that
-number is in megabytes, something went wrong and you should read
-back through pacstrap's output rather than continuing.
-
-** Generate the fstab
-:PROPERTIES:
-:EXPORT_FILE_NAME: fstab
-:EXPORT_HUGO_SLUG: fstab
-:END:
-
-The new system needs to know how to mount its own filesystems at
-boot. Right now that knowledge exists only in the live system's
-mount table -- which is exactly what =genfstab= reads:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-genfstab -U /mnt >> /mnt/etc/fstab
-#+end_run
-
-=-U= writes *UUIDs* rather than device paths. This matters more than
-it looks: =/dev/sda= is assigned in whatever order the kernel
-happens to find disks, so adding a second drive later can rename the
-first one and leave a machine that no longer boots. A UUID belongs
-to the filesystem and never moves.
-
-#+attr_shortcode: :style warning :title Append, do not overwrite -- and only once
-#+begin_notice
-Note the =>>=. =pacstrap= already created =/mnt/etc/fstab= with a
-header comment in it, and a single =>= would replace it.
-
-More importantly, running this command twice appends a *second* copy
-of every entry. Duplicate mounts are a confusing failure at boot. If
-you are unsure whether you already ran it, read the file before
-running it again -- not after.
-#+end_notice
-
-*** Read what it wrote
-
-This file is worth actually reading, because a mistake here is a
-machine that does not come up:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-cat /mnt/etc/fstab
-#+end_run
-
-#+begin_stdout
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/         	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@	0 0
-
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/home     	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@home	0 0
-
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/.snapshots	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@snapshots	0 0
-
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/var/log  	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@log	0 0
-
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/var/cache/pacman/pkg	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@pkg	0 0
-
-# /dev/nvme0n1p2 LABEL=arch
-UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6	/swap     	btrfs     	rw,noatime,compress=zstd:1,ssd,discard=async,space_cache=v2,subvol=/@swap	0 0
-
-# /dev/nvme0n1p1 LABEL=ESP
-UUID=4B65-AADD      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=ascii,shortname=mixed,errors=remount-ro	0 2
-
-/swap/swapfile      	none      	swap      	defaults  	0 0
-#+end_stdout
-
-Three things to check:
-
- 1. *Every btrfs line carries the same UUID*, and they differ only
-    by =subvol=. That is one filesystem mounted six times, which is
-    what subvolumes are.
- 2. *The boot partition has its own UUID* and is =vfat=. Its UUID is
-    short -- FAT volume IDs are 32-bit, so they look like =A1B2-C3D4=
-    rather than the long form used by btrfs.
- 3. *The swapfile has a line* if you created one.
-
-#+attr_shortcode: :style info :title Options you did not ask for
-#+begin_notice
-=genfstab= records the mount options the kernel is /actually/ using,
-not the ones you typed, so you will see extras like =ssd= and
-=space_cache=v2= that btrfs selected for itself. That is correct and
-should be left alone.
-#+end_notice
-
-#+attr_shortcode: :style warning :title No swap line?
-#+begin_notice
-=genfstab= finds swap by looking at what is currently *active*, not
-at what exists on disk. If you created a swapfile but never ran
-=swapon=, there will be no swap line here and the installed system
-will come up without swap, silently.
-
-Fix it by running =swapon /mnt/swap/swapfile= and generating the
-file again -- after deleting the entries you already wrote.
-#+end_notice
-
-** Enter the new system
-:PROPERTIES:
-:EXPORT_FILE_NAME: chroot
-:EXPORT_HUGO_SLUG: chroot
-:END:
-
-Everything from here on happens *inside* the system you just
-installed:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-arch-chroot /mnt
-#+end_run
-
-The prompt changes, and from that moment =/= means the new system,
-=pacman= installs into it, and configuration files you edit are its
-files rather than the installer's.
-
-*** What arch-chroot does
-
-A bare =chroot= would give you the new filesystem and nothing else,
-and most package scripts would fail. =arch-chroot= is a wrapper that
-also bind-mounts =/proc=, =/sys=, =/dev= and =/run= from the live
-system into the target, and copies =/etc/resolv.conf= across so that
-name resolution works inside.
-
-The practical result is that the chroot behaves like a running
-system for the purposes of installing packages and writing config.
-
-*** What it is not
-
-It is *not* booted. The new system's =systemd= is not running --
-the =systemd= you can see belongs to the live environment. That
-distinction has one consequence you will meet immediately:
-
-| Command                    | Inside the chroot                                    |
-|----------------------------+------------------------------------------------------|
-| =systemctl enable foo=     | *Works.* It only creates symlinks on disk            |
-| =systemctl start foo=      | *Does not work.* There is no running init to ask      |
-| =systemctl status foo=     | Reports on the /live/ system, not the target          |
-
-So you enable services now and they start on the first real boot.
-Nothing you enable in this chapter runs until the machine reboots.
-
-*** Getting back out
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-exit
-#+end_run
-
-=Ctrl-D= does the same thing. You can re-enter with =arch-chroot
-/mnt= as often as you like -- it is not a one-shot operation, and
-nothing is lost by leaving and coming back.
-
-*** Confirm where you are
-
-It is worth being certain which system you are typing into, because
-every remaining chapter depends on getting that right:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat /etc/os-release | head -2
-pacman -Q | wc -l
-#+end_run
-
-#+begin_stdout
-NAME="Arch Linux ARM"
-PRETTY_NAME="Arch Linux ARM"
-166
-#+end_stdout
-
-On an x86_64 machine the name is =Arch Linux=. Either way the
-package count is the interesting part: a fresh install of the set
-above is a couple of hundred packages.
-
-The live system has a far longer package list than a fresh install,
-so that count alone tells you which side of the chroot you are on.
-
-** Set the time zone and locale
-:PROPERTIES:
-:EXPORT_FILE_NAME: localize
-:EXPORT_HUGO_SLUG: localize
-:END:
-
-These are the first settings that belong to the new machine rather
-than to the installer. All of them run *inside the chroot*.
-
-*** Time zone
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-ln -sf /usr/share/zoneinfo/America/Denver /etc/localtime
-hwclock --systohc
-#+end_run
-
-Substitute your own zone; =ls /usr/share/zoneinfo= lists the
-regions, and each is a directory of cities. =/etc/localtime= is
-simply a symlink into that tree, which is why this is a one-line
-setting with no configuration file behind it.
-
-=hwclock --systohc= writes the current system time to the hardware
-clock in UTC.
-
-#+attr_shortcode: :style info :title Clocks on the Raspberry Pi
-#+begin_notice
-A Pi 5 has a real-time clock, but it only keeps time across a power
-cut if you have fitted the optional battery. Without one the machine
-boots with a meaningless date every time and waits for NTP to
-correct it, which is harmless as long as the network comes up. It is
-the reason the [[/arch-workstation/boot/survey][survey]] step checked the clock in the first place.
-#+end_notice
-
-*** Locale
-
-Arch ships every locale commented out and generates only the ones
-you ask for. Uncomment the line you want:
-
-#+attr_shortcode: :file /etc/locale.gen
-#+begin_edit
-en_US.UTF-8 UTF-8
-#+end_edit
-
-Then generate it and record the choice as the system default:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-locale-gen
-echo "LANG=en_US.UTF-8" > /etc/locale.conf
-#+end_run
-
-#+begin_stdout
-Generating locales...
-  en_US.UTF-8... done
-Generation complete.
-#+end_stdout
-
-#+attr_shortcode: :style tip
-#+begin_notice
-Pick a UTF-8 locale. A non-UTF-8 default is the reason box-drawing
-characters in programs like =lsblk= degrade into =|-= and =`-=, and
-it causes stranger problems than that in anything handling text.
-#+end_notice
-
-*** Console keymap
-
-If your keyboard is not US layout, set it for the text console --
-this is separate from any graphical keyboard setting later:
-
-#+attr_shortcode: :file /etc/vconsole.conf
-#+begin_edit
-KEYMAP=us
-#+end_edit
-
-=localectl list-keymaps= lists the options. On a machine you only
-ever reach over SSH this setting never comes up, but it costs
-nothing now and is annoying to discover you need at a rescue prompt.
-
-With a system installed, an fstab describing it, and a shell inside
-it, what remains is to make the machine capable of starting on its
-own. That is the next chapter.
-* Make it boot
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: bootloader
-:END:
-
-** Make it boot
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 600
-:END:
-
-#+attr_shortcode: :style info :title By hand
-#+begin_notice
-This chapter is what =setup install= does. If you used it, read on for the
-reasoning and skip the commands; if you are installing by hand, run
-them in order as usual.
-#+end_notice
-
-There is a complete Arch system on the disk, and nothing on that
-disk knows how to start it. Three things have to line up before a
-machine can bring itself up unattended:
-
- 1. The *firmware* has to find something to run, without your help.
- 2. That something has to load a *kernel* and an *initramfs*.
- 3. The kernel has to be told *where its root filesystem is*, and how
-    to mount it.
-
-The second and third steps are where an install usually fails, and
-they fail in a specific way: the machine powers on, prints a little,
-and drops to an emergency shell because it cannot find a root to
-mount. Everything on these pages exists to prevent that.
-
-#+attr_shortcode: :style secondary :title Everything in this chapter runs inside the chroot
-#+begin_notice
-If you have left it, get back in with =arch-chroot /mnt= from the
-live system. The commands below write to the installed system, and
-several of them read =/etc/fstab=, which only exists inside it.
-#+end_notice
-
-*** Read two pages, in this order
-
-*Step 1, everybody:* [[/arch-workstation/bootloader/initramfs][Build the initramfs]]. This is the same work on
-both architectures and it is not optional -- it is what finds and
-mounts your root filesystem at boot. Do this first.
-
-*Step 2, pick one* to match the machine:
-
-| Machine        | Read                                     | Because                                                   |
-|----------------+------------------------------------------+-----------------------------------------------------------|
-| x86_64 PC      | [[/arch-workstation/bootloader/x86_64][Install systemd-boot]]       | UEFI firmware runs a boot loader from the ESP              |
-| Raspberry Pi 5 | [[/arch-workstation/bootloader/rpi][Configure the Pi firmware]]  | There is no boot loader; the firmware reads =config.txt=   |
-
-#+attr_shortcode: :style warning
-#+begin_notice
-Do not jump straight to step 2. A boot entry that names a kernel and
-a root filesystem is useless if the initramfs cannot reach the disk,
-and that failure looks identical to a bad boot entry -- you get an
-emergency shell either way, with nothing to say which of the two is
-wrong.
-#+end_notice
-
-That split in step 2 is the biggest in this book. A PC has firmware
-that knows how to run an EFI program, and systemd-boot is that
-program. The Pi has firmware that reads a few text files off a FAT
-partition and jumps straight into the kernel -- there is nothing in
-between to install or configure.
-
-** Build the initramfs
-:PROPERTIES:
-:EXPORT_FILE_NAME: initramfs
-:EXPORT_HUGO_SLUG: initramfs
-:END:
-
-The initramfs solves a chicken-and-egg problem. To mount the root
-filesystem the kernel needs drivers -- for the disk controller, for
-btrfs, maybe for unlocking LUKS -- and those drivers live on the
-root filesystem it cannot mount yet.
-
-So the bootloader loads a second, tiny filesystem into memory
-alongside the kernel. That image contains just enough to find the
-real root, mount it, and hand over. Arch builds it with
-[[https://wiki.archlinux.org/title/Mkinitcpio][mkinitcpio]], and =pacstrap= already generated one when it installed
-the kernel.
-
-*** Look at what it is doing
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-grep -E '^(MODULES|HOOKS)' /etc/mkinitcpio.conf
-#+end_run
-
-#+begin_stdout
-MODULES=()
-HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)
-#+end_stdout
-
-Those defaults are already correct for an unencrypted btrfs system,
-so if you did not encrypt the disk there is nothing to change here.
-The hooks that matter:
-
-| Hook         | What it does                                                            |
-|--------------+-------------------------------------------------------------------------|
-| =systemd=    | Uses systemd as the early-boot init, rather than busybox shell scripts   |
-| =autodetect= | Trims the image to the modules /this/ machine actually loads             |
-| =microcode=  | Folds CPU microcode into the initramfs                                   |
-| =block=      | Block-device drivers, so the disk is visible                             |
-| =filesystems= | The filesystem drivers needed to mount the root                         |
-
-btrfs needs no entry in =MODULES=: the kernel has the driver and
-=filesystems= pulls it in.
-
-#+attr_shortcode: :style info :title The microcode hook changes the old advice
-#+begin_notice
-Guides written before mkinitcpio 38 tell you to add a separate
-=initrd /intel-ucode.img= line to your bootloader entry. The
-=microcode= hook in the default =HOOKS= does that job now, so that
-line is no longer needed and is not used later in this chapter.
-#+end_notice
-
-*** If you encrypted the disk
-
-The initramfs is what prompts for the passphrase, and it can only do
-that if it is built to. Add =sd-encrypt= to =HOOKS=, after =block=:
-
-#+attr_shortcode: :file /etc/mkinitcpio.conf
-#+begin_edit
-HOOKS=(base systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt filesystems fsck)
-#+end_edit
-
-#+attr_shortcode: :style warning :title sd-encrypt, not encrypt
-#+begin_notice
-There are two LUKS hooks, and they are not interchangeable.
-=sd-encrypt= belongs with the =systemd= hook; plain =encrypt=
-belongs to the older busybox-based initramfs. Since the default
-=HOOKS= above starts with =base systemd=, the one you want is
-=sd-encrypt=. Mixing =encrypt= into a systemd initramfs produces an
-image that builds without complaint and then cannot unlock the disk.
-#+end_notice
-
-*** Rebuild it
-
-Only necessary if you changed =HOOKS=, but it is harmless to run
-either way and it confirms the image builds:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-mkinitcpio -P
-#+end_run
-
-#+begin_stdout
-==> Creating gzip-compressed initcpio image: '/boot/initramfs-linux.img'
-  -> Early uncompressed CPIO image generation successful
-==> Initcpio image generation successful
-#+end_stdout
-
-Read the output rather than skimming it. Warnings about missing
-firmware for hardware you do not have are normal; an actual error
-here means the machine will not boot, and now is a much better time
-to find out than after the reboot.
-
-** Install systemd-boot (x86_64)
-:PROPERTIES:
-:EXPORT_FILE_NAME: x86_64
-:EXPORT_HUGO_SLUG: x86_64
-:END:
-
-#+attr_shortcode: :style info
-#+begin_notice
-This page is for *x86_64 PCs*. On a Raspberry Pi, skip it and go to
-[[/arch-workstation/bootloader/rpi][Configure the Pi firmware]] instead.
-
-Either way, [[/arch-workstation/bootloader/initramfs][Build the initramfs]] comes first. If you have not done
-that yet, go back and do it now.
-#+end_notice
-
-UEFI firmware boots an EFI program from the EFI System Partition.
-[[https://wiki.archlinux.org/title/Systemd-boot][systemd-boot]] is that program: it is part of systemd, already
-installed, and it is a menu and nothing else -- no modules, no
-scripting, no second config language to learn.
-
-*** Install it
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-bootctl install
-#+end_run
-
-That copies the EFI binary onto the ESP mounted at =/boot= and
-registers it with the firmware as a boot entry, which is the step
-that makes the machine choose it without being asked.
-
-*** Configure the menu
-
-#+attr_shortcode: :file /boot/loader/loader.conf
-#+begin_edit
-default  arch.conf
-timeout  3
-console-mode keep
-editor   no
-#+end_edit
-
-=timeout 3= gives you three seconds to interrupt; a headless machine
-could use =0=, but a short pause is worth having the first time you
-boot. =editor no= matters more than it looks: with the editor
-enabled, anyone at the keyboard can append =init=/bin/sh= to the
-kernel command line and get a root shell without a password.
-
-*** Write the boot entry
-
-This is the step that tells the kernel where its root is. Generate
-it rather than typing the UUID by hand:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat > /boot/loader/entries/arch.conf <<EOF
-title   Arch Linux
-linux   /vmlinuz-linux
-initrd  /initramfs-linux.img
-options root=UUID=$(findmnt -no UUID /) rootflags=subvol=@ rw
-EOF
-cat /boot/loader/entries/arch.conf
-#+end_run
-
-=findmnt -no UUID /= reads the UUID of the filesystem currently
-mounted at =/=, which inside the chroot is the one you are
-installing onto. =rootflags=subvol=@= is the part specific to this
-book's layout: without it the kernel mounts the top of the btrfs
-filesystem, finds the subvolumes sitting there as directories, and
-fails to boot.
-
-*** If you encrypted the disk
-
-The root device is now the unlocked mapper device, and the initramfs
-needs to be told which partition to unlock. Use the *LUKS
-partition's* UUID -- not the filesystem UUID above:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat > /boot/loader/entries/arch.conf <<EOF
-title   Arch Linux
-linux   /vmlinuz-linux
-initrd  /initramfs-linux.img
-options rd.luks.name=$(blkid -s UUID -o value /dev/nvme0n1p2)=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw
-EOF
-cat /boot/loader/entries/arch.conf
-#+end_run
-
-Substitute your own root *partition* for =/dev/nvme0n1p2=. The two
-UUIDs are easy to confuse: =blkid= on the partition gives the LUKS
-container's UUID, while =findmnt= gives the UUID of the btrfs
-filesystem inside it.
-
-*** Check it
-
-#+attr_shortcode: :style secondary
-#+begin_run
-bootctl list
-#+end_run
-
-It should show your entry as the default. If it reports no entries,
-=/boot= is not the ESP, and nothing you do later will make the
-machine boot.
-
-** Configure the Pi firmware (Raspberry Pi)
-:PROPERTIES:
-:EXPORT_FILE_NAME: rpi
-:EXPORT_HUGO_SLUG: rpi
-:END:
-
-#+attr_shortcode: :style info
-#+begin_notice
-This page is for the *Raspberry Pi*. On an x86_64 PC, skip it and go
-to [[/arch-workstation/bootloader/x86_64][Install systemd-boot]] instead.
-
-Either way, [[/arch-workstation/bootloader/initramfs][Build the initramfs]] comes first. If you have not done
-that yet, go back and do it now.
-#+end_notice
-
-There is no bootloader to install. The Pi's own firmware reads a
-handful of files from the FAT partition at =/boot=, loads the kernel
-and initramfs itself, and jumps straight in. Everything you need is
-already on that partition:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-ls /boot
-#+end_run
-
-#+begin_stdout
-bcm2712-d-rpi-5-b.dtb      fixup4db.dat          start4.elf
-bcm2712-rpi-500.dtb        fixup4x.dat           start4cd.elf
-bcm2712-rpi-5-b.dtb        fixup_cd.dat          start4db.elf
-bcm2712-rpi-cm5-cm4io.dtb  fixup_db.dat          start4x.elf
-bcm2712-rpi-cm5-cm5io.dtb  fixup_x.dat           start.elf
-bcm2712-rpi-cm5l-cm4io.dtb initramfs-linux.img   start_cd.elf
-bcm2712d0-rpi-5-b.dtb      kernel8.img           start_db.elf
-bootcode.bin               overlays              start_x.elf
-cmdline.txt                config.txt
-fixup.dat                  fixup4.dat
-fixup4cd.dat
-#+end_stdout
-
-=kernel8.img= is the kernel and =initramfs-linux.img= is the image
-you just built. The =.dtb= files are device trees -- one per board,
-so the firmware can tell the kernel what hardware it is running on,
-which is why a Pi 500 and a CM5 can share one installation. The
-=start*.elf= and =fixup*.dat= files are the Pi's own firmware, and
-=overlays/= holds device-tree overlays for add-on hardware.
-
-*** config.txt is already correct
-
-=config.txt= is the firmware's own configuration, and the one line
-that matters here is already in it:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-grep initramfs /boot/config.txt
-#+end_run
-
-#+begin_stdout
-initramfs initramfs-linux.img followkernel
-#+end_stdout
-
-That is what makes the firmware load the initramfs alongside the
-kernel. It ships that way, so leave the file alone.
-
-*** cmdline.txt is not
-
-=cmdline.txt= is the kernel command line, and it ships pointing at an
-SD card:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-cat /boot/cmdline.txt
-#+end_run
-
-#+begin_stdout
-root=/dev/mmcblk0p2 rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
-#+end_stdout
-
-Two things are wrong with that for this install: the root device is
-whatever disk you actually used, and there is no =rootflags=, so even
-the right device would mount the top of the btrfs filesystem rather
-than the =@= subvolume. Replace it:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat > /boot/cmdline.txt <<EOF
-root=UUID=$(findmnt -no UUID /) rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
-EOF
-cat /boot/cmdline.txt
-#+end_run
-
-#+attr_shortcode: :style warning :title It must stay one line
-#+begin_notice
-The firmware reads only the *first line* of =cmdline.txt=. Wrapping
-the parameters across two lines silently drops everything after the
-first, which usually means the kernel never learns where its root
-is. If you edit this file by hand afterwards, make sure your editor
-has not wrapped it.
-#+end_notice
-
-=rootwait= is doing real work on a Pi booting from USB or NVMe: it
-tells the kernel to wait for the device to appear rather than giving
-up, and those buses can take a moment to enumerate.
-
-*** If you encrypted the disk
-
-Point the command line at the unlocked mapper device, and tell the
-initramfs which partition to unlock, using the *LUKS partition's*
-UUID:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat > /boot/cmdline.txt <<EOF
-rd.luks.name=$(blkid -s UUID -o value /dev/nvme0n1p2)=cryptroot root=/dev/mapper/cryptroot rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
-EOF
-#+end_run
-
-Substitute your own root partition for =/dev/nvme0n1p2=.
-
-#+attr_shortcode: :style warning :title Unlocking a headless Pi
-#+begin_notice
-This gets you a passphrase prompt on the Pi's console and serial
-line -- which is of no use at all if the machine has neither a
-keyboard nor a serial cable attached. Unlocking an encrypted
-headless Pi over the network needs an initramfs that brings up
-networking and runs an SSH server, which this book does not set up.
-
-If the Pi is headless, the honest advice from the [[/arch-workstation/disk/encrypt][disk chapter]]
-stands: leave encryption off.
-#+end_notice
-
-*** Your edits will survive updates
-
-Both files belong to the kernel package, which would normally mean a
-kernel update overwrites them. It does not, because both are
-declared as pacman /backup/ files:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-pacman -Qii linux-rpi-16k | grep -A2 'Backup Files'
-#+end_run
-
-#+begin_stdout
-Backup Files    : /boot/config.txt [unmodified]
-                  /boot/cmdline.txt [modified]
-#+end_stdout
-
-pacman keeps a modified backup file and writes the new version
-alongside it as =cmdline.txt.pacnew=. So your boot configuration is
-safe, but it also means genuinely new firmware options arrive in a
-file you have to go and read. Check for =.pacnew= files after kernel
-updates.
-
-With the kernel locatable and the root filesystem findable, the
-machine can start itself. What it cannot yet do is let you log in --
-there is no user account and no network configuration. That is the
-next chapter, and it has to be finished before the first reboot.
-* Network and users
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: network
-:END:
-
-** Network and users
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 700
-:END:
-
-#+attr_shortcode: :style info :title By hand
-#+begin_notice
-This chapter is what =setup install= does. If you used it, read on for the
-reasoning and skip the commands; if you are installing by hand, run
-them in order as usual.
-#+end_notice
-
-This is the chapter that decides whether you ever see the machine
-again.
-
-Every other step in this book fails loudly: a disk that will not
-format, a package that will not install, a kernel that drops to an
-emergency shell. This one fails quietly and politely. The machine
-reboots, comes up perfectly, runs beautifully -- and does not let
-you in, because there is no account, or no network, or sshd was
-never enabled. On a headless box in another room, that means
-fetching a monitor and a keyboard, which is the chore this entire
-book exists to avoid.
-
-So this chapter does all of it *before* the reboot, and ends with a
-checklist.
-
-Unless a block says otherwise, every command runs *inside the
-chroot*. Get back in with =arch-chroot /mnt= if you have left it.
-
-*** Two accounts
-
-| Account | UID  | Groups        | What it is for                            |
-|---------+------+---------------+-------------------------------------------|
-| =admin= | 1000 | =admin=, =wheel= | Administration. Passwordless =sudo=.    |
-| =user=  | 1001 | =user=        | Everything else. No special privileges.   |
-
-The split is the point. Day-to-day work -- editing, browsing,
-building, running other people's code -- happens as =user=, an
-account that cannot reconfigure the system even by accident. When
-you actually intend to administer the machine, you log in as
-=admin=, where =sudo= does not argue.
-
-#+attr_shortcode: :style warning :title What passwordless sudo costs
-#+begin_notice
-=admin= can become root with no further check, so anything that
-gets a shell as =admin= has root. That is a real reduction in
-depth, and worth being deliberate about rather than copying it from
-a tutorial.
-
-The reasoning here: SSH is key-only, root login is disabled, and
-=admin= exists to administer. A sudo password in that arrangement
-mostly protects against someone who already has an =admin= shell --
-at which point they can also wait and capture the password. It is
-the same trade cloud images make by default.
-
-If you would rather keep the prompt, skip the one file that grants
-=NOPASSWD= and =wheel= membership alone gives =admin= ordinary
-password-prompting =sudo=.
-#+end_notice
-
-*** What has to be true before rebooting
-
- 1. A *hostname*, so the machine knows what it is called.
- 2. *Networking* that comes up by itself, including WiFi credentials
-    if there is no ethernet.
- 3. *Accounts* that exist and have passwords.
- 4. *SSH*: your key installed, sshd enabled, passwords refused.
-
-The last page turns that list into commands you can run to check
-each one, and only then reboots.
-
-** Set the hostname
-:PROPERTIES:
-:EXPORT_FILE_NAME: hostname
-:EXPORT_HUGO_SLUG: hostname
-:END:
-
-Pick a name for the machine and write it down in the one file that
-defines it:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-echo myhost > /etc/hostname
-#+end_run
-
-Substitute your own name. It is the name you will type into =ssh=
-for the rest of the machine's life, so something short and
-memorable beats something descriptive.
-
-#+attr_shortcode: :style warning :title Not hostnamectl -- not yet
-#+begin_notice
-On a running system, =hostnamectl hostname myhost= is the right
-tool. In a chroot it is actively dangerous, because =arch-chroot=
-bind-mounts the live system's =/run= -- including the D-Bus socket
--- so =hostnamectl= talks to the *installer's* systemd rather than
-the target's:
-
-#+begin_src bash
-# arch-chroot /mnt hostnamectl status
- Static hostname: arch-iso
-#+end_src
-
-That is the stick answering, not the machine you are installing.
-Setting the hostname that way renames the live environment and
-leaves the target with no =/etc/hostname= at all. Nothing warns
-you.
-
-Writing the file directly is what the [[https://wiki.archlinux.org/title/Installation_guide][Arch installation guide]]
-specifies for exactly this reason, and =hostnamectl= writes the same
-file once the machine is up and running on its own.
-#+end_notice
-
-*** You do not need to edit /etc/hosts
-
-Older guides tell you to add a =127.0.1.1 myhost= line. On a current
-Arch system that is unnecessary, because systemd's =myhostname=
-resolver answers for the local hostname already:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-grep '^hosts:' /etc/nsswitch.conf
-#+end_run
-
-#+begin_stdout
-hosts: mymachines resolve [!UNAVAIL=return] files myhostname dns
-#+end_stdout
-
-=myhostname= in that list is what resolves =myhost= and
-=localhost= without any help from =/etc/hosts=. Leave the file
-alone.
-
-** Configure the network
-:PROPERTIES:
-:EXPORT_FILE_NAME: network
-:EXPORT_HUGO_SLUG: network
-:END:
-
-The machine needs to be on the network before you can reach it, and
-it has to get there without you. This book uses *systemd-networkd*
-for addressing, *systemd-resolved* for DNS, and *iwd* for WiFi --
-the same combination the live system you are typing into is running.
-
-They are already installed, configured in plain files you can read,
-and need no extra packages. If you would rather have NetworkManager
-for its roaming and GUI integration, it is a perfectly good choice
-and this is the page to deviate on.
-
-*** Describe the interfaces
-
-Two files, matching by interface-name prefix rather than by exact
-name, so that this works on any machine without checking what the
-kernel decided to call the hardware:
-
-#+attr_shortcode: :file /etc/systemd/network/20-wired.network
-#+begin_edit
-[Match]
-Name=en*
-
-[Network]
-DHCP=yes
-#+end_edit
-
-#+attr_shortcode: :file /etc/systemd/network/25-wireless.network
-#+begin_edit
-[Match]
-Name=wl*
-
-[Network]
-DHCP=yes
-#+end_edit
-
-Writing both is the right move even on a machine with only one kind
-of interface: the unused file matches nothing and costs nothing, and
-it means plugging in a USB ethernet adapter later just works.
-
-*** Turn the services on
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-systemctl enable systemd-networkd systemd-resolved iwd sshd
-#+end_run
-
-This prints nothing at all, which is not a failure -- it is just
-quiet. Confirm it took:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-systemctl is-enabled systemd-networkd systemd-resolved iwd sshd
-#+end_run
-
-#+begin_stdout
-enabled
-enabled
-enabled
-enabled
-#+end_stdout
-
-Four =enabled= lines. Anything else here is a machine that will not
-come back, so do not move on until you see them.
-
-*** Point resolv.conf at resolved
-
-#+attr_shortcode: :style warning :title This one runs on the live system
-#+begin_notice
-=arch-chroot= bind-mounts the live system's =/etc/resolv.conf= over
-the target's, so that name resolution works while you are installing
-packages. The side effect is that =/etc/resolv.conf= inside the
-chroot is not the target's file at all, and trying to replace it
-there fails with /are the same file/.
-
-Leave the chroot first, and do it from the live system against
-=/mnt=.
-#+end_notice
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-ln -sf /run/systemd/resolve/stub-resolv.conf /mnt/etc/resolv.conf
-ls -l /mnt/etc/resolv.conf
-#+end_run
-
-#+begin_stdout
-lrwxrwxrwx 1 root root 37 /mnt/etc/resolv.conf -> /run/systemd/resolve/stub-resolv.conf
-#+end_stdout
-
-*** Carry the WiFi credentials across
-
-If the machine has ethernet, skip this. If it is on WiFi, the stick
-you are connected through already knows the network -- and the
-installed system does not. Copy iwd's credentials over rather than
-retyping them:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-install -d -m 0700 /mnt/var/lib/iwd
-cp /var/lib/iwd/*.psk /mnt/var/lib/iwd/
-ls /mnt/var/lib/iwd/
-#+end_run
-
-#+begin_stdout
-869iot.psk
-#+end_stdout
-
-One file per network, named after the SSID. This is the single most
-commonly forgotten step in a headless install: the machine boots,
-the disk is perfect, and it never joins the network because nothing
-ever told it the passphrase.
-
-** Create the accounts
-:PROPERTIES:
-:EXPORT_FILE_NAME: accounts
-:EXPORT_HUGO_SLUG: accounts
-:END:
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-useradd -m -u 1000 -G wheel -c "Administrator" admin
-useradd -m -c "Daily driver" user
-#+end_run
-
-=-m= creates the home directory, =-u 1000= pins =admin= to the
-first ordinary UID, and =-G wheel= puts it in the group =sudo=
-recognises. =user= takes the next UID on its own and joins no groups
-but its own.
-
-#+attr_shortcode: :style secondary
-#+begin_run
-id admin
-id user
-#+end_run
-
-#+begin_stdout
-uid=1000(admin) gid=1000(admin) groups=1000(admin),998(wheel)
-uid=1001(user) gid=1001(user) groups=1001(user)
-#+end_stdout
-
-The shell is =/usr/bin/bash= for both, from =/etc/default/useradd=.
-Note that this is *not* the zsh you have been typing into -- that
-belongs to the live system, and the installed system has only what
-you installed.
-
-*** Set the passwords
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-passwd root
-passwd admin
-passwd user
-#+end_run
-
-All three matter, for different reasons. =admin= and =user= are
-login accounts. The *root* password is the one people skip, and it
-is what systemd's emergency and rescue targets ask for when
-something goes wrong at boot -- without it, a machine that fails to
-mount its root leaves you with a prompt you cannot answer.
-
-Root cannot log in over SSH regardless; that gets switched off on
-the next page.
-
-*** Grant passwordless sudo
-
-=sudo= reads drop-in files from =/etc/sudoers.d=, which is safer
-than editing =/etc/sudoers= itself: a syntax error in one small file
-is easier to find and undo.
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-install -m 0440 /dev/null /etc/sudoers.d/10-admin
-echo "admin ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-admin
-#+end_run
-
-=install -m 0440= creates the file with the permissions sudo
-insists on before it will read it. Then check the whole
-configuration parses -- including the file you just wrote:
-
-#+attr_shortcode: :style secondary
-#+begin_run
-visudo -c
-#+end_run
-
-#+begin_stdout
-/etc/sudoers: parsed OK
-/etc/sudoers.d/10-admin: parsed OK
-#+end_stdout
-
-#+attr_shortcode: :style warning :title Do not skip visudo -c
-#+begin_notice
-A malformed sudoers file does not degrade gracefully: =sudo= refuses
-to run at all rather than guess. On a machine where =sudo= is your
-only route to root, and root cannot log in over SSH, that is a lockout
-you can only fix from the console. The check costs a second.
-#+end_notice
-
-** Set up SSH
-:PROPERTIES:
-:EXPORT_FILE_NAME: ssh
-:EXPORT_HUGO_SLUG: ssh
-:END:
-
-Your key is already on the stick -- it is how you are logged in
-right now. Copy it to =admin= rather than pasting it again:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-arch-chroot /mnt install -d -m 0700 -o admin -g admin /home/admin/.ssh
-install -m 0600 /root/.ssh/authorized_keys /mnt/home/admin/.ssh/authorized_keys
-arch-chroot /mnt chown admin:admin /home/admin/.ssh/authorized_keys
-arch-chroot /mnt ls -la /home/admin/.ssh/
-#+end_run
-
-#+begin_stdout
-drwx------ 1 admin admin  30 .
-drwx------ 1 admin admin  72 ..
--rw------- 1 admin admin 347 authorized_keys
-#+end_stdout
-
-The ownership and the modes are not decoration. sshd refuses to use
-an =authorized_keys= file that other users could write to, and it
-does so silently from the client's point of view -- you simply get
-asked for a password that will not be accepted.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-=user= gets no key here, because =admin= is the account you
-administer from. If you also want to SSH in as =user= day to day,
-repeat the three commands with =user= in place of =admin=.
-#+end_notice
-
-*** Refuse everything except keys
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-cat > /etc/ssh/sshd_config.d/10-hardening.conf <<EOF
-PermitRootLogin no
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-EOF
-#+end_run
-
-Arch's =sshd_config= ends with =Include /etc/ssh/sshd_config.d/*.conf=,
-so a drop-in overrides the defaults without touching the shipped
-file -- which means package updates never conflict with your
-changes.
-
-All three lines matter. =PasswordAuthentication no= alone is not
-enough: on a system with PAM, keyboard-interactive is a second route
-to the same password prompt, which is why it is switched off
-explicitly.
-
-*** Check the config parses
-
-#+attr_shortcode: :style secondary
-#+begin_run
-sshd -t
-#+end_run
-
-#+begin_stdout
-sshd: no hostkeys available -- exiting.
-#+end_stdout
-
-That message is the *success* case here. The installed system has no
-host keys yet -- they are generated on first boot -- and =sshd=
-checks the configuration before it looks for them. So a complaint
-about host keys means the config parsed; a complaint naming a line
-or an option means it did not, and you should fix that now.
-
-** Check it, then reboot
-:PROPERTIES:
-:EXPORT_FILE_NAME: reboot
-:EXPORT_HUGO_SLUG: reboot
-:END:
-
-Everything is in place. Before you give up your shell, confirm it --
-each of these is something that has locked someone out of a headless
-machine.
-
-*** The pre-flight check
-
-#+attr_shortcode: :style secondary :title Run this inside the chroot:
-#+begin_run
-echo "hostname : $(cat /etc/hostname)"
-echo "accounts : $(getent passwd admin user | cut -d: -f1 | tr '\n' ' ')"
-echo "passwords: $(passwd -S admin | awk '{print $2}') $(passwd -S user | awk '{print $2}')"
-echo "sudo     : $(visudo -c >/dev/null 2>&1 && echo OK || echo BROKEN)"
-echo "units    : $(systemctl is-enabled systemd-networkd systemd-resolved iwd sshd | tr '\n' ' ')"
-echo "ssh key  : $(wc -l < /home/admin/.ssh/authorized_keys) key(s)"
-echo "fstab    : $(grep -c '^UUID' /etc/fstab) entries"
-#+end_run
-
-#+begin_stdout
-hostname : myhost
-accounts : admin user
-passwords: P P
-sudo     : OK
-units    : enabled enabled enabled enabled
-ssh key  : 3 key(s)
-fstab    : 7 entries
-#+end_stdout
-
-=P= from =passwd -S= means a usable password is set; =L= means
-locked and =NP= means none at all. Both accounts must read =P=.
-
-#+attr_shortcode: :style warning :title On WiFi, check this too
-#+begin_notice
-The credentials live outside the chroot's view, so check them from
-the live system:
-
-#+begin_src bash
-ls /mnt/var/lib/iwd/
-#+end_src
-
-An empty directory on a machine with no ethernet means it will boot
-and never appear on the network.
-#+end_notice
-
-*** Unmount and reboot
-
-Leave the chroot, release everything cleanly, and go:
-
-#+attr_shortcode: :style secondary :title Run this on the live system:
-#+begin_run
-exit
-swapoff /mnt/swap/swapfile
-umount -R /mnt
-reboot
-#+end_run
-
-=umount -R= unmounts the whole tree in the right order. If it
-complains that the target is busy, something still has a file open
-there -- often a shell sitting in a directory under =/mnt=. Find it
-with =fuser -m /mnt= rather than forcing it; a lazy unmount can
-leave btrfs with writes that never landed.
-
-Pull the stick out once the machine has powered down, or it will
-boot the installer again.
+That runs the check again and only if it passes does it =swapoff=,
+=umount -R /mnt=, close the LUKS volume if there is one, and reboot.
+There is no flag to skip the check.
+
+Pull the stick out once the machine has powered down, or it will boot
+the installer again.
 
 *** Connecting to the new machine
 
 The installed system is a *different host* from the stick, and it
-will say so. On its first boot it generates its own SSH host keys,
-which have nothing to do with the ones on the USB stick, so the
-=arch-iso= entry in your SSH config no longer describes it.
-
-Give the real machine its own entry:
+will say so: its SSH host keys are its own, unrelated to the ones on
+the USB stick, so the =arch-iso= entry in your SSH config does not
+describe it. Give it an entry of its own:
 
 #+attr_shortcode: :file ~/.ssh/config
 #+begin_edit
@@ -3096,88 +1273,28 @@ Host myhost
 ssh myhost
 #+end_run
 
-You will be asked to accept a new host key, which is correct and
-expected -- this really is a machine you have never spoken to
-before. The address may also have changed: the machine is asking
-for its own DHCP lease now, under its own hostname, rather than the
-stick's.
+You will be asked to accept a new host key, which is correct -- this
+really is a machine you have never spoken to before. The address may
+have changed too: the machine is asking for its own DHCP lease now,
+under its own hostname.
 
 #+attr_shortcode: :style tip
 #+begin_notice
-If it does not answer, the fastest thing to check is whether it is
-on the network at all -- look at your router's lease table, or
-=ping= the address. A machine that has an address but refuses SSH is
-a different problem from one that never appeared, and the two want
-opposite kinds of investigation.
+If it does not answer, check first whether it is on the network at
+all -- look at your router's lease table, or =ping= it. A machine that
+has an address but refuses SSH is a different problem from one that
+never appeared, and they want opposite kinds of investigation. For
+the second kind, boot the stick again: =setup host --from= and =setup
+disk --mount= get you back into the installed system with
+=arch-chroot /mnt=.
 #+end_notice
 
-Once you are in as =admin=, the install is finished. Everything from
-here on is a running system you can change at will, and the next
-chapter is about keeping it that way.
-* Keeping it maintainable
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: maintain
-:END:
+*** Keep the host repo
 
-** Keeping it maintainable
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 800
-:END:
-
-#+attr_shortcode: :style warning :title Speculative
-#+begin_notice
-Like [[/arch-workstation/setup][Install with setup]], this chapter describes tools that do not
-exist yet. It is a sketch of how the host repo that =setup= creates
-would be used once the machine is running.
-#+end_notice
-
-The introduction made a promise about Arch: the running system is the
-source of truth, it drifts, and nothing but your own discipline
-records how it got that way. This chapter is that discipline, written
-down as a git repository and four commands, so that it does not have
-to live in your head.
-
-Log in as =admin=. The host repo that =setup= built the machine from
-is already there:
-
-#+attr_shortcode: :style secondary :title Run this on the new machine:
-#+begin_run
-cd ~/arch
-git log --oneline
-#+end_run
-
-#+begin_stdout
-3f9c2e1 setup install: myhost (aarch64, Raspberry Pi 5)
-a14b07d setup host: myhost
-#+end_stdout
-
-| File              | Holds                                             | Changed by                    |
-|-------------------+---------------------------------------------------+-------------------------------|
-| =host.env=        | The install answers                               | You, rarely                   |
-| =packages.txt=    | Every package you asked for                       | You, or =admin save=          |
-| =units.txt=       | Every unit you enabled                            | You, or =admin save=          |
-| =etc/=            | Your files under =/etc=, with their modes         | You, or =admin save=          |
-| =authorized_keys= | Public keys =admin= accepts                       | You                           |
-| =Justfile=        | The =admin= recipes                               | Nobody, usually               |
-
-The =admin= alias runs =just= against =~/arch/Justfile= from any
-directory, the same convention as the [[/nixos-workstation/making-changes][NixOS book]]:
-
-| Command         | Direction        | What it does                                                    |
-|-----------------+------------------+-----------------------------------------------------------------|
-| =admin diff=    | look only        | Lists every difference between the repo and the machine         |
-| =admin apply=   | repo → machine   | Makes the machine match the repo                                 |
-| =admin save=    | machine → repo   | Copies the machine's drift into the repo, for you to review      |
-| =admin upgrade= | both             | Snapshot, =pacman -Syu=, apply, report =.pacnew= files            |
-
-*** Push it somewhere
-
-The host repo is the only record of this machine that exists off its
-own disk -- or it will be, once you push it. Make it a *private*
-repository: it holds no secrets, but it describes your machine in
-detail.
+Once you are in as =admin=, the install is finished, and the first
+thing worth doing is pushing =~/arch= somewhere off the machine. It is
+the only record of how this machine was built, and the next reinstall
+starts from it with =setup host --from=:
 
 #+attr_shortcode: :style secondary :title Run this on the new machine:
 #+begin_run
@@ -3185,160 +1302,9 @@ git -C ~/arch remote add origin git@git.example.com:you/arch-myhost.git
 git -C ~/arch push -u origin main
 #+end_run
 
-That URL is what =setup host --from= takes the next time you
-reinstall this machine.
+Make it a private repository. It holds no secrets, but it describes
+your machine in detail.
 
-** See what drifted
-:PROPERTIES:
-:EXPORT_FILE_NAME: diff
-:EXPORT_HUGO_SLUG: diff
-:END:
-
-#+attr_shortcode: :style secondary :title Run this on the new machine:
-#+begin_run
-admin diff
-#+end_run
-
-#+begin_stdout
-packages:
-  + htop                  installed, not in packages.txt
-  - tmux                  in packages.txt, not installed
-units:
-  + podman.socket         enabled, not in units.txt
-etc:
-  M ssh/sshd_config.d/10-hardening.conf    differs from etc/
-  ? pacman.conf                            changed from package default, not tracked
-#+end_stdout
-
-Three sources, each read the way pacman and systemd already expose
-them, without any database of its own:
-
- - *Packages* compare =packages.txt= against =pacman -Qqe=, the list
-   of packages installed explicitly. Dependencies are never listed and
-   never reported: pacman tracks those itself.
- - *Units* compare =units.txt= against =systemctl list-unit-files
-   --state=enabled=, ignoring units that packages enable by default.
- - *Files* come in two kinds. =M= is a file the repo owns that no
-   longer matches. =?= is the interesting one: a file under =/etc= that
-   belongs to a package, has been edited since it was installed, and
-   is not in the repo. pacman already knows which files those are --
-   =pacman -Qkk= reports a backup file whose checksum changed -- so
-   nothing you edit by hand can go unnoticed.
-
-=admin diff= changes nothing and exits non-zero when there is drift,
-so it is also a sensible thing to run from a timer and send to the
-same webhook the BOOMSTICK uses.
-
-** Apply and save
-:PROPERTIES:
-:EXPORT_FILE_NAME: apply
-:EXPORT_HUGO_SLUG: apply
-:END:
-
-Every line of drift has two possible fixes: change the machine to
-match the repo, or change the repo to match the machine. These are
-the two commands.
-
-*** Change the machine: admin apply
-
-Edit the repo, commit, and apply:
-
-#+attr_shortcode: :style secondary :title Run this on the new machine:
-#+begin_run
-echo ripgrep >> ~/arch/packages.txt
-git -C ~/arch commit -am "Add ripgrep"
-admin apply
-#+end_run
-
-#+begin_stdout
-+ pacman -S --needed ripgrep tmux
-+ install -m 0644 etc/ssh/sshd_config.d/10-hardening.conf /etc/ssh/sshd_config.d/
-+ systemctl reload sshd
-not removed (run 'admin apply --prune' to remove):
-  htop
-#+end_stdout
-
-=apply= installs what is missing, puts files back, and enables units.
-It does *not* remove packages that are installed but unlisted unless
-you ask with =--prune=. On a rolling release, a package you installed
-in a hurry five minutes ago is more often something to keep than
-something to delete, and pacman removals are not undone by a rebuild.
-
-This is the same code that ran as step 6 of [[/arch-workstation/setup/install][setup install]],
-pointed at =/= rather than =/mnt=.
-
-*** Change the repo: admin save
-
-When the drift is something you meant -- you installed =htop= and
-want to keep it, or you edited =pacman.conf= on purpose -- pull it
-into the repo instead:
-
-#+attr_shortcode: :style secondary :title Run this on the new machine:
-#+begin_run
-admin save
-git -C ~/arch diff
-#+end_run
-
-#+begin_src diff
---- a/packages.txt
-+++ b/packages.txt
-@@
-+htop
---- /dev/null
-+++ b/etc/pacman.conf
-#+end_src
-
-=save= writes, and never commits. Read the diff, keep what you meant,
-=git checkout= what you did not, and commit the rest. That review is
-the whole point: it is the moment the machine's history gets a
-reason attached to it.
-
-#+attr_shortcode: :style info :title Underneath
-#+begin_notice
-These recipes could be a few dozen lines of bash in the =Justfile=,
-or a thin wrapper over an existing tool. [[https://github.com/CyberShadow/aconfmgr][aconfmgr]] already does both
-directions (=save= and =apply=) for packages and =/etc=, and
-=decman= takes the stricter, config-is-truth approach. Either would
-keep the commands on this page the same; whichever is chosen should
-first be tried on Arch Linux ARM.
-#+end_notice
-
-** Upgrade
-:PROPERTIES:
-:EXPORT_FILE_NAME: upgrade
-:EXPORT_HUGO_SLUG: upgrade
-:END:
-
-#+attr_shortcode: :style secondary :title Run this on the new machine:
-#+begin_run
-admin upgrade
-#+end_run
-
-One command for the thing you will do most often, in an order worth
-not having to remember:
-
- 1. Refuse to start if =admin diff= reports drift. Upgrading a machine
-    you cannot describe makes it harder to describe.
- 2. Take a btrfs snapshot of =@= into =/.snapshots=, which is why that
-    subvolume exists.
- 3. =pacman -Syu=.
- 4. =admin apply=, so that anything a package update reset comes back.
- 5. List any new =.pacnew= files, because on Arch that is how new
-    configuration options arrive -- the [[/arch-workstation/bootloader/rpi][Pi's cmdline.txt]] is one.
- 6. Say whether a reboot is needed, by comparing the running kernel
-    with the installed one.
-
-#+attr_shortcode: :style warning :title What this is not
-#+begin_notice
-This is not NixOS. A snapshot is a way back, but not an atomic one:
-booting an older snapshot from systemd-boot, or from the Pi's
-firmware, needs more setup than this chapter describes. The host repo
-reproduces your package /list/ and your files, not the versions
-pacman installed on the day. Two machines built from the same repo a
-month apart will differ in every package that moved. That is the
-trade the introduction described, made smaller -- not made to go
-away.
-#+end_notice
 * Appendix: BOOMSTICK
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boomstick
@@ -3381,6 +1347,7 @@ profile -- with a few additions layered on top:
    permitted.
  - *A stable identity*: the hostname is always =arch-iso=, and the
    stick generates its SSH host keys on first boot and keeps them.
+ - *=setup=*, the installer the rest of this book uses.
  - *A boot webhook*, optionally, which notifies you (via [[https://ntfy.sh][ntfy]], for
    example) with the stick's LAN, public and WireGuard addresses once
    it is up.
@@ -3749,6 +1716,7 @@ root:
 | =ssh/authorized_keys= | =/root/.ssh/authorized_keys= |
 | =webhook.env=         | =/etc/arch-iso/webhook.env=  |
 | =ssh/host/*=          | =/etc/ssh/=                  |
+| =bin/setup=           | =/usr/local/bin/setup=       |
 
 Nothing else is ever written back to the stick. The one exception is
 the SSH host keys on the first boot: the partition is remounted
@@ -3871,9 +1839,11 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Keeping it maintainable -- drafted speculatively on the setup
-   branch (host repo, admin diff/apply/save/upgrade). Still to cover:
-   snapper setup, booting a snapshot, AUR.
+ - Keeping it maintainable -- built on the host repo setup leaves
+   at ~admin/arch. Tooling (aconfmgr, decman, or a few recipes) is
+   undecided. A speculative draft (admin diff/apply/save/upgrade) is
+   in this branch's history at 9f01aa5. Also: snapper, booting a
+   snapshot, AUR.
  - Desktop (optional) -- sway and friends.
  - Hardware-key sudo (optional) -- Solokey, mirroring the NixOS book.
 
