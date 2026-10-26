@@ -1154,14 +1154,16 @@ install and the Raspberry Pi 5 have not been through it yet.
 #+end_notice
 
 You have a root shell on the live system. Four commands install the
-machine, each one a page of this chapter:
+machine, with a fifth for a tunnel if you want one, each a page of this
+chapter:
 
-| Command         | What it does                                                 | Changes the target? |
-|-----------------+--------------------------------------------------------------+---------------------|
-| [[/arch-workstation/setup/host][setup host]]      | Asks what this machine is, and writes it down                | No                  |
-| [[/arch-workstation/setup/disk][setup disk]]      | Partitions, encrypts, formats and mounts the disk, adds swap | Erases the disk     |
-| [[/arch-workstation/setup/install][setup install]]   | Installs, makes it boot, sets up network, accounts and SSH  | Writes to =/mnt=    |
-| [[/arch-workstation/setup/check][setup reboot]]    | Checks everything, then unmounts and reboots                 | No                  |
+| Command           | What it does                                                 | Changes the target? |
+|-------------------+--------------------------------------------------------------+---------------------|
+| [[/arch-workstation/setup/host][setup host]]        | Asks what this machine is, and writes it down                | No                  |
+| [[/arch-workstation/setup/disk][setup disk]]        | Partitions, encrypts, formats and mounts the disk, adds swap | Erases the disk     |
+| [[/arch-workstation/setup/install][setup install]]     | Installs, makes it boot, sets up network, accounts and SSH   | Writes to =/mnt=    |
+| [[/arch-workstation/setup/wireguard][setup wireguard]]   | Gives it a WireGuard tunnel of its own (optional)            | Writes to =/mnt=    |
+| [[/arch-workstation/setup/check][setup reboot]]      | Checks everything, then unmounts and reboots                 | No                  |
 
 Run =setup= with no arguments and it shows the same list, with a mark
 next to each step already done, and offers to run the next one.
@@ -2059,9 +2061,10 @@ is never committed.
 
 What /is/ configuration goes in the host repo, where the rest of the
 machine's description lives: =wireguard-tools= in =packages.txt= and
-=wg-quick@wg0= in =units.txt=. Run this before [[/arch-workstation/setup/install][Install the system]] and
-the install picks both up; run it after, as the step order suggests,
-and it installs the package and enables the unit itself.
+=wg-quick@wg0= in =units.txt=. Either order works: if this step runs
+before [[/arch-workstation/setup/install][Install the system]] the install picks both up, and if it runs
+after -- where the step order puts it -- it installs the package and
+enables the unit itself.
 
 #+attr_shortcode: :style info :title A DNS line needs one more package
 #+begin_notice
