@@ -542,7 +542,7 @@ place or accept with Enter.
 #+begin_annotate
 #+begin_src bash
 == Describe this machine ==
-Machine: Raspberry Pi 5 (aarch64, bcm2712)
+Machine: x86_64 PC, UEFI
 ? Hostname archlinux
 #+end_src
 
@@ -958,10 +958,10 @@ setup install
 #+begin_src bash
 ================ Review =================
 Host:         myhost
-Detected:     Raspberry Pi 5 (aarch64, bcm2712)
-Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim git pacutils expect snapper snap-pac linux-rpi-16k firmware-raspberrypi linux-firmware
+Detected:     x86_64 PC, UEFI
+Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim git pacutils expect snapper snap-pac linux linux-firmware intel-ucode
               + packages.txt: just tmux
-Boot:         Pi firmware (cmdline.txt)
+Boot:         systemd-boot
 Units:        systemd-networkd systemd-resolved iwd sshd snapper-cleanup.timer
 Accounts:     admin (1000, wheel, passwordless sudo), user
 SSH keys:     3, from /root/arch/authorized_keys
@@ -976,6 +976,23 @@ Everything on this screen was decided either by the hardware or by
 the host repo. If any of it is not what you want, answer =n=, change
 the host repo, and run it again.
 #+end_annotate
+
+#+attr_shortcode: :style info :title The same screen on a Raspberry Pi
+#+begin_notice
+Three lines read differently on a Pi 5, because they are the three
+things chosen by the hardware:
+
+#+begin_src bash
+Detected:     Raspberry Pi 5 (aarch64, bcm2712)
+Packages:     ... snapper snap-pac linux-rpi-16k firmware-raspberrypi linux-firmware
+Boot:         Pi firmware (cmdline.txt)
+#+end_src
+
+=linux-rpi-16k= and =firmware-raspberrypi= replace =linux= and the
+=intel-ucode= / =amd-ucode= microcode, and there is no bootloader to
+install. Everything else -- the subvolumes, the accounts, the units,
+the host repo, the maintenance tools -- is the same on both.
+#+end_notice
 
 After you confirm, it works through eleven stages. Apart from the
 passwords near the end, it asks nothing more.
@@ -1157,9 +1174,11 @@ doing this by hand.
 
 #+attr_shortcode: :style warning :title The Pi half is untested
 #+begin_notice
-The x86_64 half of this stage boots in BOOMSTICK's test VM. The
-Raspberry Pi half, and the LUKS command line on either, have not yet
-booted a machine.
+The x86_64 half of this stage boots in BOOMSTICK's test VM, encrypted
+or not: =ENCRYPT=yes just test-vm= installs onto LUKS, answers the
+initramfs passphrase prompt on the serial console, and logs in
+afterwards. The Raspberry Pi half -- =cmdline.txt=, and a passphrase
+prompt with no bootloader behind it -- has not yet booted a machine.
 #+end_notice
 
 *** 6. The host repo, applied
@@ -1276,7 +1295,7 @@ setup check
 #+begin_stdout
 ✓ hostname   myhost
 ✓ fstab      8 entries + swap, no duplicates
-✓ boot       cmdline.txt: root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6
+✓ boot       systemd-boot, entries/arch.conf: root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6
 ✓ initramfs  initramfs-linux.img
 ✓ accounts   admin user
 ✓ passwords  root=P admin=P user=P
