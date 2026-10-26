@@ -24,8 +24,8 @@ while I am still working through them.
 What is written takes a machine from an unplugged box to one that
 boots on its own and accepts an SSH login -- the disk, the base
 system, the bootloader, networking and accounts, all done by =setup=
--- and then keeps it in step with its host repo with =admin=. The
-chapters on the graphical desktop and hardware-key =sudo= are not
+-- and then keeps it in step with its host repo with =admin=, and adds
+a sway desktop to it. The chapter on hardware-key =sudo= is not
 written yet.
 
 Be aware of what "tested" means here. BOOMSTICK's =just test-vm=
@@ -34,8 +34,9 @@ every prompt answered, reboots it, logs in, and checks the result,
 including that =admin diff= finds no drift and that pacman
 transactions are snapshotted. Not tested yet: *encryption* (the
 install up to the passphrase prompt at boot), the *Raspberry Pi 5*,
-=admin upgrade=, and rolling back a snapshot. Specific caveats are
-flagged in place.
+=admin upgrade=, rolling back a snapshot, and logging in to the
+desktop (the test VM installs it and checks the login screen and Nix,
+nothing more). Specific caveats are flagged in place.
 
 Read it as notes becoming a book rather than as a recipe that is
 known to work start to finish.
@@ -188,8 +189,9 @@ On top of that base it is kept *maintainable*: [[https://github.com/CyberShadow/
 the machine with its host repo in both directions, and snapper takes
 a btrfs snapshot before and after every pacman transaction.
 
-The graphical desktop comes later, as its own optional chapter, built
-on top of that base.
+The graphical [[/arch-workstation/desktop][desktop]] comes after that, as its own optional chapter,
+built on top of that base: sway from Arch, and the user's environment
+from Nix and Home Manager.
 
 *** You start from a BOOMSTICK
 
@@ -785,6 +787,7 @@ but each can be snapshotted, mounted or rolled back on its own.
 | =@log=       | =/var/log=              | Logs of what went wrong should outlive the rollback        |
 | =@pkg=       | =/var/cache/pacman/pkg= | A re-downloadable cache, not worth snapshotting            |
 | =@swap=      | =/swap=                 | A swapfile cannot sit on a subvolume that gets snapshotted |
+| =@nix=       | =/nix=                  | The Nix store, if you install the [[/arch-workstation/desktop][desktop]]: big, and Nix's own |
 
 Every subvolume except =@swap= is mounted =noatime,compress=zstd:1=.
 =noatime= stops a write on every /read/, which is pure write
@@ -812,7 +815,7 @@ Disk:         /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
               (nvme0n1 238.5G XP1000F256G)
 Currently:    2 partition(s): nvme0n1p1 vfat ESP; nvme0n1p2 btrfs arch;
 Will create:  1G ESP (vfat) + rest btrfs, no encryption
-Subvolumes:   @ @home @snapshots @log @pkg @swap
+Subvolumes:   @ @home @snapshots @log @pkg @swap @nix
 Swap:         8g swapfile
 =========================================
 
@@ -843,11 +846,11 @@ Then it runs, echoing each command as it goes:
 + mkfs.btrfs --quiet -L arch /dev/nvme0n1p2
 + mount /dev/nvme0n1p2 /mnt
 + btrfs subvolume create /mnt/@
-  ... five more subvolumes, then umount /mnt and the seven mounts
+  ... six more subvolumes, then umount /mnt and the eight mounts
 + btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
 + swapon /mnt/swap/swapfile
 
-✓ disk       7 mounts under /mnt, 8g swap active
+✓ disk       8 mounts under /mnt, 8g swap active
 Next: setup install
 #+end_stdout
 
@@ -1272,7 +1275,7 @@ setup check
 
 #+begin_stdout
 ✓ hostname   myhost
-✓ fstab      7 entries + swap, no duplicates
+✓ fstab      8 entries + swap, no duplicates
 ✓ boot       cmdline.txt: root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6
 ✓ initramfs  initramfs-linux.img
 ✓ accounts   admin user
@@ -1288,7 +1291,7 @@ All checks passed. Safe to reboot: setup reboot
 | Line        | Fails when                                                                                  |
 |-------------+---------------------------------------------------------------------------------------------|
 | =hostname=  | =/etc/hostname= does not match the host file                                                |
-| =fstab=     | fewer than seven entries, a duplicated mount point, or no swap line when there should be one |
+| =fstab=     | fewer entries than subvolumes plus the ESP, a duplicated mount point, or no swap line when there should be one |
 | =boot=      | the systemd-boot entry or =cmdline.txt= lacks =rootflags=subvol=@=, or =cmdline.txt= is more than one line |
 | =initramfs= | there is no initramfs image in =/boot=                                                      |
 | =accounts=  | =admin= or =user= does not exist                                                            |
@@ -1457,7 +1460,7 @@ line in =packages.txt=.
  - *Generated files*: the CA bundle, =ld.so.cache=, module and hardware
    databases, the locale archive, the mirror list.
  - *State*: =/var/lib=, =/var/log=, =/var/tmp=, =/swap=, =/.snapshots=,
-   and aconfmgr's own checkout.
+   the Nix store (=/nix=), and aconfmgr's own checkout.
 
 aconfmgr already ignores =/home=, =/root=, =/tmp=, =/var/cache= and
 the pseudo-filesystems. When something new shows up that is state
@@ -1763,6 +1766,281 @@ When the system no longer boots at all, boot the stick, then =setup
 host --from= and =setup disk --mount= as in [[/arch-workstation/setup/disk][Prepare the disk]], and
 =arch-chroot /mnt snapper --no-dbus undochange 1..2= from there. Booting straight
 into a snapshot from the boot menu is not set up by this book.
+
+* Desktop
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: desktop
+:END:
+
+** Desktop
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 600
+:END:
+
+#+attr_shortcode: :style warning :title Partly tested
+#+begin_notice
+BOOMSTICK's =DESKTOP=1 just test-vm= does the [[/arch-workstation/desktop/system][system half]] of this
+chapter on a test VM: it adds the files below to the host repo, runs
+=admin apply=, reboots, and checks that greetd is greeting on the
+console, that =user= can reach the Nix daemon, and that =admin diff=
+still finds no drift. Logging in to sway, the [[/arch-workstation/desktop/sway-home][sway-home]] half, and
+GPU drivers for Nix programs have not been tested.
+#+end_notice
+
+The base system is headless on purpose. A desktop is something you
+add to it, and on this machine adding things means editing the host
+repo and running =admin apply=. This chapter adds [[https://swaywm.org/][sway]], a tiling
+Wayland compositor, with my own dotfiles, [[https://github.com/EnigmaCurry/sway-home][sway-home]], for the
+=user= account.
+
+The desktop comes from two places, split along one line: *what the
+system has to provide comes from pacman, and what the user chooses
+comes from Nix.*
+
+| From pacman, via the host repo                                        | From Nix, via Home Manager and sway-home                  |
+|-----------------------------------------------------------------------+-----------------------------------------------------------|
+| sway, swaylock, swayidle, kanshi, the Wayland portal                   | foot, waybar, rofi, screenshot and clipboard tools, fonts |
+| PipeWire and WirePlumber, pamixer, playerctl, brightnessctl           | emacs, and the command-line toolbox                       |
+| greetd and tuigreet, the login screen                                 | every dotfile: sway, waybar, foot, bash, git ...          |
+| polkit, firefox, Nix itself                                            |                                                           |
+
+The left column is the part that is tangled up with the system: sway
+needs logind and the system's Mesa drivers, swaylock authenticates
+through the system's PAM, greetd is a system service, and Nix's own
+daemon runs as root. Those come from Arch, managed by =admin= like
+everything else on the machine. The right column is the part that is
+personal -- which terminal, which bar, which keys -- and it comes from
+[[https://github.com/nix-community/home-manager][Home Manager]], which builds a user's whole environment from one git
+repository and can roll it back. That is the same arrangement the
+[[/nixos-workstation][NixOS Workstation]] book uses, minus NixOS.
+
+=admin= and =user= are still separate. The desktop belongs to =user=,
+the day-to-day account; =admin= changes the system it runs on.
+
+** The system
+:PROPERTIES:
+:EXPORT_FILE_NAME: system
+:EXPORT_HUGO_SLUG: system
+:END:
+
+Everything on this page is an edit to the host repo, made as =admin=,
+followed by =admin apply=. The same files are in BOOMSTICK's
+[[https://github.com/EnigmaCurry/boomstick/tree/setup/desktop][desktop/]] directory, which the test VM uses.
+
+*** Packages
+
+Add a block to =packages.txt=:
+
+#+attr_shortcode: :file ~/arch/packages.txt
+#+begin_edit
+# Desktop: sway and what it needs from the system. The rest of the
+# desktop -- terminal, bar, launcher, fonts, dotfiles -- comes from Nix,
+# with Home Manager and sway-home.
+nix
+sway swaylock swayidle kanshi xdg-desktop-portal-wlr
+pipewire pipewire-pulse pipewire-jack wireplumber pamixer playerctl brightnessctl
+greetd greetd-tuigreet polkit
+firefox noto-fonts just
+#+end_edit
+
+ - *sway*, *swaylock* and *swayidle* are the compositor, the screen
+   locker and the idle watcher that starts it. *kanshi* switches
+   display layouts when monitors come and go.
+ - *xdg-desktop-portal-wlr* lets sandboxed programs and browsers share
+   the screen.
+ - *PipeWire* is the sound server, with *pipewire-pulse* standing in
+   for PulseAudio so that =pactl= and =pamixer= -- which sway-home's
+   volume keys call -- work, and *pipewire-jack* standing in for JACK.
+   *WirePlumber* decides which device is which. *playerctl* and *brightnessctl* are the media and brightness
+   keys.
+ - *greetd* with *tuigreet* is the login screen: a text prompt on the
+   first console that starts sway once you have logged in.
+ - *polkit* lets programs ask for privileges without being run as
+   root.
+ - *firefox* from Arch rather than from Nix, so that it uses the
+   system's GPU drivers (see [[/arch-workstation/desktop/sway-home][sway-home]]), with *noto-fonts* for it
+   to draw text with. *just* runs sway-home's install recipe.
+#+attr_shortcode: :style info :title Name the providers
+#+begin_notice
+=pipewire-jack= and =noto-fonts= are there because something else
+needs /a/ JACK and /a/ font, and more than one package provides each.
+Run by hand, =admin apply= lets pacman ask you which; =admin apply
+--yes= cannot answer that question and loops on it. Naming the one
+you want in =packages.txt= means nobody has to be asked -- and it is
+what aconfmgr's documentation recommends anyway.
+#+end_notice
+
+ - *nix* is the package manager Home Manager needs. Arch packages it,
+   and so does Arch Linux ARM, so there is no installer script to
+   download and nothing outside pacman's view.
+
+*** Units
+
+Add two lines to =units.txt=:
+
+#+attr_shortcode: :file ~/arch/units.txt
+#+begin_edit
+nix-daemon.socket
+greetd
+#+end_edit
+
+=nix-daemon.socket= starts the Nix daemon the first time someone uses
+=nix=. Arch's package leaves the socket open to every user, so =user=
+needs no group membership to use it.
+
+=greetd= replaces the plain text login on the first console:
+=greetd.service= declares =Conflicts=getty@tty1.service=, so enabling
+it is all it takes. It also becomes =display-manager.service=.
+
+*** Files
+
+Nix needs flakes turned on, which Home Manager uses. The file replaces
+the one the package installs, so it keeps that one's single setting:
+
+#+attr_shortcode: :file ~/arch/etc/nix/nix.conf
+#+begin_edit
+build-users-group = nixbld
+experimental-features = nix-command flakes
+#+end_edit
+
+greetd needs to be told to start tuigreet, and tuigreet to start sway:
+
+#+attr_shortcode: :file ~/arch/etc/greetd/config.toml
+#+begin_edit
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --asterisks --cmd sway"
+user = "greeter"
+#+end_edit
+
+=--remember= fills in the last user who logged in.
+
+*** Apply
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+git -C ~/arch add -A
+git -C ~/arch commit -m "Desktop: sway, greetd, Nix"
+admin apply
+sudo systemctl reboot
+#+end_run
+
+=admin apply= installs the packages, puts the two files in place and
+enables the units, after showing you each change. It goes round
+twice: =nix-daemon.socket= and =greetd= do not exist until their
+packages are installed, so the first pass installs them and a second
+enables them, announced as =Enabling units from newly installed
+packages=. snap-pac snapshots
+the transaction like any other. The reboot is what starts greetd and
+the Nix daemon socket. Afterwards the console shows tuigreet instead
+of a login prompt; SSH as =admin= is unchanged.
+
+Run =admin diff= once more. It should find no drift: the Nix store is
+on its own subvolume, =@nix=, mounted at =/nix=, which =setup disk=
+made for this and =90-ignore.sh= ignores. That also keeps the store --
+which can grow to many gigabytes -- out of the snapshots of =/=.
+
+** Nix and sway-home
+:PROPERTIES:
+:EXPORT_FILE_NAME: sway-home
+:EXPORT_HUGO_SLUG: sway-home
+:END:
+
+#+attr_shortcode: :style warning :title Untested
+#+begin_notice
+Nothing on this page has been run on a machine built by this book
+yet.
+#+end_notice
+
+The rest of the desktop is =user='s, installed by =user=. =user= has
+no SSH key and no =sudo=, so get a shell as =user= from your =admin=
+session:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo -iu user
+#+end_run
+
+Then clone sway-home and let Home Manager install it:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine, as user:
+#+begin_run
+git clone https://github.com/EnigmaCurry/sway-home ~/git/vendor/enigmacurry/sway-home
+cd ~/git/vendor/enigmacurry/sway-home
+just hm-install
+#+end_run
+
+=hm-install= asks for the name and email address to put in git's
+configuration, then builds the Home Manager configuration in
+=home-manager/= and switches to it: the packages land in the Nix
+store, and =~/.config=, =~/bin=, =~/.bashrc= and the rest become links
+into it. Dotfiles already in the way are renamed to =*.backup=. The
+first run downloads a great deal; later ones only what changed.
+
+From then on, as =user=:
+
+| Command          | What it does                                           |
+|------------------+--------------------------------------------------------|
+| =hm-switch=      | Apply changes after editing sway-home                  |
+| =hm-pull=        | Pull the latest sway-home                              |
+| =hm-update=      | Move nixpkgs and Home Manager forward (then =hm-switch=) |
+| =hm-generations= | List previous versions of the environment              |
+| =hm-rollback=    | Go back to the previous one                            |
+
+sway-home's own [[https://github.com/EnigmaCurry/sway-home/blob/master/HOME_MANAGER.md][HOME_MANAGER.md]] describes the rest. This is the
+user's half of the "two halves" in the [[/arch-workstation/desktop][chapter introduction]]: =admin=
+keeps the system in step with =~admin/arch=, and Home Manager keeps
+=user='s environment in step with sway-home, each with its own
+history and its own way back.
+
+*** Log in
+
+Log out of the =user= shell, and at the machine itself, log in as
+=user= at tuigreet. It starts sway, with sway-home's configuration.
+
+*** GPU drivers for programs from Nix
+
+Programs from Nix are linked against Nix's own copy of Mesa, which
+cannot use the drivers Arch installed. Most of sway-home's GUI
+programs -- foot, waybar, rofi -- draw in software and do not care.
+Anything that wants OpenGL or Vulkan does: that is why =firefox=
+comes from pacman above.
+
+For the rest, Home Manager has an answer for non-NixOS systems:
+=targets.genericLinux.enable = true;= in the Home Manager
+configuration builds the GPU drivers from Nix, and asks for one
+command to be run as root, which links them into place as
+=/run/opengl-driver= through a file in =/etc/tmpfiles.d=. =user= has
+no =sudo=, so =admin= runs it:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine, as admin:
+#+begin_run
+sudo /home/user/.nix-profile/bin/non-nixos-gpu-setup
+#+end_run
+
+That file is a link into the Nix store, which changes whenever the
+drivers do, so tell aconfmgr to leave it alone:
+
+#+attr_shortcode: :file ~/arch/aconfmgr/90-ignore.sh
+#+begin_edit
+# Home Manager's GPU drivers for Nix programs (non-nixos-gpu-setup).
+IgnorePath '/etc/tmpfiles.d/non-nixos-gpu.conf'
+#+end_edit
+
+sway-home does not turn =targets.genericLinux= on yet.
+
+*** Networking
+
+sway-home installs =nm-applet=, the NetworkManager tray icon, and
+sway starts it when it is there. This machine does not run
+NetworkManager -- it uses systemd-networkd and iwd, as the [[/arch-workstation/setup/install][install]]
+set up -- so the applet has nothing to manage: it is harmless, but
+useless. For WiFi, =iwctl= does the same job from a terminal. If you would rather have NetworkManager, the [[/arch-workstation/setup/host][host page]]
+shows how to switch the host repo over to it.
 
 * Appendix: BOOMSTICK
 :PROPERTIES:
@@ -2300,7 +2578,6 @@ SECTION_FRAG once we write it.
 
  - Maintenance, later: booting a snapshot from systemd-boot, and AUR
    packages (aconfmgr's AddPackage --foreign needs base-devel).
- - Desktop (optional) -- sway and friends.
  - Hardware-key sudo (optional) -- Solokey, mirroring the NixOS book.
 
 * COMMENT Local Variables                                         :ARCHIVE:
