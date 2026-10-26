@@ -149,11 +149,10 @@ of your machine that will exist.
 
 *** ...but it comes with a script
 
-#+attr_shortcode: :style warning :title Speculative
+#+attr_shortcode: :style warning :title Untested
 #+begin_notice
-This section and the [[/arch-workstation/setup][Install with setup]] chapter describe a =setup=
-command that is not written yet. They are a draft of how the book
-would read if it were.
+The =setup= command this section and the [[/arch-workstation/setup][Install with setup]] chapter
+describe is written but has not yet installed a machine end to end.
 #+end_notice
 
 Reading the commands is how you learn the system. Typing them is
@@ -774,13 +773,13 @@ on with the next chapter, which writes to the disk by hand.
 :EXPORT_HUGO_WEIGHT: 350
 :END:
 
-#+attr_shortcode: :style warning :title Speculative
+#+attr_shortcode: :style warning :title Untested
 #+begin_notice
-The =setup= command described in this chapter does not exist yet.
-This is a design sketch, written as though it did, to see whether the
-book reads better with it. Every command it runs is one the by-hand
-chapters already document, so nothing here is new behaviour -- only
-new packaging.
+=setup= is written, on the =setup= branch of [[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]], but only
+=setup disk= has been run so far, against a loopback disk. Treat
+=setup install= as a draft until it has installed a machine that then
+booted. Every command it runs is one the by-hand chapters already
+document, so nothing here is new behaviour -- only new packaging.
 #+end_notice
 
 The chapters after this one are the install written out by hand, one
@@ -819,7 +818,10 @@ has to warn you about:
    transcript you can check against this book.
  - *It is one readable file.* =setup= is a single bash script at
    =/usr/local/bin/setup= on the stick. =less $(which setup)= is the
-   documentation of last resort.
+   documentation of last resort. =just provision= copies it onto the
+   stick's config partition too, and the live system prefers that
+   copy, so a fix to =setup= reaches a stick without rebuilding the
+   image.
 
 #+attr_shortcode: :style info :title The by-hand chapters stay
 #+begin_notice
@@ -861,9 +863,10 @@ life. It is written to =/etc/hostname= directly, never through
 #+begin_annotate
 #+begin_src bash
 ? Install to which disk?
-> /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3   238.5G  nvme  (nvme0n1)
-  /dev/disk/by-id/ata-Samsung_SSD_870_S5Y1NG0R    931.5G  sata  (sda)
-  (sdb, the BOOMSTICK you booted from, is not offered)
+  1) /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3       238.5G  nvme  XP1000F256G  (nvme0n1)
+  2) /dev/disk/by-id/ata-Samsung_SSD_870_S5Y1NG0R        931.5G  sata  Samsung SSD 870  (sda)
+  (/dev/sdb, the BOOMSTICK you booted from, is not offered)
+? Number (1)
 #+end_src
 
 A picker in place of the =DISK== line you would otherwise type. Two
@@ -878,30 +881,32 @@ be.
 
 #+begin_annotate
 #+begin_src bash
-? Encrypt the root filesystem with LUKS? (y/N)
+? Encrypt the root filesystem with LUKS? (yes/no) no
 #+end_src
 
 The same trade as [[/arch-workstation/disk/encrypt][Encrypt the root]]. On a Raspberry Pi the question
 comes with the warning from that page attached -- a headless Pi has
-nobody to type the passphrase -- and the default stays =N=.
+nobody to type the passphrase -- and the default stays =no=.
 #+end_annotate
 
 #+begin_annotate
 #+begin_src bash
-? Swap file size, or 0 for none (8g)
-? Time zone (America/Denver)
-? Locale (en_US.UTF-8)
-? Console keymap (us)
+? Swap file size, or 0 for none 8g
+? Time zone America/Denver
+? Locale en_US.UTF-8
+? Console keymap us
 #+end_src
 
-Defaults come from the live system where it has an opinion -- the
-time zone is guessed from the public IP the boot webhook already
-looked up -- and from this book where it does not.
+Each prompt is pre-filled with its default, which you edit in place:
+the book's choices, except the time zone, which is the live
+system's (UTC unless you changed it). The time zone and locale are
+checked against =/usr/share/zoneinfo= and =/etc/locale.gen=, so a
+typo is caught here rather than at the end of the install.
 #+end_annotate
 
 #+begin_annotate
 #+begin_src bash
-? Passwordless sudo for admin? (Y/n)
+? Passwordless sudo for admin? (yes/no) yes
 ? Extra packages to install (blank for none) git just tmux
 #+end_src
 
@@ -928,8 +933,8 @@ ADMIN_NOPASSWD=yes
 #+end_edit
 
 Open it with =vim /root/arch/host.env= and change anything you
-like; =setup host= again re-asks every question with your current
-answers as the defaults.
+like, or run =setup host= again, which re-asks every question with
+your current answers as the defaults.
 
 =/root/arch= is more than one file. It is a git repository -- the
 *host repo* -- and =setup host= seeds the rest of it too:
@@ -937,11 +942,10 @@ answers as the defaults.
 | File              | Holds                                                         |
 |-------------------+---------------------------------------------------------------|
 | =host.env=        | The answers above                                             |
-| =packages.txt=    | Every package to install, one per line: the base set plus yours |
+| =packages.txt=    | Packages beyond the base set, which =setup= picks from the hardware |
 | =units.txt=       | systemd units to enable: =systemd-networkd=, =iwd=, =sshd=, ... |
 | =etc/=            | Files to place under =/etc=: the =.network= files, the sshd drop-in, the sudoers drop-in |
 | =authorized_keys= | The SSH public keys =admin= will accept, copied from the stick |
-| =Justfile=        | The =admin= recipes, used once the machine is running          |
 
 These are exactly the files the by-hand chapters tell you to write,
 collected in one place before they are installed. After the install,
@@ -957,6 +961,10 @@ already exists, and there is nothing to ask. Point =setup= at it:
 #+begin_run
 setup host --from git@git.example.com:you/arch-myhost.git
 #+end_run
+
+The live system has no private key of its own, so cloning a private
+repo over SSH uses yours: connect with =ssh -A arch-iso= to forward
+your agent for that one command.
 
 =--from= also accepts the name of a host file on the stick's config
 partition, at =archiso-config/hosts/myhost.env=, for when you would
@@ -1007,7 +1015,8 @@ This ERASES the disk. Type the hostname to continue: myhost
 The =Currently:= line is there so that you notice when the disk you
 picked is not the one you thought it was. Typing the hostname rather
 than =y= is deliberate friction: it is the one prompt in =setup= that
-cannot be undone.
+cannot be undone, and =--yes= does not answer it. To script it, pass
+=--confirm-wipe myhost=.
 #+end_annotate
 
 Then it runs the whole of the [[/arch-workstation/disk][disk chapter]], echoing each
@@ -1017,14 +1026,25 @@ command as it goes:
 + sgdisk --zap-all /dev/nvme0n1
 + sgdisk --clear --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP --new=2:0:0 --typecode=2:8300 --change-name=2:root /dev/nvme0n1
 + partprobe /dev/nvme0n1
++ udevadm settle
++ wipefs --all --quiet /dev/nvme0n1p1 /dev/nvme0n1p2
 + mkfs.fat -F32 -n ESP /dev/nvme0n1p1
-+ mkfs.btrfs -L arch /dev/nvme0n1p2
-+ btrfs subvolume create /mnt/@ ... /mnt/@swap   (6 subvolumes)
-+ mount -o noatime,compress=zstd:1,subvol=@ /dev/nvme0n1p2 /mnt   (+ 6 more mounts)
++ mkfs.btrfs --quiet -L arch /dev/nvme0n1p2
++ mount /dev/nvme0n1p2 /mnt
++ btrfs subvolume create /mnt/@
+  ... (five more subvolumes, then the seven mounts)
 + btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
 + swapon /mnt/swap/swapfile
-✓ Disk ready: 7 mounts under /mnt, 8G swap active.
+
+✓ disk       7 mounts under /mnt, 8g swap active
+Next: setup install
 #+end_stdout
+
+One step here is not in the by-hand chapter: =wipefs=. The new
+partitions start exactly where the old ones did, so on a reinstall the
+old btrfs signature is still sitting at the start of partition 2, and
+=mkfs.btrfs= refuses to format over it. Clearing the signatures first
+is what makes reinstalling over the same layout work.
 
 The partition naming question (=p1= or =1=?) and the =ROOTDEV=
 indirection for LUKS disappear: =setup= works them out from the
@@ -1036,7 +1056,7 @@ If =/mnt= already holds the layout =setup disk= would build, it says
 so and stops before touching anything:
 
 #+begin_stdout
-/mnt already has the layout for myhost (7 mounts, swap on). Nothing to do.
+/mnt already has the layout for myhost. Nothing to do.
 #+end_stdout
 
 And if the layout exists on the disk but is not mounted -- the live
@@ -1069,14 +1089,13 @@ setup install
 #+begin_src bash
 ================ Review =================
 Host:         myhost
-Detected:     aarch64, bcm2712 (Raspberry Pi 5)
-Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim
-              linux-rpi-16k firmware-raspberrypi linux-firmware
-              + 3 from packages.txt (git just tmux)
-Boot:         Pi firmware (cmdline.txt, root=UUID=..., subvol=@)
-Network:      networkd + resolved + iwd, 1 WiFi network from the stick
-Accounts:     admin (1000, wheel, passwordless sudo), user (1001)
-SSH keys:     3, from authorized_keys
+Detected:     Raspberry Pi 5 (aarch64, bcm2712)
+Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
+              + packages.txt: git just tmux
+Boot:         Pi firmware (cmdline.txt)
+Units:        systemd-networkd systemd-resolved iwd sshd
+Accounts:     admin (1000, wheel, passwordless sudo), user
+SSH keys:     3, from /root/arch/authorized_keys
 Host repo:    /root/arch -> /mnt/home/admin/arch
 =========================================
 
@@ -1092,15 +1111,18 @@ architecture.
 After you confirm, it works through the rest of the by-hand install
 in order. Each step is the page it links to:
 
- 1. *[[/arch-workstation/install/pacstrap][pacstrap]]* the base set plus =packages.txt=. It checks the stick's
-    Arch Linux ARM key first, and drops =-K= on an old Pi stick that
-    needs it dropped, so that warning box becomes something the
-    reader never sees.
+ 1. *[[/arch-workstation/install/pacstrap][pacstrap]]* the base set plus =packages.txt=, after refreshing the
+    keyring. On a Pi it first checks that the stick trusts Arch Linux
+    ARM's key, and stops with the fix if it does not; on a stick that
+    did not ship that keyring it drops =-K=, so that warning box
+    becomes something the reader never sees. On a re-run, when the
+    base system is already there, it only installs what is missing.
  2. *[[/arch-workstation/install/fstab][fstab]]*, generated fresh with =genfstab -U= and /written/, not
     appended -- so running =setup install= twice cannot duplicate an
     entry. It refuses to continue if the swapfile is missing from the
     result.
- 3. *[[/arch-workstation/install/localize][Time zone, locale and keymap]]*, from the host file.
+ 3. *[[/arch-workstation/install/localize][Time zone, locale and keymap]]*, from the host file, and
+    =/etc/hostname=.
  4. *[[/arch-workstation/bootloader/initramfs][The initramfs]]*, adding =sd-encrypt= to =HOOKS= when the host
     file says the disk is encrypted, and rebuilding with
     =mkinitcpio -P=.
@@ -1111,8 +1133,9 @@ in order. Each step is the page it links to:
     and the hard-coded =/dev/nvme0n1p2= goes away.
  6. *[[/arch-workstation/network/network][The host repo, applied to /mnt]]*: the files under =etc/= are
     copied into =/mnt/etc= with their modes, the units in =units.txt=
-    are enabled, and =/etc/hostname= is written. This is the same
-    =apply= that maintains the machine later, pointed at =/mnt=
+    are enabled. git does not keep file modes, so they are set by place:
+    sudoers drop-ins =0440=, everything else =0644=. This is the
+    operation that will maintain the machine later, pointed at =/mnt=
     instead of =/=.
  7. *The live-system side*: the =resolv.conf= symlink and the iwd
     =.psk= files, done from outside the chroot where they have to be.
@@ -1121,9 +1144,9 @@ in order. Each step is the page it links to:
     modes.
  9. *Passwords*, the only prompts after the review: root, =admin=,
     =user=. On a re-run, any account that already has one is skipped.
- 10. *The host repo moves in*: =/root/arch= is copied to
-     =/mnt/home/admin/arch=, owned by =admin=, with a commit recording
-     the install.
+ 10. *The host repo moves in*: a commit records the install, and
+     =/root/arch= is copied to =/mnt/home/admin/arch=, owned by
+     =admin=.
 
 #+attr_shortcode: :style info :title One apply, two places
 #+begin_notice
@@ -1151,16 +1174,16 @@ setup check
 
 #+begin_stdout
 ✓ hostname   myhost
-✓ fstab      7 btrfs/vfat entries + swap, no duplicates
-✓ boot       cmdline.txt: root=UUID=e1445380-... rootflags=subvol=@
-✓ initramfs  /boot/initramfs-linux.img, built 2 minutes ago
+✓ fstab      7 entries + swap, no duplicates
+✓ boot       cmdline.txt: root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6
+✓ initramfs  initramfs-linux.img
 ✓ accounts   admin user
 ✓ passwords  root=P admin=P user=P
 ✓ sudo       visudo -c OK
 ✓ units      systemd-networkd systemd-resolved iwd sshd enabled
-✓ ssh        3 key(s) for admin, sshd -t OK (no host keys yet: expected)
-✓ wifi       1 network in /mnt/var/lib/iwd
-All checks passed. Safe to reboot.
+✓ ssh        3 key(s) for admin, sshd config parses
+✓ wifi       1 network(s) in /var/lib/iwd
+All checks passed. Safe to reboot: setup reboot
 #+end_stdout
 
 It is the [[/arch-workstation/network/reboot][pre-flight check]] from the by-hand path, with one difference
