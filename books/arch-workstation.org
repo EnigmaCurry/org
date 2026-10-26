@@ -1723,6 +1723,7 @@ The base set is chosen from the hardware:
 | =openssh=                   | The whole point of a headless machine                                |
 | =iwd=                       | WiFi                                                                 |
 | =vim=                       | An editor that exists inside the installed system                    |
+| =less=                      | git's pager. Only an /optional/ dependency of git, so without it =git log= in the host repo fails outright rather than merely not paging |
 | =git=                       | The host repo is a git repository                                    |
 | =pacutils=, =expect=        | What aconfmgr needs to compare the machine with the repo             |
 | =snapper=, =snap-pac=       | Snapshots of =/=, and the pacman hooks that take them                |
@@ -2269,6 +2270,12 @@ a14b07d setup host: myhost
 | [[/arch-workstation/maintain/save][admin save]]      | machine → repo   | Writes the machine's drift into the repo, for you to sort and commit |
 | [[/arch-workstation/maintain/save][admin apply]]     | repo → machine   | Makes the machine match the repo, removals included                  |
 | [[/arch-workstation/maintain/upgrade][admin upgrade]]   | both             | Refuses on drift, =pacman -Syu=, apply, reports =.pacnew= files       |
+| =admin git ...=   | the repo itself  | Runs git in the host repo, from wherever you are                     |
+
+=admin git= saves remembering where the repo lives: =admin git log=,
+=admin git commit -am "..."=, =admin git push=, from any directory.
+Everything after =git= is handed to git untouched, and git's exit
+status comes back, so =admin git diff --quiet= still works as a test.
 
 =admin help= prints the same list. Every command takes aconfmgr's own
 options after it: =--yes= answers its questions, =--skip-checksums=
