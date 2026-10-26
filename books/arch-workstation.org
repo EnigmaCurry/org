@@ -22,16 +22,20 @@ move, commands will change, and pages may contradict each other
 while I am still working through them.
 
 What is written takes a machine from an unplugged box to one that
-boots on its own and accepts an SSH login: the disk, the base
-system, the bootloader, networking and accounts, all done by =setup=.
-The chapters on keeping the system maintainable, the graphical
-desktop, and hardware-key =sudo= are not written yet.
+boots on its own and accepts an SSH login -- the disk, the base
+system, the bootloader, networking and accounts, all done by =setup=
+-- and then keeps it in step with its host repo with =admin=. The
+chapters on the graphical desktop and hardware-key =sudo= are not
+written yet.
 
-Be aware of what "tested" means here. =setup disk= has been run
-against loopback disks; =setup install= has not yet installed a
-machine that was then rebooted. The x86_64 bootloader is the least
-exercised part, because I develop this on a Raspberry Pi 5. Specific
-caveats are flagged in place.
+Be aware of what "tested" means here. BOOMSTICK's =just test-vm=
+installs an *x86_64 PC, unencrypted*, in a QEMU virtual machine with
+every prompt answered, reboots it, logs in, and checks the result,
+including that =admin diff= finds no drift and that pacman
+transactions are snapshotted. Not tested yet: *encryption* (the
+install up to the passphrase prompt at boot), the *Raspberry Pi 5*,
+=admin upgrade=, and rolling back a snapshot. Specific caveats are
+flagged in place.
 
 Read it as notes becoming a book rather than as a recipe that is
 known to work start to finish.
@@ -126,6 +130,15 @@ setup install   # install, make it boot, network, accounts, SSH
 setup reboot    # check everything, then reboot
 #+end_run
 
+and, for the rest of the machine's life, one more command:
+
+#+begin_run
+admin diff      # what changed on the machine that the repo does not say?
+admin save      # write it into the repo, for you to review and commit
+admin apply     # make the machine match the repo again
+admin upgrade   # pacman -Syu, snapshotted, then apply
+#+end_run
+
 =setup= is not a black box. It is one bash script that prints every
 command before it runs it, and the pages that follow explain what
 each of those commands is for and why it is there. The aim is the
@@ -136,8 +149,8 @@ The description it works from is a small git repository, the *host
 repo*: a file of answers (hostname, disk, encryption, time zone), a
 package list, a list of services, and the handful of files that go
 under =/etc=. It holds no secrets, and it ends up inside the installed
-machine, where it is the start of a record of how that machine was
-built.
+machine, where it is the record of how that machine was built -- and,
+through =admin=, of every change made to it since.
 
 #+attr_shortcode: :style warning :title What this does and does not buy you
 #+begin_notice
@@ -155,6 +168,10 @@ partitioned and formatted disk, a bootloader, networking, your user
 accounts, SSH and =sudo=. That base is deliberately the same work on
 a desktop PC as on a Raspberry Pi, and it is a perfectly good
 stopping point if what you wanted was a small server.
+
+On top of that base it is kept *maintainable*: [[https://github.com/CyberShadow/aconfmgr][aconfmgr]] compares
+the machine with its host repo in both directions, and snapper takes
+a btrfs snapshot before and after every pacman transaction.
 
 The graphical desktop comes later, as its own optional chapter, built
 on top of that base.
@@ -424,12 +441,12 @@ key, unique to it.
 :EXPORT_HUGO_WEIGHT: 400
 :END:
 
-#+attr_shortcode: :style warning :title Untested
+#+attr_shortcode: :style warning :title Tested on x86_64 only
 #+begin_notice
-=setup= is on the =setup= branch of [[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]], and so far only
-=setup disk= has been run, against a loopback disk. Treat =setup
-install= as a draft until it has installed a machine that then
-booted.
+=setup= is on the =setup= branch of [[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]]. Its =just test-vm=
+runs this whole chapter unattended against an *x86_64 PC* in QEMU,
+without encryption, then boots the result and logs in. An encrypted
+install and the Raspberry Pi 5 have not been through it yet.
 #+end_notice
 
 You have a root shell on the live system. Four commands install the
@@ -591,7 +608,7 @@ over SSH you may never see -- until a rescue prompt.
 #+begin_annotate
 #+begin_src bash
 ? Passwordless sudo for admin? (yes/no) yes
-? Extra packages to install (blank for none) git just tmux
+? Extra packages to install (blank for none) just tmux
 #+end_src
 
 =setup= always creates two accounts:
@@ -642,15 +659,20 @@ it too:
 |------------------------------------------+-----------------------------------------------------------|
 | =host.env=                               | The answers above                                         |
 | =packages.txt=                           | Packages beyond the base set, which =setup= picks from the hardware |
-| =units.txt=                              | systemd units to enable: =systemd-networkd=, =systemd-resolved=, =iwd=, =sshd= |
+| =units.txt=                              | systemd units to enable: =systemd-networkd=, =systemd-resolved=, =iwd=, =sshd=, =snapper-cleanup.timer= |
 | =etc/systemd/network/*.network=          | DHCP on any wired (=en*=) and wireless (=wl*=) interface  |
 | =etc/ssh/sshd_config.d/10-hardening.conf= | Keys only, no root login                                 |
 | =etc/sudoers.d/10-admin=                 | Passwordless sudo for =admin=, if you said yes            |
+| =etc/snapper/configs/root=, =etc/conf.d/snapper= | Snapshots of =/=, kept to the newest ten          |
+| =bin/admin=                              | The =admin= command, installed to =/usr/local/bin=        |
+| =aconfmgr/=                              | aconfmgr's view of all of the above, plus what to ignore  |
 | =authorized_keys=                        | The SSH public keys =admin= will accept, copied from the stick |
 
 Once seeded, these files are yours: =setup= never overwrites them,
 except for the sudoers drop-in, which follows your answer about
-passwordless sudo.
+passwordless sudo, and =aconfmgr/10-base.sh=, which =setup install=
+rewrites from the hardware. The [[/arch-workstation/maintain][maintenance chapter]] explains =admin=
+and =aconfmgr/=; until the machine is running you can ignore both.
 
 *** Change anything before installing
 
@@ -664,7 +686,9 @@ For example, to use NetworkManager instead of systemd-networkd and
 iwd -- a perfectly good choice if you want its roaming and GUI
 integration -- add =networkmanager= to =packages.txt=, replace the
 first three lines of =units.txt= with =NetworkManager=, and delete
-the two =.network= files. Commit when you are done:
+the two =.network= files. The aconfmgr configuration is worked out
+from these files, so it follows without being edited. Commit when you
+are done:
 
 #+attr_shortcode: :style secondary :title Run this on the live system:
 #+begin_run
@@ -829,6 +853,11 @@ Reading it across:
    which is then unmounted and never used again except as their
    container. =@= is mounted first, because the mount points for the
    others are directories inside it.
+ - The ESP is mounted =fmask=0077,dmask=0077=, readable by root only,
+   and =genfstab= carries that into the fstab. FAT has no permissions
+   of its own, and with the default masks systemd-boot's random seed
+   is world-readable, which =bootctl= reports at every boot as "a
+   security hole".
  - The swap is turned on now, not just created, for two reasons: on a
    low-memory machine it is what keeps the install from running out,
    and the fstab is generated from what is /active/, so a swapfile that
@@ -912,13 +941,14 @@ setup install
 ================ Review =================
 Host:         myhost
 Detected:     Raspberry Pi 5 (aarch64, bcm2712)
-Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim linux-rpi-16k firmware-raspberrypi linux-firmware
-              + packages.txt: git just tmux
+Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim git pacutils expect snapper snap-pac linux-rpi-16k firmware-raspberrypi linux-firmware
+              + packages.txt: just tmux
 Boot:         Pi firmware (cmdline.txt)
-Units:        systemd-networkd systemd-resolved iwd sshd
+Units:        systemd-networkd systemd-resolved iwd sshd snapper-cleanup.timer
 Accounts:     admin (1000, wheel, passwordless sudo), user
 SSH keys:     3, from /root/arch/authorized_keys
 Host repo:    /root/arch -> /mnt/home/admin/arch
+Maintenance:  aconfmgr 96ab414 (admin diff/apply/save/upgrade), snapper + snap-pac
 =========================================
 
 ? Install? (Y/n)
@@ -929,7 +959,7 @@ the host repo. If any of it is not what you want, answer =n=, change
 the host repo, and run it again.
 #+end_annotate
 
-After you confirm, it works through ten stages. Apart from the
+After you confirm, it works through eleven stages. Apart from the
 passwords near the end, it asks nothing more.
 
 *** 1. Packages
@@ -955,6 +985,9 @@ The base set is chosen from the hardware:
 | =openssh=                   | The whole point of a headless machine                                |
 | =iwd=                       | WiFi                                                                 |
 | =vim=                       | An editor that exists inside the installed system                    |
+| =git=                       | The host repo is a git repository                                    |
+| =pacutils=, =expect=        | What aconfmgr needs to compare the machine with the repo             |
+| =snapper=, =snap-pac=       | Snapshots of =/=, and the pacman hooks that take them                |
 
 The keyring refresh matters more than it looks. Every package is
 checked against developer signing keys, and the copy of those keys on
@@ -1104,10 +1137,11 @@ the UUID of the LUKS /container/, which is a different UUID from the
 btrfs filesystem inside it, and the easiest thing to get wrong when
 doing this by hand.
 
-#+attr_shortcode: :style warning :title The least tested page
+#+attr_shortcode: :style warning :title The Pi half is untested
 #+begin_notice
-The x86_64 half of this stage is the least exercised part of the
-book, because I develop on the Pi.
+The x86_64 half of this stage boots in BOOMSTICK's test VM. The
+Raspberry Pi half, and the LUKS command line on either, have not yet
+booted a machine.
 #+end_notice
 
 *** 6. The host repo, applied
@@ -1116,7 +1150,8 @@ The files under the host repo's =etc/= are installed at the same paths
 under =/mnt/etc=, owned by root. git does not keep file modes, so
 =setup= sets them by place: =0440= for sudoers drop-ins, which =sudo=
 insists on before it will read them, and =0644= for everything else.
-Then every unit in =units.txt= is enabled.
+Files under the repo's =bin/= -- =admin= -- go to =/usr/local/bin=,
+mode =0755=. Then every unit in =units.txt= is enabled.
 
 Enabling works inside the chroot because it only creates symlinks on
 disk. Nothing /starts/ until the machine reboots: the =systemd= you
@@ -1181,10 +1216,23 @@ wrong at boot -- without it, a machine that fails to mount its root
 leaves you at a prompt you cannot answer. Root still cannot log in
 over SSH.
 
-*** 10. The host repo moves in
+*** 10. aconfmgr
 
-A commit records the install in the host repo, which is then copied
-to =/mnt/home/admin/arch= and handed to =admin=. From the first boot,
+[[https://github.com/CyberShadow/aconfmgr][aconfmgr]] is what =admin= runs. It is in neither Arch's nor Arch Linux
+ARM's repositories -- only the AUR has it, and building AUR packages
+would mean =base-devel= on every machine -- but it is a bash program
+with no compiled parts, so =setup= clones it from GitHub at a fixed
+commit into =/usr/local/lib/aconfmgr=, and links it where its own
+launcher looks (=/usr/lib/aconfmgr=, =/usr/local/bin/aconfmgr=).
+Pinning the commit means every machine runs the version this book was
+checked against; a newer one is a deliberate change to =setup=.
+
+*** 11. The host repo moves in
+
+=setup= writes =aconfmgr/10-base.sh=, the base packages it picked for
+this hardware, so aconfmgr knows them as wanted. A commit records the
+install in the host repo, which is then copied to
+=/mnt/home/admin/arch= and handed to =admin=. From the first boot,
 the description of the machine lives on the machine.
 
 =setup install= finishes by running the [[/arch-workstation/setup/check][check]].
@@ -1215,8 +1263,9 @@ setup check
 ✓ accounts   admin user
 ✓ passwords  root=P admin=P user=P
 ✓ sudo       visudo -c OK
-✓ units      systemd-networkd systemd-resolved iwd sshd enabled
+✓ units      systemd-networkd systemd-resolved iwd sshd snapper-cleanup.timer enabled
 ✓ ssh        3 key(s) for admin, sshd config parses
+✓ admin      aconfmgr 96ab414, snapper config root
 ✓ wifi       1 network(s) in /var/lib/iwd
 All checks passed. Safe to reboot: setup reboot
 #+end_stdout
@@ -1232,6 +1281,7 @@ All checks passed. Safe to reboot: setup reboot
 | =sudo=      | =visudo -c= fails                                                                           |
 | =units=     | anything in =units.txt= is not enabled                                                      |
 | =ssh=       | =admin= has no keys, the file has the wrong owner or mode, or =sshd -t= rejects the config   |
+| =admin=     | aconfmgr, =/usr/local/bin/admin= or snapper's root configuration is missing                 |
 | =wifi=      | there are no WiFi credentials /and/ no ethernet interface: it would never join a network   |
 
 Any =✗= means a machine that will not come back, and =setup check=
@@ -1289,12 +1339,130 @@ disk --mount= get you back into the installed system with
 =arch-chroot /mnt=.
 #+end_notice
 
-*** Keep the host repo
+Once you are in as =admin=, the install is finished. From here on the
+machine is looked after with =admin=, in [[/arch-workstation/maintain][Keeping it maintainable]],
+starting with pushing its host repo somewhere off the machine.
 
-Once you are in as =admin=, the install is finished, and the first
-thing worth doing is pushing =~/arch= somewhere off the machine. It is
-the only record of how this machine was built, and the next reinstall
-starts from it with =setup host --from=:
+* Keeping it maintainable
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: maintain
+:END:
+
+** Keeping it maintainable
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 500
+:END:
+
+The introduction made a promise about Arch: the running system is the
+source of truth, it drifts, and nothing but your own discipline
+records how it got that way. This chapter is that discipline, written
+down as a git repository and one command, so that it does not have to
+live in your head.
+
+Log in as =admin=. The host repo that =setup= built the machine from
+is already there:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+cd ~/arch
+git log --oneline
+#+end_run
+
+#+begin_stdout
+3f9c2e1 setup install: myhost (x86_64 PC, UEFI)
+a14b07d setup host: myhost
+#+end_stdout
+
+| File                  | Holds                                                    | Changed by           |
+|-----------------------+----------------------------------------------------------+----------------------|
+| =host.env=            | The install answers                                      | You, rarely          |
+| =packages.txt=        | Every package you asked for, beyond the base set         | You                  |
+| =units.txt=           | Every unit you enabled                                   | You                  |
+| =etc/=                | Your files under =/etc=                                  | You                  |
+| =bin/admin=           | The =admin= command itself                               | Nobody, usually      |
+| =authorized_keys=     | Public keys =admin= accepts                              | You                  |
+| =aconfmgr/=           | The same, in aconfmgr's terms, plus what to ignore       | Nobody, usually      |
+| =aconfmgr/10-base.sh= | The base packages =setup= picked for this hardware       | =setup install=      |
+
+=admin= runs [[https://github.com/CyberShadow/aconfmgr][aconfmgr]] against =~/arch/aconfmgr=:
+
+| Command         | Direction        | What it does                                                         |
+|-----------------+------------------+----------------------------------------------------------------------|
+| [[/arch-workstation/maintain/diff][admin diff]]      | look only        | Lists every difference between the machine and the repo              |
+| [[/arch-workstation/maintain/save][admin save]]      | machine → repo   | Writes the machine's drift into the repo, for you to sort and commit |
+| [[/arch-workstation/maintain/save][admin apply]]     | repo → machine   | Makes the machine match the repo, removals included                  |
+| [[/arch-workstation/maintain/upgrade][admin upgrade]]   | both             | Refuses on drift, =pacman -Syu=, apply, reports =.pacnew= files       |
+
+=admin help= prints the same list. Every command takes aconfmgr's own
+options after it: =--yes= answers its questions, =--skip-checksums=
+skips comparing package files with their checksums, which is much
+faster but misses edits to files that packages own.
+
+*** What aconfmgr looks at
+
+aconfmgr knows the whole system, not only what you told it about. It
+lists the packages installed /explicitly/ (=pacman -Qe=; dependencies
+come and go with them and are never listed), every file on the
+system that no package owns, and every file a package owns that has
+changed since it was installed. Anything in that list that the
+configuration does not describe, or that the configuration describes
+and the machine lacks, is drift.
+
+A fresh install has no drift. That is not an accident of a new
+system -- a fresh Arch install is full of files no package owns -- but
+the result of =~/arch/aconfmgr/=, which accounts for all of them:
+
+| File             | Describes                                                                                          |
+|------------------+----------------------------------------------------------------------------------------------------|
+| =00-helpers.sh=  | The helpers the others use, including one that works out the links =systemctl enable= makes           |
+| =10-base.sh=     | The base packages for this hardware (written by =setup install=)                                    |
+| =20-host.sh=     | What =setup= wrote from =host.env=: hostname, locale, keymap, time zone, =resolv.conf=               |
+| =30-repo.sh=     | =packages.txt=, the files under =etc/= and =bin/=, and the units in =units.txt=                      |
+| =40-system.sh=   | What packages and boot leave behind: units they enable, directories they make, aconfmgr's links      |
+| =90-ignore.sh=   | What is not configuration at all                                                                    |
+
+They are bash, read by aconfmgr in order. =20-host.sh= and
+=30-repo.sh= do not copy anything: they /read/ =host.env=,
+=packages.txt=, =units.txt=, =etc/= and =bin/=, so those stay the
+files you edit and aconfmgr follows them. Adding a package is still a
+line in =packages.txt=.
+
+*** What is ignored, and why
+
+=90-ignore.sh= lists what aconfmgr should not report:
+
+ - *What =setup= owns*: =/boot= (the bootloader, kernel and initramfs,
+   rewritten by pacman hooks) and =/etc/fstab= (UUIDs of this disk).
+ - *Accounts*: =/etc/passwd=, =group=, =shadow= and friends. =setup=
+   makes the accounts, and password hashes never go into the repo.
+ - *Secrets and identity*: SSH host keys, =/etc/machine-id=, pacman's
+   keyring.
+ - *Generated files*: the CA bundle, =ld.so.cache=, module and hardware
+   databases, the locale archive, the mirror list.
+ - *State*: =/var/lib=, =/var/log=, =/var/tmp=, =/swap=, =/.snapshots=,
+   and aconfmgr's own checkout.
+
+aconfmgr already ignores =/home=, =/root=, =/tmp=, =/var/cache= and
+the pseudo-filesystems. When something new shows up that is state
+rather than configuration -- a database a service keeps under =/srv=,
+say -- the fix is a line here, with its reason:
+
+#+attr_shortcode: :file ~/arch/aconfmgr/90-ignore.sh
+#+begin_edit
+# The music server's library database.
+IgnorePath '/srv/music/*.db'
+#+end_edit
+
+Quote the pattern, or bash expands it before aconfmgr sees it.
+
+*** Push it somewhere
+
+The host repo is the only record of this machine that exists off its
+own disk -- or it will be, once you push it. The next reinstall starts
+from it with =setup host --from=. Make it a *private* repository: it
+holds no secrets, but it describes your machine in detail.
 
 #+attr_shortcode: :style secondary :title Run this on the new machine:
 #+begin_run
@@ -1302,8 +1470,284 @@ git -C ~/arch remote add origin git@git.example.com:you/arch-myhost.git
 git -C ~/arch push -u origin main
 #+end_run
 
-Make it a private repository. It holds no secrets, but it describes
-your machine in detail.
+** See what drifted
+:PROPERTIES:
+:EXPORT_FILE_NAME: diff
+:EXPORT_HUGO_SLUG: diff
+:END:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin diff
+#+end_run
+
+On a machine that matches its repo:
+
+#+begin_stdout
+No drift: the machine matches /home/admin/arch.
+#+end_stdout
+
+After installing =htop= and dropping a sysctl file into =/etc= by hand:
+
+#+begin_stdout
+Drift (as the aconfmgr lines that would describe it):
+  AddPackage htop # Interactive process viewer
+  CopyFile /etc/sysctl.d/99-swappiness.conf
+#+end_stdout
+
+Each line is what aconfmgr would have to add to the configuration to
+describe the machine as it is. Removals show up the same way, as
+=RemovePackage= or =RemoveFile=: something the repo has and the
+machine lost.
+
+=admin diff= runs =aconfmgr save= into a throwaway copy of
+=~/arch/aconfmgr=, so it changes nothing, and it exits 1 when there is
+drift -- a reasonable thing to run from a timer and send to the same
+webhook the BOOMSTICK uses. aconfmgr prints its progress to stderr as
+it goes; it reads every file on the system, so expect it to take a
+minute or two.
+
+** Save and apply
+:PROPERTIES:
+:EXPORT_FILE_NAME: save
+:EXPORT_HUGO_SLUG: save
+:END:
+
+Every line of drift has two possible fixes: change the repo to match
+the machine, or change the machine to match the repo. =admin save= and
+=admin apply= are the two.
+
+*** Change the repo: admin save
+
+When the drift is something you meant, record it:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin save
+#+end_run
+
+#+begin_stdout
+Wrote /home/admin/arch/aconfmgr/99-unsorted.sh. Move what you meant into a numbered
+file, delete the rest (and 'admin apply' to undo it), then commit.
+#+end_stdout
+
+=99-unsorted.sh= holds the same lines =admin diff= printed. Files it
+copied -- the sysctl file, here -- are under =aconfmgr/files/=. It is
+git-ignored on purpose: it is a to-do list, not configuration, and it
+should not survive the review.
+
+*** Review and commit
+
+Sort each line into the place it belongs. In this repo, that is
+usually /not/ another aconfmgr file, but the plain file aconfmgr
+reads:
+
+| Line in 99-unsorted.sh         | Where it goes                                                              |
+|--------------------------------+----------------------------------------------------------------------------|
+| =AddPackage foo=               | =foo= on a line of =packages.txt=                                           |
+| =CopyFile /etc/...=            | the file, moved from =aconfmgr/files/etc/...= to =etc/...=                  |
+| =CreateLink /etc/systemd/...=  | the unit in =units.txt=                                                    |
+| anything that is state         | an =IgnorePath= in =aconfmgr/90-ignore.sh=                                  |
+| anything you did not mean      | nowhere: delete it, and =admin apply= will undo it on the machine           |
+
+For the example above:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+cd ~/arch
+echo htop >> packages.txt
+mkdir -p etc/sysctl.d
+mv aconfmgr/files/etc/sysctl.d/99-swappiness.conf etc/sysctl.d/
+rm -r aconfmgr/99-unsorted.sh aconfmgr/files
+admin diff
+git add -A
+git commit -m "htop; lower swappiness"
+#+end_run
+
+The second =admin diff= is the check that the sorting was right: it
+should say there is no drift. =save= writes and never commits, and
+that review is the whole point -- it is the moment the machine's
+history gets a reason attached to it.
+
+*** Change the machine: admin apply
+
+Edit the repo, commit, and apply:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+echo ripgrep >> ~/arch/packages.txt
+git -C ~/arch commit -am "Add ripgrep"
+admin apply
+#+end_run
+
+aconfmgr shows each change before it makes it and asks. It installs
+what is missing, puts files back the way the repo has them, and
+enables units.
+
+#+attr_shortcode: :style warning :title apply removes things too
+#+begin_notice
+=apply= makes the machine match the repo /exactly/. A package
+installed by hand and not in =packages.txt= is uninstalled (aconfmgr
+marks it as a dependency, then removes orphans); a file that the repo
+does not describe and =90-ignore.sh= does not ignore is deleted. That is what makes it an undo button, and also why you
+should run =admin diff= first and =admin save= anything you want to
+keep. Read what it proposes before answering yes, and do not get into
+the habit of =admin apply --yes=.
+#+end_notice
+
+This is also how a second machine picks up a change: pull the repo
+there and apply.
+
+** Upgrade
+:PROPERTIES:
+:EXPORT_FILE_NAME: upgrade
+:EXPORT_HUGO_SLUG: upgrade
+:END:
+
+#+attr_shortcode: :style warning :title Untested
+#+begin_notice
+=admin upgrade= has not yet been run by the test VM, which installs
+from the current repositories and has nothing to upgrade.
+#+end_notice
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+admin upgrade
+#+end_run
+
+One command for the thing you will do most often, in an order worth
+not having to remember:
+
+ 1. Refuse to start if =admin diff= reports drift. Upgrading a machine
+    you cannot describe makes it harder to describe. =admin save= or
+    =admin apply= first.
+ 2. =pacman -Syu=. snap-pac takes a snapshot of =/= just before the
+    transaction and another just after (see [[/arch-workstation/maintain/snapshots][Snapshots]]).
+ 3. =admin apply=, so that anything a package update reset comes back.
+ 4. List any /new/ =.pacnew= files.
+ 5. Say whether a reboot is needed: when the running kernel's modules
+    are gone from =/usr/lib/modules=, the kernel was upgraded.
+
+=admin upgrade --yes= passes =--noconfirm= to pacman and =--yes= to
+aconfmgr.
+
+*** .pacnew files
+
+When a package updates a configuration file you have changed, pacman
+keeps yours and writes its new version alongside as =<file>.pacnew=.
+That is how new options arrive on Arch -- the [[/arch-workstation/setup/install][Pi's cmdline.txt]] is one
+-- and pacman never merges them for you. =admin upgrade= lists them:
+
+#+begin_stdout
+New .pacnew files (merge them, then 'admin save'):
+  /etc/pacman.conf.pacnew
+#+end_stdout
+
+Compare the two, carry over what you want, and delete the =.pacnew=:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo vim -d /etc/pacman.conf /etc/pacman.conf.pacnew
+sudo rm /etc/pacman.conf.pacnew
+admin save
+#+end_run
+
+If the file is one the repo provides (under =~/arch/etc/=), merge into
+the repo's copy instead and =admin apply=. A =.pacnew= left lying
+around is drift too, so =admin diff= reports it until you deal with
+it.
+
+#+attr_shortcode: :style warning :title What this is not
+#+begin_notice
+This is not NixOS. The host repo reproduces your package /list/ and
+your files, not the versions pacman installed on the day. Two machines
+built from the same repo a month apart will differ in every package
+that moved. A snapshot is a way back from a bad upgrade, but not an
+atomic one. That is the trade the introduction described, made
+smaller -- not made to go away.
+#+end_notice
+
+** Snapshots
+:PROPERTIES:
+:EXPORT_FILE_NAME: snapshots
+:EXPORT_HUGO_SLUG: snapshots
+:END:
+
+=setup disk= made =@snapshots= for exactly this. =setup install=
+configured [[https://wiki.archlinux.org/title/Snapper][snapper]] to keep snapshots of =/= (the =@= subvolume) there,
+and installed [[https://github.com/wesbarnett/snap-pac][snap-pac]], whose pacman hooks take one snapshot before
+every transaction and one after:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo snapper list
+#+end_run
+
+#+begin_stdout
+# | Type   | Pre # | Date                     | User | Cleanup | Description               | Userdata
+--+--------+-------+--------------------------+------+---------+---------------------------+---------
+0 | single |       |                          | root |         | current                   |
+1 | pre    |       | Mon Oct 26 05:22:11 2026 | root | number  | pacman -S --noconfirm vim |
+2 | post   |     1 | Mon Oct 26 05:22:14 2026 | root | number  | vim                       |
+#+end_stdout
+
+The configuration is in the host repo, at =etc/snapper/configs/root=:
+
+ - *No timeline.* Snapshots are taken when something changes, by
+   pacman, not every hour. =admin save= and =admin apply= that do not
+   touch packages take none.
+ - *The newest ten*, by =NUMBER_LIMIT=, pruned by
+   =snapper-cleanup.timer= once they are an hour old. Pre and post
+   pairs whose contents are identical are pruned too.
+ - *Only =/=.* =@home=, =@log= and =@pkg= are separate subvolumes so
+   that rolling the system back leaves your data, your logs and the
+   package cache alone.
+
+A snapshot is a read-only btrfs subvolume under =/.snapshots/N/snapshot=,
+so it costs only the space of what changed since.
+
+*** Rolling back
+
+#+attr_shortcode: :style warning :title Untested
+#+begin_notice
+Undoing a snapshot has not been tried on a machine built by this book
+yet.
+#+end_notice
+
+To see what a transaction changed, compare its pre and post snapshot:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo snapper status 1..2
+#+end_run
+
+To undo it, on the running system:
+
+#+attr_shortcode: :style secondary :title Run this on the new machine:
+#+begin_run
+sudo snapper undochange 1..2
+#+end_run
+
+That copies back every file in =/= that changed between the two
+snapshots -- including pacman's database, which lives in =@=, so
+pacman agrees afterwards about which versions are installed. Then
+=admin diff=, which should show no drift.
+
+#+attr_shortcode: :style warning :title The kernel is not in the snapshot
+#+begin_notice
+=/boot= is the FAT ESP (or the Pi's firmware partition), not a btrfs
+subvolume, so no snapshot covers it. If the transaction you undo
+upgraded the kernel, the old modules come back but =/boot= still has
+the new kernel, and the next boot will not find its modules. Before
+rebooting, reinstall the kernel package -- now the older version, from
+the package cache -- so that its hooks rewrite =/boot= to match:
+=sudo pacman -S linux= (=linux-rpi-16k= on the Pi).
+#+end_notice
+
+When the system no longer boots at all, boot the stick, then =setup
+host --from= and =setup disk --mount= as in [[/arch-workstation/setup/disk][Prepare the disk]], and
+=arch-chroot /mnt snapper --no-dbus undochange 1..2= from there. Booting straight
+into a snapshot from the boot menu is not set up by this book.
 
 * Appendix: BOOMSTICK
 :PROPERTIES:
@@ -1839,11 +2283,8 @@ Linux project.
 Outline only -- not exported. Each becomes a `* Chapter` with a
 SECTION_FRAG once we write it.
 
- - Keeping it maintainable -- built on the host repo setup leaves
-   at ~admin/arch. Tooling (aconfmgr, decman, or a few recipes) is
-   undecided. A speculative draft (admin diff/apply/save/upgrade) is
-   in this branch's history at 9f01aa5. Also: snapper, booting a
-   snapshot, AUR.
+ - Maintenance, later: booting a snapshot from systemd-boot, and AUR
+   packages (aconfmgr's AddPackage --foreign needs base-devel).
  - Desktop (optional) -- sway and friends.
  - Hardware-key sudo (optional) -- Solokey, mirroring the NixOS book.
 
