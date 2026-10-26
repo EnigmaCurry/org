@@ -711,6 +711,47 @@ be given a newer =setup= either, however many times you provision it.
 Rebuild instead.
 #+end_notice
 
+*** Upgrading a stick you already have
+
+Writing a new image to a stick erases the only copy of some of its
+secrets. The WireGuard key and the SSH host keys it made on its first
+boot exist nowhere else: =secrets/= on your workstation may be long
+gone, or may never have been on /this/ workstation at all. So take them
+off the stick /before/ you write anything to it.
+
+#+attr_shortcode: :style secondary :title Run this on your workstation:
+#+begin_run
+git clone https://github.com/EnigmaCurry/boomstick
+cd boomstick
+just adopt
+#+end_run
+
+=just adopt= finds the stick by its =BOOMSTICK= label and copies back
+what the repository cannot regenerate -- the WiFi PSKs, =wg0.conf=,
+=authorized_keys=, =webhook.env= and =ssh/host/= -- into =secrets/=,
+owned by you and readable by nobody else. =README.txt= and =bin/= are
+left alone: those come from the repository, not from the stick.
+
+It refuses to overwrite a =secrets/= that already has files in it, and
+says which ones clashed, so aiming it at the wrong stick cannot quietly
+replace a working configuration with somebody else's. =just adopt
+--force= when the stick really is the one to keep.
+
+With the secrets safe, the rest is the ordinary path: [[/arch-workstation/boomstick/build][build]] a new
+image, write it to the stick, and =just provision= to put the
+configuration back.
+
+#+attr_shortcode: :style info :title The stick keeps its identity
+#+begin_notice
+Adopting =ssh/host/= is what carries the stick's SSH host keys across
+the rewrite, so =ssh boomstick= does not start warning about a changed
+host key afterwards. If you would rather it got new ones, delete
+=secrets/ssh/host/= before provisioning and it will generate a fresh
+set on its next first boot.
+#+end_notice
+
+*** Where to go next
+
 The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use
 it -- or, if you would rather know what the stick does at boot
 before you trust it with a machine, read
