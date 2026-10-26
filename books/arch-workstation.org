@@ -2359,9 +2359,12 @@ diskutil unmountDisk /dev/diskN
 sudo dd if=out/boomstick-usb-<date>-x86_64+rpi5.img of=/dev/rdiskN bs=4m
 #+end_src
 
-The image only has to be built and written once. Everything that
-makes the stick yours is configuration, and changing it later never
-requires another build. That starts on the next page,
+Everything that makes the stick yours is configuration, and changing
+that later never requires another build -- so this is the only time
+you have to think about the image at all for a good while. (It is not
+quite "once, ever": see [[/arch-workstation/boomstick/provision][Changing it later]] for the handful of
+things that are frozen into an image.) Configuration starts on the
+next page,
 [[/arch-workstation/boomstick/secrets][SSH keys, WiFi and the webhook]].
 
 ** SSH keys, WiFi and the webhook
@@ -2589,6 +2592,41 @@ files. When you move to a new WiFi network, rotate a WireGuard key,
 or add someone's SSH key, you edit a file on the stick -- or in
 =secrets/=, then run =just provision= again -- and you are done, with
 nothing to rebuild.
+
+=boomstick-config= re-reads all of it on /every/ boot, which is what
+makes that true. The same mechanism updates =setup= itself: =just
+provision= copies the current installer to =boomstick/bin/setup=, and
+the live system installs that copy over its own at boot. So a fix to
+=setup= reaches a stick without a rebuild.
+
+What a stick /cannot/ grow into is anything that lives in the live
+system itself -- the squashfs the image was built from:
+
+ - the *package set*: the live system's own =git=, =cryptsetup=,
+   =archlinuxarm-keyring= and the rest,
+ - the *kernel and initramfs*, and
+ - =boomstick-config=, =boomstick-webhook= and =boomstick-motd=, the
+   boot-time logic itself.
+
+Those are frozen at build time, and the way to move them forward is to
+build a new image and write it to the stick again -- then =just
+provision= to put your configuration back, since a fresh image carries
+only the templates.
+
+#+attr_shortcode: :style warning :title Installing packages on the live system does not stick
+#+begin_notice
+The live system boots =copytoram=auto=, and its root is a tmpfs
+overlay. =pacman -Sy something= works and is a perfectly good way out
+of a hole, but the next boot has forgotten it. Treat it as a patch for
+the session, not a repair to the stick.
+
+The corollary is worth knowing before you keep an old stick around: a
+stick whose image predates a feature in that frozen half cannot be
+provisioned into having it. =bin/setup= is only picked up because
+=boomstick-config= looks for it, so a stick older than /that/ cannot
+be given a newer =setup= either, however many times you provision it.
+Rebuild instead.
+#+end_notice
 
 The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use
 it -- or, if you would rather know what the stick does at boot
