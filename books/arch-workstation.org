@@ -711,6 +711,55 @@ be given a newer =setup= either, however many times you provision it.
 Rebuild instead.
 #+end_notice
 
+*** Updating from the stick itself
+
+=just provision= needs your workstation and a checkout of the
+repository. =boomstick-update=, on the live system, does the same job
+over the network when you have neither -- which, for a tool meant for
+installing machines in other rooms and other buildings, is a situation
+that comes up.
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+boomstick-update
+#+end_run
+
+It clones the repository, says where from and which commit it resolved
+to, shows a *diff* of every helper that would change, and asks. Enter
+declines. What you accept is written to =boomstick/bin/= on the stick,
+so the next boot has it, /and/ to =/usr/local/bin= in the running
+system, so this boot has it too -- no reboot in between. Each run
+appends a line to =boomstick/UPDATES.txt=, so the stick carries a
+record of what it has been given.
+
+It updates BOOMSTICK, not Arch. The live system stays the one the image
+was built with -- the same =pacman=, the same keyring, the same
+kernel -- so this is no answer to an image going stale on a rolling
+release. Its reach is exactly =just provision='s: the helpers, and
+nothing else. =boomstick-config= is deliberately left out too, since it
+is what installs the others at boot and a broken copy would take
+configuration down with it on every later boot. For the package set,
+the kernel, or that, rebuild.
+
+It refuses to run while something is mounted at =/mnt=, since replacing
+=setup= under a running install is nobody's idea of a good afternoon,
+and when the stick is not plugged in -- =copytoram= means the live
+system keeps going without it, but then there is nothing to write to.
+
+=--ref= takes a branch or a tag, and defaults to the repository's
+default branch, which is not necessarily where your stick came from. A
+stick built from a topic branch will find the default branch has none
+of its helpers, and =boomstick-update= says so rather than reporting
+everything up to date.
+
+#+attr_shortcode: :style warning :title It verifies nothing
+#+begin_notice
+The commits are not signed, so the SHA it prints is a record of what
+was pulled, not proof of who wrote it -- and this installs a program
+that runs as root on a machine about to repartition a disk. The diff is
+the safeguard, which is why it is not optional. Read it.
+#+end_notice
+
 *** Upgrading a stick you already have
 
 Writing a new image to a stick erases the only copy of some of its
