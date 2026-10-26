@@ -54,8 +54,15 @@ END = re.compile(r"^\s*#\+end_(\w+)", re.I)
 
 
 def org_sources():
-    yield from sorted(REPO.glob("*.org"))
-    yield from sorted((REPO / "books").glob("*.org"))
+    # Emacs leaves ".#name.org" lock symlinks while a buffer is being
+    # edited, pointing at "user@host.pid", which is not a file. They come
+    # and go under us, so a run would fail on whichever buffer happened
+    # to be open rather than on anything wrong with the book.
+    def real(paths):
+        return [p for p in sorted(paths) if not p.name.startswith(".#") and p.is_file()]
+
+    yield from real(REPO.glob("*.org"))
+    yield from real((REPO / "books").glob("*.org"))
 
 
 HEADING = re.compile(r"^(\*+)\s")

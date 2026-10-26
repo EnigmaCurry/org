@@ -1975,6 +1975,116 @@ the description of the machine lives on the machine.
 
 =setup install= finishes by running the [[/arch-workstation/setup/check][check]].
 
+** A tunnel of its own (optional)
+:PROPERTIES:
+:EXPORT_FILE_NAME: wireguard
+:EXPORT_HUGO_SLUG: wireguard
+:END:
+
+The stick comes up on WireGuard by itself, which is most of why
+installing a headless machine from your desk works at all. The machine
+you have just installed can do the same -- and the moment to arrange it
+is now, before it reboots, because afterwards it is on its own.
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup wireguard
+#+end_run
+
+#+attr_shortcode: :style warning :title Not the stick's key
+#+begin_notice
+Do not copy =wg0.conf= off the stick. That key /is/ the stick's
+identity to your server: give it to the new machine as well and you
+have two peers claiming to be the same one, which is a confusing
+afternoon waiting to happen. The stick's job is to install machines;
+this machine gets a key of its own.
+#+end_notice
+
+*** Where the key comes from
+
+The first question is how the key should come about, and the default is
+the careful answer.
+
+#+begin_annotate
+#+begin_src bash
+  genkey -- make the key here, so your provider never sees it
+  paste  -- you already have a wg0.conf, private key included
+? Key: genkey
+#+end_src
+
+=genkey= makes the key pair on the live system and prints only the
+/public/ half. You give that to your VPN provider, or add it as a
+=[Peer]= on your own server, and paste back the configuration it hands
+you. =setup= splices the private key into it -- over a placeholder
+=PrivateKey= line if there is one, or under =[Interface]= if there is
+not. The secret never leaves the machine it belongs to.
+
+=paste= is for when you already hold a complete =wg0.conf=, private key
+and all, because that is what you were given.
+#+end_annotate
+
+Either way the configuration is pasted at the terminal and ends with
+Ctrl-D, so there is no file to edit on a machine that is still being
+installed:
+
+#+begin_stdout
+This machine's public key -- give this to your provider, or add it
+as a peer on your own server. The private key stays here.
+
+    IUpvRDOi8yIS4VER07dIOLXYJC9/9mo4OTJp2RMcqAM=
+
+Now paste the configuration they give you back.
+  (paste it, then press Ctrl-D on a line of its own)
+#+end_stdout
+
+*** What it writes
+
+#+begin_stdout
+================ Review =================
+Address:      10.9.0.7/32
+Endpoint:     vpn.example.com:51820
+AllowedIPs:   10.9.0.0/24
+DNS:          10.9.0.1
+Keepalive:    25
+PrivateKey:   (not shown, and never written to the repo)
+Writes:       /mnt/etc/wireguard/wg0.conf, 0600 root:root
+=========================================
+#+end_stdout
+
+The key goes to the target's =/etc/wireguard/wg0.conf=, owned by root
+and readable by nobody else, and =aconfmgr/90-ignore.sh= gains
+=IgnorePath '/etc/wireguard/*'= beside the rule that already ignores
+the SSH host keys. So =admin diff= does not report it as drift, and it
+is never committed.
+
+What /is/ configuration goes in the host repo, where the rest of the
+machine's description lives: =wireguard-tools= in =packages.txt= and
+=wg-quick@wg0= in =units.txt=. Run this before [[/arch-workstation/setup/install][Install the system]] and
+the install picks both up; run it after, as the step order suggests,
+and it installs the package and enables the unit itself.
+
+#+attr_shortcode: :style info :title A DNS line needs one more package
+#+begin_notice
+If the configuration has a =DNS == line, =wg-quick= hands it to
+=resolvconf=, which the installed system does not have: =base= does not
+bring it and the live system's copy comes from the ISO. =setup= adds
+=systemd-resolvconf= to =packages.txt= when it sees one, which is the
+difference between a tunnel that comes up and a unit that fails on
+first boot.
+#+end_notice
+
+#+attr_shortcode: :style warning :title Nothing is echoed back
+#+begin_notice
+The review names the address, the endpoint, the AllowedIPs, the DNS and
+the keepalive, and of the key says only that it is not shown. That is
+deliberate: everything =setup= prints is written to
+[[/arch-workstation/setup/install][=logs/000_SETUP.txt=]] in the host repo and committed, so printing the
+configuration would commit a private key. What you paste is echoed by
+your terminal, not by =setup=, so it stays out of the log too.
+#+end_notice
+
+The tunnel comes up on the next boot. Check it there with =wg show=.
+
 ** Check and reboot
 :PROPERTIES:
 :EXPORT_FILE_NAME: check
