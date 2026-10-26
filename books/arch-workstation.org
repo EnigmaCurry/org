@@ -29,14 +29,18 @@ a sway desktop to it. The chapter on hardware-key =sudo= is not
 written yet.
 
 Be aware of what "tested" means here. BOOMSTICK's =just test-vm=
-installs an *x86_64 PC, unencrypted*, in a QEMU virtual machine with
-every prompt answered, reboots it, logs in, and checks the result,
-including that =admin diff= finds no drift and that pacman
-transactions are snapshotted. Not tested yet: *encryption* (the
-install up to the passphrase prompt at boot), the *Raspberry Pi 5*,
-=admin upgrade=, rolling back a snapshot, and logging in to the
-desktop (the test VM installs it and checks the login screen and Nix,
-nothing more). Specific caveats are flagged in place.
+installs an *x86_64 PC* in a QEMU virtual machine with every prompt
+answered, reboots it, logs in, and checks the result, including that
+=admin diff= finds no drift and that pacman transactions are
+snapshotted. =ENCRYPT=yes= does the same onto *LUKS*, answering the
+passphrase prompt at boot. A *Raspberry Pi 5* has been installed on
+real hardware, start to finish.
+
+Not tested yet: =admin upgrade=, rolling back a snapshot, and logging
+in to the desktop -- the test VM installs it and checks the login
+screen, Nix and sway-home, but nobody has sat in front of it.
+Hardware-key =sudo= is unwritten. Specific caveats are flagged in
+place.
 
 Read it as notes becoming a book rather than as a recipe that is
 known to work start to finish.
@@ -201,8 +205,8 @@ machine over SSH, with no monitor or keyboard attached to it.
 brings up a WireGuard tunnel to my own server, and lets me in over
 SSH with my own keys -- so the target machine needs nothing but power
 and a USB port, and the install is driven from my own desk. It is
-also where =setup= lives. The [[/arch-workstation/boomstick][appendix]] explains how to build one and
-fill it in.
+also where =setup= lives. The [[/arch-workstation/boomstick][next chapter]] explains how to build
+one and fill it in.
 
 *** Hardware this book covers
 
@@ -257,6 +261,573 @@ vibe is not the point. I review what goes in, the decisions and the
 setup described are genuinely mine and what I run, and the goal is
 simply that you can follow it and end up with a working machine.
 
+* Make the BOOMSTICK
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: boomstick
+:END:
+
+** Make the BOOMSTICK
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 250
+:END:
+
+Reinstalling Linux on a headless PC or a Raspberry Pi with the
+official installer is a tedious affair. Before the target machine
+will accept a remote login, there is a handful of chores to be done
+by hand, every single time: write the ISO to a stick, borrow a
+monitor and keyboard, type a WiFi passphrase into =iwctl=, set a root
+password or paste in an authorized key, get onto the same network as
+the target, and clear the machine's stale entry out of
+=known_hosts=.
+
+[[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]] does all of those chores for you, once, at your desk. You
+write the image to a USB stick, drop your WiFi, WireGuard and SSH
+settings onto it, and from then on you plug it in, power on, and SSH
+in from wherever you are. It is what the rest of this book assumes
+you booted the target machine from.
+
+*** What's on the stick
+
+BOOMSTICK is the stock Arch Linux installer -- archiso's =releng=
+profile -- with a few additions layered on top:
+
+ - *WiFi*, optionally: iwd joins your networks automatically, with
+   wired ethernet preferred when both are available.
+ - *WireGuard*, optionally: =wg-quick@wg0= brings up a tunnel to your
+   own server at boot, retrying until the endpoint's DNS name
+   resolves, so the stick has the same address on any network.
+ - *SSH*: sshd lets you in as root with your =authorized_keys=, which
+   is the one thing you must supply. Password login is never
+   permitted.
+ - *A stable identity*: the hostname is always =boomstick=, and the
+   stick generates its SSH host keys on first boot and keeps them.
+ - *=setup=*, the installer the rest of this book uses.
+ - *A boot webhook*, optionally, which notifies you (via [[https://ntfy.sh][ntfy]], for
+   example) with the stick's LAN, public and WireGuard addresses once
+   it is up.
+
+One image boots both x86_64 PCs (UEFI only) and the Raspberry Pi 5,
+so a single stick in your bag covers every machine in this book.
+
+*** The image is generic; the stick is yours
+
+The image itself contains no secrets, so you can build it once, and
+so can anyone else. Your WiFi passwords, WireGuard key, SSH keys and
+webhook URL go into a =boomstick/= directory on the stick's
+FAT32 partition, which you fill in /after/ writing the image. That
+partition is readable from any computer, so you edit those files with
+whatever editor you like, and the live system reads them again on
+every boot.
+
+#+attr_shortcode: :style warning :title A configured stick is a key
+#+begin_notice
+The secrets on the stick are stored in plain text, readable by any
+computer it is plugged into. Anyone holding it can join your WiFi and
+your VPN. Keep it in your possession, and give each stick its own
+WireGuard key so that you can revoke a lost one without touching the
+others.
+#+end_notice
+
+The rest of this chapter goes through it in order, beginning with
+[[/arch-workstation/boomstick/build][Build the image]].
+
+** Build the image
+:PROPERTIES:
+:EXPORT_FILE_NAME: build
+:EXPORT_HUGO_SLUG: build
+:END:
+
+Everything on this page runs on your own workstation.
+
+You do not need archiso, or any Arch packages at all: the build runs
+inside an =archlinux= container, so the host's own distribution does
+not matter. You need rootless [[https://podman.io/][Podman]], [[https://github.com/casey/just][just]], about 8 GB of free disk
+space, and an internet connection.
+
+Because the image holds both an x86_64 and an ARM system, whichever
+half does not match your own machine is built under qemu-user
+emulation, so you also need the static qemu-user emulators registered
+with binfmt_misc. On Arch Linux, that is all of:
+
+#+begin_run
+sudo pacman -S --needed podman just git qemu-user-static qemu-user-static-binfmt
+#+end_run
+
+On Debian, Ubuntu or Fedora, the emulator package is called
+=qemu-user-static=.
+
+#+attr_shortcode: :style info :title Building on macOS
+#+begin_notice
+Because the work happens inside a container, a Mac builds the image
+too -- this is tested, not theoretical. Install the tools and start a
+Podman VM with enough memory to do the build:
+
+#+begin_src bash
+brew install podman just
+podman machine init --cpus 4 --memory 3072
+podman machine start
+#+end_src
+
+On Apple Silicon the two halves swap roles: the Raspberry Pi image
+builds natively and the x86_64 one runs under emulation, which is the
+reverse of what happens on a Linux PC. The rest of this page is
+unchanged, except for writing the image to the stick.
+#+end_notice
+
+*** Build
+
+#+begin_run
+git clone https://github.com/EnigmaCurry/boomstick.git
+cd boomstick
+just build-usb
+#+end_run
+
+The build takes no input, because there is nothing to configure yet:
+the result is the same for everybody. The first run pulls the
+=archlinux= container image and downloads about 1 GB of packages;
+later builds reuse a package cache and finish in a few minutes. You
+end up with =out/boomstick-usb-<date>-x86_64+rpi5.img=, about 2.7 GB.
+
+#+attr_shortcode: :style tip
+#+begin_notice
+If you only ever install one kind of machine, =just build= (x86_64
+only) and =just build-rpi5= (Raspberry Pi 5 only) produce smaller
+images that need no emulation on a matching host.
+#+end_notice
+
+*** Write it to a USB stick
+
+Find your stick with =lsblk=, then write the image to it. Double
+check the device name, because this erases the whole stick:
+
+#+begin_run
+sudo dd if=out/boomstick-usb-<date>-x86_64+rpi5.img \
+  of=/dev/sdX bs=4M status=progress oflag=sync
+#+end_run
+
+On macOS the device names and flags differ: find the disk with
+=diskutil list=, then unmount and write it to the /raw/ device, which
+is much faster than the buffered one:
+
+#+begin_src bash
+diskutil unmountDisk /dev/diskN
+sudo dd if=out/boomstick-usb-<date>-x86_64+rpi5.img of=/dev/rdiskN bs=4m
+#+end_src
+
+Everything that makes the stick yours is configuration, and changing
+that later never requires another build -- so this is the only time
+you have to think about the image at all for a good while. (It is not
+quite "once, ever": see [[/arch-workstation/boomstick/provision][Changing it later]] for the handful of
+things that are frozen into an image.) Configuration starts on the
+next page,
+[[/arch-workstation/boomstick/secrets][SSH keys, WiFi and the webhook]].
+
+** SSH keys, WiFi and the webhook
+:PROPERTIES:
+:EXPORT_FILE_NAME: secrets
+:EXPORT_HUGO_SLUG: secrets
+:END:
+
+You can edit the configuration directly on the stick, but it is
+easier to keep it in the repo, next to the build, and copy it over.
+Running =just config= creates a =secrets/= directory -- git-ignored,
+and readable only by you -- full of commented-out templates:
+
+#+begin_run
+just config
+#+end_run
+
+#+begin_stdout
+created: secrets/ssh/authorized_keys  (edit it)
+created: secrets/webhook.env  (edit it)
+created: secrets/wifi/EXAMPLE.psk.example  (edit it)
+created: secrets/wireguard/wg0.conf  (edit it)
+#+end_stdout
+
+Of those four files, *only =secrets/ssh/authorized_keys= is
+required*. The others are opt-in: leave any of them commented out and
+the stick simply boots without that feature.
+
+*** SSH keys (required)
+
+The only other file you *must* fill in is
+=secrets/ssh/authorized_keys=: put the public key or keys you will
+log in with, one per line, exactly as in any other =authorized_keys=
+file. Without at least one key, nobody can log in over SSH at all,
+because the stick never allows password logins.
+
+If your keys are on GitHub, you can fetch them straight from your
+profile, since GitHub publishes every user's public keys:
+
+#+begin_run
+curl -fsSL https://github.com/YOUR_USERNAME.keys >> secrets/ssh/authorized_keys
+#+end_run
+
+Read the file afterwards to make sure you got the keys you expected,
+and remove any you do not want to have root on the stick.
+
+*** WiFi (optional)
+
+WiFi is optional; without it, the stick is wired-only. Add one file
+per network to =secrets/wifi/=, in iwd's own format, named after the
+SSID:
+
+#+attr_shortcode: :file secrets/wifi/My Network.psk
+#+begin_edit
+[Security]
+Passphrase=your wifi password
+#+end_edit
+
+You can add as many networks as you like, and iwd joins whichever one
+is in range. An SSID with characters other than letters, digits,
+spaces, =-= and =_= needs a hex-encoded filename; the
+=EXAMPLE.psk.example= template explains how.
+
+*** The boot webhook (optional)
+
+To get a notification when the stick boots, set a URL in
+=secrets/webhook.env=:
+
+#+attr_shortcode: :file secrets/webhook.env
+#+begin_edit
+WEBHOOK_URL=https://ntfy.sh/a-long-random-topic
+#+end_edit
+
+Once the network is up and WireGuard connects -- or gives up after
+two minutes -- the stick POSTs a plain-text message there, which
+works with [[https://ntfy.sh][ntfy]] or a [[https://github.com/matrix-org/matrix-hookshot][matrix-hookshot]] generic webhook.
+
+#+attr_shortcode: :style warning
+#+begin_notice
+The message includes your IP addresses, and anyone who knows an
+ntfy.sh topic name can read it. Pick a long random topic, or use a
+server with access control.
+#+end_notice
+
+With those in place, the stick is already usable on a network you
+control. The next page adds [[/arch-workstation/boomstick/wireguard][WireGuard]], which is what makes it
+usable on one you do not.
+
+** Configure WireGuard
+:PROPERTIES:
+:EXPORT_FILE_NAME: wireguard
+:EXPORT_HUGO_SLUG: wireguard
+:END:
+
+WireGuard is optional. Without it, the stick still boots, joins your
+WiFi and accepts your SSH keys -- it is simply reachable only on
+whatever LAN it lands on, at whatever address DHCP gave it. That is
+perfectly workable when the target machine is sitting on your own
+network.
+
+What the tunnel buys you is a *fixed* address that does not depend on
+which network the machine is plugged into. The stick answers at the
+same WireGuard address on every network and in every machine, so you
+can =ssh boomstick= without discovering anything first, and you can
+install a machine that is nowhere near you.
+
+#+attr_shortcode: :style info :title Skipping it
+#+begin_notice
+To leave WireGuard out, just leave =secrets/wireguard/wg0.conf= as
+the template generated it. =just provision= prints a warning that
+there is no WireGuard and carries on.
+
+If you /do/ fill it in, it has to be complete: provision refuses a
+=wg0.conf= with no =PrivateKey=, or one with no
+=PersistentKeepalive=, rather than handing you a stick that cannot
+phone home.
+#+end_notice
+
+*** Give the stick its own peer
+
+The stick is a WireGuard client -- a /spoke/ -- of a server you
+already run. Most VPN servers and routers will provision a client for
+you: you add a new peer on the server, and it hands you a ready-made
+config with the client's private key, its address, and the server's
+public key and endpoint.
+
+#+attr_shortcode: :style info :title If you do not have a server yet
+#+begin_notice
+Standing up the hub is out of scope for this book, and will
+eventually get a book of its own. In the meantime, my
+[[https://github.com/EnigmaCurry/nixos-vm-template][nixos-vm-template]] has a =wireguard= profile that does it:
+=just wireguard <hub>= mints the hub and a config for every peer, and
+[[https://github.com/EnigmaCurry/nixos-vm-template/blob/master/WIREGUARD.md][WIREGUARD.md]] walks through the whole thing.
+
+Add the stick there as an ordinary spoke, and treat it as the
+wizard's "generic Linux client" case. The =.conf= it generates
+already carries the =AllowedIPs= and =PersistentKeepalive = 25= lines
+the stick requires; the only difference is that it goes into
+=secrets/wireguard/wg0.conf= here, instead of straight into
+=/etc/wireguard/wg0.conf= on a running machine.
+#+end_notice
+
+Give the stick a peer of its own -- do not reuse your laptop's -- and
+paste that config in:
+
+#+attr_shortcode: :file secrets/wireguard/wg0.conf
+#+begin_edit
+[Interface]
+PrivateKey = <the stick's private key>
+Address = 10.0.0.2/32
+
+[Peer]
+PublicKey = <your server's public key>
+Endpoint = vpn.example.com:51820
+AllowedIPs = 10.0.0.0/24
+PersistentKeepalive = 25
+#+end_edit
+
+If your server does not provision clients for you, =just keygen=
+makes a fresh key pair for the stick. Put the private key in
+=wg0.conf=, and add the public key to your server as a new peer, with
+=AllowedIPs= set to the stick's address (=10.0.0.2/32= here).
+
+*** Why the keepalive matters
+
+Check that the config has a =PersistentKeepalive= line, and add one
+if your server left it out. The stick is the one behind NAT, usually
+on some network you do not control, so it has to keep the tunnel open
+itself. Without the keepalive, the server cannot reach the stick
+until the stick happens to send it something -- and you cannot SSH
+in.
+
+The =Endpoint= may be a DNS name: the tunnel keeps retrying until it
+resolves, which helps when the stick boots before the network is
+fully up. If you want to resolve names through the VPN, a =DNS= line
+works too.
+
+With the configuration written, [[/arch-workstation/boomstick/provision][Provision the stick]] copies it onto
+the stick itself.
+
+** Provision the stick
+:PROPERTIES:
+:EXPORT_FILE_NAME: provision
+:EXPORT_HUGO_SLUG: provision
+:END:
+
+With the files filled in, plug in the stick you wrote earlier and
+copy them onto it:
+
+#+begin_run
+just provision
+#+end_run
+
+=just provision= finds the stick by its =BOOMSTICK= partition
+label, mounts it if it has to, writes =boomstick/=, and unmounts
+it again so it is ready to pull.
+
+Before copying anything, it checks the files for the mistakes that
+would leave a headless machine unreachable, and fails here, at your
+desk, instead of later on the other side of the room. An
+=authorized_keys= with no keys in it is refused outright, since
+nobody could log in. A =wg0.conf= that is filled in but missing its
+=PrivateKey= or =PersistentKeepalive= is refused too. A =wg0.conf=
+left untouched is fine -- that is just a stick without WireGuard, and
+it says so.
+
+*** Editing the stick by hand instead
+
+If you would rather skip =secrets/= and edit the stick directly,
+mount its partition with =udisksctl= rather than =sudo mount=:
+
+#+begin_run
+udisksctl mount -b /dev/sdX1
+#+end_run
+
+FAT stores no file ownership, so a plain =sudo mount= makes every
+file look like it belongs to root, and you cannot edit them as
+yourself. =udisksctl= mounts it as your own user, at
+=/run/media/$USER/BOOMSTICK=.
+
+*** Changing it later
+
+Everything that makes the stick yours lives in a handful of plain
+files. When you move to a new WiFi network, rotate a WireGuard key,
+or add someone's SSH key, you edit a file on the stick -- or in
+=secrets/=, then run =just provision= again -- and you are done, with
+nothing to rebuild.
+
+=boomstick-config= re-reads all of it on /every/ boot, which is what
+makes that true. The same mechanism updates =setup= itself: =just
+provision= copies the current installer to =boomstick/bin/setup=, and
+the live system installs that copy over its own at boot. So a fix to
+=setup= reaches a stick without a rebuild.
+
+What a stick /cannot/ grow into is anything that lives in the live
+system itself -- the squashfs the image was built from:
+
+ - the *package set*: the live system's own =git=, =cryptsetup=,
+   =archlinuxarm-keyring= and the rest,
+ - the *kernel and initramfs*, and
+ - =boomstick-config=, =boomstick-webhook= and =boomstick-motd=, the
+   boot-time logic itself.
+
+Those are frozen at build time, and the way to move them forward is to
+build a new image and write it to the stick again -- then =just
+provision= to put your configuration back, since a fresh image carries
+only the templates.
+
+#+attr_shortcode: :style warning :title Installing packages on the live system does not stick
+#+begin_notice
+The live system boots =copytoram=auto=, and its root is a tmpfs
+overlay. =pacman -Sy something= works and is a perfectly good way out
+of a hole, but the next boot has forgotten it. Treat it as a patch for
+the session, not a repair to the stick.
+
+The corollary is worth knowing before you keep an old stick around: a
+stick whose image predates a feature in that frozen half cannot be
+provisioned into having it. =bin/setup= is only picked up because
+=boomstick-config= looks for it, so a stick older than /that/ cannot
+be given a newer =setup= either, however many times you provision it.
+Rebuild instead.
+#+end_notice
+
+The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use
+it -- or, if you would rather know what the stick does at boot
+before you trust it with a machine, read
+[[/arch-workstation/boomstick/internals][How it works under the hood]] first.
+
+** How it works under the hood
+:PROPERTIES:
+:EXPORT_FILE_NAME: internals
+:EXPORT_HUGO_SLUG: internals
+:END:
+
+There is very little magic involved. Early in boot -- before iwd,
+WireGuard, sshd or the webhook start -- a small service called
+=boomstick-config= finds the config partition and copies
+=boomstick/= into the live system, which runs entirely in RAM.
+Each file lands where the stock tools expect it, readable only by
+root:
+
+| On the stick          | In the live system           |
+|-----------------------+------------------------------|
+| =wifi/*.psk=          | =/var/lib/iwd/=              |
+| =wireguard/wg0.conf=  | =/etc/wireguard/wg0.conf=    |
+| =ssh/authorized_keys= | =/root/.ssh/authorized_keys= |
+| =webhook.env=         | =/etc/boomstick/webhook.env= |
+| =ssh/host/*=          | =/etc/ssh/=                  |
+| =bin/setup=           | =/usr/local/bin/setup=       |
+
+Nothing else is ever written back to the stick. The one exception is
+the SSH host keys on the first boot: the partition is remounted
+read-write just long enough to save them, then read-only again. That
+is what keeps the fingerprint stable from one boot to the next.
+
+*** Why the partition label matters
+
+The service finds the partition by its =BOOMSTICK= label, and that
+label matters more than it looks. The Arch live system boots with
+=copytoram=: on a machine with enough memory, it copies itself into
+RAM and lets go of the boot partition before any of this runs. So the
+service cannot simply look at "the partition I booted from"; it
+searches for a filesystem labelled =BOOMSTICK=, mounts it, and
+unmounts it again.
+
+If you relabel the partition, the stick still boots -- but
+unconfigured.
+
+A nice side effect is that the configuration does not have to be on
+the stick you booted from. Any FAT32 USB stick labelled =BOOMSTICK=
+with a =boomstick/= directory on it works too; start from a
+copy of the repo's =config-templates/=. Just do not plug in two of
+them at once, because the first one found wins.
+
+And a stick with no configuration at all still boots. It simply has
+no WiFi, no VPN, no SSH login and no webhook, and says so on the
+console.
+
+*** One stick, two architectures
+
+The combined image boots an x86_64 PC and a Raspberry Pi 5 from the
+same partition, which sounds like it ought to need something clever.
+It does not. There is one MBR disk image with a single FAT32
+partition on it, and the whole trick is that the two firmwares never
+look at the same files:
+
+#+begin_src text
+config.txt cmdline.txt kernel8.img initramfs-linux.img *.dtb overlays/   # Pi 5 firmware
+EFI/BOOT/BOOTx64.EFI  loader/  arch/boot/x86_64/                         # x86_64 UEFI (systemd-boot)
+arch/x86_64/airootfs.sfs   arch/aarch64/airootfs.sfs                     # the two live systems
+boomstick/                                                               # your configuration
+boot/<uuid>.uuid                                                         # how each initramfs finds the stick
+#+end_src
+
+The Pi's firmware reads only the top-level files. There is no boot
+loader on the Pi at all: the firmware itself loads =kernel8.img=, the
+initramfs and the device trees straight off the FAT partition, and
+takes its kernel command line from =cmdline.txt=. UEFI firmware, for
+its part, looks only in =EFI/= and =loader/=, where it finds
+systemd-boot. Neither one has any idea the other's files are sitting
+next to it.
+
+Once a kernel is running, its initramfs mounts
+=arch/<its own architecture>/airootfs.sfs=. That is why there are two
+=airootfs.sfs= files: they are two complete live systems, one per
+architecture, and each boot only ever touches one of them.
+
+*** How each half finds the stick
+
+archiso normally identifies the medium it booted from by the ISO's
+volume UUID -- which a FAT32 stick does not have, because there is no
+ISO filesystem involved. So it falls back to a second method: it
+searches the attached disks for a file at =boot/<uuid>.uuid= and uses
+whichever one matches the UUID it was told to expect. The Pi gets
+told through =cmdline.txt=:
+
+#+begin_src text
+archisobasedir=arch archisosearchuuid=1234-5678 console=serial0,115200 console=tty1
+#+end_src
+
+This is the same mechanism archiso provides for copying an ISO onto a
+FAT32 stick, used here for both halves.
+
+It is worth noticing that this is a /different/ search from the one
+that finds =boomstick/=. The live system looks for its
+configuration by the =BOOMSTICK= filesystem label, as described
+above, because by then it may have let go of the boot device
+entirely. The two lookups are independent, which is exactly why the
+configuration can live on a second stick.
+
+*** How the combined image is built
+
+=just build-usb= builds an x86_64 ISO first, then builds the Pi image
+and merges the ISO's UEFI boot files and live system into the Pi
+image's FAT32 partition. The ISO is only an intermediate -- it is
+where systemd-boot and the x86_64 kernel come from -- and it is
+deleted once the combined image exists.
+
+#+attr_shortcode: :style warning :title What the combined image costs
+#+begin_notice
+ - *x86_64 is UEFI only*, and Secure Boot must be off.
+ - The partition is FAT32 with MBR type =0x0c=, because that is what
+   the Pi requires. UEFI firmware is /supposed/ to boot from an EFI
+   System Partition (type =0xef=), and although nearly all of it will
+   also boot a FAT32 USB stick carrying =EFI/BOOT/BOOTx64.EFI=, a
+   strict implementation is entitled not to.
+ - Both halves read the same =boomstick/=, so a PC and a Pi
+   booted from this stick present the *same* SSH host key and claim
+   the *same* WireGuard address. That is a feature when you use them
+   one at a time, and a problem if you boot two at once -- they will
+   fight over the peer address. Install one machine at a time, or
+   give the second stick its own key.
+#+end_notice
+
+*** Where to go next
+
+That is the whole of the stick. With one built and provisioned, the
+book proper starts at [[/arch-workstation/boot][Boot the stick and connect]].
+
+*** Source and trademark
+
+The source is at [[https://github.com/EnigmaCurry/boomstick][github.com/EnigmaCurry/boomstick]].
+
+BOOMSTICK is an independent project, not affiliated with or endorsed
+by the Arch Linux project. Arch Linux is a trademark of the Arch
+Linux project.
 * Boot the stick and connect
 :PROPERTIES:
 :EXPORT_HUGO_SECTION_FRAG: boot
@@ -277,8 +848,8 @@ chapter is reversible by pulling the power.
 
 What you need before starting:
 
- - A [[/arch-workstation/boomstick][BOOMSTICK]] you have already written and provisioned. It carries
-   =setup=, which the rest of the book uses.
+ - A [[/arch-workstation/boomstick][BOOMSTICK]], written and filled in as in the previous chapter.
+   It carries =setup=, which the rest of the book uses.
  - The target machine, with power and a network connection.
  - Your own workstation, with an SSH client.
 
@@ -2218,573 +2789,6 @@ from a terminal. If you would rather have NetworkManager, the [[/arch-workstatio
 page]] shows how to switch the host repo over to it; run =hm-switch=
 afterwards and the applet comes back.
 
-* Appendix: BOOMSTICK
-:PROPERTIES:
-:EXPORT_HUGO_SECTION_FRAG: boomstick
-:END:
-
-** Appendix: BOOMSTICK
-:PROPERTIES:
-:EXPORT_FILE_NAME: _index
-:EXPORT_HUGO_SLUG: _index
-:EXPORT_HUGO_WEIGHT: 9000
-:END:
-
-Reinstalling Linux on a headless PC or a Raspberry Pi with the
-official installer is a tedious affair. Before the target machine
-will accept a remote login, there is a handful of chores to be done
-by hand, every single time: write the ISO to a stick, borrow a
-monitor and keyboard, type a WiFi passphrase into =iwctl=, set a root
-password or paste in an authorized key, get onto the same network as
-the target, and clear the machine's stale entry out of
-=known_hosts=.
-
-[[https://github.com/EnigmaCurry/boomstick][BOOMSTICK]] does all of those chores for you, once, at your desk. You
-write the image to a USB stick, drop your WiFi, WireGuard and SSH
-settings onto it, and from then on you plug it in, power on, and SSH
-in from wherever you are. It is what the rest of this book assumes
-you booted the target machine from.
-
-*** What's on the stick
-
-BOOMSTICK is the stock Arch Linux installer -- archiso's =releng=
-profile -- with a few additions layered on top:
-
- - *WiFi*, optionally: iwd joins your networks automatically, with
-   wired ethernet preferred when both are available.
- - *WireGuard*, optionally: =wg-quick@wg0= brings up a tunnel to your
-   own server at boot, retrying until the endpoint's DNS name
-   resolves, so the stick has the same address on any network.
- - *SSH*: sshd lets you in as root with your =authorized_keys=, which
-   is the one thing you must supply. Password login is never
-   permitted.
- - *A stable identity*: the hostname is always =boomstick=, and the
-   stick generates its SSH host keys on first boot and keeps them.
- - *=setup=*, the installer the rest of this book uses.
- - *A boot webhook*, optionally, which notifies you (via [[https://ntfy.sh][ntfy]], for
-   example) with the stick's LAN, public and WireGuard addresses once
-   it is up.
-
-One image boots both x86_64 PCs (UEFI only) and the Raspberry Pi 5,
-so a single stick in your bag covers every machine in this book.
-
-*** The image is generic; the stick is yours
-
-The image itself contains no secrets, so you can build it once, and
-so can anyone else. Your WiFi passwords, WireGuard key, SSH keys and
-webhook URL go into a =boomstick/= directory on the stick's
-FAT32 partition, which you fill in /after/ writing the image. That
-partition is readable from any computer, so you edit those files with
-whatever editor you like, and the live system reads them again on
-every boot.
-
-#+attr_shortcode: :style warning :title A configured stick is a key
-#+begin_notice
-The secrets on the stick are stored in plain text, readable by any
-computer it is plugged into. Anyone holding it can join your WiFi and
-your VPN. Keep it in your possession, and give each stick its own
-WireGuard key so that you can revoke a lost one without touching the
-others.
-#+end_notice
-
-The rest of this appendix goes through it in order, beginning with
-[[/arch-workstation/boomstick/build][Build the image]].
-
-** Build the image
-:PROPERTIES:
-:EXPORT_FILE_NAME: build
-:EXPORT_HUGO_SLUG: build
-:END:
-
-Everything on this page runs on your own workstation.
-
-You do not need archiso, or any Arch packages at all: the build runs
-inside an =archlinux= container, so the host's own distribution does
-not matter. You need rootless [[https://podman.io/][Podman]], [[https://github.com/casey/just][just]], about 8 GB of free disk
-space, and an internet connection.
-
-Because the image holds both an x86_64 and an ARM system, whichever
-half does not match your own machine is built under qemu-user
-emulation, so you also need the static qemu-user emulators registered
-with binfmt_misc. On Arch Linux, that is all of:
-
-#+begin_run
-sudo pacman -S --needed podman just git qemu-user-static qemu-user-static-binfmt
-#+end_run
-
-On Debian, Ubuntu or Fedora, the emulator package is called
-=qemu-user-static=.
-
-#+attr_shortcode: :style info :title Building on macOS
-#+begin_notice
-Because the work happens inside a container, a Mac builds the image
-too -- this is tested, not theoretical. Install the tools and start a
-Podman VM with enough memory to do the build:
-
-#+begin_src bash
-brew install podman just
-podman machine init --cpus 4 --memory 3072
-podman machine start
-#+end_src
-
-On Apple Silicon the two halves swap roles: the Raspberry Pi image
-builds natively and the x86_64 one runs under emulation, which is the
-reverse of what happens on a Linux PC. The rest of this page is
-unchanged, except for writing the image to the stick.
-#+end_notice
-
-*** Build
-
-#+begin_run
-git clone https://github.com/EnigmaCurry/boomstick.git
-cd boomstick
-just build-usb
-#+end_run
-
-The build takes no input, because there is nothing to configure yet:
-the result is the same for everybody. The first run pulls the
-=archlinux= container image and downloads about 1 GB of packages;
-later builds reuse a package cache and finish in a few minutes. You
-end up with =out/boomstick-usb-<date>-x86_64+rpi5.img=, about 2.7 GB.
-
-#+attr_shortcode: :style tip
-#+begin_notice
-If you only ever install one kind of machine, =just build= (x86_64
-only) and =just build-rpi5= (Raspberry Pi 5 only) produce smaller
-images that need no emulation on a matching host.
-#+end_notice
-
-*** Write it to a USB stick
-
-Find your stick with =lsblk=, then write the image to it. Double
-check the device name, because this erases the whole stick:
-
-#+begin_run
-sudo dd if=out/boomstick-usb-<date>-x86_64+rpi5.img \
-  of=/dev/sdX bs=4M status=progress oflag=sync
-#+end_run
-
-On macOS the device names and flags differ: find the disk with
-=diskutil list=, then unmount and write it to the /raw/ device, which
-is much faster than the buffered one:
-
-#+begin_src bash
-diskutil unmountDisk /dev/diskN
-sudo dd if=out/boomstick-usb-<date>-x86_64+rpi5.img of=/dev/rdiskN bs=4m
-#+end_src
-
-Everything that makes the stick yours is configuration, and changing
-that later never requires another build -- so this is the only time
-you have to think about the image at all for a good while. (It is not
-quite "once, ever": see [[/arch-workstation/boomstick/provision][Changing it later]] for the handful of
-things that are frozen into an image.) Configuration starts on the
-next page,
-[[/arch-workstation/boomstick/secrets][SSH keys, WiFi and the webhook]].
-
-** SSH keys, WiFi and the webhook
-:PROPERTIES:
-:EXPORT_FILE_NAME: secrets
-:EXPORT_HUGO_SLUG: secrets
-:END:
-
-You can edit the configuration directly on the stick, but it is
-easier to keep it in the repo, next to the build, and copy it over.
-Running =just config= creates a =secrets/= directory -- git-ignored,
-and readable only by you -- full of commented-out templates:
-
-#+begin_run
-just config
-#+end_run
-
-#+begin_stdout
-created: secrets/ssh/authorized_keys  (edit it)
-created: secrets/webhook.env  (edit it)
-created: secrets/wifi/EXAMPLE.psk.example  (edit it)
-created: secrets/wireguard/wg0.conf  (edit it)
-#+end_stdout
-
-Of those four files, *only =secrets/ssh/authorized_keys= is
-required*. The others are opt-in: leave any of them commented out and
-the stick simply boots without that feature.
-
-*** SSH keys (required)
-
-The only other file you *must* fill in is
-=secrets/ssh/authorized_keys=: put the public key or keys you will
-log in with, one per line, exactly as in any other =authorized_keys=
-file. Without at least one key, nobody can log in over SSH at all,
-because the stick never allows password logins.
-
-If your keys are on GitHub, you can fetch them straight from your
-profile, since GitHub publishes every user's public keys:
-
-#+begin_run
-curl -fsSL https://github.com/YOUR_USERNAME.keys >> secrets/ssh/authorized_keys
-#+end_run
-
-Read the file afterwards to make sure you got the keys you expected,
-and remove any you do not want to have root on the stick.
-
-*** WiFi (optional)
-
-WiFi is optional; without it, the stick is wired-only. Add one file
-per network to =secrets/wifi/=, in iwd's own format, named after the
-SSID:
-
-#+attr_shortcode: :file secrets/wifi/My Network.psk
-#+begin_edit
-[Security]
-Passphrase=your wifi password
-#+end_edit
-
-You can add as many networks as you like, and iwd joins whichever one
-is in range. An SSID with characters other than letters, digits,
-spaces, =-= and =_= needs a hex-encoded filename; the
-=EXAMPLE.psk.example= template explains how.
-
-*** The boot webhook (optional)
-
-To get a notification when the stick boots, set a URL in
-=secrets/webhook.env=:
-
-#+attr_shortcode: :file secrets/webhook.env
-#+begin_edit
-WEBHOOK_URL=https://ntfy.sh/a-long-random-topic
-#+end_edit
-
-Once the network is up and WireGuard connects -- or gives up after
-two minutes -- the stick POSTs a plain-text message there, which
-works with [[https://ntfy.sh][ntfy]] or a [[https://github.com/matrix-org/matrix-hookshot][matrix-hookshot]] generic webhook.
-
-#+attr_shortcode: :style warning
-#+begin_notice
-The message includes your IP addresses, and anyone who knows an
-ntfy.sh topic name can read it. Pick a long random topic, or use a
-server with access control.
-#+end_notice
-
-With those in place, the stick is already usable on a network you
-control. The next page adds [[/arch-workstation/boomstick/wireguard][WireGuard]], which is what makes it
-usable on one you do not.
-
-** Configure WireGuard
-:PROPERTIES:
-:EXPORT_FILE_NAME: wireguard
-:EXPORT_HUGO_SLUG: wireguard
-:END:
-
-WireGuard is optional. Without it, the stick still boots, joins your
-WiFi and accepts your SSH keys -- it is simply reachable only on
-whatever LAN it lands on, at whatever address DHCP gave it. That is
-perfectly workable when the target machine is sitting on your own
-network.
-
-What the tunnel buys you is a *fixed* address that does not depend on
-which network the machine is plugged into. The stick answers at the
-same WireGuard address on every network and in every machine, so you
-can =ssh boomstick= without discovering anything first, and you can
-install a machine that is nowhere near you.
-
-#+attr_shortcode: :style info :title Skipping it
-#+begin_notice
-To leave WireGuard out, just leave =secrets/wireguard/wg0.conf= as
-the template generated it. =just provision= prints a warning that
-there is no WireGuard and carries on.
-
-If you /do/ fill it in, it has to be complete: provision refuses a
-=wg0.conf= with no =PrivateKey=, or one with no
-=PersistentKeepalive=, rather than handing you a stick that cannot
-phone home.
-#+end_notice
-
-*** Give the stick its own peer
-
-The stick is a WireGuard client -- a /spoke/ -- of a server you
-already run. Most VPN servers and routers will provision a client for
-you: you add a new peer on the server, and it hands you a ready-made
-config with the client's private key, its address, and the server's
-public key and endpoint.
-
-#+attr_shortcode: :style info :title If you do not have a server yet
-#+begin_notice
-Standing up the hub is out of scope for this book, and will
-eventually get a book of its own. In the meantime, my
-[[https://github.com/EnigmaCurry/nixos-vm-template][nixos-vm-template]] has a =wireguard= profile that does it:
-=just wireguard <hub>= mints the hub and a config for every peer, and
-[[https://github.com/EnigmaCurry/nixos-vm-template/blob/master/WIREGUARD.md][WIREGUARD.md]] walks through the whole thing.
-
-Add the stick there as an ordinary spoke, and treat it as the
-wizard's "generic Linux client" case. The =.conf= it generates
-already carries the =AllowedIPs= and =PersistentKeepalive = 25= lines
-the stick requires; the only difference is that it goes into
-=secrets/wireguard/wg0.conf= here, instead of straight into
-=/etc/wireguard/wg0.conf= on a running machine.
-#+end_notice
-
-Give the stick a peer of its own -- do not reuse your laptop's -- and
-paste that config in:
-
-#+attr_shortcode: :file secrets/wireguard/wg0.conf
-#+begin_edit
-[Interface]
-PrivateKey = <the stick's private key>
-Address = 10.0.0.2/32
-
-[Peer]
-PublicKey = <your server's public key>
-Endpoint = vpn.example.com:51820
-AllowedIPs = 10.0.0.0/24
-PersistentKeepalive = 25
-#+end_edit
-
-If your server does not provision clients for you, =just keygen=
-makes a fresh key pair for the stick. Put the private key in
-=wg0.conf=, and add the public key to your server as a new peer, with
-=AllowedIPs= set to the stick's address (=10.0.0.2/32= here).
-
-*** Why the keepalive matters
-
-Check that the config has a =PersistentKeepalive= line, and add one
-if your server left it out. The stick is the one behind NAT, usually
-on some network you do not control, so it has to keep the tunnel open
-itself. Without the keepalive, the server cannot reach the stick
-until the stick happens to send it something -- and you cannot SSH
-in.
-
-The =Endpoint= may be a DNS name: the tunnel keeps retrying until it
-resolves, which helps when the stick boots before the network is
-fully up. If you want to resolve names through the VPN, a =DNS= line
-works too.
-
-With the configuration written, [[/arch-workstation/boomstick/provision][Provision the stick]] copies it onto
-the stick itself.
-
-** Provision the stick
-:PROPERTIES:
-:EXPORT_FILE_NAME: provision
-:EXPORT_HUGO_SLUG: provision
-:END:
-
-With the files filled in, plug in the stick you wrote earlier and
-copy them onto it:
-
-#+begin_run
-just provision
-#+end_run
-
-=just provision= finds the stick by its =BOOMSTICK= partition
-label, mounts it if it has to, writes =boomstick/=, and unmounts
-it again so it is ready to pull.
-
-Before copying anything, it checks the files for the mistakes that
-would leave a headless machine unreachable, and fails here, at your
-desk, instead of later on the other side of the room. An
-=authorized_keys= with no keys in it is refused outright, since
-nobody could log in. A =wg0.conf= that is filled in but missing its
-=PrivateKey= or =PersistentKeepalive= is refused too. A =wg0.conf=
-left untouched is fine -- that is just a stick without WireGuard, and
-it says so.
-
-*** Editing the stick by hand instead
-
-If you would rather skip =secrets/= and edit the stick directly,
-mount its partition with =udisksctl= rather than =sudo mount=:
-
-#+begin_run
-udisksctl mount -b /dev/sdX1
-#+end_run
-
-FAT stores no file ownership, so a plain =sudo mount= makes every
-file look like it belongs to root, and you cannot edit them as
-yourself. =udisksctl= mounts it as your own user, at
-=/run/media/$USER/BOOMSTICK=.
-
-*** Changing it later
-
-Everything that makes the stick yours lives in a handful of plain
-files. When you move to a new WiFi network, rotate a WireGuard key,
-or add someone's SSH key, you edit a file on the stick -- or in
-=secrets/=, then run =just provision= again -- and you are done, with
-nothing to rebuild.
-
-=boomstick-config= re-reads all of it on /every/ boot, which is what
-makes that true. The same mechanism updates =setup= itself: =just
-provision= copies the current installer to =boomstick/bin/setup=, and
-the live system installs that copy over its own at boot. So a fix to
-=setup= reaches a stick without a rebuild.
-
-What a stick /cannot/ grow into is anything that lives in the live
-system itself -- the squashfs the image was built from:
-
- - the *package set*: the live system's own =git=, =cryptsetup=,
-   =archlinuxarm-keyring= and the rest,
- - the *kernel and initramfs*, and
- - =boomstick-config=, =boomstick-webhook= and =boomstick-motd=, the
-   boot-time logic itself.
-
-Those are frozen at build time, and the way to move them forward is to
-build a new image and write it to the stick again -- then =just
-provision= to put your configuration back, since a fresh image carries
-only the templates.
-
-#+attr_shortcode: :style warning :title Installing packages on the live system does not stick
-#+begin_notice
-The live system boots =copytoram=auto=, and its root is a tmpfs
-overlay. =pacman -Sy something= works and is a perfectly good way out
-of a hole, but the next boot has forgotten it. Treat it as a patch for
-the session, not a repair to the stick.
-
-The corollary is worth knowing before you keep an old stick around: a
-stick whose image predates a feature in that frozen half cannot be
-provisioned into having it. =bin/setup= is only picked up because
-=boomstick-config= looks for it, so a stick older than /that/ cannot
-be given a newer =setup= either, however many times you provision it.
-Rebuild instead.
-#+end_notice
-
-The stick is now ready. Go to [[/arch-workstation/boot][Boot the stick and connect]] to use
-it -- or, if you would rather know what the stick does at boot
-before you trust it with a machine, read
-[[/arch-workstation/boomstick/internals][How it works under the hood]] first.
-
-** How it works under the hood
-:PROPERTIES:
-:EXPORT_FILE_NAME: internals
-:EXPORT_HUGO_SLUG: internals
-:END:
-
-There is very little magic involved. Early in boot -- before iwd,
-WireGuard, sshd or the webhook start -- a small service called
-=boomstick-config= finds the config partition and copies
-=boomstick/= into the live system, which runs entirely in RAM.
-Each file lands where the stock tools expect it, readable only by
-root:
-
-| On the stick          | In the live system           |
-|-----------------------+------------------------------|
-| =wifi/*.psk=          | =/var/lib/iwd/=              |
-| =wireguard/wg0.conf=  | =/etc/wireguard/wg0.conf=    |
-| =ssh/authorized_keys= | =/root/.ssh/authorized_keys= |
-| =webhook.env=         | =/etc/boomstick/webhook.env= |
-| =ssh/host/*=          | =/etc/ssh/=                  |
-| =bin/setup=           | =/usr/local/bin/setup=       |
-
-Nothing else is ever written back to the stick. The one exception is
-the SSH host keys on the first boot: the partition is remounted
-read-write just long enough to save them, then read-only again. That
-is what keeps the fingerprint stable from one boot to the next.
-
-*** Why the partition label matters
-
-The service finds the partition by its =BOOMSTICK= label, and that
-label matters more than it looks. The Arch live system boots with
-=copytoram=: on a machine with enough memory, it copies itself into
-RAM and lets go of the boot partition before any of this runs. So the
-service cannot simply look at "the partition I booted from"; it
-searches for a filesystem labelled =BOOMSTICK=, mounts it, and
-unmounts it again.
-
-If you relabel the partition, the stick still boots -- but
-unconfigured.
-
-A nice side effect is that the configuration does not have to be on
-the stick you booted from. Any FAT32 USB stick labelled =BOOMSTICK=
-with a =boomstick/= directory on it works too; start from a
-copy of the repo's =config-templates/=. Just do not plug in two of
-them at once, because the first one found wins.
-
-And a stick with no configuration at all still boots. It simply has
-no WiFi, no VPN, no SSH login and no webhook, and says so on the
-console.
-
-*** One stick, two architectures
-
-The combined image boots an x86_64 PC and a Raspberry Pi 5 from the
-same partition, which sounds like it ought to need something clever.
-It does not. There is one MBR disk image with a single FAT32
-partition on it, and the whole trick is that the two firmwares never
-look at the same files:
-
-#+begin_src text
-config.txt cmdline.txt kernel8.img initramfs-linux.img *.dtb overlays/   # Pi 5 firmware
-EFI/BOOT/BOOTx64.EFI  loader/  arch/boot/x86_64/                         # x86_64 UEFI (systemd-boot)
-arch/x86_64/airootfs.sfs   arch/aarch64/airootfs.sfs                     # the two live systems
-boomstick/                                                               # your configuration
-boot/<uuid>.uuid                                                         # how each initramfs finds the stick
-#+end_src
-
-The Pi's firmware reads only the top-level files. There is no boot
-loader on the Pi at all: the firmware itself loads =kernel8.img=, the
-initramfs and the device trees straight off the FAT partition, and
-takes its kernel command line from =cmdline.txt=. UEFI firmware, for
-its part, looks only in =EFI/= and =loader/=, where it finds
-systemd-boot. Neither one has any idea the other's files are sitting
-next to it.
-
-Once a kernel is running, its initramfs mounts
-=arch/<its own architecture>/airootfs.sfs=. That is why there are two
-=airootfs.sfs= files: they are two complete live systems, one per
-architecture, and each boot only ever touches one of them.
-
-*** How each half finds the stick
-
-archiso normally identifies the medium it booted from by the ISO's
-volume UUID -- which a FAT32 stick does not have, because there is no
-ISO filesystem involved. So it falls back to a second method: it
-searches the attached disks for a file at =boot/<uuid>.uuid= and uses
-whichever one matches the UUID it was told to expect. The Pi gets
-told through =cmdline.txt=:
-
-#+begin_src text
-archisobasedir=arch archisosearchuuid=1234-5678 console=serial0,115200 console=tty1
-#+end_src
-
-This is the same mechanism archiso provides for copying an ISO onto a
-FAT32 stick, used here for both halves.
-
-It is worth noticing that this is a /different/ search from the one
-that finds =boomstick/=. The live system looks for its
-configuration by the =BOOMSTICK= filesystem label, as described
-above, because by then it may have let go of the boot device
-entirely. The two lookups are independent, which is exactly why the
-configuration can live on a second stick.
-
-*** How the combined image is built
-
-=just build-usb= builds an x86_64 ISO first, then builds the Pi image
-and merges the ISO's UEFI boot files and live system into the Pi
-image's FAT32 partition. The ISO is only an intermediate -- it is
-where systemd-boot and the x86_64 kernel come from -- and it is
-deleted once the combined image exists.
-
-#+attr_shortcode: :style warning :title What the combined image costs
-#+begin_notice
- - *x86_64 is UEFI only*, and Secure Boot must be off.
- - The partition is FAT32 with MBR type =0x0c=, because that is what
-   the Pi requires. UEFI firmware is /supposed/ to boot from an EFI
-   System Partition (type =0xef=), and although nearly all of it will
-   also boot a FAT32 USB stick carrying =EFI/BOOT/BOOTx64.EFI=, a
-   strict implementation is entitled not to.
- - Both halves read the same =boomstick/=, so a PC and a Pi
-   booted from this stick present the *same* SSH host key and claim
-   the *same* WireGuard address. That is a feature when you use them
-   one at a time, and a problem if you boot two at once -- they will
-   fight over the peer address. Install one machine at a time, or
-   give the second stick its own key.
-#+end_notice
-
-*** Where to go next
-
-That is the whole of the stick. With one built and provisioned, the
-book proper starts at [[/arch-workstation/boot][Boot the stick and connect]].
-
-*** Source and trademark
-
-The source is at [[https://github.com/EnigmaCurry/boomstick][github.com/EnigmaCurry/boomstick]].
-
-BOOMSTICK is an independent project, not affiliated with or endorsed
-by the Arch Linux project. Arch Linux is a trademark of the Arch
-Linux project.
 * COMMENT Planned chapters                                        :ARCHIVE:
 
 Outline only -- not exported. Each becomes a `* Chapter` with a
