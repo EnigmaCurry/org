@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Make the BOOMSTICK · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/introduction/" aria-label="Previous: introduction" title="prev: introduction"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/boomstick/build/" aria-label="Next: build" title="next: build"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/">arch-workstation</a><ul><li class="lvl1"><a href="#">boomstick</a></li><li class="lvl2"><a href="#what-s-on-the-stick">What&amp;rsquo;s on the stick</a></li><li class="lvl2"><a href="#the-image-is-generic-the-stick-is-yours">The image is generic; the stick is yours</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/build/">Build the image</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/secrets/">SSH keys, WiFi and the webhook</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/wireguard/">Configure WireGuard</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/provision/">Provision the stick</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/internals/">How it works under the hood</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node open">
+                  <a class="active" href="/arch-workstation/boomstick/">boomstick</a><ul class="sections"><li><a class="" href="/arch-workstation/boomstick/build/">build</a></li><li><a class="" href="/arch-workstation/boomstick/secrets/">secrets</a></li><li><a class="" href="/arch-workstation/boomstick/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/boomstick/provision/">provision</a></li><li><a class="" href="/arch-workstation/boomstick/internals/">internals</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg pcur" href="/arch-workstation/boomstick/">/boomstick</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Make the BOOMSTICK</a></h1>
+
+
+<p>Reinstalling Linux on a headless PC or a Raspberry Pi with the
+official installer is a tedious affair. Before the target machine
+will accept a remote login, there is a handful of chores to be done
+by hand, every single time: write the ISO to a stick, borrow a
+monitor and keyboard, type a WiFi passphrase into <code>iwctl</code>, set a root
+password or paste in an authorized key, get onto the same network as
+the target, and clear the machine&rsquo;s stale entry out of
+<code>known_hosts</code>.</p>
+<p><a href="https://github.com/EnigmaCurry/boomstick">BOOMSTICK</a> does all of those chores for you, once, at your desk. You
+write the image to a USB stick, drop your WiFi, WireGuard and SSH
+settings onto it, and from then on you plug it in, power on, and SSH
+in from wherever you are. This chapter builds it; every chapter after
+it assumes you booted the target machine from one.</p>
+<h2 id="what-s-on-the-stick"><a class="heading-anchor" href="#what-s-on-the-stick">What&rsquo;s on the stick</a></h2>
+<p>BOOMSTICK is the stock Arch Linux installer &ndash; archiso&rsquo;s <code>releng</code>
+profile &ndash; with a few additions layered on top:</p>
+<ul>
+<li><strong>WiFi</strong>, optionally: iwd joins your networks automatically, with
+wired ethernet preferred when both are available.</li>
+<li><strong>WireGuard</strong>, optionally: <code>wg-quick@wg0</code> brings up a tunnel to your
+own server at boot, retrying until the endpoint&rsquo;s DNS name
+resolves, so the stick has the same address on any network.</li>
+<li><strong>SSH</strong>: sshd lets you in as root with your <code>authorized_keys</code>, which
+is the one thing you must supply. Password login is never
+permitted.</li>
+<li><strong>A stable identity</strong>: the hostname is always <code>boomstick</code>, and the
+stick generates its SSH host keys on first boot and keeps them.</li>
+<li><strong><code>setup</code></strong>, the installer the rest of this book uses.</li>
+<li><strong>A boot webhook</strong>, optionally, which notifies you (via <a href="https://ntfy.sh">ntfy</a>, for
+example) with the stick&rsquo;s LAN, public and WireGuard addresses once
+it is up.</li>
+</ul>
+<p>One image boots both x86_64 PCs (UEFI only) and the Raspberry Pi 5,
+so a single stick in your bag covers every machine in this book.</p>
+<h2 id="the-image-is-generic-the-stick-is-yours"><a class="heading-anchor" href="#the-image-is-generic-the-stick-is-yours">The image is generic; the stick is yours</a></h2>
+<p>The image itself contains no secrets, so you can build it once, and
+so can anyone else. Your WiFi passwords, WireGuard key, SSH keys and
+webhook URL go into a <code>boomstick/</code> directory on the stick&rsquo;s
+FAT32 partition, which you fill in <em>after</em> writing the image. That
+partition is readable from any computer, so you edit those files with
+whatever editor you like, and the live system reads them again on
+every boot.</p>
+<div class="box notice notice-warning"><div class="label">A configured stick is a key</div>
+  <div class="body">
+<p>The secrets on the stick are stored in plain text, readable by any
+computer it is plugged into. Anyone holding it can join your WiFi and
+your VPN. Keep it in your possession, and give each stick its own
+WireGuard key so that you can revoke a lost one without touching the
+others.</p>
+  </div>
+</div>
+<p>The rest of this chapter goes through it in order, beginning with
+<a href="/arch-workstation/boomstick/build">Build the image</a>.</p>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

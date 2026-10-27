@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Make the BOOMSTICK on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/arch-workstation/boomstick/</link>
+    <description>Recent content in Make the BOOMSTICK on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/arch-workstation/boomstick/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Build the image</title>
+      <link>https://book.rymcg.tech/arch-workstation/boomstick/build/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/boomstick/build/</guid>
+      <description>Everything on this page runs on your own workstation.&#xA;You do not need archiso, or any Arch packages at all: the build runs inside an archlinux container, so the host&amp;rsquo;s own distribution does not matter. You need rootless Podman, just, about 8 GB of free disk space, and an internet connection.&#xA;Because the image holds both an x86_64 and an ARM system, whichever half does not match your own machine is built under qemu-user emulation, so you also need the static qemu-user emulators registered with binfmt_misc.</description>
+    </item>
+    <item>
+      <title>SSH keys, WiFi and the webhook</title>
+      <link>https://book.rymcg.tech/arch-workstation/boomstick/secrets/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/boomstick/secrets/</guid>
+      <description>You can edit the configuration directly on the stick, but it is easier to keep it in the repo, next to the build, and copy it over. Running just config creates a secrets/ directory &amp;ndash; git-ignored, and readable only by you &amp;ndash; full of commented-out templates:&#xA;[bash]: Run this on your workstation: just config (stdout) created: secrets/ssh/authorized_keys (edit it) created: secrets/webhook.env (edit it) created: secrets/wifi/EXAMPLE.psk.example (edit it) created: secrets/wireguard/wg0.conf (edit it) Of those four files, only secrets/ssh/authorized_keys is required.</description>
+    </item>
+    <item>
+      <title>Configure WireGuard</title>
+      <link>https://book.rymcg.tech/arch-workstation/boomstick/wireguard/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/boomstick/wireguard/</guid>
+      <description>WireGuard is optional. Without it, the stick still boots, joins your WiFi and accepts your SSH keys &amp;ndash; it is simply reachable only on whatever LAN it lands on, at whatever address DHCP gave it. That is perfectly workable when the target machine is sitting on your own network.&#xA;What the tunnel buys you is a fixed address that does not depend on which network the machine is plugged into. The stick answers at the same WireGuard address on every network and in every machine, so you can ssh boomstick without discovering anything first, and you can install a machine that is nowhere near you.</description>
+    </item>
+    <item>
+      <title>Provision the stick</title>
+      <link>https://book.rymcg.tech/arch-workstation/boomstick/provision/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/boomstick/provision/</guid>
+      <description>With the files filled in, plug in the stick you wrote earlier and copy them onto it:&#xA;[bash]: Run this on your workstation: just provision just provision finds the stick by its BOOMSTICK partition label, mounts it if it has to, writes boomstick/, and unmounts it again so it is ready to pull.&#xA;Before copying anything, it checks the files for the mistakes that would leave a headless machine unreachable, and fails here, at your desk, instead of later on the other side of the room.</description>
+    </item>
+    <item>
+      <title>How it works under the hood</title>
+      <link>https://book.rymcg.tech/arch-workstation/boomstick/internals/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/boomstick/internals/</guid>
+      <description>There is very little magic involved. Early in boot &amp;ndash; before iwd, WireGuard, sshd or the webhook start &amp;ndash; a small service called boomstick-config finds the config partition and copies boomstick/ into the live system, which runs entirely in RAM. Each file lands where the stock tools expect it, readable only by root:&#xA;On the stick In the live system wifi/*.psk /var/lib/iwd/ wireguard/wg0.conf /etc/wireguard/wg0.conf ssh/authorized_keys /root/.ssh/authorized_keys webhook.env /etc/boomstick/webhook.env ssh/host/* /etc/ssh/ bin/setup /usr/local/bin/setup Nothing else is ever written back to the stick.</description>
+    </item>
+  </channel>
+</rss>

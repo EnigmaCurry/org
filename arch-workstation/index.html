@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Arch Workstation · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/" aria-label="Previous: book.rymcg.tech" title="prev: book.rymcg.tech"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/introduction/" aria-label="Next: introduction" title="next: introduction"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/">book.rymcg.tech</a><ul><li class="lvl1"><a href="#">arch-workstation</a></li><li class="lvl2 page"><a href="/arch-workstation/introduction/">Introduction</a></li><li class="lvl2 page"><a href="/arch-workstation/boomstick/">Make the BOOMSTICK</a></li><li class="lvl3 page"><a href="/arch-workstation/boomstick/build/">Build the image</a></li><li class="lvl3 page"><a href="/arch-workstation/boomstick/secrets/">SSH keys, WiFi and the webhook</a></li><li class="lvl3 page"><a href="/arch-workstation/boomstick/wireguard/">Configure WireGuard</a></li><li class="lvl3 page"><a href="/arch-workstation/boomstick/provision/">Provision the stick</a></li><li class="lvl3 page"><a href="/arch-workstation/boomstick/internals/">How it works under the hood</a></li><li class="lvl2 page"><a href="/arch-workstation/boot/">Boot the stick and connect</a></li><li class="lvl3 page"><a href="/arch-workstation/boot/ssh/">Connect over SSH</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/">Install with setup</a></li><li class="lvl3 page"><a href="/arch-workstation/setup/host/">Describe the machine</a></li><li class="lvl3 page"><a href="/arch-workstation/setup/disk/">Prepare the disk</a></li><li class="lvl3 page"><a href="/arch-workstation/setup/install/">Install the system</a></li><li class="lvl3 page"><a href="/arch-workstation/setup/wireguard/">A tunnel of its own (optional)</a></li><li class="lvl3 page"><a href="/arch-workstation/setup/check/">Check and reboot</a></li><li class="lvl2 page"><a href="/arch-workstation/maintain/">Keeping it maintainable</a></li><li class="lvl3 page"><a href="/arch-workstation/maintain/diff/">See what drifted</a></li><li class="lvl3 page"><a href="/arch-workstation/maintain/save/">Save and apply</a></li><li class="lvl3 page"><a href="/arch-workstation/maintain/upgrade/">Upgrade</a></li><li class="lvl3 page"><a href="/arch-workstation/maintain/snapshots/">Snapshots</a></li><li class="lvl2 page"><a href="/arch-workstation/desktop/">Desktop</a></li><li class="lvl3 page"><a href="/arch-workstation/desktop/system/">The system</a></li><li class="lvl3 page"><a href="/arch-workstation/desktop/sway-home/">Nix and sway-home</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg pcur" href="/arch-workstation/">/arch-workstation</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Arch Workstation</a></h1>
+
+
+<p>This book describes how I setup a Linux Workstation using Arch Linux,
+installed remotely over SSH from a <a href="/arch-workstation/boomstick">BOOMSTICK</a> live USB with its
+<code>setup</code> command.</p>
+<div class="box notice notice-warning"><div class="label">Work in progress</div>
+  <div class="body">
+<p>This book is unfinished and under active development. Chapters will
+move, commands will change, and pages may contradict each other
+while I am still working through them.</p>
+<p>What is written takes a machine from an unplugged box to one that
+boots on its own and accepts an SSH login &ndash; the disk, the base
+system, the bootloader, networking and accounts, all done by <code>setup</code>
+&ndash; and then keeps it in step with its host repo with <code>admin</code>, and adds
+a sway desktop to it. The chapter on hardware-key <code>sudo</code> is not
+written yet.</p>
+<p>Be aware of what &ldquo;tested&rdquo; means here. BOOMSTICK&rsquo;s <code>just test-vm</code>
+installs an <strong>x86_64 PC</strong> in a QEMU virtual machine with every prompt
+answered, reboots it, logs in, and checks the result, including that
+<code>admin diff</code> finds no drift and that pacman transactions are
+snapshotted. <code>ENCRYPT=yes</code> does the same onto <strong>LUKS</strong>, answering the
+passphrase prompt at boot. A <strong>Raspberry Pi 5</strong> has been installed on
+real hardware, start to finish.</p>
+<p>Not tested yet: <code>admin upgrade</code>, rolling back a snapshot, and logging
+in to the desktop &ndash; the test VM installs it and checks the login
+screen, Nix and sway-home, but nobody has sat in front of it.
+Hardware-key <code>sudo</code> is unwritten. Specific caveats are flagged in
+place.</p>
+<p>Read it as notes becoming a book rather than as a recipe that is
+known to work start to finish.</p>
+  </div>
+</div>
+<div class="index">
+    <h2>Index</h2><ul class="children"><li>
+      <a href="/arch-workstation/introduction/">Introduction</a></li><li>
+      <a href="/arch-workstation/boomstick/">Make the BOOMSTICK</a><ul class="children"><li>
+      <a href="/arch-workstation/boomstick/build/">Build the image</a></li><li>
+      <a href="/arch-workstation/boomstick/secrets/">SSH keys, WiFi and the webhook</a></li><li>
+      <a href="/arch-workstation/boomstick/wireguard/">Configure WireGuard</a></li><li>
+      <a href="/arch-workstation/boomstick/provision/">Provision the stick</a></li><li>
+      <a href="/arch-workstation/boomstick/internals/">How it works under the hood</a></li></ul></li><li>
+      <a href="/arch-workstation/boot/">Boot the stick and connect</a><ul class="children"><li>
+      <a href="/arch-workstation/boot/ssh/">Connect over SSH</a></li></ul></li><li>
+      <a href="/arch-workstation/setup/">Install with setup</a><ul class="children"><li>
+      <a href="/arch-workstation/setup/host/">Describe the machine</a></li><li>
+      <a href="/arch-workstation/setup/disk/">Prepare the disk</a></li><li>
+      <a href="/arch-workstation/setup/install/">Install the system</a></li><li>
+      <a href="/arch-workstation/setup/wireguard/">A tunnel of its own (optional)</a></li><li>
+      <a href="/arch-workstation/setup/check/">Check and reboot</a></li></ul></li><li>
+      <a href="/arch-workstation/maintain/">Keeping it maintainable</a><ul class="children"><li>
+      <a href="/arch-workstation/maintain/diff/">See what drifted</a></li><li>
+      <a href="/arch-workstation/maintain/save/">Save and apply</a></li><li>
+      <a href="/arch-workstation/maintain/upgrade/">Upgrade</a></li><li>
+      <a href="/arch-workstation/maintain/snapshots/">Snapshots</a></li></ul></li><li>
+      <a href="/arch-workstation/desktop/">Desktop</a><ul class="children"><li>
+      <a href="/arch-workstation/desktop/system/">The system</a></li><li>
+      <a href="/arch-workstation/desktop/sway-home/">Nix and sway-home</a></li></ul></li></ul>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

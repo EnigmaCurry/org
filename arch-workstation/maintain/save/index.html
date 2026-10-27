@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Save and apply · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/maintain/diff/" aria-label="Previous: diff" title="prev: diff"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/maintain/upgrade/" aria-label="Next: upgrade" title="next: upgrade"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/maintain/">maintain</a><ul><li class="lvl1"><a href="#">save</a></li><li class="lvl2"><a href="#change-the-repo-admin-save">Change the repo: admin save</a></li><li class="lvl2"><a href="#review-and-commit">Review and commit</a></li><li class="lvl2"><a href="#change-the-machine-admin-apply">Change the machine: admin apply</a></li><li class="lvl2"><a href="#packages-from-the-aur">Packages from the AUR</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a><ul class="sections"><li><a class="" href="/arch-workstation/maintain/diff/">diff</a></li><li><a class="active" href="/arch-workstation/maintain/save/">save</a></li><li><a class="" href="/arch-workstation/maintain/upgrade/">upgrade</a></li><li><a class="" href="/arch-workstation/maintain/snapshots/">snapshots</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/maintain/">/maintain</a><a class="pseg pcur" href="/arch-workstation/maintain/save/">/save</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Save and apply</a></h1>
+
+
+<p>Every line of drift has two possible fixes: change the repo to match
+the machine, or change the machine to match the repo. <code>admin save</code> and
+<code>admin apply</code> are the two.</p>
+<h2 id="change-the-repo-admin-save"><a class="heading-anchor" href="#change-the-repo-admin-save">Change the repo: admin save</a></h2>
+<p>When the drift is something you meant, record it:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+admin save
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+Wrote /home/admin/arch/aconfmgr/99-unsorted.sh. Move what you meant into a numbered
+file, delete the rest (and 'admin apply' to undo it), then commit.
+</pre></div>
+</div>
+
+<p><code>99-unsorted.sh</code> holds the same lines <code>admin diff</code> printed. Files it
+copied &ndash; the sysctl file, here &ndash; are under <code>aconfmgr/files/</code>. It is
+git-ignored on purpose: it is a to-do list, not configuration, and it
+should not survive the review.</p>
+<h2 id="review-and-commit"><a class="heading-anchor" href="#review-and-commit">Review and commit</a></h2>
+<p>Sort each line into the place it belongs. In this repo, that is
+usually <em>not</em> another aconfmgr file, but the plain file aconfmgr
+reads:</p>
+<table>
+<thead>
+<tr>
+<th>Line in 99-unsorted.sh</th>
+<th>Where it goes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AddPackage foo</code></td>
+<td><code>foo</code> on a line of <code>packages.txt</code></td>
+</tr>
+<tr>
+<td><code>CopyFile /etc/...</code></td>
+<td>the file, moved from <code>aconfmgr/files/etc/...</code> to <code>etc/...</code></td>
+</tr>
+<tr>
+<td><code>CreateLink /etc/systemd/...</code></td>
+<td>the unit in <code>units.txt</code></td>
+</tr>
+<tr>
+<td>anything that is state</td>
+<td>an <code>IgnorePath</code> in <code>aconfmgr/90-ignore.sh</code></td>
+</tr>
+<tr>
+<td>anything you did not mean</td>
+<td>nowhere: delete it, and <code>admin apply</code> will undo it on the machine</td>
+</tr>
+</tbody>
+</table>
+<p>For the example above:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cd ~/arch
+echo htop &gt;&gt; packages.txt
+mkdir -p etc/sysctl.d
+mv aconfmgr/files/etc/sysctl.d/99-swappiness.conf etc/sysctl.d/
+rm -r aconfmgr/99-unsorted.sh aconfmgr/files
+admin diff
+git add -A
+git commit -m &#34;htop; lower swappiness&#34;
+</pre></div>
+</div>
+
+
+<p>The second <code>admin diff</code> is the check that the sorting was right: it
+should say there is no drift. <code>save</code> writes and never commits, and
+that review is the whole point &ndash; it is the moment the machine&rsquo;s
+history gets a reason attached to it.</p>
+<h2 id="change-the-machine-admin-apply"><a class="heading-anchor" href="#change-the-machine-admin-apply">Change the machine: admin apply</a></h2>
+<p>Edit the repo, commit, and apply:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+echo ripgrep &gt;&gt; ~/arch/packages.txt
+git -C ~/arch commit -am &#34;Add ripgrep&#34;
+admin apply
+</pre></div>
+</div>
+
+
+<p>aconfmgr shows each change before it makes it and asks. It installs
+what is missing, puts files back the way the repo has them, and
+enables units.</p>
+<div class="box notice notice-warning"><div class="label">apply removes things too</div>
+  <div class="body">
+<p><code>apply</code> makes the machine match the repo <em>exactly</em>. A package
+installed by hand and not in <code>packages.txt</code> is uninstalled (aconfmgr
+marks it as a dependency, then removes orphans); a file that the repo
+does not describe and <code>90-ignore.sh</code> does not ignore is deleted. That is what makes it an undo button, and also why you
+should run <code>admin diff</code> first and <code>admin save</code> anything you want to
+keep. Read what it proposes before answering yes, and do not get into
+the habit of <code>admin apply --yes</code>.</p>
+  </div>
+</div>
+<p>This is also how a second machine picks up a change: pull the repo
+there and apply.</p>
+<h2 id="packages-from-the-aur"><a class="heading-anchor" href="#packages-from-the-aur">Packages from the AUR</a></h2>
+<p>The <a href="https://wiki.archlinux.org/title/Arch_User_Repository">AUR</a> is not a repository of packages but of <em>build recipes</em>,
+contributed by users and reviewed by nobody. Nothing in <code>packages.txt</code>
+can come from it, because <code>pacstrap</code> and <code>pacman</code> only know the
+official repositories. aconfmgr calls anything pacman did not install
+from a repository a <strong>foreign</strong> package, and describes it with a
+<code>--foreign</code> flag:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/aconfmgr/50-packages.sh</div>
+    <div class="body"><pre>
+AddPackage --foreign yay          # Yet another yogurt. Pacman wrapper and AUR helper written in go.
+AddPackage --foreign solo2-cli    # A CLI for SoloKeys Solo 2 devices
+</pre></div>
+</div>
+
+<p>You rarely type those lines yourself. Install something from the AUR by
+hand and <code>admin save</code> writes them for you, comment and all, exactly as
+it does for a package from the repos &ndash; which is the point: a foreign
+package that is not described is drift, and <code>admin apply</code> would remove
+it.</p>
+<p>What makes this work without any setting of your own is how aconfmgr
+finds a builder. It looks for <code>aurman</code>, <code>pacaur</code>, <code>yaourt</code>, <code>yay</code>,
+<code>paru</code>, <code>aura</code> and then <code>makepkg</code>, in that order, and uses the first
+one on <code>PATH</code>; <code>--aur-helper HELPER</code> overrides the choice. And if one of
+those names is itself in the list of foreign packages it is about to
+install, it builds <em>that</em> one first, with <code>makepkg</code>, and then uses it
+for the rest. So a single <code>AddPackage --foreign yay</code> bootstraps itself
+on a machine that has never had an AUR helper.</p>
+<div class="box notice notice-warning"><div class="label">base-devel is not installed</div>
+  <div class="body">
+<p><code>makepkg</code> is what every one of those helpers ultimately runs, and it
+needs the toolchain in <code>base-devel</code> &ndash; which <code>setup</code> does not install,
+because a machine that builds nothing does not need a compiler. Add it
+before the first foreign package, or the build fails on a missing
+<code>fakeroot</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo base-devel &gt;&gt; ~/arch/packages.txt
+</span></span></code></pre></div><p><code>makepkg</code> also refuses to run as root, which is why <code>admin apply</code> runs
+aconfmgr as <code>admin</code> and lets it call <code>sudo</code> for the parts that need it.</p>
+  </div>
+</div>
+<div class="box notice notice-warning"><div class="label">admin upgrade does not upgrade them</div>
+  <div class="body">
+<p><code>admin upgrade</code> runs <code>pacman -Syu</code>, which has never heard of the AUR,
+and then <code>admin apply</code>, which installs foreign packages that are
+<em>missing</em> but does not rebuild ones that are merely out of date. So
+foreign packages stay at whatever version you built, including when
+that version grows a security hole. Upgrading them is a separate habit
+&ndash; <code>yay -Sua</code> &ndash; and the honest reason to keep the <code>--foreign</code> list
+short.</p>
+  </div>
+</div>
+<div class="box notice notice-info"><div class="label">Untested</div>
+  <div class="body">
+<p>No machine built by this book has installed an AUR package yet. The
+behaviour above is read from the pinned aconfmgr (<code>96ab414</code>) rather
+than observed.</p>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

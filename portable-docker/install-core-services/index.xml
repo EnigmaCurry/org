@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Install core services on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/portable-docker/install-core-services/</link>
+    <description>Recent content in Install core services on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/portable-docker/install-core-services/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Forgejo</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/forgejo/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/forgejo/</guid>
+      <description>Forgejo is a self-hosted git forge similar to GitHub. Forgejo is a fork of Gitea, which is a fork of Gogs.&#xA;Installing Forgejo is useful for two unrelated purposes:&#xA;Self-hosting your own git repositories. Providing an OAuth2 identity service for your organization, facilitating single-sign on to all of your apps via Traefik&amp;rsquo;s forward-auth middleware. Forgejo is fundamental infrastructure You don&amp;rsquo;t need to install Forgejo on every server you make, but having at least one instance in your domain is recommended.</description>
+    </item>
+    <item>
+      <title>Traefik-Forward-Auth (sentry authorization)</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/traefik-forward-auth/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/traefik-forward-auth/</guid>
+      <description>--- title: Traefik Forward Auth middleware handles authentication --- sequenceDiagram participant User participant Traefik participant TFA as TFA middleware participant Forgejo as Oauth2 provider - Forgejo participant HeaderAuth as Sentry authorization middleware participant App User -&gt;&gt; Traefik: HTTP request Traefik -&gt;&gt; TFA: Sends the request to TFA middleware TFA -&gt;&gt; Forgejo: OAuth2 authentication Forgejo --&gt;&gt; TFA: OAuth2 response (returns OK / KO) TFA --&gt;&gt; Traefik: Returns OK / KO alt KO Traefik -&gt;&gt; User: KO, access denied else OK Traefik --&gt;&gt; User: OK, logged in User --&gt;&gt; Traefik: Send new requests with auth cookie.</description>
+    </item>
+    <item>
+      <title>Postfix-Relay (MTA)</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/postfix-relay/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/postfix-relay/</guid>
+      <description>Many apps require to send email for various purposes. Rather than configure each such container with your secret mail credentials, you can configure a single central mail forwarding service with postfix-relay.&#xA;--- title: Authorized container networks may bridge with the Postfix-Relay to send outgoing email. --- graph TD; subgraph Docker network A[Container A] --&gt;|private mail-only network| D[Postfix-Relay] B[Container B] --&gt;|private mail-only network| D[Postfix-Relay] C[Container C] -.- F[Blocked] end D --&gt;|Internet| E[Public SMTP server] E --&gt; G[Allowed Email recipient] E --&gt; H[Allowed Email recipient] E -.</description>
+    </item>
+    <item>
+      <title>Step-CA (mutual TLS)</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/step-ca/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/step-ca/</guid>
+      <description>Mutual TLS (mTLS) is a form of transport security where both the client and server authenticate each other using digital certificates. Unlike traditional TLS (e.g., Let&amp;rsquo;s Encrypt), where only the server&amp;rsquo;s identity is verified, mTLS provides mutual verification of the server and client, making it ideal for protecting data exchanges in interconnected environments like microservices and zero-trust architectures. By using certificates issued by trusted Certificate Authorities (CA), mTLS prevents unauthorized access and guarantees that both parties using a communication channel are legitimate.</description>
+    </item>
+    <item>
+      <title>Docker Registry</title>
+      <link>https://book.rymcg.tech/portable-docker/install-core-services/docker-registry/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/portable-docker/install-core-services/docker-registry/</guid>
+      <description>A Docker registry is a service for storing and distributing Docker images (OCI images). Public registries like Docker Hub are common, but private registries offer more control and security. By using a registry, you can version images, enforce access policies, and simplify deployment, making it a key part of your infrastructure.&#xA;If you only have one Docker server, running a registry might be kind of pointless. But you may want to run it for any of these reasons:</description>
+    </item>
+  </channel>
+</rss>

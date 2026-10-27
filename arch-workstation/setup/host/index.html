@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Describe the machine · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/setup/" aria-label="Previous: setup" title="prev: setup"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/setup/disk/" aria-label="Next: disk" title="next: disk"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/setup/">setup</a><ul><li class="lvl1"><a href="#">host</a></li><li class="lvl2"><a href="#answer-the-prompts">Answer the prompts</a></li><li class="lvl2"><a href="#what-it-wrote">What it wrote</a></li><li class="lvl2"><a href="#change-anything-before-installing">Change anything before installing</a></li><li class="lvl2"><a href="#reinstalling-a-machine-you-already-have">Reinstalling a machine you already have</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/setup/">setup</a><ul class="sections"><li><a class="active" href="/arch-workstation/setup/host/">host</a></li><li><a class="" href="/arch-workstation/setup/disk/">disk</a></li><li><a class="" href="/arch-workstation/setup/install/">install</a></li><li><a class="" href="/arch-workstation/setup/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/setup/check/">check</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/setup/">/setup</a><a class="pseg pcur" href="/arch-workstation/setup/host/">/host</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Describe the machine</a></h1>
+
+
+<p>The first step changes nothing on the target. It asks a few
+questions and writes the answers into the <strong>host repo</strong>, which every
+later step reads.</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup host
+</pre></div>
+</div>
+
+
+<h2 id="answer-the-prompts"><a class="heading-anchor" href="#answer-the-prompts">Answer the prompts</a></h2>
+<p>Each prompt is pre-filled with its default, which you can edit in
+place or accept with Enter.</p>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">==</span> Describe this machine <span style="color:#f92672">==</span>
+</span></span><span style="display:flex;"><span>Machine: x86_64 PC, UEFI
+</span></span><span style="display:flex;"><span>? Hostname: archlinux
+</span></span></code></pre></div><p>The name you will type into <code>ssh</code> for the rest of the machine&rsquo;s
+life, so something short and memorable beats something descriptive.
+<code>setup</code> writes it straight into the target&rsquo;s <code>/etc/hostname</code> rather
+than using <code>hostnamectl</code>, which inside a chroot talks to the <em>live
+system&rsquo;s</em> systemd and would rename the stick instead.</p>
+  </div>
+</div>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Install to which disk?
+</span></span><span style="display:flex;"><span>  1<span style="color:#f92672">)</span> /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3       238.5G  nvme  XP1000F256G  <span style="color:#f92672">(</span>nvme0n1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  2<span style="color:#f92672">)</span> /dev/disk/by-id/ata-Samsung_SSD_870_S5Y1NG0R        931.5G  sata  Samsung SSD <span style="color:#ae81ff">870</span>  <span style="color:#f92672">(</span>sda<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">(</span>/dev/sdb, the BOOMSTICK you booted from, is not offered<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>? Number <span style="color:#f92672">(</span>1<span style="color:#f92672">)</span>:
+</span></span></code></pre></div><p>The disk is recorded by its <code>/dev/disk/by-id/</code> name, which belongs to
+that physical drive, rather than <code>/dev/nvme0n1</code>, which belongs to
+whatever order the kernel found the drives in this time. The stick you
+booted from is never offered: <code>setup</code> finds it by its <code>BOOMSTICK</code>
+partition label and leaves it off the list, and refuses it later even
+if you write it into the host file by hand.</p>
+  </div>
+</div>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Encrypt the root filesystem with LUKS? <span style="color:#f92672">(</span>yes/no<span style="color:#f92672">)</span>: no
+</span></span></code></pre></div><p>Full-disk encryption protects the data on a machine that is stolen,
+resold, or returned under warranty. It does nothing for a machine
+that is already running and unlocked: the threat it addresses is
+physical possession of the disk.</p>
+<p>The cost is a passphrase at every boot, which is a real cost on a
+headless machine in another room. A laptop is an obvious yes; a home
+server that must come back up unattended after a power cut is an
+obvious no.</p>
+<p>On a Raspberry Pi, <code>setup</code> warns before asking. The Pi has no
+bootloader that can prompt for a passphrase, so the prompt comes from
+the initramfs on the console and serial line &ndash; of no use on a Pi
+with neither attached. Unlocking a headless Pi over the network needs
+an initramfs with networking and SSH, which this book does not set
+up. If the Pi is headless, leave encryption off.</p>
+  </div>
+</div>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Swap file size, or <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">for</span> none: 8g
+</span></span></code></pre></div><p>Swap is worth having even with plenty of memory: it gives the kernel
+somewhere to put pages that genuinely are not being used, freeing real
+memory for the page cache, and it turns &ldquo;the machine froze solid&rdquo; into
+&ldquo;the machine got slow&rdquo; when something runs away with allocations.
+Matching your RAM is only strictly necessary for hibernation, which
+this book does not set up.</p>
+  </div>
+</div>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Time zone: America/Denver
+</span></span><span style="display:flex;"><span>? Locale: en_US.UTF-8
+</span></span><span style="display:flex;"><span>? Console keymap: us
+</span></span></code></pre></div><p>The time zone defaults to the live system&rsquo;s (UTC unless you changed
+it); <code>ls /usr/share/zoneinfo</code> lists them. The locale is checked
+against <code>/etc/locale.gen</code>. Pick a UTF-8 one: a non-UTF-8 default is
+why box-drawing characters in programs like <code>lsblk</code> degrade into <code>|-</code>,
+and it causes stranger problems than that in anything handling text.
+The keymap is for the text console only, which on a machine you reach
+over SSH you may never see &ndash; until a rescue prompt.</p>
+  </div>
+</div>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>? Passwordless sudo <span style="color:#66d9ef">for</span> admin? <span style="color:#f92672">(</span>yes/no<span style="color:#f92672">)</span>: yes
+</span></span><span style="display:flex;"><span>? Extra packages to install <span style="color:#f92672">(</span>blank <span style="color:#66d9ef">for</span> none<span style="color:#f92672">)</span>: just tmux
+</span></span></code></pre></div><p><code>setup</code> always creates two accounts:</p>
+<table>
+<thead>
+<tr>
+<th>Account</th>
+<th>UID</th>
+<th>Groups</th>
+<th>What it is for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>admin</code></td>
+<td>1000</td>
+<td><code>admin</code>, <code>wheel</code></td>
+<td>Administration, and SSH login</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>1001</td>
+<td><code>user</code></td>
+<td>Everything else. No special privileges.</td>
+</tr>
+</tbody>
+</table>
+<p>The split is the point. Day-to-day work &ndash; editing, browsing,
+building, running other people&rsquo;s code &ndash; happens as <code>user</code>, an
+account that cannot reconfigure the system even by accident. When
+you intend to administer the machine, you log in as <code>admin</code>.</p>
+<p>Whether <code>admin</code> needs a password for <code>sudo</code> is the question. Saying
+yes means anything that gets a shell as <code>admin</code> has root, which is a
+real reduction in depth. The reasoning for it here: SSH is key-only,
+root cannot log in, and a sudo password mostly protects against
+someone who already has an <code>admin</code> shell &ndash; at which point they can
+wait and capture it. It is the same trade cloud images make. Say no
+and <code>admin</code> gets ordinary, password-prompting <code>sudo</code> through <code>wheel</code>.</p>
+  </div>
+</div>
+<h2 id="what-it-wrote"><a class="heading-anchor" href="#what-it-wrote">What it wrote</a></h2>
+<p>The answers land in one small file of shell variables:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: /root/arch/host.env</div>
+    <div class="body"><pre>
+HOSTNAME=myhost
+DISK=/dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
+ENCRYPT=no
+SWAP_SIZE=8g
+TIMEZONE=America/Denver
+LOCALE=en_US.UTF-8
+KEYMAP=us
+ADMIN_NOPASSWD=yes
+</pre></div>
+</div>
+
+<p>Edit it with <code>vim /root/arch/host.env</code>, or run <code>setup host</code> again,
+which re-asks every question with your current answers as the
+defaults.</p>
+<p><code>/root/arch</code> is a git repository, and <code>setup host</code> seeds the rest of
+it too:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host.env</code></td>
+<td>The answers above</td>
+</tr>
+<tr>
+<td><code>packages.txt</code></td>
+<td>Packages beyond the base set, which <code>setup</code> picks from the hardware</td>
+</tr>
+<tr>
+<td><code>units.txt</code></td>
+<td>systemd units to enable: <code>systemd-networkd</code>, <code>systemd-resolved</code>, <code>iwd</code>, <code>sshd</code>, <code>snapper-cleanup.timer</code></td>
+</tr>
+<tr>
+<td><code>etc/systemd/network/*.network</code></td>
+<td>DHCP on any wired (<code>en*</code>) and wireless (<code>wl*</code>) interface</td>
+</tr>
+<tr>
+<td><code>etc/ssh/sshd_config.d/10-hardening.conf</code></td>
+<td>Keys only, no root login</td>
+</tr>
+<tr>
+<td><code>etc/sudoers.d/10-admin</code></td>
+<td>Passwordless sudo for <code>admin</code>, if you said yes</td>
+</tr>
+<tr>
+<td><code>etc/snapper/configs/root</code>, <code>etc/conf.d/snapper</code></td>
+<td>Snapshots of <code>/</code>, kept to the newest ten</td>
+</tr>
+<tr>
+<td><code>bin/admin</code></td>
+<td>The <code>admin</code> command, installed to <code>/usr/local/bin</code></td>
+</tr>
+<tr>
+<td><code>aconfmgr/</code></td>
+<td>aconfmgr&rsquo;s view of all of the above, plus what to ignore</td>
+</tr>
+<tr>
+<td><code>authorized_keys</code></td>
+<td>The SSH public keys <code>admin</code> will accept, copied from the stick</td>
+</tr>
+</tbody>
+</table>
+<p>Once seeded, these files are yours: <code>setup</code> never overwrites them,
+except for the sudoers drop-in, which follows your answer about
+passwordless sudo, and <code>aconfmgr/10-base.sh</code>, which <code>setup install</code>
+rewrites from the hardware. The <a href="/arch-workstation/maintain">maintenance chapter</a> explains <code>admin</code>
+and <code>aconfmgr/</code>; until the machine is running you can ignore both.</p>
+<h2 id="change-anything-before-installing"><a class="heading-anchor" href="#change-anything-before-installing">Change anything before installing</a></h2>
+<p>Everything <code>setup install</code> puts on the machine beyond the base system
+comes from those files, so this is where you deviate from the book.
+Add packages to <code>packages.txt</code>. Add files under <code>etc/</code> and they are
+installed at the same path under <code>/etc</code>. Add or remove units in
+<code>units.txt</code>.</p>
+<p>For example, to use NetworkManager instead of systemd-networkd and
+iwd &ndash; a perfectly good choice if you want its roaming and GUI
+integration &ndash; add <code>networkmanager</code> to <code>packages.txt</code>, replace the
+first three lines of <code>units.txt</code> with <code>NetworkManager</code>, and delete
+the two <code>.network</code> files. The aconfmgr configuration is worked out
+from these files, so it follows without being edited. Commit when you
+are done:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C /root/arch commit -am &#34;Use NetworkManager&#34;
+</pre></div>
+</div>
+
+
+<h2 id="reinstalling-a-machine-you-already-have"><a class="heading-anchor" href="#reinstalling-a-machine-you-already-have">Reinstalling a machine you already have</a></h2>
+<p>If the machine has been installed this way before, its host repo
+already exists &ndash; inside the old installation at <code>~admin/arch</code>, and
+anywhere you pushed it. Point <code>setup</code> at it instead of answering the
+questions again:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup host --from git@git.example.com:you/arch-myhost.git
+</pre></div>
+</div>
+
+
+<p>The live system has no private key of its own, so cloning a private
+repo over SSH uses yours: connect with <code>ssh -A boomstick</code> to forward
+your agent.</p>
+<p><code>--from</code> also takes a path to a <code>host.env</code> file, or a name, which is
+looked up as <code>boomstick/hosts/&lt;name&gt;.env</code> on the stick&rsquo;s config
+partition &ndash; handy when the machine has no route to your git server.</p>
+<p>The only answer it re-checks is the disk. A <code>by-id</code> name belongs to
+one physical drive, so a reinstall onto a new drive &ndash; the usual
+reason for reinstalling &ndash; has to pick again.</p>
+<div class="box notice notice-warning"><div class="label">No secrets in the host repo</div>
+  <div class="body">
+<p>The host repo is meant to be pushed to a git remote, so it holds no
+secrets. Passwords are asked for during <code>setup install</code> and written
+nowhere else. WiFi passphrases are copied from the live system into
+the target, never into the repo. The SSH keys it does hold are
+<em>public</em> keys. Even so, make any remote you push it to private: it
+describes your machine in detail.</p>
+  </div>
+</div>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

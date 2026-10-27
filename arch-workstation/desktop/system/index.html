@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>The system · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/desktop/" aria-label="Previous: desktop" title="prev: desktop"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/desktop/sway-home/" aria-label="Next: sway-home" title="next: sway-home"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/desktop/">desktop</a><ul><li class="lvl1"><a href="#">system</a></li><li class="lvl2"><a href="#packages">Packages</a></li><li class="lvl2"><a href="#units">Units</a></li><li class="lvl2"><a href="#files">Files</a></li><li class="lvl2"><a href="#apply">Apply</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a><ul class="sections"><li><a class="active" href="/arch-workstation/desktop/system/">system</a></li><li><a class="" href="/arch-workstation/desktop/sway-home/">sway-home</a></li></ul></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/desktop/">/desktop</a><a class="pseg pcur" href="/arch-workstation/desktop/system/">/system</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">The system</a></h1>
+
+
+<p>Everything on this page is an edit to the host repo, made as <code>admin</code>,
+followed by <code>admin apply</code>. The same files are in BOOMSTICK&rsquo;s
+<a href="https://github.com/EnigmaCurry/boomstick/tree/setup/desktop">desktop/</a> directory, which the test VM uses.</p>
+<h2 id="packages"><a class="heading-anchor" href="#packages">Packages</a></h2>
+<p>Add a block to <code>packages.txt</code>:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/packages.txt</div>
+    <div class="body"><pre>
+# Desktop: sway and what it needs from the system. The rest of the
+# desktop -- terminal, bar, launcher, firefox, fonts, dotfiles -- comes
+# from Nix, with Home Manager and sway-home.
+nix
+sway swaylock swayidle kanshi xdg-desktop-portal-wlr
+pipewire pipewire-pulse pipewire-jack wireplumber pamixer playerctl brightnessctl
+greetd greetd-tuigreet polkit
+noto-fonts just
+</pre></div>
+</div>
+
+<ul>
+<li><strong>sway</strong>, <strong>swaylock</strong> and <strong>swayidle</strong> are the compositor, the screen
+locker and the idle watcher that starts it. <strong>kanshi</strong> switches
+display layouts when monitors come and go.</li>
+<li><strong>xdg-desktop-portal-wlr</strong> lets sandboxed programs and browsers share
+the screen.</li>
+<li><strong>PipeWire</strong> is the sound server, with <strong>pipewire-pulse</strong> standing in
+for PulseAudio so that <code>pactl</code> and <code>pamixer</code> &ndash; which sway-home&rsquo;s
+volume keys call &ndash; work, and <strong>pipewire-jack</strong> standing in for JACK.
+<strong>WirePlumber</strong> decides which device is which. <strong>playerctl</strong> and <strong>brightnessctl</strong> are the media and brightness
+keys.</li>
+<li><strong>greetd</strong> with <strong>tuigreet</strong> is the login screen: a text prompt on the
+first console that starts sway once you have logged in.</li>
+<li><strong>polkit</strong> lets programs ask for privileges without being run as
+root.</li>
+<li><strong>noto-fonts</strong> is the font the system&rsquo;s own programs draw with &ndash;
+sway&rsquo;s title bars, swaylock &ndash; named because something among them
+asks for <em>a</em> font (see below). <strong>just</strong> runs sway-home&rsquo;s install
+recipe.</li>
+</ul>
+<div class="box notice notice-info"><div class="label">Name the providers</div>
+  <div class="body">
+<p><code>pipewire-jack</code> and <code>noto-fonts</code> are there because something else
+needs <em>a</em> JACK and <em>a</em> font, and more than one package provides each.
+Run by hand, <code>admin apply</code> lets pacman ask you which; <code>admin apply --yes</code> cannot answer that question and loops on it. Naming the one
+you want in <code>packages.txt</code> means nobody has to be asked &ndash; and it is
+what aconfmgr&rsquo;s documentation recommends anyway.</p>
+  </div>
+</div>
+<ul>
+<li><strong>nix</strong> is the package manager Home Manager needs. Arch packages it,
+and so does Arch Linux ARM, so there is no installer script to
+download and nothing outside pacman&rsquo;s view.</li>
+</ul>
+<h2 id="units"><a class="heading-anchor" href="#units">Units</a></h2>
+<p>Add two lines to <code>units.txt</code>:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/units.txt</div>
+    <div class="body"><pre>
+nix-daemon.socket
+greetd
+</pre></div>
+</div>
+
+<p><code>nix-daemon.socket</code> starts the Nix daemon the first time someone uses
+<code>nix</code>. Arch&rsquo;s package leaves the socket open to every user, so <code>user</code>
+needs no group membership to use it.</p>
+<p><code>greetd</code> replaces the plain text login on the first console:
+<code>greetd.service</code> declares <code>Conflicts=getty@tty1.service</code>, so enabling
+it is all it takes. It also becomes <code>display-manager.service</code>.</p>
+<h2 id="files"><a class="heading-anchor" href="#files">Files</a></h2>
+<p>Nix needs flakes turned on, which Home Manager uses. The file replaces
+the one the package installs, so it keeps that one&rsquo;s single setting:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/etc/nix/nix.conf</div>
+    <div class="body"><pre>
+build-users-group = nixbld
+experimental-features = nix-command flakes
+</pre></div>
+</div>
+
+<p>greetd needs to be told to start tuigreet, and tuigreet to start sway:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/etc/greetd/config.toml</div>
+    <div class="body"><pre>
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --time --remember --asterisks --cmd sway"
+user = "greeter"
+</pre></div>
+</div>
+
+<p><code>--remember</code> fills in the last user who logged in.</p>
+<h2 id="apply"><a class="heading-anchor" href="#apply">Apply</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ~/arch add -A
+git -C ~/arch commit -m &#34;Desktop: sway, greetd, Nix&#34;
+admin apply
+sudo systemctl reboot
+</pre></div>
+</div>
+
+
+<p><code>admin apply</code> installs the packages, puts the two files in place and
+enables the units, after showing you each change. It goes round
+twice: <code>nix-daemon.socket</code> and <code>greetd</code> do not exist until their
+packages are installed, so the first pass installs them and a second
+enables them, announced as <code>Enabling units from newly installed packages</code>. snap-pac snapshots
+the transaction like any other. The reboot is what starts greetd and
+the Nix daemon socket. Afterwards the console shows tuigreet instead
+of a login prompt; SSH as <code>admin</code> is unchanged.</p>
+<p>Run <code>admin diff</code> once more. It should find no drift: the Nix store is
+on its own subvolume, <code>@nix</code>, mounted at <code>/nix</code>, which <code>setup disk</code>
+made for this and <code>90-ignore.sh</code> ignores. That also keeps the store &ndash;
+which can grow to many gigabytes &ndash; out of the snapshots of <code>/</code>.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

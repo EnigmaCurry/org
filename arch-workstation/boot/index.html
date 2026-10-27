@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Boot the stick and connect · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/boomstick/internals/" aria-label="Previous: internals" title="prev: internals"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/boot/ssh/" aria-label="Next: ssh" title="next: ssh"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/">arch-workstation</a><ul><li class="lvl1"><a href="#">boot</a></li><li class="lvl2"><a href="#plug-in-and-power-on">Plug in and power on</a></li><li class="lvl2"><a href="#getting-the-machine-to-boot-from-usb">Getting the machine to boot from USB</a></li><li class="lvl2"><a href="#wait-for-the-notification">Wait for the notification</a></li><li class="lvl2 page"><a href="/arch-workstation/boot/ssh/">Connect over SSH</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node open">
+                  <a class="active" href="/arch-workstation/boot/">boot</a><ul class="sections"><li><a class="" href="/arch-workstation/boot/ssh/">ssh</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg pcur" href="/arch-workstation/boot/">/boot</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Boot the stick and connect</a></h1>
+
+
+<p>This chapter takes you from a machine with no operating system on it
+to a root shell on that machine, reached over SSH from the computer
+you are already sitting at. Nothing is written to the target&rsquo;s disk
+here. The live system runs entirely in RAM, so everything in this
+chapter is reversible by pulling the power.</p>
+<p>What you need before starting:</p>
+<ul>
+<li>A <a href="/arch-workstation/boomstick">BOOMSTICK</a>, written and filled in as in the previous chapter.
+It carries <code>setup</code>, which the rest of the book uses.</li>
+<li>The target machine, with power and a network connection.</li>
+<li>Your own workstation, with an SSH client.</li>
+</ul>
+<h2 id="plug-in-and-power-on"><a class="heading-anchor" href="#plug-in-and-power-on">Plug in and power on</a></h2>
+<p>Plug the stick into the target machine. Connect ethernet if you have
+it &ndash; wired is preferred automatically when both are available &ndash;
+otherwise make sure the machine is in range of one of the WiFi
+networks you put on the stick. Then power it on.</p>
+<p>You do not need a monitor or a keyboard. There is no boot menu to
+answer and no prompt to type into.</p>
+<h2 id="getting-the-machine-to-boot-from-usb"><a class="heading-anchor" href="#getting-the-machine-to-boot-from-usb">Getting the machine to boot from USB</a></h2>
+<p>The one thing that may need a monitor, exactly once, is convincing
+the machine&rsquo;s firmware to boot the stick at all.</p>
+<p>On an <strong>x86_64 PC</strong>, most firmware offers a one-time boot device menu,
+usually behind <code>F12</code>, <code>F11</code>, <code>F8</code> or <code>ESC</code> during power-on &ndash; the key
+varies by manufacturer. Pick the USB device from that menu, or enter
+the firmware setup and move USB ahead of the internal disk in the
+boot order permanently. Set it permanently if you expect to reinstall
+this machine again.</p>
+<div class="box notice notice-warning"><div class="label">UEFI only</div>
+  <div class="body">
+<p>This book installs UEFI systems. If the machine&rsquo;s firmware is set to
+legacy BIOS or &ldquo;CSM&rdquo; mode, switch it to UEFI before going any
+further, because <code>setup</code> installs systemd-boot onto an EFI System
+Partition. <code>setup disk</code> checks which mode you actually booted in,
+and refuses to touch the disk if it was legacy BIOS.</p>
+  </div>
+</div>
+<p>On a <strong>Raspberry Pi 5</strong> there is no boot menu, and the factory boot
+order works against you. The default is <code>BOOT_ORDER=0xf461</code>, which
+tries the SD card, then NVMe, then USB &ndash; so a Pi with a bootable
+NVMe drive never reaches the stick at all.</p>
+<p>Remove any SD card before powering on. If the machine also has an
+NVMe drive you cannot simply unplug, change the boot order once, from
+whatever system you can currently boot on that Pi:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the Raspberry Pi:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+rpi-eeprom-config --edit     # set BOOT_ORDER=0xf641, then reboot
+</pre></div>
+</div>
+
+
+<p>Those numbers are easier to read once you know the trick: each hex
+digit names one boot device, and the Pi works through them <strong>right to
+left</strong>. <code>1</code> is the SD card, <code>4</code> is USB, <code>6</code> is NVMe, and the leading
+<code>f</code> means &ldquo;start the list over again&rdquo;.</p>
+<p>So the factory <code>0xf461</code> is SD → NVMe → USB, and <code>0xf641</code> is SD → USB
+→ NVMe: the same three devices, with USB promoted above NVMe.</p>
+<p>The setting lives in the Pi&rsquo;s EEPROM, so you only do this once. With
+the stick removed, the Pi goes back to booting its NVMe as usual.</p>
+<h2 id="wait-for-the-notification"><a class="heading-anchor" href="#wait-for-the-notification">Wait for the notification</a></h2>
+<p>If you set a webhook URL on the stick, the live system posts to it
+once the network is up and WireGuard has either connected or given up:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+boomstick is up (boomstick 2026.10.24)
+LAN: 192.168.1.50/24 on enp1s0
+Public: 203.0.113.4
+WireGuard: 10.0.0.2/32 on wg0 (handshake 3s ago)
+</pre></div>
+</div>
+
+<p>That message is how you learn the machine is ready and where it
+landed. If WireGuard failed, the last line says why instead, which is
+considerably more useful than silence.</p>
+<p>Without a webhook, you already know where to find it: the stick&rsquo;s
+WireGuard address is fixed, set by you when you provisioned it, and
+it is the same on every machine you plug the stick into. Give it
+thirty seconds or so after power-on and try to connect.</p>
+<div class="box notice notice-tip"><div class="label">tip</div>
+  <div class="body">
+<p>If the network did not come up and you are working at the console
+instead, everything from the next chapter onward is identical: log in
+as root and run <code>setup</code> there. Only the <a href="/arch-workstation/boot/ssh">Connect over SSH</a> page is
+specific to the headless path.</p>
+<p><code>setup</code> is a single script, so the official <a href="https://archlinux.org/download/">Arch Linux ISO</a> can run it
+too, once you copy it across. That path is not tested.</p>
+  </div>
+</div>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

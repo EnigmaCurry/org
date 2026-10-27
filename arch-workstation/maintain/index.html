@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Keeping it maintainable · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/setup/check/" aria-label="Previous: check" title="prev: check"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/maintain/diff/" aria-label="Next: diff" title="next: diff"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/">arch-workstation</a><ul><li class="lvl1"><a href="#">maintain</a></li><li class="lvl2"><a href="#what-aconfmgr-looks-at">What aconfmgr looks at</a></li><li class="lvl2"><a href="#what-is-ignored-and-why">What is ignored, and why</a></li><li class="lvl2"><a href="#push-it-somewhere">Push it somewhere</a></li><li class="lvl2 page"><a href="/arch-workstation/maintain/diff/">See what drifted</a></li><li class="lvl2 page"><a href="/arch-workstation/maintain/save/">Save and apply</a></li><li class="lvl2 page"><a href="/arch-workstation/maintain/upgrade/">Upgrade</a></li><li class="lvl2 page"><a href="/arch-workstation/maintain/snapshots/">Snapshots</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node open">
+                  <a class="active" href="/arch-workstation/maintain/">maintain</a><ul class="sections"><li><a class="" href="/arch-workstation/maintain/diff/">diff</a></li><li><a class="" href="/arch-workstation/maintain/save/">save</a></li><li><a class="" href="/arch-workstation/maintain/upgrade/">upgrade</a></li><li><a class="" href="/arch-workstation/maintain/snapshots/">snapshots</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg pcur" href="/arch-workstation/maintain/">/maintain</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Keeping it maintainable</a></h1>
+
+
+<p>The introduction made a promise about Arch: the running system is the
+source of truth, it drifts, and nothing but your own discipline
+records how it got that way. This chapter is that discipline, written
+down as a git repository and one command, so that it does not have to
+live in your head.</p>
+<p>Log in as <code>admin</code>. The host repo that <code>setup</code> built the machine from
+is already there:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+cd ~/arch
+git log --oneline
+</pre></div>
+</div>
+
+
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+3f9c2e1 setup install: myhost (x86_64 PC, UEFI)
+a14b07d setup host: myhost
+</pre></div>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Holds</th>
+<th>Changed by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>host.env</code></td>
+<td>The install answers</td>
+<td>You, rarely</td>
+</tr>
+<tr>
+<td><code>packages.txt</code></td>
+<td>Every package you asked for, beyond the base set</td>
+<td>You</td>
+</tr>
+<tr>
+<td><code>units.txt</code></td>
+<td>Every unit you enabled</td>
+<td>You</td>
+</tr>
+<tr>
+<td><code>etc/</code></td>
+<td>Your files under <code>/etc</code></td>
+<td>You</td>
+</tr>
+<tr>
+<td><code>bin/admin</code></td>
+<td>The <code>admin</code> command itself</td>
+<td>Nobody, usually</td>
+</tr>
+<tr>
+<td><code>authorized_keys</code></td>
+<td>Public keys <code>admin</code> accepts</td>
+<td>You</td>
+</tr>
+<tr>
+<td><code>aconfmgr/</code></td>
+<td>The same, in aconfmgr&rsquo;s terms, plus what to ignore</td>
+<td>Nobody, usually</td>
+</tr>
+<tr>
+<td><code>aconfmgr/10-base.sh</code></td>
+<td>The base packages <code>setup</code> picked for this hardware</td>
+<td><code>setup install</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>admin</code> runs <a href="https://github.com/CyberShadow/aconfmgr">aconfmgr</a> against <code>~/arch/aconfmgr</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Direction</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/arch-workstation/maintain/diff">admin diff</a></td>
+<td>look only</td>
+<td>Lists every difference between the machine and the repo</td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/maintain/save">admin save</a></td>
+<td>machine → repo</td>
+<td>Writes the machine&rsquo;s drift into the repo, for you to sort and commit</td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/maintain/save">admin apply</a></td>
+<td>repo → machine</td>
+<td>Makes the machine match the repo, removals included</td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/maintain/upgrade">admin upgrade</a></td>
+<td>both</td>
+<td>Refuses on drift, <code>pacman -Syu</code>, apply, reports <code>.pacnew</code> files</td>
+</tr>
+<tr>
+<td><code>admin git ...</code></td>
+<td>the repo itself</td>
+<td>Runs git in the host repo, from wherever you are</td>
+</tr>
+</tbody>
+</table>
+<p><code>admin git</code> saves remembering where the repo lives: <code>admin git log</code>,
+<code>admin git commit -am &quot;...&quot;</code>, <code>admin git push</code>, from any directory.
+Everything after <code>git</code> is handed to git untouched, and git&rsquo;s exit
+status comes back, so <code>admin git diff --quiet</code> still works as a test.</p>
+<p><code>admin help</code> prints the same list. Every command takes aconfmgr&rsquo;s own
+options after it: <code>--yes</code> answers its questions, <code>--skip-checksums</code>
+skips comparing package files with their checksums, which is much
+faster but misses edits to files that packages own.</p>
+<h2 id="what-aconfmgr-looks-at"><a class="heading-anchor" href="#what-aconfmgr-looks-at">What aconfmgr looks at</a></h2>
+<p>aconfmgr knows the whole system, not only what you told it about. It
+lists the packages installed <em>explicitly</em> (<code>pacman -Qe</code>; dependencies
+come and go with them and are never listed), every file on the
+system that no package owns, and every file a package owns that has
+changed since it was installed. Anything in that list that the
+configuration does not describe, or that the configuration describes
+and the machine lacks, is drift.</p>
+<p>A fresh install has no drift. That is not an accident of a new
+system &ndash; a fresh Arch install is full of files no package owns &ndash; but
+the result of <code>~/arch/aconfmgr/</code>, which accounts for all of them:</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Describes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>00-helpers.sh</code></td>
+<td>The helpers the others use, including one that works out the links <code>systemctl enable</code> makes</td>
+</tr>
+<tr>
+<td><code>10-base.sh</code></td>
+<td>The base packages for this hardware (written by <code>setup install</code>)</td>
+</tr>
+<tr>
+<td><code>20-host.sh</code></td>
+<td>What <code>setup</code> wrote from <code>host.env</code>: hostname, locale, keymap, time zone, <code>resolv.conf</code></td>
+</tr>
+<tr>
+<td><code>30-repo.sh</code></td>
+<td><code>packages.txt</code>, the files under <code>etc/</code> and <code>bin/</code>, and the units in <code>units.txt</code></td>
+</tr>
+<tr>
+<td><code>40-system.sh</code></td>
+<td>What packages and boot leave behind: units they enable, directories they make, aconfmgr&rsquo;s links</td>
+</tr>
+<tr>
+<td><code>90-ignore.sh</code></td>
+<td>What is not configuration at all</td>
+</tr>
+</tbody>
+</table>
+<p>They are bash, read by aconfmgr in order. <code>20-host.sh</code> and
+<code>30-repo.sh</code> do not copy anything: they <em>read</em> <code>host.env</code>,
+<code>packages.txt</code>, <code>units.txt</code>, <code>etc/</code> and <code>bin/</code>, so those stay the
+files you edit and aconfmgr follows them. Adding a package is still a
+line in <code>packages.txt</code>.</p>
+<h2 id="what-is-ignored-and-why"><a class="heading-anchor" href="#what-is-ignored-and-why">What is ignored, and why</a></h2>
+<p><code>90-ignore.sh</code> lists what aconfmgr should not report:</p>
+<ul>
+<li><strong>What <code>setup</code> owns</strong>: <code>/boot</code> (the bootloader, kernel and initramfs,
+rewritten by pacman hooks) and <code>/etc/fstab</code> (UUIDs of this disk).</li>
+<li><strong>Accounts</strong>: <code>/etc/passwd</code>, <code>group</code>, <code>shadow</code> and friends. <code>setup</code>
+makes the accounts, and password hashes never go into the repo.</li>
+<li><strong>Secrets and identity</strong>: SSH host keys, <code>/etc/machine-id</code>, pacman&rsquo;s
+keyring.</li>
+<li><strong>Generated files</strong>: the CA bundle, <code>ld.so.cache</code>, module and hardware
+databases, the locale archive, the mirror list.</li>
+<li><strong>State</strong>: <code>/var/lib</code>, <code>/var/log</code>, <code>/var/tmp</code>, <code>/swap</code>, <code>/.snapshots</code>,
+the Nix store (<code>/nix</code>), and aconfmgr&rsquo;s own checkout.</li>
+</ul>
+<p>aconfmgr already ignores <code>/home</code>, <code>/root</code>, <code>/tmp</code>, <code>/var/cache</code> and
+the pseudo-filesystems. When something new shows up that is state
+rather than configuration &ndash; a database a service keeps under <code>/srv</code>,
+say &ndash; the fix is a line here, with its reason:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: ~/arch/aconfmgr/90-ignore.sh</div>
+    <div class="body"><pre>
+# The music server's library database.
+IgnorePath '/srv/music/*.db'
+</pre></div>
+</div>
+
+<p>Quote the pattern, or bash expands it before aconfmgr sees it.</p>
+<h2 id="push-it-somewhere"><a class="heading-anchor" href="#push-it-somewhere">Push it somewhere</a></h2>
+<p>The host repo is the only record of this machine that exists off its
+own disk &ndash; or it will be, once you push it. The next reinstall starts
+from it with <code>setup host --from</code>. Make it a <strong>private</strong> repository: it
+holds no secrets, but it describes your machine in detail.</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the new machine:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git -C ~/arch remote add origin git@git.example.com:you/arch-myhost.git
+git -C ~/arch push -u origin main
+</pre></div>
+</div>
+
+
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

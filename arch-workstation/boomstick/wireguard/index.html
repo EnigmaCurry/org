@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Configure WireGuard · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/boomstick/secrets/" aria-label="Previous: secrets" title="prev: secrets"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/boomstick/provision/" aria-label="Next: provision" title="next: provision"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/boomstick/">boomstick</a><ul><li class="lvl1"><a href="#">wireguard</a></li><li class="lvl2"><a href="#give-the-stick-its-own-peer">Give the stick its own peer</a></li><li class="lvl2"><a href="#why-the-keepalive-matters">Why the keepalive matters</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a><ul class="sections"><li><a class="" href="/arch-workstation/boomstick/build/">build</a></li><li><a class="" href="/arch-workstation/boomstick/secrets/">secrets</a></li><li><a class="active" href="/arch-workstation/boomstick/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/boomstick/provision/">provision</a></li><li><a class="" href="/arch-workstation/boomstick/internals/">internals</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/boomstick/">/boomstick</a><a class="pseg pcur" href="/arch-workstation/boomstick/wireguard/">/wireguard</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Configure WireGuard</a></h1>
+
+
+<p>WireGuard is optional. Without it, the stick still boots, joins your
+WiFi and accepts your SSH keys &ndash; it is simply reachable only on
+whatever LAN it lands on, at whatever address DHCP gave it. That is
+perfectly workable when the target machine is sitting on your own
+network.</p>
+<p>What the tunnel buys you is a <strong>fixed</strong> address that does not depend on
+which network the machine is plugged into. The stick answers at the
+same WireGuard address on every network and in every machine, so you
+can <code>ssh boomstick</code> without discovering anything first, and you can
+install a machine that is nowhere near you.</p>
+<div class="box notice notice-info"><div class="label">Skipping it</div>
+  <div class="body">
+<p>To leave WireGuard out, just leave <code>secrets/wireguard/wg0.conf</code> as
+the template generated it. <code>just provision</code> prints a warning that
+there is no WireGuard and carries on.</p>
+<p>If you <em>do</em> fill it in, it has to be complete: provision refuses a
+<code>wg0.conf</code> with no <code>PrivateKey</code>, or one with no
+<code>PersistentKeepalive</code>, rather than handing you a stick that cannot
+phone home.</p>
+  </div>
+</div>
+<h2 id="give-the-stick-its-own-peer"><a class="heading-anchor" href="#give-the-stick-its-own-peer">Give the stick its own peer</a></h2>
+<p>The stick is a WireGuard client &ndash; a <em>spoke</em> &ndash; of a server you
+already run. Most VPN servers and routers will provision a client for
+you: you add a new peer on the server, and it hands you a ready-made
+config with the client&rsquo;s private key, its address, and the server&rsquo;s
+public key and endpoint.</p>
+<div class="box notice notice-info"><div class="label">If you do not have a server yet</div>
+  <div class="body">
+<p>Standing up the hub is out of scope for this book, and will
+eventually get a book of its own. In the meantime, my
+<a href="https://github.com/EnigmaCurry/nixos-vm-template">nixos-vm-template</a> has a <code>wireguard</code> profile that does it:
+<code>just wireguard &lt;hub&gt;</code> mints the hub and a config for every peer, and
+<a href="https://github.com/EnigmaCurry/nixos-vm-template/blob/master/WIREGUARD.md">WIREGUARD.md</a> walks through the whole thing.</p>
+<p>Add the stick there as an ordinary spoke, and treat it as the
+wizard&rsquo;s &ldquo;generic Linux client&rdquo; case. The <code>.conf</code> it generates
+already carries the <code>AllowedIPs</code> and <code>PersistentKeepalive = 25</code> lines
+the stick requires; the only difference is that it goes into
+<code>secrets/wireguard/wg0.conf</code> here, instead of straight into
+<code>/etc/wireguard/wg0.conf</code> on a running machine.</p>
+  </div>
+</div>
+<p>Give the stick a peer of its own &ndash; do not reuse your laptop&rsquo;s &ndash; and
+paste that config in:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: secrets/wireguard/wg0.conf</div>
+    <div class="body"><pre>
+[Interface]
+PrivateKey = <the stick's private key>
+Address = 10.0.0.2/32
+
+[Peer]
+PublicKey = <your server's public key>
+Endpoint = vpn.example.com:51820
+AllowedIPs = 10.0.0.0/24
+PersistentKeepalive = 25
+</pre></div>
+</div>
+
+<p>If your server does not provision clients for you, <code>just keygen</code>
+makes a fresh key pair for the stick. Put the private key in
+<code>wg0.conf</code>, and add the public key to your server as a new peer, with
+<code>AllowedIPs</code> set to the stick&rsquo;s address (<code>10.0.0.2/32</code> here).</p>
+<h2 id="why-the-keepalive-matters"><a class="heading-anchor" href="#why-the-keepalive-matters">Why the keepalive matters</a></h2>
+<p>Check that the config has a <code>PersistentKeepalive</code> line, and add one
+if your server left it out. The stick is the one behind NAT, usually
+on some network you do not control, so it has to keep the tunnel open
+itself. Without the keepalive, the server cannot reach the stick
+until the stick happens to send it something &ndash; and you cannot SSH
+in.</p>
+<p>The <code>Endpoint</code> may be a DNS name: the tunnel keeps retrying until it
+resolves, which helps when the stick boots before the network is
+fully up. If you want to resolve names through the VPN, a <code>DNS</code> line
+works too.</p>
+<p>With the configuration written, <a href="/arch-workstation/boomstick/provision">Provision the stick</a> copies it onto
+the stick itself.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

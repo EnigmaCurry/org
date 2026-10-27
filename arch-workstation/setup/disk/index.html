@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Prepare the disk · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/setup/host/" aria-label="Previous: host" title="prev: host"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/setup/install/" aria-label="Next: install" title="next: install"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/setup/">setup</a><ul><li class="lvl1"><a href="#">disk</a></li><li class="lvl2"><a href="#what-it-builds">What it builds</a></li><li class="lvl2"><a href="#run-it">Run it</a></li><li class="lvl2"><a href="#with-encryption">With encryption</a></li><li class="lvl2"><a href="#running-it-again">Running it again</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/setup/">setup</a><ul class="sections"><li><a class="" href="/arch-workstation/setup/host/">host</a></li><li><a class="active" href="/arch-workstation/setup/disk/">disk</a></li><li><a class="" href="/arch-workstation/setup/install/">install</a></li><li><a class="" href="/arch-workstation/setup/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/setup/check/">check</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/setup/">/setup</a><a class="pseg pcur" href="/arch-workstation/setup/disk/">/disk</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Prepare the disk</a></h1>
+
+
+<p>This is the first step that writes to the target machine. Up to now
+everything lived in RAM and a power cycle undid it; this step
+destroys whatever was on the disk you picked.</p>
+<h2 id="what-it-builds"><a class="heading-anchor" href="#what-it-builds">What it builds</a></h2>
+<p>A single GPT disk with two partitions:</p>
+<table>
+<thead>
+<tr>
+<th>Partition</th>
+<th>Size</th>
+<th>Format</th>
+<th>Mounted at</th>
+<th>Holds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>1 GiB</td>
+<td>FAT32</td>
+<td><code>/boot</code></td>
+<td>The bootloader, kernel and initramfs</td>
+</tr>
+<tr>
+<td>2</td>
+<td>rest</td>
+<td>btrfs</td>
+<td><code>/</code> etc.</td>
+<td>Everything else, optionally encrypted</td>
+</tr>
+</tbody>
+</table>
+<p>The same two partitions serve both architectures, for different
+reasons. On an x86_64 PC the first is the <strong>EFI System Partition</strong> the
+firmware reads. On a Raspberry Pi 5 it is the <strong>firmware partition</strong>,
+where the Pi&rsquo;s bootloader expects <code>config.txt</code>, the kernel and the
+device trees; the Pi ignores partition type codes and simply uses the
+first FAT partition. A gibibyte is far more than one kernel needs, and
+that is the point: boot partitions that are too small are a well-worn
+regret.</p>
+<p>Everything else goes on btrfs, split into <strong>subvolumes</strong>. A subvolume is
+an independently mountable tree inside one filesystem: they all draw
+from the same free space, so there is no sizing decision to regret,
+but each can be snapshotted, mounted or rolled back on its own.</p>
+<table>
+<thead>
+<tr>
+<th>Subvolume</th>
+<th>Mounted at</th>
+<th>Why it is separate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@</code></td>
+<td><code>/</code></td>
+<td>The system itself &ndash; the thing you roll back</td>
+</tr>
+<tr>
+<td><code>@home</code></td>
+<td><code>/home</code></td>
+<td>Your data, which must <em>survive</em> a rollback of the system</td>
+</tr>
+<tr>
+<td><code>@snapshots</code></td>
+<td><code>/.snapshots</code></td>
+<td>Where snapshots are kept; cannot live inside <code>@</code></td>
+</tr>
+<tr>
+<td><code>@log</code></td>
+<td><code>/var/log</code></td>
+<td>Logs of what went wrong should outlive the rollback</td>
+</tr>
+<tr>
+<td><code>@pkg</code></td>
+<td><code>/var/cache/pacman/pkg</code></td>
+<td>A re-downloadable cache, not worth snapshotting</td>
+</tr>
+<tr>
+<td><code>@swap</code></td>
+<td><code>/swap</code></td>
+<td>A swapfile cannot sit on a subvolume that gets snapshotted</td>
+</tr>
+<tr>
+<td><code>@nix</code></td>
+<td><code>/nix</code></td>
+<td>The Nix store, if you install the <a href="/arch-workstation/desktop">desktop</a>: big, and Nix&rsquo;s own</td>
+</tr>
+</tbody>
+</table>
+<p>Every subvolume except <code>@swap</code> is mounted <code>noatime,compress=zstd:1</code>.
+<code>noatime</code> stops a write on every <em>read</em>, which is pure write
+amplification on a workstation. zstd at level 1 is fast enough to be
+effectively free, while higher levels cost noticeably more CPU for a
+few percent more space. <code>@swap</code> is mounted without compression,
+because a swapfile must be a plain, uncompressed, un-copy-on-write
+extent.</p>
+<h2 id="run-it"><a class="heading-anchor" href="#run-it">Run it</a></h2>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup disk
+</pre></div>
+</div>
+
+
+<p>It reads the host file and shows you what it is about to destroy
+before it destroys it:</p>
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">================</span> Review <span style="color:#f92672">=================</span>
+</span></span><span style="display:flex;"><span>Host:         myhost
+</span></span><span style="display:flex;"><span>Disk:         /dev/disk/by-id/nvme-XP1000F256G_2213E5A1B2C3
+</span></span><span style="display:flex;"><span>              <span style="color:#f92672">(</span>nvme0n1 238.5G XP1000F256G<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Currently:    <span style="color:#ae81ff">2</span> partition<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span>: nvme0n1p1 vfat ESP; nvme0n1p2 btrfs arch;
+</span></span><span style="display:flex;"><span>Will create:  1G ESP <span style="color:#f92672">(</span>vfat<span style="color:#f92672">)</span> + rest btrfs, no encryption
+</span></span><span style="display:flex;"><span>Subvolumes:   @ @home @snapshots @log @pkg @swap @nix
+</span></span><span style="display:flex;"><span>Swap:         8g swapfile
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=========================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>This ERASES /dev/nvme0n1. Type the hostname to <span style="color:#66d9ef">continue</span>: myhost
+</span></span></code></pre></div><p>The <code>Currently:</code> line is there so that you notice when the disk you
+picked is not the one you thought it was &ndash; on a machine you are
+operating blind, over SSH, from another room, it is worth being slower
+than feels necessary. Typing the hostname rather than <code>y</code> is
+deliberate friction, and <code>--yes</code> does not answer it. To script it,
+pass <code>--confirm-wipe myhost</code>.</p>
+<p>Before it gets this far, <code>setup disk</code> refuses to run at all if the
+machine booted in legacy BIOS mode, if any partition on the disk is
+mounted or in use as swap, or if the disk is the stick itself.</p>
+  </div>
+</div>
+<p>Then it runs, echoing each command as it goes:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
++ sgdisk --zap-all /dev/nvme0n1
++ sgdisk --clear --new=1:0:+1G --typecode=1:ef00 --change-name=1:ESP --new=2:0:0 --typecode=2:8300 --change-name=2:root /dev/nvme0n1
++ partprobe /dev/nvme0n1
++ udevadm settle
++ wipefs --all --quiet /dev/nvme0n1p1 /dev/nvme0n1p2
++ mkfs.fat -F32 -n ESP /dev/nvme0n1p1
++ mkfs.btrfs --quiet -L arch /dev/nvme0n1p2
++ mount /dev/nvme0n1p2 /mnt
++ btrfs subvolume create /mnt/@
+  ... six more subvolumes, then umount /mnt and the eight mounts
++ btrfs filesystem mkswapfile --size 8g --uuid clear /mnt/swap/swapfile
++ swapon /mnt/swap/swapfile
+
+✓ disk       8 mounts under /mnt, 8g swap active
+Next: setup install
+</pre></div>
+</div>
+
+<p>Reading it across:</p>
+<ul>
+<li><code>sgdisk --zap-all</code> destroys the old GPT <em>and</em> any leftover MBR.
+<code>--new=1:0:+1G</code> makes partition 1 a gibibyte from the first aligned
+sector, <code>--new=2:0:0</code> gives partition 2 the rest, and the type codes
+mark them as an EFI System Partition (<code>ef00</code>) and a Linux
+filesystem (<code>8300</code>).</li>
+<li><code>wipefs</code> is the step most install guides leave out. The new
+partitions start exactly where the old ones did, so on a reinstall
+the old btrfs signature is still sitting at the start of partition
+2, and <code>mkfs.btrfs</code> refuses to format over it.</li>
+<li>The filesystem labels (<code>ESP</code>, <code>arch</code>) are a convenience: they make
+<code>lsblk</code> readable.</li>
+<li>The subvolumes are created at the top level of the filesystem,
+which is then unmounted and never used again except as their
+container. <code>@</code> is mounted first, because the mount points for the
+others are directories inside it.</li>
+<li>The ESP is mounted <code>fmask=0077,dmask=0077</code>, readable by root only,
+and <code>genfstab</code> carries that into the fstab. FAT has no permissions
+of its own, and with the default masks systemd-boot&rsquo;s random seed
+is world-readable, which <code>bootctl</code> reports at every boot as &ldquo;a
+security hole&rdquo;.</li>
+<li>The swap is turned on now, not just created, for two reasons: on a
+low-memory machine it is what keeps the install from running out,
+and the fstab is generated from what is <em>active</em>, so a swapfile that
+is not on would be silently left out of it.</li>
+</ul>
+<div class="box notice notice-info"><div class="label">Page size on the Raspberry Pi</div>
+  <div class="body">
+<p>On the Pi, <code>mkswapfile</code> reports <code>page size 16384</code> rather than <code>4096</code>,
+because <code>linux-rpi-16k</code> is built with 16 KiB pages. That is expected.
+It does leave one trap: a swapfile records the page size it was made
+with, and a kernel with a different page size refuses it. If you ever
+move this disk to a generic 4 KiB-page arm64 kernel, <code>swapon</code> fails
+with <code>Invalid argument</code>; delete the swapfile and make a new one.</p>
+  </div>
+</div>
+<h2 id="with-encryption"><a class="heading-anchor" href="#with-encryption">With encryption</a></h2>
+<p>If the host file says <code>ENCRYPT=yes</code>, two commands join the list before
+<code>mkfs.btrfs</code>:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
++ cryptsetup luksFormat --type luks2 --batch-mode --verify-passphrase /dev/nvme0n1p2
++ cryptsetup open /dev/nvme0n1p2 cryptroot
+</pre></div>
+</div>
+
+<p>The first asks you to set and confirm the passphrase; the second asks
+for it again to unlock the container, which makes
+<code>/dev/mapper/cryptroot</code> appear, and everything after that formats and
+mounts the mapper device instead of the partition. LUKS2&rsquo;s defaults
+are good ones &ndash; <code>aes-xts-plain64</code>, and <code>argon2id</code> as the key
+derivation function, which is memory-hard and therefore expensive to
+attack with GPUs &ndash; so <code>setup</code> does not choose any of them for you.</p>
+<div class="box notice notice-warning"><div class="label">The passphrase cannot be recovered</div>
+  <div class="body">
+<p>There is no backdoor and no reset. If you forget it, the data is
+gone &ndash; that is the entire purpose. Put it in a password manager
+before you reboot, not after.</p>
+  </div>
+</div>
+<h2 id="running-it-again"><a class="heading-anchor" href="#running-it-again">Running it again</a></h2>
+<p>If <code>/mnt</code> already holds the layout <code>setup disk</code> would build, it says
+so and touches nothing:</p>
+<div class="box notice stdout">
+    <div class="label">(stdout)</div>
+    <div class="body"><pre>
+/mnt already has the layout for myhost. Nothing to do.
+</pre></div>
+</div>
+
+<p>If the layout exists on the disk but is not mounted &ndash; the live system
+rebooted, or you are coming back to finish a half-done install &ndash;
+<code>--mount</code> puts it back without formatting, unlocking LUKS first if
+the host file says the disk is encrypted:</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup disk --mount
+</pre></div>
+</div>
+
+
+<p>That is also the rescue path for a machine that will not boot: boot
+the stick, run <code>setup host --from ...</code> and <code>setup disk --mount</code>, and
+<code>arch-chroot /mnt</code> puts you inside it.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

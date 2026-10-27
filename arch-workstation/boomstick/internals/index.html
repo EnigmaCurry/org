@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>How it works under the hood · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/boomstick/provision/" aria-label="Previous: provision" title="prev: provision"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/boot/" aria-label="Next: boot" title="next: boot"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/boomstick/">boomstick</a><ul><li class="lvl1"><a href="#">internals</a></li><li class="lvl2"><a href="#why-the-partition-label-matters">Why the partition label matters</a></li><li class="lvl2"><a href="#one-stick-two-architectures">One stick, two architectures</a></li><li class="lvl2"><a href="#how-each-half-finds-the-stick">How each half finds the stick</a></li><li class="lvl2"><a href="#how-the-combined-image-is-built">How the combined image is built</a></li><li class="lvl2"><a href="#where-to-go-next">Where to go next</a></li><li class="lvl2"><a href="#source-and-trademark">Source and trademark</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a><ul class="sections"><li><a class="" href="/arch-workstation/boomstick/build/">build</a></li><li><a class="" href="/arch-workstation/boomstick/secrets/">secrets</a></li><li><a class="" href="/arch-workstation/boomstick/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/boomstick/provision/">provision</a></li><li><a class="active" href="/arch-workstation/boomstick/internals/">internals</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/boomstick/">/boomstick</a><a class="pseg pcur" href="/arch-workstation/boomstick/internals/">/internals</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">How it works under the hood</a></h1>
+
+
+<p>There is very little magic involved. Early in boot &ndash; before iwd,
+WireGuard, sshd or the webhook start &ndash; a small service called
+<code>boomstick-config</code> finds the config partition and copies
+<code>boomstick/</code> into the live system, which runs entirely in RAM.
+Each file lands where the stock tools expect it, readable only by
+root:</p>
+<table>
+<thead>
+<tr>
+<th>On the stick</th>
+<th>In the live system</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wifi/*.psk</code></td>
+<td><code>/var/lib/iwd/</code></td>
+</tr>
+<tr>
+<td><code>wireguard/wg0.conf</code></td>
+<td><code>/etc/wireguard/wg0.conf</code></td>
+</tr>
+<tr>
+<td><code>ssh/authorized_keys</code></td>
+<td><code>/root/.ssh/authorized_keys</code></td>
+</tr>
+<tr>
+<td><code>webhook.env</code></td>
+<td><code>/etc/boomstick/webhook.env</code></td>
+</tr>
+<tr>
+<td><code>ssh/host/*</code></td>
+<td><code>/etc/ssh/</code></td>
+</tr>
+<tr>
+<td><code>bin/setup</code></td>
+<td><code>/usr/local/bin/setup</code></td>
+</tr>
+</tbody>
+</table>
+<p>Nothing else is ever written back to the stick. The one exception is
+the SSH host keys on the first boot: the partition is remounted
+read-write just long enough to save them, then read-only again. That
+is what keeps the fingerprint stable from one boot to the next.</p>
+<h2 id="why-the-partition-label-matters"><a class="heading-anchor" href="#why-the-partition-label-matters">Why the partition label matters</a></h2>
+<p>The service finds the partition by its <code>BOOMSTICK</code> label, and that
+label matters more than it looks. The Arch live system boots with
+<code>copytoram</code>: on a machine with enough memory, it copies itself into
+RAM and lets go of the boot partition before any of this runs. So the
+service cannot simply look at &ldquo;the partition I booted from&rdquo;; it
+searches for a filesystem labelled <code>BOOMSTICK</code>, mounts it, and
+unmounts it again.</p>
+<p>If you relabel the partition, the stick still boots &ndash; but
+unconfigured.</p>
+<p>A nice side effect is that the configuration does not have to be on
+the stick you booted from. Any FAT32 USB stick labelled <code>BOOMSTICK</code>
+with a <code>boomstick/</code> directory on it works too; start from a
+copy of the repo&rsquo;s <code>config-templates/</code>. Just do not plug in two of
+them at once, because the first one found wins.</p>
+<p>And a stick with no configuration at all still boots. It simply has
+no WiFi, no VPN, no SSH login and no webhook, and says so on the
+console.</p>
+<h2 id="one-stick-two-architectures"><a class="heading-anchor" href="#one-stick-two-architectures">One stick, two architectures</a></h2>
+<p>The combined image boots an x86_64 PC and a Raspberry Pi 5 from the
+same partition, which sounds like it ought to need something clever.
+It does not. There is one MBR disk image with a single FAT32
+partition on it, and the whole trick is that the two firmwares never
+look at the same files:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>config.txt cmdline.txt kernel8.img initramfs-linux.img *.dtb overlays/   # Pi 5 firmware
+</span></span><span style="display:flex;"><span>EFI/BOOT/BOOTx64.EFI  loader/  arch/boot/x86_64/                         # x86_64 UEFI (systemd-boot)
+</span></span><span style="display:flex;"><span>arch/x86_64/airootfs.sfs   arch/aarch64/airootfs.sfs                     # the two live systems
+</span></span><span style="display:flex;"><span>boomstick/                                                               # your configuration
+</span></span><span style="display:flex;"><span>boot/&lt;uuid&gt;.uuid                                                         # how each initramfs finds the stick
+</span></span></code></pre></div><p>The Pi&rsquo;s firmware reads only the top-level files. There is no boot
+loader on the Pi at all: the firmware itself loads <code>kernel8.img</code>, the
+initramfs and the device trees straight off the FAT partition, and
+takes its kernel command line from <code>cmdline.txt</code>. UEFI firmware, for
+its part, looks only in <code>EFI/</code> and <code>loader/</code>, where it finds
+systemd-boot. Neither one has any idea the other&rsquo;s files are sitting
+next to it.</p>
+<p>Once a kernel is running, its initramfs mounts
+<code>arch/&lt;its own architecture&gt;/airootfs.sfs</code>. That is why there are two
+<code>airootfs.sfs</code> files: they are two complete live systems, one per
+architecture, and each boot only ever touches one of them.</p>
+<h2 id="how-each-half-finds-the-stick"><a class="heading-anchor" href="#how-each-half-finds-the-stick">How each half finds the stick</a></h2>
+<p>archiso normally identifies the medium it booted from by the ISO&rsquo;s
+volume UUID &ndash; which a FAT32 stick does not have, because there is no
+ISO filesystem involved. So it falls back to a second method: it
+searches the attached disks for a file at <code>boot/&lt;uuid&gt;.uuid</code> and uses
+whichever one matches the UUID it was told to expect. The Pi gets
+told through <code>cmdline.txt</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>archisobasedir=arch archisosearchuuid=1234-5678 console=serial0,115200 console=tty1
+</span></span></code></pre></div><p>This is the same mechanism archiso provides for copying an ISO onto a
+FAT32 stick, used here for both halves.</p>
+<p>It is worth noticing that this is a <em>different</em> search from the one
+that finds <code>boomstick/</code>. The live system looks for its
+configuration by the <code>BOOMSTICK</code> filesystem label, as described
+above, because by then it may have let go of the boot device
+entirely. The two lookups are independent, which is exactly why the
+configuration can live on a second stick.</p>
+<h2 id="how-the-combined-image-is-built"><a class="heading-anchor" href="#how-the-combined-image-is-built">How the combined image is built</a></h2>
+<p><code>just build-usb</code> builds an x86_64 ISO first, then builds the Pi image
+and merges the ISO&rsquo;s UEFI boot files and live system into the Pi
+image&rsquo;s FAT32 partition. The ISO is only an intermediate &ndash; it is
+where systemd-boot and the x86_64 kernel come from &ndash; and it is
+deleted once the combined image exists.</p>
+<div class="box notice notice-warning"><div class="label">What the combined image costs</div>
+  <div class="body">
+<ul>
+<li><strong>x86_64 is UEFI only</strong>, and Secure Boot must be off.</li>
+<li>The partition is FAT32 with MBR type <code>0x0c</code>, because that is what
+the Pi requires. UEFI firmware is <em>supposed</em> to boot from an EFI
+System Partition (type <code>0xef</code>), and although nearly all of it will
+also boot a FAT32 USB stick carrying <code>EFI/BOOT/BOOTx64.EFI</code>, a
+strict implementation is entitled not to.</li>
+<li>Both halves read the same <code>boomstick/</code>, so a PC and a Pi
+booted from this stick present the <strong>same</strong> SSH host key and claim
+the <strong>same</strong> WireGuard address. That is a feature when you use them
+one at a time, and a problem if you boot two at once &ndash; they will
+fight over the peer address. Install one machine at a time, or
+give the second stick its own key.</li>
+</ul>
+  </div>
+</div>
+<h2 id="where-to-go-next"><a class="heading-anchor" href="#where-to-go-next">Where to go next</a></h2>
+<p>That is the whole of the stick. With one built and provisioned, carry
+on to <a href="/arch-workstation/boot">Boot the stick and connect</a> and put it to work.</p>
+<h2 id="source-and-trademark"><a class="heading-anchor" href="#source-and-trademark">Source and trademark</a></h2>
+<p>The source is at <a href="https://github.com/EnigmaCurry/boomstick">github.com/EnigmaCurry/boomstick</a>.</p>
+<p>BOOMSTICK is an independent project, not affiliated with or endorsed
+by the Arch Linux project. Arch Linux is a trademark of the Arch
+Linux project.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Install with setup · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/boot/ssh/" aria-label="Previous: ssh" title="prev: ssh"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/setup/host/" aria-label="Next: host" title="next: host"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/">arch-workstation</a><ul><li class="lvl1"><a href="#">setup</a></li><li class="lvl2"><a href="#how-setup-behaves">How setup behaves</a></li><li class="lvl2"><a href="#three-machines">Three machines</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/host/">Describe the machine</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/disk/">Prepare the disk</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/install/">Install the system</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/wireguard/">A tunnel of its own (optional)</a></li><li class="lvl2 page"><a href="/arch-workstation/setup/check/">Check and reboot</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node open">
+                  <a class="active" href="/arch-workstation/setup/">setup</a><ul class="sections"><li><a class="" href="/arch-workstation/setup/host/">host</a></li><li><a class="" href="/arch-workstation/setup/disk/">disk</a></li><li><a class="" href="/arch-workstation/setup/install/">install</a></li><li><a class="" href="/arch-workstation/setup/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/setup/check/">check</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg pcur" href="/arch-workstation/setup/">/setup</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Install with setup</a></h1>
+
+
+<div class="box notice notice-warning"><div class="label">Tested on x86_64 only</div>
+  <div class="body">
+<p><code>setup</code> is on the <code>setup</code> branch of <a href="https://github.com/EnigmaCurry/boomstick">BOOMSTICK</a>. Its <code>just test-vm</code>
+runs this whole chapter unattended against an <strong>x86_64 PC</strong> in QEMU,
+without encryption, then boots the result and logs in. An encrypted
+install and the Raspberry Pi 5 have not been through it yet.</p>
+  </div>
+</div>
+<p>You have a root shell on the live system. Four commands install the
+machine, with a fifth for a tunnel if you want one, each a page of this
+chapter:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>What it does</th>
+<th>Changes the target?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="/arch-workstation/setup/host">setup host</a></td>
+<td>Asks what this machine is, and writes it down</td>
+<td>No</td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/setup/disk">setup disk</a></td>
+<td>Partitions, encrypts, formats and mounts the disk, adds swap</td>
+<td>Erases the disk</td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/setup/install">setup install</a></td>
+<td>Installs, makes it boot, sets up network, accounts and SSH</td>
+<td>Writes to <code>/mnt</code></td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/setup/wireguard">setup wireguard</a></td>
+<td>Gives it a WireGuard tunnel of its own (optional)</td>
+<td>Writes to <code>/mnt</code></td>
+</tr>
+<tr>
+<td><a href="/arch-workstation/setup/check">setup reboot</a></td>
+<td>Checks everything, then unmounts and reboots</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Run <code>setup</code> with no arguments and it shows the same list, with a mark
+next to each step already done, and offers to run the next one.</p>
+<h2 id="how-setup-behaves"><a class="heading-anchor" href="#how-setup-behaves">How setup behaves</a></h2>
+<ul>
+<li><strong>It reads the host repo and nothing else.</strong> Every step starts by
+reading <code>/root/arch/host.env</code>, never a shell variable, so a dropped
+SSH session loses nothing: reconnect and run the step again.</li>
+<li><strong>Every step is safe to run again.</strong> A step that has already been
+done says so and skips, or only does what is missing. The one step
+that cannot be repeated &ndash; erasing the disk &ndash; makes you type the
+hostname first.</li>
+<li><strong>It shows you before it does anything.</strong> Each step prints a review
+screen and asks. <code>setup --yes &lt;step&gt;</code> answers yes for you, except
+to erasing a disk.</li>
+<li><strong>It walks you through.</strong> <code>setup</code> with no arguments shows which steps
+are done and offers to run the next one, then the one after that,
+so an install is one command and a series of questions rather than
+four commands typed from the book. Declining stops there, and so
+does a step that fails. The reboot at the end is the exception:
+pressing Enter <em>declines</em> it, because wanting a look around before
+the machine goes down is the normal case.</li>
+<li><strong>It prints what it runs.</strong> Every command is echoed with a leading
+<code>+</code> before it runs, so the output is a transcript of exactly what
+was done to the machine.</li>
+<li><strong>It keeps that transcript.</strong> All of it is written to
+<code>logs/000_SETUP.txt</code> in the host repo, committed, and copied to the
+installed machine, with a header per step recording the time,
+whether the clock was synchronised, and which image did the
+installing. Months later, <code>git log</code> in <code>~/arch</code> still answers &ldquo;how
+was this machine built?&rdquo;. Passwords and passphrases are not in it:
+they are read from the terminal, never printed.</li>
+<li><strong>It is one readable file.</strong> <code>setup</code> is a bash script at
+<code>/usr/local/bin/setup</code>. <code>less $(which setup)</code> is the documentation
+of last resort, and the pages that follow say which part of it does
+what.</li>
+</ul>
+<p><code>just provision</code> copies the current <code>setup</code> onto the stick&rsquo;s config
+partition, and the live system prefers that copy to the one built
+into the image, so a fix to <code>setup</code> reaches a stick without
+rebuilding it.</p>
+<h2 id="three-machines"><a class="heading-anchor" href="#three-machines">Three machines</a></h2>
+<p>Three machines are in play during an install, and the command blocks
+in this chapter say which one each runs on:</p>
+<table>
+<thead>
+<tr>
+<th>Machine</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>your workstation</td>
+<td>The computer you are already sitting at, running your editor and SSH client.</td>
+</tr>
+<tr>
+<td>the live system</td>
+<td>The target machine booted from the BOOMSTICK, running in RAM. <code>setup</code> runs here.</td>
+</tr>
+<tr>
+<td>the target</td>
+<td>The system being installed, mounted under <code>/mnt</code> until it boots on its own.</td>
+</tr>
+</tbody>
+</table>
+<p><code>setup</code> works on the target from the live system, using <code>arch-chroot /mnt</code> for each command that has to run inside it, so you never have to
+keep track of which side of the chroot you are on.</p>
+
+
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Install the system · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/setup/disk/" aria-label="Previous: disk" title="prev: disk"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/setup/wireguard/" aria-label="Next: wireguard" title="next: wireguard"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/setup/">setup</a><ul><li class="lvl1"><a href="#">install</a></li><li class="lvl2"><a href="#1-dot-packages">1. Packages</a></li><li class="lvl2"><a href="#2-dot-fstab">2. fstab</a></li><li class="lvl2"><a href="#3-dot-time-zone-locale-keymap-and-hostname">3. Time zone, locale, keymap and hostname</a></li><li class="lvl2"><a href="#4-dot-initramfs">4. initramfs</a></li><li class="lvl2"><a href="#5-dot-bootloader">5. Bootloader</a></li><li class="lvl2"><a href="#6-dot-the-host-repo-applied">6. The host repo, applied</a></li><li class="lvl2"><a href="#7-dot-the-live-system-s-side">7. The live system&amp;rsquo;s side</a></li><li class="lvl2"><a href="#8-dot-accounts">8. Accounts</a></li><li class="lvl2"><a href="#9-dot-passwords">9. Passwords</a></li><li class="lvl2"><a href="#10-dot-aconfmgr">10. aconfmgr</a></li><li class="lvl2"><a href="#11-dot-the-host-repo-moves-in">11. The host repo moves in</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/setup/">setup</a><ul class="sections"><li><a class="" href="/arch-workstation/setup/host/">host</a></li><li><a class="" href="/arch-workstation/setup/disk/">disk</a></li><li><a class="active" href="/arch-workstation/setup/install/">install</a></li><li><a class="" href="/arch-workstation/setup/wireguard/">wireguard</a></li><li><a class="" href="/arch-workstation/setup/check/">check</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/setup/">/setup</a><a class="pseg pcur" href="/arch-workstation/setup/install/">/install</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Install the system</a></h1>
+
+
+<p>The disk is partitioned, formatted and mounted under <code>/mnt</code>, and there
+is nothing on it. This step puts a complete Arch system there, makes
+it able to boot itself, and makes sure you can log in when it does.</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+setup install
+</pre></div>
+</div>
+
+
+<div class="box annotate">
+  <div class="body">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">================</span> Review <span style="color:#f92672">=================</span>
+</span></span><span style="display:flex;"><span>Host:         myhost
+</span></span><span style="display:flex;"><span>Detected:     x86_64 PC, UEFI
+</span></span><span style="display:flex;"><span>Packages:     base btrfs-progs cryptsetup sudo openssh iwd vim git pacutils expect snapper snap-pac linux linux-firmware intel-ucode
+</span></span><span style="display:flex;"><span>              + packages.txt: just tmux
+</span></span><span style="display:flex;"><span>Boot:         systemd-boot
+</span></span><span style="display:flex;"><span>Units:        systemd-networkd systemd-resolved iwd sshd snapper-cleanup.timer
+</span></span><span style="display:flex;"><span>Accounts:     admin <span style="color:#f92672">(</span>1000, wheel, passwordless sudo<span style="color:#f92672">)</span>, user
+</span></span><span style="display:flex;"><span>SSH keys:     3, from /root/arch/authorized_keys
+</span></span><span style="display:flex;"><span>Host repo:    /root/arch -&gt; /mnt/home/admin/arch
+</span></span><span style="display:flex;"><span>Maintenance:  aconfmgr 96ab414 <span style="color:#f92672">(</span>admin diff/apply/save/upgrade<span style="color:#f92672">)</span>, snapper + snap-pac
+</span></span><span style="display:flex;"><span><span style="color:#f92672">=========================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>? Install? <span style="color:#f92672">(</span>Y/n<span style="color:#f92672">)</span>:
+</span></span></code></pre></div><p>Everything on this screen was decided either by the hardware or by
+the host repo. If any of it is not what you want, answer <code>n</code>, change
+the host repo, and run it again.</p>
+  </div>
+</div>
+<div class="box notice notice-info"><div class="label">The same screen on a Raspberry Pi</div>
+  <div class="body">
+<p>Three lines read differently on a Pi 5, because they are the three
+things chosen by the hardware:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Detected:     Raspberry Pi <span style="color:#ae81ff">5</span> <span style="color:#f92672">(</span>aarch64, bcm2712<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Packages:     ... snapper snap-pac linux-rpi-16k firmware-raspberrypi linux-firmware
+</span></span><span style="display:flex;"><span>Boot:         Pi firmware <span style="color:#f92672">(</span>cmdline.txt<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p><code>linux-rpi-16k</code> and <code>firmware-raspberrypi</code> replace <code>linux</code> and the
+<code>intel-ucode</code> / <code>amd-ucode</code> microcode, and there is no bootloader to
+install. Everything else &ndash; the subvolumes, the accounts, the units,
+the host repo, the maintenance tools &ndash; is the same on both.</p>
+  </div>
+</div>
+<p>After you confirm, it works through eleven stages. Apart from the
+passwords near the end, it asks nothing more.</p>
+<h2 id="1-dot-packages"><a class="heading-anchor" href="#1-dot-packages">1. Packages</a></h2>
+<p><code>setup</code> refreshes the live system&rsquo;s pacman keyring, then installs the
+base set and everything in <code>packages.txt</code> into <code>/mnt</code> with <code>pacstrap</code>
+&ndash; pacman pointed at a different root. There is no image and no magic:
+when it finishes, <code>/mnt</code> is an ordinary directory tree that happens to
+be a Linux system.</p>
+<p>The base set is chosen from the hardware:</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Why it is there</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>base</code></td>
+<td>The minimum system: glibc, bash, coreutils, pacman, systemd</td>
+</tr>
+<tr>
+<td><code>linux</code> / <code>linux-rpi-16k</code></td>
+<td>A kernel, which <code>base</code> does not include; picked by <code>uname -m</code>, and on aarch64 only for a <code>bcm2712</code> board</td>
+</tr>
+<tr>
+<td><code>linux-firmware</code></td>
+<td>Firmware blobs for WiFi, GPUs and other devices</td>
+</tr>
+<tr>
+<td><code>firmware-raspberrypi</code></td>
+<td>Pi only: VideoCore firmware and the files its bootloader reads</td>
+</tr>
+<tr>
+<td><code>intel-ucode</code> / <code>amd-ucode</code></td>
+<td>x86_64 only, by CPU vendor: microcode errata fixes, loaded at boot</td>
+</tr>
+<tr>
+<td><code>btrfs-progs</code></td>
+<td>The root filesystem is btrfs and cannot be checked without it</td>
+</tr>
+<tr>
+<td><code>cryptsetup</code></td>
+<td>Always: a couple of megabytes, and forgetting it on an encrypted disk is a far worse afternoon</td>
+</tr>
+<tr>
+<td><code>sudo</code></td>
+<td>Administration from <code>admin</code></td>
+</tr>
+<tr>
+<td><code>openssh</code></td>
+<td>The whole point of a headless machine</td>
+</tr>
+<tr>
+<td><code>iwd</code></td>
+<td>WiFi</td>
+</tr>
+<tr>
+<td><code>vim</code></td>
+<td>An editor that exists inside the installed system</td>
+</tr>
+<tr>
+<td><code>less</code></td>
+<td>git&rsquo;s pager. Only an <em>optional</em> dependency of git, so without it <code>git log</code> in the host repo fails outright rather than merely not paging</td>
+</tr>
+<tr>
+<td><code>git</code></td>
+<td>The host repo is a git repository</td>
+</tr>
+<tr>
+<td><code>pacutils</code>, <code>expect</code></td>
+<td>What aconfmgr needs to compare the machine with the repo</td>
+</tr>
+<tr>
+<td><code>snapper</code>, <code>snap-pac</code></td>
+<td>Snapshots of <code>/</code>, and the pacman hooks that take them</td>
+</tr>
+</tbody>
+</table>
+<p>The keyring refresh matters more than it looks. Every package is
+checked against developer signing keys, and the copy of those keys on
+the stick is as old as the image; a stick that has been in a drawer
+for six months will eventually meet a package signed by a key it has
+never heard of. The resulting error names a signature rather than a
+stale keyring, which sends people down the wrong path.</p>
+<p>pacstrap uses the live system&rsquo;s mirror list, which by default starts
+with Arch&rsquo;s own geo-routed CDN &ndash; a fine first choice anywhere. If you
+would rather draw from a measured-fastest mirror near you, run
+<code>reflector --country US --protocol https --age 12 --sort rate --save /etc/pacman.d/mirrorlist</code> before <code>setup install</code> (x86_64 only;
+reflector is not on the Pi image and knows nothing about Arch Linux
+ARM&rsquo;s mirrors).</p>
+<div class="box notice notice-warning"><div class="label">On an older Pi stick</div>
+  <div class="body">
+<p>Early BOOMSTICK Pi images shipped without Arch Linux ARM&rsquo;s signing
+keys, and on one of those every ALARM package &ndash; including the
+kernel &ndash; fails as <code>unknown trust</code>. <code>setup</code> checks before it starts,
+and stops with the fix: rebuild the stick, or sign the key locally
+with <code>pacman-key --lsign-key 68B3537F39A313B3E574D06777193F152BDBE6A6</code>.
+On such a stick it also runs <code>pacstrap</code> without <code>-K</code>, because <code>-K</code>
+gives the target a fresh keyring and would leave that hand-made trust
+behind.</p>
+  </div>
+</div>
+<p>On a re-run, when the base system is already there, this stage only
+installs what is missing.</p>
+<h2 id="2-dot-fstab"><a class="heading-anchor" href="#2-dot-fstab">2. fstab</a></h2>
+<p>The new system needs to know how to mount its own filesystems at boot,
+and right now that knowledge exists only in the live system&rsquo;s mount
+table, which is what <code>genfstab -U</code> reads. <code>-U</code> writes UUIDs rather
+than device paths, because <code>/dev/sda</code> is assigned in whatever order
+the kernel finds disks, while a UUID belongs to the filesystem and
+never moves.</p>
+<p><code>setup</code> <em>writes</em> the file rather than appending to it, so running it
+twice cannot duplicate an entry, and it stops if the swapfile is
+missing from the result.</p>
+<h2 id="3-dot-time-zone-locale-keymap-and-hostname"><a class="heading-anchor" href="#3-dot-time-zone-locale-keymap-and-hostname">3. Time zone, locale, keymap and hostname</a></h2>
+<p><code>/etc/localtime</code> becomes a symlink into <code>/usr/share/zoneinfo</code>, and the
+hardware clock is set from the system clock. Your locale is uncommented
+in <code>/etc/locale.gen</code> and generated, and written to <code>/etc/locale.conf</code>
+as the default. The keymap goes into <code>/etc/vconsole.conf</code> and the
+hostname into <code>/etc/hostname</code>. There is no need for a <code>127.0.1.1</code>
+line in <code>/etc/hosts</code>: systemd&rsquo;s <code>myhostname</code> resolver answers for the
+local hostname already.</p>
+<div class="box notice notice-info"><div class="label">Clocks on the Raspberry Pi</div>
+  <div class="body">
+<p>A Pi 5 has a real-time clock, but it only keeps time across a power
+cut if you have fitted the optional battery. Without one it boots
+with a meaningless date and waits for NTP to correct it, which is
+harmless as long as the network comes up. The same is true of the
+live system, and a wrong clock makes pacman&rsquo;s signature checks and
+TLS fail in confusing ways &ndash; so if <code>setup install</code> fails on
+signatures on a Pi, check <code>timedatectl</code> first.</p>
+  </div>
+</div>
+<h2 id="4-dot-initramfs"><a class="heading-anchor" href="#4-dot-initramfs">4. initramfs</a></h2>
+<p>To mount the root filesystem the kernel needs drivers &ndash; for the disk
+controller, for btrfs, maybe for unlocking LUKS &ndash; and those drivers
+live on the root filesystem it cannot mount yet. The initramfs is a
+second, tiny filesystem loaded into memory alongside the kernel with
+just enough in it to find the real root, mount it and hand over.
+Arch builds it with <code>mkinitcpio</code>.</p>
+<p>The default <code>HOOKS</code> are already right for an unencrypted btrfs root,
+including the <code>microcode</code> hook that folds CPU microcode into the
+image (which is why the boot entry below has no separate
+<code>intel-ucode.img</code> line, unlike older guides). On an encrypted disk
+<code>setup</code> adds <code>sd-encrypt</code> after <code>block</code>. It has to be <code>sd-encrypt</code>,
+not plain <code>encrypt</code>: the default initramfs is systemd-based, and the
+older hook builds without complaint into an image that cannot unlock
+the disk.</p>
+<p><code>mkinitcpio -P</code> then rebuilds every image. Warnings about missing
+firmware for hardware you do not have are normal.</p>
+<h2 id="5-dot-bootloader"><a class="heading-anchor" href="#5-dot-bootloader">5. Bootloader</a></h2>
+<p>A machine can only start itself if three things line up: the firmware
+finds something to run, that something loads a kernel and the
+initramfs, and the kernel is told where its root filesystem is. The
+last part is where installs usually fail, and they fail the same way:
+the machine powers on, prints a little, and drops to an emergency
+shell.</p>
+<p>On an <strong>x86_64 PC</strong>, <code>setup</code> runs <code>bootctl install</code>, which copies
+<a href="https://wiki.archlinux.org/title/Systemd-boot">systemd-boot</a> onto the ESP and registers it with the firmware, then
+writes its menu and one entry:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: /boot/loader/loader.conf</div>
+    <div class="body"><pre>
+default  arch.conf
+timeout  3
+console-mode keep
+editor   no
+</pre></div>
+</div>
+
+<div class="box notice edit">
+    <div class="label">Edit this file: /boot/loader/entries/arch.conf</div>
+    <div class="body"><pre>
+title   Arch Linux
+linux   /vmlinuz-linux
+initrd  /initramfs-linux.img
+options root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6 rootflags=subvol=@ rw
+</pre></div>
+</div>
+
+<p><code>editor no</code> matters more than it looks: with the editor enabled,
+anyone at the keyboard can append <code>init=/bin/sh</code> to the kernel command
+line and get a root shell without a password.</p>
+<p>On a <strong>Raspberry Pi 5</strong> there is no bootloader to install. The Pi&rsquo;s
+firmware reads <code>config.txt</code> and <code>cmdline.txt</code> from the FAT partition,
+loads the kernel and initramfs itself, and jumps straight in.
+<code>config.txt</code> already loads the initramfs, so <code>setup</code> leaves it alone
+and rewrites only the kernel command line, which ships pointing at an
+SD card:</p>
+<div class="box notice edit">
+    <div class="label">Edit this file: /boot/cmdline.txt</div>
+    <div class="body"><pre>
+root=UUID=e1445380-51a2-449d-ad82-8ac3286cbfb6 rootflags=subvol=@ rw rootwait console=serial0,115200 console=tty1 fsck.repair=yes
+</pre></div>
+</div>
+
+<p>The firmware reads only the <em>first line</em> of that file, so if you edit
+it by hand, make sure your editor has not wrapped it. <code>rootwait</code> tells
+the kernel to wait for a USB or NVMe disk to appear rather than give
+up. Both files are pacman <em>backup</em> files of the kernel package, so a
+kernel update keeps your version and writes its own alongside as
+<code>cmdline.txt.pacnew</code> &ndash; which is how new firmware options arrive, and
+why <code>.pacnew</code> files are worth checking after kernel updates.</p>
+<p>Either way, the part that is specific to this book&rsquo;s layout is
+<code>rootflags=subvol=@</code>. Without it the kernel mounts the <em>top</em> of the
+btrfs filesystem, finds the subvolumes sitting there as directories,
+and fails to boot. The UUID is read from the filesystem <code>setup disk</code>
+made, never typed. On an encrypted disk, the root becomes
+<code>rd.luks.name=&lt;LUKS UUID&gt;=cryptroot root=/dev/mapper/cryptroot</code> &ndash;
+the UUID of the LUKS <em>container</em>, which is a different UUID from the
+btrfs filesystem inside it, and the easiest thing to get wrong when
+doing this by hand.</p>
+<div class="box notice notice-warning"><div class="label">The Pi half is untested</div>
+  <div class="body">
+<p>The x86_64 half of this stage boots in BOOMSTICK&rsquo;s test VM, encrypted
+or not: <code>ENCRYPT=yes just test-vm</code> installs onto LUKS, answers the
+initramfs passphrase prompt on the serial console, and logs in
+afterwards. The Raspberry Pi half &ndash; <code>cmdline.txt</code>, and a passphrase
+prompt with no bootloader behind it &ndash; has not yet booted a machine.</p>
+  </div>
+</div>
+<h2 id="6-dot-the-host-repo-applied"><a class="heading-anchor" href="#6-dot-the-host-repo-applied">6. The host repo, applied</a></h2>
+<p>The files under the host repo&rsquo;s <code>etc/</code> are installed at the same paths
+under <code>/mnt/etc</code>, owned by root. git does not keep file modes, so
+<code>setup</code> sets them by place: <code>0440</code> for sudoers drop-ins, which <code>sudo</code>
+insists on before it will read them, and <code>0644</code> for everything else.
+Files under the repo&rsquo;s <code>bin/</code> &ndash; <code>admin</code> &ndash; go to <code>/usr/local/bin</code>,
+mode <code>0755</code>. Then every unit in <code>units.txt</code> is enabled.</p>
+<p>Enabling works inside the chroot because it only creates symlinks on
+disk. Nothing <em>starts</em> until the machine reboots: the <code>systemd</code> you
+can see from the chroot belongs to the live system, not the target.</p>
+<p>The network this sets up by default is <strong>systemd-networkd</strong> for
+addresses, <strong>systemd-resolved</strong> for DNS and <strong>iwd</strong> for WiFi &ndash; the same
+combination the live system is running. The two <code>.network</code> files
+match by name prefix (<code>en*</code>, <code>wl*</code>) rather than exact name, so they
+work on any machine without checking what the kernel called the
+hardware, and a USB ethernet adapter plugged in later just works.</p>
+<p>The sshd drop-in is three lines, and all three matter.
+<code>PasswordAuthentication no</code> alone is not enough: with PAM,
+keyboard-interactive is a second route to the same password prompt,
+so it is switched off explicitly, along with root login. Arch&rsquo;s
+<code>sshd_config</code> includes <code>/etc/ssh/sshd_config.d/*.conf</code>, so the drop-in
+overrides the defaults without touching the shipped file, and package
+updates never conflict with it.</p>
+<h2 id="7-dot-the-live-system-s-side"><a class="heading-anchor" href="#7-dot-the-live-system-s-side">7. The live system&rsquo;s side</a></h2>
+<p>Two things can only be done from outside the chroot, so <code>setup</code> does
+them from the live system against <code>/mnt</code>:</p>
+<ul>
+<li><code>/etc/resolv.conf</code> becomes a symlink to resolved&rsquo;s stub. Inside the
+chroot that file is the live system&rsquo;s own, bind-mounted over the
+target&rsquo;s so that package downloads can resolve names, and replacing
+it there fails.</li>
+<li>The live system&rsquo;s iwd network files &ndash; the WiFi passphrases the
+stick joined with &ndash; are copied into <code>/mnt/var/lib/iwd</code>. This is the
+single most commonly forgotten step of a headless install: the
+machine boots, the disk is perfect, and it never joins the network
+because nothing told it the passphrase.</li>
+</ul>
+<h2 id="8-dot-accounts"><a class="heading-anchor" href="#8-dot-accounts">8. Accounts</a></h2>
+<p><code>admin</code> and <code>user</code> are created, if they do not exist yet, with
+<code>admin</code> in <code>wheel</code>. <code>visudo -c</code> then checks that the whole sudo
+configuration parses. That check is not optional: a malformed sudoers
+file does not degrade gracefully &ndash; <code>sudo</code> refuses to run at all &ndash;
+and on a machine where <code>sudo</code> is the only route to root, that is a
+lockout you can only fix from the console.</p>
+<p><code>admin</code>&rsquo;s <code>~/.ssh/authorized_keys</code> is installed from the host repo,
+owned by <code>admin</code>, mode <code>0600</code>, in a <code>0700</code> directory. Those modes are
+not decoration: sshd silently refuses an <code>authorized_keys</code> file that
+other users could write to, and from the client&rsquo;s side you are just
+asked for a password that will never be accepted.</p>
+<p><code>admin</code> also gets a <code>~/.gitconfig</code> naming it <code>admin@&lt;hostname&gt;</code>. git
+refuses to commit without an identity, and the host repo is a git
+repository <code>admin</code> is expected to commit to, so &ldquo;Author identity
+unknown&rdquo; on the first <code>git commit</code> in <code>~/arch</code> would otherwise be the
+machine&rsquo;s opening remark. It is a machine account, so it gets a machine
+identity; seeded once, and yours to change. The daily user is left
+alone deliberately &ndash; that is a person, and sway-home&rsquo;s <code>hm-install</code>
+asks them for a name and address of their own.</p>
+<p>The daily user is given the same keys, so the first thing you do on the
+new machine can be logging in as yourself rather than as its
+administrator. The two are managed differently from then on:
+<code>admin</code>&rsquo;s are installed from the repo on every run, because the repo is
+what says who may administer this machine, while the daily user&rsquo;s are
+<em>seeded once</em> and left alone afterwards &ndash; a key added there by hand is
+theirs, and a re-run will not revert it.</p>
+<h2 id="9-dot-passwords"><a class="heading-anchor" href="#9-dot-passwords">9. Passwords</a></h2>
+<p>The only prompts after the review: a password for <code>admin</code> and one for
+the daily user, each typed twice. On a re-run, an account that already
+has one is skipped.</p>
+<p><code>root</code> is not among them. It is <strong>locked</strong> instead &ndash; no password at all,
+so there is none to guess, leak, or forget to rotate. Nothing needs it:
+<code>admin</code> is in <code>wheel</code>, administration happens through <code>sudo</code>, and sshd
+refuses root whatever its password is. <code>setup check</code> expects
+<code>root=L</code>.</p>
+<div class="box notice notice-warning"><div class="label">What a locked root costs</div>
+  <div class="body">
+<p>systemd&rsquo;s emergency and rescue targets ask for the root password, and
+<code>sulogin</code> will not open a shell for a locked account &ndash; it says so and
+reboots. A machine that cannot mount its root filesystem therefore
+cannot be rescued from its own keyboard.</p>
+<p>This book makes that trade on purpose, because the stick is the
+recovery tool and a better one: boot it, then <code>setup host --from</code> and
+<code>setup disk --mount</code> as in <a href="/arch-workstation/setup/disk">Prepare the disk</a>, and <code>arch-chroot /mnt</code>
+gives you a root shell inside the broken system &ndash; over SSH, which a
+keyboard attached to a machine in another room does not offer.</p>
+<p>If you would rather have the console, <code>sudo passwd root</code> on the running
+machine sets one. <code>setup check</code> accepts a root password that exists; it
+objects only to an account with none.</p>
+  </div>
+</div>
+<h2 id="10-dot-aconfmgr"><a class="heading-anchor" href="#10-dot-aconfmgr">10. aconfmgr</a></h2>
+<p><a href="https://github.com/CyberShadow/aconfmgr">aconfmgr</a> is what <code>admin</code> runs. It is in neither Arch&rsquo;s nor Arch Linux
+ARM&rsquo;s repositories &ndash; only the AUR has it, and building AUR packages
+would mean <code>base-devel</code> on every machine &ndash; but it is a bash program
+with no compiled parts, so <code>setup</code> clones it from GitHub at a fixed
+commit into <code>/usr/local/lib/aconfmgr</code>, and links it where its own
+launcher looks (<code>/usr/lib/aconfmgr</code>, <code>/usr/local/bin/aconfmgr</code>).
+Pinning the commit means every machine runs the version this book was
+checked against; a newer one is a deliberate change to <code>setup</code>.</p>
+<h2 id="11-dot-the-host-repo-moves-in"><a class="heading-anchor" href="#11-dot-the-host-repo-moves-in">11. The host repo moves in</a></h2>
+<p><code>setup</code> writes <code>aconfmgr/10-base.sh</code>, the base packages it picked for
+this hardware, so aconfmgr knows them as wanted. A commit records the
+install in the host repo, which is then copied to
+<code>/mnt/home/admin/arch</code> and handed to <code>admin</code>. From the first boot,
+the description of the machine lives on the machine.</p>
+<p><code>setup install</code> finishes by running the <a href="/arch-workstation/setup/check">check</a>.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>

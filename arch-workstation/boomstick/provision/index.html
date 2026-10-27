@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en-us" data-theme="amber">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="color-scheme" content="dark light">
+<title>Provision the stick · book.rymcg.tech</title>
+
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
+<link href="https://fonts.bunny.net/css?family=inconsolata:400,600,700|inter:400,400i,600,700&display=swap" rel="stylesheet">
+
+<script>
+(function(){
+  var P = ["amber","green","mono","lite"], t;
+  try{ t = localStorage.getItem("theme"); }catch(e){}
+  if(P.indexOf(t) < 0)
+    t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "lite" : "green";
+  document.documentElement.dataset.theme = t;
+  document.documentElement.classList.add("wait-fonts");
+  document.documentElement.classList.add("js");   
+})();
+</script>
+
+
+
+<link rel="stylesheet" href="/css/terminal.bundle.7ac7ca33ea224721fbeb1c83bba34663bd0b1e70a1b34b7ac20fc57b402329b7.css" integrity="sha256-esfKM&#43;oiRyH76xyDu6NGY70LHnChs0t6wg/Fe0AjKbc=">
+
+</head>
+<body>
+
+
+<canvas id="fxcanvas" class="fx-canvas" aria-hidden="true"></canvas>
+
+<div id="page-fx" class="page-fx"></div>
+
+<div id="fxctl" class="shader-ctl shader-bgctl" aria-label="Background shader controls">
+  <button type="button" class="shader-play" aria-label="Stop">
+    <svg class="ico-stop" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"></rect></svg>
+    <svg class="ico-play" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+  </button>
+</div>
+
+
+<input type="checkbox" id="navtoggle" class="nav-checkbox" aria-label="Toggle menu">
+<label id="menutoggle" class="menutoggle" for="navtoggle" aria-hidden="true"></label>
+
+
+<div class="topnav"><input type="checkbox" id="toctoggle" class="toc-checkbox" aria-label="Sections in this page"><a class="navbtn navprev" href="/arch-workstation/boomstick/wireguard/" aria-label="Previous: wireguard" title="prev: wireguard"></a><label class="navbtn toc-toggle" for="toctoggle" aria-hidden="true"></label><a class="navbtn navnext" href="/arch-workstation/boomstick/internals/" aria-label="Next: internals" title="next: internals"></a><nav class="toc" id="toc" aria-label="Sections in this page"><a class="toc-book" href="/arch-workstation/boomstick/">boomstick</a><ul><li class="lvl1"><a href="#">provision</a></li><li class="lvl2"><a href="#editing-the-stick-by-hand-instead">Editing the stick by hand instead</a></li><li class="lvl2"><a href="#changing-it-later">Changing it later</a></li><li class="lvl2"><a href="#updating-from-the-stick-itself">Updating from the stick itself</a></li><li class="lvl2"><a href="#upgrading-a-stick-you-already-have">Upgrading a stick you already have</a></li><li class="lvl2"><a href="#where-to-go-next">Where to go next</a></li></ul>
+  </nav>
+</div>
+
+
+<div class="wrap">
+
+  <aside class="sidebar">
+  <div class="brand">
+    <span class="deco" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+    <a class="bname" href="/">book.rymcg.tech</a>
+    <span class="deco right" aria-hidden="true"><i class="blk"></i><i class="blk"></i><i class="blk"></i></span>
+  </div>
+  <div class="tag">// books by EnigmaCurry</div>
+  <ul class="tree"><li class="book open">
+        <a href="/arch-workstation/">arch-workstation</a><ul class="chapters"><li class="">
+                  <a class="" href="/arch-workstation/introduction/">introduction</a></li><li class="node open">
+                  <a class="" href="/arch-workstation/boomstick/">boomstick</a><ul class="sections"><li><a class="" href="/arch-workstation/boomstick/build/">build</a></li><li><a class="" href="/arch-workstation/boomstick/secrets/">secrets</a></li><li><a class="" href="/arch-workstation/boomstick/wireguard/">wireguard</a></li><li><a class="active" href="/arch-workstation/boomstick/provision/">provision</a></li><li><a class="" href="/arch-workstation/boomstick/internals/">internals</a></li></ul></li><li class="node ">
+                  <a class="" href="/arch-workstation/boot/">boot</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/setup/">setup</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/maintain/">maintain</a></li><li class="node ">
+                  <a class="" href="/arch-workstation/desktop/">desktop</a></li></ul></li><li class="book">
+        <a href="/nixos-workstation/">nixos-workstation</a></li><li class="book">
+        <a href="/portable-docker/">portable-docker</a></li><li class="book">
+        <a href="/publishing-with-org-mode/">publishing-with-org-mode</a></li><li class="book">
+        <a href="/shaders/">shaders</a></li><li class="book">
+        <a href="/license/">license</a></li><li class="book">
+        <a href="/blog/">blogs</a></li><li class="book">
+      <a href="/notes/">notes</a>
+    </li>
+  </ul><div class="sidebar-actions"><a class="btn iconbtn" href="https://github.com/enigmacurry/org" title="Source Repository" aria-label="Source Repository" rel="noopener" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <path d="M6 9v6"></path>
+        <path d="M18 9a9 9 0 0 1-9 9"></path>
+      </svg>
+    </a><button id="settings-open" class="btn iconbtn js-only" title="Settings" aria-label="Settings" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="build-date"><span class="lbl">build:</span> Oct 27, 2026 at 12:47am (UTC)</div>
+</aside>
+
+  
+  <label class="nav-backdrop" id="navBackdrop" for="navtoggle" aria-hidden="true"></label>
+
+  
+  <div>
+    <div class="topbar">
+  <span class="cmd"><a class="seg prefix" href="/"><span class="prompt"><span class="username">visitor</span><span class="at">@</span>book.rymcg.tech</span>:</a><span class="seg pathseg"><span class="path"><span class="pell" hidden>…</span><a class="pseg ptilde" href="/">~</a><a class="pseg" href="/arch-workstation/">/arch-workstation</a><a class="pseg" href="/arch-workstation/boomstick/">/boomstick</a><a class="pseg pcur" href="/arch-workstation/boomstick/provision/">/provision</a></span></span></span>
+</div>
+
+    <main>
+      <div class="content" id="content">
+        
+<h1><a class="heading-anchor" href="#">Provision the stick</a></h1>
+
+
+<p>With the files filled in, plug in the stick you wrote earlier and
+copy them onto it:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+just provision
+</pre></div>
+</div>
+
+
+<p><code>just provision</code> finds the stick by its <code>BOOMSTICK</code> partition
+label, mounts it if it has to, writes <code>boomstick/</code>, and unmounts
+it again so it is ready to pull.</p>
+<p>Before copying anything, it checks the files for the mistakes that
+would leave a headless machine unreachable, and fails here, at your
+desk, instead of later on the other side of the room. An
+<code>authorized_keys</code> with no keys in it is refused outright, since
+nobody could log in. A <code>wg0.conf</code> that is filled in but missing its
+<code>PrivateKey</code> or <code>PersistentKeepalive</code> is refused too. A <code>wg0.conf</code>
+left untouched is fine &ndash; that is just a stick without WireGuard, and
+it says so.</p>
+<h2 id="editing-the-stick-by-hand-instead"><a class="heading-anchor" href="#editing-the-stick-by-hand-instead">Editing the stick by hand instead</a></h2>
+<p>If you would rather skip <code>secrets/</code> and edit the stick directly,
+mount its partition with <code>udisksctl</code> rather than <code>sudo mount</code>:</p>
+
+
+<div class="box run">
+    <div class="label"><span class="lt">[bash]: Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+udisksctl mount -b /dev/sdX1
+</pre></div>
+</div>
+
+
+<p>FAT stores no file ownership, so a plain <code>sudo mount</code> makes every
+file look like it belongs to root, and you cannot edit them as
+yourself. <code>udisksctl</code> mounts it as your own user, at
+<code>/run/media/$USER/BOOMSTICK</code>.</p>
+<h2 id="changing-it-later"><a class="heading-anchor" href="#changing-it-later">Changing it later</a></h2>
+<p>Everything that makes the stick yours lives in a handful of plain
+files. When you move to a new WiFi network, rotate a WireGuard key,
+or add someone&rsquo;s SSH key, you edit a file on the stick &ndash; or in
+<code>secrets/</code>, then run <code>just provision</code> again &ndash; and you are done, with
+nothing to rebuild.</p>
+<p><code>boomstick-config</code> re-reads all of it on <em>every</em> boot, which is what
+makes that true. The same mechanism updates <code>setup</code> itself: <code>just provision</code> copies the current installer to <code>boomstick/bin/setup</code>, and
+the live system installs that copy over its own at boot. So a fix to
+<code>setup</code> reaches a stick without a rebuild.</p>
+<p>What a stick <em>cannot</em> grow into is anything that lives in the live
+system itself &ndash; the squashfs the image was built from:</p>
+<ul>
+<li>the <strong>package set</strong>: the live system&rsquo;s own <code>git</code>, <code>cryptsetup</code>,
+<code>archlinuxarm-keyring</code> and the rest,</li>
+<li>the <strong>kernel and initramfs</strong>, and</li>
+<li><code>boomstick-config</code>, <code>boomstick-webhook</code> and <code>boomstick-motd</code>, the
+boot-time logic itself.</li>
+</ul>
+<p>Those are frozen at build time, and the way to move them forward is to
+build a new image and write it to the stick again &ndash; then <code>just provision</code> to put your configuration back, since a fresh image carries
+only the templates.</p>
+<div class="box notice notice-warning"><div class="label">Installing packages on the live system does not stick</div>
+  <div class="body">
+<p>The live system boots <code>copytoram=auto</code>, and its root is a tmpfs
+overlay. <code>pacman -Sy something</code> works and is a perfectly good way out
+of a hole, but the next boot has forgotten it. Treat it as a patch for
+the session, not a repair to the stick.</p>
+<p>The corollary is worth knowing before you keep an old stick around: a
+stick whose image predates a feature in that frozen half cannot be
+provisioned into having it. <code>bin/setup</code> is only picked up because
+<code>boomstick-config</code> looks for it, so a stick older than <em>that</em> cannot
+be given a newer <code>setup</code> either, however many times you provision it.
+Rebuild instead.</p>
+  </div>
+</div>
+<h2 id="updating-from-the-stick-itself"><a class="heading-anchor" href="#updating-from-the-stick-itself">Updating from the stick itself</a></h2>
+<p><code>just provision</code> needs your workstation and a checkout of the
+repository. <code>boomstick-update</code>, on the live system, does the same job
+over the network when you have neither &ndash; which, for a tool meant for
+installing machines in other rooms and other buildings, is a situation
+that comes up.</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on the live system:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+boomstick-update
+</pre></div>
+</div>
+
+
+<p>It clones the repository, says where from and which commit it resolved
+to, shows a <strong>diff</strong> of every helper that would change, and asks. Enter
+declines. What you accept is written to <code>boomstick/bin/</code> on the stick,
+so the next boot has it, <em>and</em> to <code>/usr/local/bin</code> in the running
+system, so this boot has it too &ndash; no reboot in between. Each run
+appends a line to <code>boomstick/UPDATES.txt</code>, so the stick carries a
+record of what it has been given.</p>
+<p>It updates BOOMSTICK, not Arch. The live system stays the one the image
+was built with &ndash; the same <code>pacman</code>, the same keyring, the same
+kernel &ndash; so this is no answer to an image going stale on a rolling
+release. Its reach is exactly <code>just provision</code>&rsquo;s: the helpers, and
+nothing else. <code>boomstick-config</code> is deliberately left out too, since it
+is what installs the others at boot and a broken copy would take
+configuration down with it on every later boot. For the package set,
+the kernel, or that, rebuild.</p>
+<p>It refuses to run while something is mounted at <code>/mnt</code>, since replacing
+<code>setup</code> under a running install is nobody&rsquo;s idea of a good afternoon,
+and when the stick is not plugged in &ndash; <code>copytoram</code> means the live
+system keeps going without it, but then there is nothing to write to.</p>
+<p><code>--ref</code> takes a branch or a tag, and defaults to the repository&rsquo;s
+default branch, which is not necessarily where your stick came from. A
+stick built from a topic branch will find the default branch has none
+of its helpers, and <code>boomstick-update</code> says so rather than reporting
+everything up to date.</p>
+<div class="box notice notice-warning"><div class="label">It verifies nothing</div>
+  <div class="body">
+<p>The commits are not signed, so the SHA it prints is a record of what
+was pulled, not proof of who wrote it &ndash; and this installs a program
+that runs as root on a machine about to repartition a disk. The diff is
+the safeguard, which is why it is not optional. Read it.</p>
+  </div>
+</div>
+<h2 id="upgrading-a-stick-you-already-have"><a class="heading-anchor" href="#upgrading-a-stick-you-already-have">Upgrading a stick you already have</a></h2>
+<p>Writing a new image to a stick erases the only copy of some of its
+secrets. The WireGuard key and the SSH host keys it made on its first
+boot exist nowhere else: <code>secrets/</code> on your workstation may be long
+gone, or may never have been on <em>this</em> workstation at all. So take them
+off the stick <em>before</em> you write anything to it.</p>
+
+
+<div class="box run run-secondary">
+    <div class="label"><span class="lt">Run this on your workstation:</span></div>
+    <button class="copy" type="button" aria-label="Copy to clipboard"><span class="ico clip"></span><span class="ico check"></span></button>
+    <div class="body"><pre>
+git clone https://github.com/EnigmaCurry/boomstick
+cd boomstick
+just adopt
+</pre></div>
+</div>
+
+
+<p><code>just adopt</code> finds the stick by its <code>BOOMSTICK</code> label and copies back
+what the repository cannot regenerate &ndash; the WiFi PSKs, <code>wg0.conf</code>,
+<code>authorized_keys</code>, <code>webhook.env</code> and <code>ssh/host/</code> &ndash; into <code>secrets/</code>,
+owned by you and readable by nobody else. <code>README.txt</code> and <code>bin/</code> are
+left alone: those come from the repository, not from the stick.</p>
+<p>It refuses to overwrite a <code>secrets/</code> that already has files in it, and
+says which ones clashed, so aiming it at the wrong stick cannot quietly
+replace a working configuration with somebody else&rsquo;s. <code>just adopt --force</code> when the stick really is the one to keep.</p>
+<p>With the secrets safe, the rest is the ordinary path: <a href="/arch-workstation/boomstick/build">build</a> a new
+image, write it to the stick, and <code>just provision</code> to put the
+configuration back.</p>
+<div class="box notice notice-info"><div class="label">The stick keeps its identity</div>
+  <div class="body">
+<p>Adopting <code>ssh/host/</code> is what carries the stick&rsquo;s SSH host keys across
+the rewrite, so <code>ssh boomstick</code> does not start warning about a changed
+host key afterwards. If you would rather it got new ones, delete
+<code>secrets/ssh/host/</code> before provisioning and it will generate a fresh
+set on its next first boot.</p>
+  </div>
+</div>
+<h2 id="where-to-go-next"><a class="heading-anchor" href="#where-to-go-next">Where to go next</a></h2>
+<p>The stick is now ready. Go to <a href="/arch-workstation/boot">Boot the stick and connect</a> to use
+it &ndash; or, if you would rather know what the stick does at boot
+before you trust it with a machine, read
+<a href="/arch-workstation/boomstick/internals">How it works under the hood</a> first.</p>
+
+
+      </div>
+    </main>
+  </div>
+</div><dialog id="settings" class="settings-modal">
+  <div class="settings-head">
+    <span class="settings-title">// settings</span>
+    <button class="btn iconbtn settings-close" type="button" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M18 6 6 18"></path>
+        <path d="m6 6 12 12"></path>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row"><span class="ctl-label">theme:</span><button id="palette" class="btn" type="button">amber</button></div>
+    <div class="settings-row"><span class="ctl-label">fx:</span><button id="fx" class="btn" type="button">on</button></div>
+  </div>
+</dialog><dialog id="code-sheet" class="code-sheet">
+  <div class="code-sheet-head">
+    <span class="code-sheet-title"></span>
+    <button class="code-sheet-toggle diff-toggle" type="button" hidden aria-label="Toggle between diff and source view">Source</button>
+    <button class="btn iconbtn code-sheet-copy copy" type="button" aria-label="Copy to clipboard">
+      <span class="ico clip"></span><span class="ico check"></span>
+    </button>
+    <button class="btn iconbtn code-sheet-close" type="button" aria-label="Close">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M4 14h6v6"></path>
+        <path d="M20 10h-6V4"></path>
+        <path d="M14 10l7-7"></path>
+        <path d="M3 21l7-7"></path>
+      </svg>
+    </button>
+  </div>
+  <pre class="code-sheet-body"></pre>
+</dialog>
+
+
+
+
+<script src="/js/terminal.bundle.0492c31a4547df53a41d38db0639ebad2072c995e81ed7e4d89e11a2caff7153.js"></script>
+<script>if(window.Takeover) Takeover.init(); if(window.Shader) Shader.init();</script>
+
+
+</body>
+</html>
