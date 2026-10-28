@@ -24,9 +24,9 @@ while I am still working through them.
 What is written takes a machine from an unplugged box to one that
 boots on its own and accepts an SSH login -- the disk, the base
 system, the bootloader, networking and accounts, all done by =setup=
--- and then keeps it in step with its host repo with =admin=, and adds
-a sway desktop to it. The chapter on hardware-key =sudo= is not
-written yet.
+-- and then keeps it in step with its host repo with =admin=, rebuilds
+it from that repo when the machine is lost, and adds a sway desktop to
+it. The chapter on hardware-key =sudo= is not written yet.
 
 Be aware of what "tested" means here. BOOMSTICK's =just test-vm=
 installs an *x86_64 PC* in a QEMU virtual machine with every prompt
@@ -36,10 +36,11 @@ snapshotted. =ENCRYPT=yes= does the same onto *LUKS*, answering the
 passphrase prompt at boot. A *Raspberry Pi 5* has been installed on
 real hardware, start to finish.
 
-Not tested yet: =admin upgrade=, rolling back a snapshot, and logging
-in to the desktop -- the test VM installs it and checks the login
-screen, Nix and sway-home, but nobody has sat in front of it.
-Hardware-key =sudo= is unwritten. Specific caveats are flagged in
+Not tested yet: =admin upgrade=, rolling back a snapshot, the
+[[/arch-workstation/restore][restore]] (the test VM has a mode for it that has not been run yet),
+and logging in to the desktop -- the test VM installs it and checks
+the login screen, Nix and sway-home, but nobody has sat in front of
+it. Hardware-key =sudo= is unwritten. Specific caveats are flagged in
 place.
 
 Read it as notes becoming a book rather than as a recipe that is
@@ -213,7 +214,9 @@ stopping point if what you wanted was a small server.
 
 On top of that base it is kept *maintainable*: [[https://github.com/CyberShadow/aconfmgr][aconfmgr]] compares
 the machine with its host repo in both directions, and snapper takes
-a btrfs snapshot before and after every pacman transaction.
+a btrfs snapshot before and after every pacman transaction. Because
+the repo describes the whole system, a lost machine can be [[/arch-workstation/restore][rebuilt
+from it]] onto new hardware.
 
 The graphical [[/arch-workstation/desktop][desktop]] comes after that, as its own optional chapter,
 built on top of that base: sway from Arch, and the user's environment
@@ -1429,15 +1432,20 @@ setup host --from git@git.example.com:you/arch-myhost.git
 
 The live system has no private key of its own, so cloning a private
 repo over SSH uses yours: connect with =ssh -A boomstick= to forward
-your agent.
+your agent. The [[/arch-workstation/restore][Restore]] chapter has the other ways in, and walks
+through a whole rebuild from the repo.
 
-=--from= also takes a path to a =host.env= file, or a name, which is
-looked up as =boomstick/hosts/<name>.env= on the stick's config
-partition -- handy when the machine has no route to your git server.
+=--from= takes any git repository: a URL, a path to a clone, or a
+=git bundle= file. It also takes a path to a =host.env= file, or a
+name, which is looked up as =boomstick/hosts/<name>.env= on the
+stick's config partition -- handy when the machine has no route to
+your git server.
 
 The only answer it re-checks is the disk. A =by-id= name belongs to
 one physical drive, so a reinstall onto a new drive -- the usual
-reason for reinstalling -- has to pick again.
+reason for reinstalling -- has to pick again. A repo it clones is
+otherwise kept exactly as committed: only the =DISK= line of
+=host.env= changes, and files you deleted from the repo stay deleted.
 
 #+attr_shortcode: :style warning :title No secrets in the host repo
 #+begin_notice
@@ -1893,6 +1901,12 @@ insists on before it will read them, and =0644= for everything else.
 Files under the repo's =bin/= -- =admin= -- go to =/usr/local/bin=,
 mode =0755=. Then every unit in =units.txt= is enabled.
 
+A unit whose package the install did not put in -- possible in a
+[[/arch-workstation/restore][restored]] repo, where a package can be named only in =aconfmgr/=
+-- has no unit file to enable yet. =setup= warns, leaves it, and the
+check names it as waiting for =admin apply=, which installs the
+package and then enables the unit.
+
 Enabling works inside the chroot because it only creates symlinks on
 disk. Nothing /starts/ until the machine reboots: the =systemd= you
 can see from the chroot belongs to the live system, not the target.
@@ -2154,9 +2168,10 @@ All checks passed. Safe to reboot: setup reboot
 | =accounts=  | =admin= or =user= does not exist                                                            |
 | =passwords= | =admin= or the daily user is not =P= (set), or =root= is =NP=: no password at all. =root=L= is what setup leaves, and =root=P= is allowed |
 | =sudo=      | =visudo -c= fails                                                                           |
-| =units=     | anything in =units.txt= is not enabled                                                      |
+| =units=     | anything in =units.txt= that is installed is not enabled (one not installed yet is listed, for =admin apply=) |
 | =ssh=       | =admin= has no keys, the file has the wrong owner or mode, or =sshd -t= rejects the config   |
 | =admin=     | aconfmgr, =/usr/local/bin/admin= or snapper's root configuration is missing                 |
+| =wireguard= | =units.txt= enables =wg-quick@wg0= but =/etc/wireguard/wg0.conf= is missing -- as after a [[/arch-workstation/restore/rebuild][restore]], since the key is never in the repo |
 | =wifi=      | there are no WiFi credentials /and/ no ethernet interface: it would never join a network   |
 
 Any =✗= means a machine that will not come back, and =setup check=
@@ -2336,14 +2351,20 @@ Quote the pattern, or bash expands it before aconfmgr sees it.
 
 The host repo is the only record of this machine that exists off its
 own disk -- or it will be, once you push it. The next reinstall starts
-from it with =setup host --from=. Make it a *private* repository: it
-holds no secrets, but it describes your machine in detail.
+from it with =setup host --from=, and if the machine is lost, it is
+what you [[/arch-workstation/restore][restore]] it from. Make it a *private* repository: it holds
+no secrets, but it describes your machine in detail.
 
 #+attr_shortcode: :style secondary :title Run this on the new machine:
 #+begin_run
 git -C ~/arch remote add origin git@git.example.com:you/arch-myhost.git
 git -C ~/arch push -u origin main
 #+end_run
+
+A restore brings back what was pushed, and nothing since. Push after
+every commit -- after each =admin save= you sort, each package you
+add -- or the machine you rebuild is the one you had last time you
+remembered.
 
 ** See what drifted
 :PROPERTIES:
@@ -2749,6 +2770,287 @@ Because it was a one-shot, the next boot is the normal system again,
 with nothing to undo and no failed units. The entry file stays until
 you delete it; =admin diff= will not mention it, since =/boot= is not
 in the host repo.
+
+* Restore
+:PROPERTIES:
+:EXPORT_HUGO_SECTION_FRAG: restore
+:END:
+
+** Restore
+:PROPERTIES:
+:EXPORT_FILE_NAME: _index
+:EXPORT_HUGO_SLUG: _index
+:EXPORT_HUGO_WEIGHT: 550
+:END:
+
+#+attr_shortcode: :style warning :title Not yet run
+#+begin_notice
+BOOMSTICK's =RESTORE=1 just test-vm= does this chapter on a test VM:
+it installs a machine, changes it and records the change with =admin
+save=, keeps only the host repo, erases the machine, rebuilds it onto
+a new disk from the repo, and checks that =admin diff= finds no drift.
+With =DESKTOP=1= as well, it restores the desktop too. That test has
+been written, but not yet run, so treat this chapter as untested.
+#+end_notice
+
+The machine is gone: the disk died, the laptop was stolen, or you
+simply want the same system on new hardware. What you have left is
+the host repo you [[/arch-workstation/maintain][pushed]]. This chapter rebuilds the machine from
+it.
+
+The repo describes the whole /system/ -- that is what =admin diff=
+finding no drift means -- so the rebuild is the ordinary install,
+pointed at the repo instead of at questions, then one =admin apply=:
+
+#+begin_run
+setup host --from git@git.example.com:you/arch-myhost.git
+setup disk
+setup install
+setup reboot
+admin apply     # on the restored machine, as admin
+admin diff      # no drift: it is the machine the repo describes
+#+end_run
+
+*** What comes back, and what does not
+
+| Comes back from the repo                                    | Does not                                                  |
+|-------------------------------------------------------------+-----------------------------------------------------------|
+| The install answers: hostname, encryption, swap, locale     | Everything in =/home=: =user='s files, =admin='s too      |
+| Every package, file and unit the repo or =aconfmgr/= names | Passwords: =setup install= asks for them again            |
+| =admin='s SSH keys (=authorized_keys=, public keys)         | WiFi passphrases: they come from the stick, as before     |
+| The repo's own history                                      | The SSH host keys: the machine has a new identity         |
+| The desktop's system half (sway, greetd, Nix)               | The desktop's user half: sway-home is installed again     |
+| A WireGuard tunnel's package and unit                       | The tunnel's key: =setup wireguard= again                 |
+|                                                             | State under =/var/lib=: databases, containers, services'  |
+|                                                             | Snapshots, and anything you did not commit /and push/     |
+
+The left column is exactly what [[/arch-workstation/maintain/diff][admin diff]] watches, and the right
+column is what [[/arch-workstation/maintain][90-ignore.sh]] and aconfmgr ignore: state, secrets,
+and identity, none of which belongs in a git repository you push.
+
+#+attr_shortcode: :style warning :title Back up the rest separately
+#+begin_notice
+The host repo rebuilds the machine, not your data. =/home=, any
+service state under =/var/lib=, and your secrets -- SSH and GPG
+private keys, password stores, tokens -- need a backup of their own,
+kept somewhere other than the machine. This book does not cover
+backups yet. Without one, a restore gives you a clean machine with
+empty home directories.
+#+end_notice
+
+*** Before you need it
+
+A restore can only be as recent as the last push. Keep the repo
+pushed after every change (see [[/arch-workstation/maintain][Push it somewhere]]), and know how you
+will reach it from a live stick that has none of your keys -- the
+[[/arch-workstation/restore/rebuild][next page]] lists the ways. Keep the stick provisioned with your WiFi,
+since the restored machine takes its WiFi passphrases from it.
+
+** Rebuild the machine
+:PROPERTIES:
+:EXPORT_FILE_NAME: rebuild
+:EXPORT_HUGO_SLUG: rebuild
+:END:
+
+Start where the install did: a blank machine (or one whose disk you
+are going to erase), the BOOMSTICK, and an SSH session to it, as in
+[[/arch-workstation/boot][Boot the stick and connect]].
+
+*** Get the repo onto the stick
+
+The live system has none of your keys and none of your credentials,
+and the host repo is private. Pick one way in.
+
+*Forward your SSH agent.* Connect with =ssh -A boomstick=, and git on
+the stick uses the keys loaded on your workstation, without copying
+them anywhere. For a repo you push to over SSH, this is the simplest:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup host --from git@git.example.com:you/arch-myhost.git
+#+end_run
+
+The stick has never seen your git server's host key, so ssh asks
+whether to trust it. Check the fingerprint against the one your git
+host publishes before you answer =yes=.
+
+*An HTTPS token.* Give =--from= the repo's =https://= URL, and git
+asks for a username and a password: the password is a token -- for
+GitHub, a fine-grained one, read-only, for this one repository,
+expiring in a day. The stick stores nothing (it has no credential
+helper). If you put a token in the URL instead, =setup= keeps it out
+of the clone's configuration, but it stays in the live shell's
+history until the stick reboots.
+
+*A deploy key.* Run =ssh-keygen -t ed25519= on the stick, add
+=/root/.ssh/id_ed25519.pub= to the repository as a read-only deploy
+key, clone over SSH, then delete the deploy key. The private half
+lives on the stick's RAM disk and is gone at the reboot.
+
+*A bundle, or a copy.* Any surviving clone of the repo packs into one
+file, which you copy to the stick with =scp=. =--from= takes the file,
+or a path to a clone, such as one on another USB stick. No network or
+credentials needed:
+
+#+attr_shortcode: :style secondary :title Run this wherever a clone survived:
+#+begin_run
+git -C arch bundle create ../arch.bundle --all
+scp arch.bundle boomstick:
+#+end_run
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup host --from /root/arch.bundle
+#+end_run
+
+*** Describe the machine: from the repo
+
+=setup host --from= clones the repo to =/root/arch= and keeps it as
+it was committed. Everything was answered when the machine was first
+installed, except the disk, which belongs to the hardware: a =by-id=
+name is one physical drive, and on a new machine (or a new drive)
+that drive is gone. =setup= says so and asks you to pick:
+
+#+begin_stdout
+== Describe this machine ==
+Machine: x86_64 PC, UEFI
++ git clone git@git.example.com:you/arch-myhost.git /root/arch
+Disk /dev/disk/by-id/nvme-Samsung_SSD_970_EVO_S46XNX0M123456 from the host file is not on this machine: pick again.
+? Install to which disk?
+  1) /dev/disk/by-id/nvme-WD_BLACK_SN770_23170K800123       1.8T  nvme  WD_BLACK SN770  (nvme0n1)
+? Number (1): 
+Committed: setup host: myhost
+
+Host repo: /root/arch. Next: setup disk
+Restoring myhost from its host repo: once it has rebooted, log in as
+admin and run 'admin apply' for what only arch/aconfmgr/ describes.
+#+end_stdout
+
+Only the =DISK= line of =host.env= changes, and it is committed, so
+the repo records which drive the machine is on now. Nothing else in
+the repo is touched: a file =setup= would have seeded but you deleted
+stays deleted. The hostname comes from the repo too, so the new
+machine takes the old one's name.
+
+The repo's install log, =logs/000_SETUP.txt=, comes back with it, and
+this run's output is added to the end of it: the restored machine's
+log starts with how the original was installed, then shows how it was
+restored.
+
+*** Disk, install, reboot
+
+From here it is the install you already know:
+
+#+attr_shortcode: :style secondary :title Run this on the live system:
+#+begin_run
+setup disk
+setup install
+setup reboot
+#+end_run
+
+[[/arch-workstation/setup/disk][setup disk]] builds the same layout on the new drive -- with LUKS if
+=host.env= says =ENCRYPT=yes=, so have a passphrase ready.
+[[/arch-workstation/setup/install][setup install]] installs from the repo's plain files: the base packages
+for /this/ hardware, every package in =packages.txt=, the files under
+=etc/= and =bin/=, and the units in =units.txt=. It asks for the
+passwords of =admin= and the daily user again, since none were ever
+kept (=root= stays locked, as before), and copies the stick's WiFi
+networks in.
+
+=aconfmgr/10-base.sh= is rewritten for the hardware it finds. On the
+same kind of machine that changes nothing; on different hardware --
+an AMD CPU where there was an Intel one, say -- the microcode package
+changes, and =setup install= commits the difference, so that the repo
+describes the machine it is now on.
+
+If the repo names a unit whose package only =aconfmgr/= installs, the
+install warns that it is not there yet, and the check lists it as
+waiting for =admin apply=. That is expected, and does not stop the
+reboot.
+
+*** A tunnel, if it had one
+
+If the machine had [[/arch-workstation/setup/wireguard][a tunnel of its own]], the repo has its package, its
+=wg-quick@wg0= unit and the line that tells aconfmgr to ignore it --
+but not its key, which was never in the repo. The check fails until
+the key is back, rather than let the machine boot into a failing
+unit:
+
+#+begin_stdout
+✗ wireguard  units.txt enables wg-quick@wg0, but there is no /etc/wireguard/wg0.conf: run 'setup wireguard', or take it out of units.txt
+#+end_stdout
+
+Run =setup wireguard= before =setup reboot=. With =--paste=, give it
+the =wg0.conf= from your backup, and the machine comes back as the
+same peer. With =--genkey=, it makes a new key: give the new public
+key to your server or provider in place of the old one.
+
+*** Connect again
+
+The restored machine has the old one's name, but new SSH host keys:
+they were never in the repo. Your workstation remembers the old ones,
+and ssh will refuse with a warning that the host key has changed.
+Here, that is the truth, so forget the old keys -- by name, and by
+address if you ever connected by address:
+
+#+attr_shortcode: :style secondary :title Run this on your workstation:
+#+begin_run
+ssh-keygen -R myhost
+ssh-keygen -R 192.168.1.50
+ssh myhost
+#+end_run
+
+and accept the new key. If the machine's address changed, update the
+=HostName= in your =~/.ssh/config= entry.
+
+*** admin apply
+
+The install restored everything the repo's plain files list. What you
+recorded only in aconfmgr's own terms -- lines from =admin save= you
+kept in a numbered file under =aconfmgr/=, and the files it copied to
+=aconfmgr/files/= -- is applied by aconfmgr itself. =admin diff= shows
+what is outstanding first: the repo's history is all there, and the
+drift is the missing pieces, as =RemovePackage= and =RemoveFile= lines
+(the machine lacks what the repo has):
+
+#+attr_shortcode: :style secondary :title Run this on the restored machine:
+#+begin_run
+git -C ~/arch log --oneline
+admin diff
+admin apply
+admin diff
+#+end_run
+
+The last =admin diff= should say:
+
+#+begin_stdout
+No drift: the machine matches /home/admin/arch.
+#+end_stdout
+
+That is the restored machine: the system the repo describes, on new
+hardware.
+
+*** The repo's remote
+
+=~/arch= came from wherever you cloned it, and its =origin= is that
+URL -- or, from a bundle, a file that is not on this machine: point it
+back at your git server with =git -C ~/arch remote set-url origin
+...=. Either way, =admin= on the new machine has no private key yet,
+so set one up (or forward your agent) before you push. Then push: the
+=setup host= commit recording the new disk, and any =setup install=
+commit for new hardware, are the first entries of this machine's
+history.
+
+*** The desktop
+
+If the repo had the [[/arch-workstation/desktop][desktop]], its system half came back with the
+install -- sway, greetd and Nix are in =packages.txt= and =units.txt=,
+and the reboot started greetd. The user half did not: it lived in
+=/home/user=. Restore =user='s home from your backup, and then
+install sway-home again, as on the [[/arch-workstation/desktop/sway-home][sway-home]] page: =hm-install= as
+=user=, and =non-nixos-gpu-setup= as =admin=. Home Manager rebuilds
+the same environment from sway-home's lock file, and =admin diff=
+should still find no drift.
 
 * Desktop
 :PROPERTIES:
