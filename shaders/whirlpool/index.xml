@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Whirlpool on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/shaders/whirlpool/</link>
+    <description>Recent content in Whirlpool on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/shaders/whirlpool/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>First Whirlpool</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/first-whirlpool/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/first-whirlpool/</guid>
+      <description>An evolution of the step function: instead of sampling the quadrants from a fixed grid, we swirl the coordinate plane around its center before applying step. Each point is rotated by an angle that grows toward the middle, dragging the four colored quadrants into a whirlpool. A slow iTime term keeps the vortex turning.&#xA;A single shader block runs it live and, via #+attr_diff, shows its source as a changeset from the step function — toggle the box to read the full source instead:</description>
+    </item>
+    <item>
+      <title>Whirlpool (precision-stable)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/precision-stable/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/precision-stable/</guid>
+      <description>Left to run, the whirlpool slowly turns grainy and chunky, worst near the center. That isn&amp;rsquo;t in the design — the iTime term adds a uniform angular offset, so the vortex should spin rigidly without ever changing detail. The decay is a numerical artifact:&#xA;iTime * 0.3 grows without bound, so cos=/=sin lose precision in their fractional argument as the magnitude climbs. step(0.5, sw) is a hard, un-antialiased edge, so any coordinate error gets thresholded into a full pixel flip — and the quadrant boundaries pack tightest near the center, where the speckle shows first.</description>
+    </item>
+    <item>
+      <title>Whirlpool (palettes)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/palettes/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/palettes/</guid>
+      <description>The four quadrant colors of the precision-stable whirlpool — black / red / green / yellow — weren&amp;rsquo;t chosen; they fell out of vec3(e, 0), the x-bit wired to red and the y-bit to green with blue pinned off. That puts them on the four corners of one face of the RGB cube: a square, with edge distance 1 and diagonal √2 — so they are not mutually equidistant.&#xA;Other four-color palettes are equally intrinsic to the same two-bit quadrant, and each is just a different map from the antialiased quadrant q (q.</description>
+    </item>
+    <item>
+      <title>Whirlpool (palette sweep)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/palette-sweep/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/palette-sweep/</guid>
+      <description>Rather than hard-code one of the palettes, cycle through all five and wipe between them with a sweep transition. Three pieces, shown via #+attr_diff as a changeset from the palettes shader:&#xA;The palettes page&amp;rsquo;s palette(int i, vec2 q) dispatcher is already in place; here the index comes from iTime rather than the @select selector, so the palette advances on its own instead of waiting for a pick. iTime / HOLD is split by floor / fract into a current palette index and how far we are through its slot.</description>
+    </item>
+    <item>
+      <title>Whirlpool (looping transport)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/looping-transport/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/looping-transport/</guid>
+      <description>The palette sweep already repeats — the five palettes cycle every 5 * HOLD units of iTime — but the engine doesn&amp;rsquo;t know that, so it just lets iTime run forever. Tell it the period with a @loop directive and two things change: iTime wraps to [0, DURATION), and the controls panel grows a transport scrubber across the top. Drag it (or focus it and arrow-key) to seek anywhere in the loop — accrual pauses while you scrub and resumes from wherever you let go, video-player style.</description>
+    </item>
+    <item>
+      <title>Whirlpool (spiral &amp; tunnel)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/spiral-tunnel/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/spiral-tunnel/</guid>
+      <description>Every whirlpool so far has used the same polar move: convert the pixel to (r, a), nudge the angle, rebuild cartesian coords. The nudge has always been a + 6 * exp(-3 r)= — a twist that dies off away from the center. Swap that one term and the geometry changes completely. This page adds a @select to flip between two classic polar remaps live (shown via #+attr_diff as a changeset from the looping transport):</description>
+    </item>
+    <item>
+      <title>Whirlpool (living drain)</title>
+      <link>https://book.rymcg.tech/shaders/whirlpool/living-drain/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/whirlpool/living-drain/</guid>
+      <description>The spiral drains, but mechanically: a fixed eye, a constant pull, a metronome spin. A real drain sloshes — the vortex wanders, surges, and breathes. This changeset (from the spiral &amp;amp; tunnel) adds that life with three time-varying wobbles, then keeps the @loop seamless with one trick: every wobble is a sine at a whole multiple of the loop frequency w = TAU / LOOP, so each returns to its start at iTime = LOOP.</description>
+    </item>
+  </channel>
+</rss>

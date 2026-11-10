@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Keeping it maintainable on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/arch-workstation/maintain/</link>
+    <description>Recent content in Keeping it maintainable on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/arch-workstation/maintain/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>See what drifted</title>
+      <link>https://book.rymcg.tech/arch-workstation/maintain/diff/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/maintain/diff/</guid>
+      <description>Run this on the new machine: admin diff On a machine that matches its repo:&#xA;(stdout) No drift: the machine matches /home/admin/arch. After installing htop and dropping a sysctl file into /etc by hand:&#xA;(stdout) Drift (as the aconfmgr lines that would describe it): AddPackage htop # Interactive process viewer CopyFile /etc/sysctl.d/99-swappiness.conf Each line is what aconfmgr would have to add to the configuration to describe the machine as it is.</description>
+    </item>
+    <item>
+      <title>Save and apply</title>
+      <link>https://book.rymcg.tech/arch-workstation/maintain/save/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/maintain/save/</guid>
+      <description>Every line of drift has two possible fixes: change the repo to match the machine, or change the machine to match the repo. admin save and admin apply are the two.&#xA;Change the repo: admin save When the drift is something you meant, record it:&#xA;Run this on the new machine: admin save (stdout) Wrote /home/admin/arch/aconfmgr/99-unsorted.sh. Move what you meant into a numbered file, delete the rest (and &#39;admin apply&#39; to undo it), then commit.</description>
+    </item>
+    <item>
+      <title>Upgrade</title>
+      <link>https://book.rymcg.tech/arch-workstation/maintain/upgrade/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/maintain/upgrade/</guid>
+      <description>Untested admin upgrade has not yet been run by the test VM, which installs from the current repositories and has nothing to upgrade.&#xA;Run this on the new machine: admin upgrade One command for the thing you will do most often, in an order worth not having to remember:&#xA;Refuse to start if admin diff reports drift. Upgrading a machine you cannot describe makes it harder to describe. admin save or admin apply first.</description>
+    </item>
+    <item>
+      <title>Snapshots</title>
+      <link>https://book.rymcg.tech/arch-workstation/maintain/snapshots/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/arch-workstation/maintain/snapshots/</guid>
+      <description>setup disk made @snapshots for exactly this. setup install configured snapper to keep snapshots of / (the @ subvolume) there, and installed snap-pac, whose pacman hooks take one snapshot before every transaction and one after:&#xA;Run this on the new machine: sudo snapper list (stdout) # | Type | Pre # | Date | User | Cleanup | Description | Userdata --+--------+-------+--------------------------+------+---------+---------------------------+--------- 0 | single | | | root | | current | 1 | pre | | Mon Oct 26 05:22:11 2026 | root | number | pacman -S --noconfirm vim | 2 | post | 1 | Mon Oct 26 05:22:14 2026 | root | number | vim | The configuration is in the host repo, at etc/snapper/configs/root:</description>
+    </item>
+  </channel>
+</rss>

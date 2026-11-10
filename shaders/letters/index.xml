@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Letters on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/shaders/letters/</link>
+    <description>Recent content in Letters on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/shaders/letters/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Letter A</title>
+      <link>https://book.rymcg.tech/shaders/letters/letter-a/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/letters/letter-a/</guid>
+      <description>The most minimal way to put a real letterform on the screen from GLSL: read it from a font. A shader can&amp;rsquo;t call fillText, but the host page can. The literate directive // @glyph iGlyph &amp;quot;A&amp;quot; tells the shader engine to render the character into an offscreen 1024×1024 canvas using the site&amp;rsquo;s monospace webfont — Inconsolata — and upload the result as a sampler2D uniform. What the shader receives is an RGBA texture whose alpha channel is 1.</description>
+    </item>
+    <item>
+      <title>Letter A (SDF)</title>
+      <link>https://book.rymcg.tech/shaders/letters/letter-a-sdf/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/letters/letter-a-sdf/</guid>
+      <description>The previous letter A renders sharply at a fit-to-screen zoom but softens the moment you look closer: Canvas2D&amp;rsquo;s rasterizer produces a coverage ramp only one texel wide along the boundary, and once the texture is magnified past 1:1 that ramp spreads across many output pixels — a blur that no fwidth-scaled threshold can rescue.&#xA;The fix is to change what the texture stores. Instead of coverage, put a signed distance field there: every texel holds the (clipped) signed distance in pixels to the nearest glyph edge — negative inside the letter, positive outside, zero on the outline.</description>
+    </item>
+    <item>
+      <title>Hello, world!</title>
+      <link>https://book.rymcg.tech/shaders/letters/hello-world/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/letters/hello-world/</guid>
+      <description>Everything the previous page does works on a whole string with almost no new code — the rasterizer already has fillText, and the distance transform is pixel-agnostic. So @sdf is generalised: whatever sits between the quotes becomes the atlas.&#xA;For a multi-character quoted argument, the engine measures the string, sizes the offscreen canvas to fit (a fixed 512-pixel height, natural width from Canvas2D&amp;rsquo;s measureText), rasterises the whole string, and runs the same 2D Felzenszwalb distance transform on the rectangle.</description>
+    </item>
+    <item>
+      <title>Tileset</title>
+      <link>https://book.rymcg.tech/shaders/letters/tileset/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/letters/tileset/</guid>
+      <description>The previous page bakes a whole string into one atlas laid out for reading. Change the layout to a grid instead — one character per cell — and the atlas becomes a lookup table: pass an integer index, get a glyph. That turns a fragment shader into a tile-based renderer, with everything the term suggests: partition the screen into cells, decide independently what each cell shows, and let the choice function itself become a visual layer.</description>
+    </item>
+    <item>
+      <title>Marquee</title>
+      <link>https://book.rymcg.tech/shaders/letters/marquee/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/shaders/letters/marquee/</guid>
+      <description>The previous page treats a tileset as a lookup: partition the screen into cells, and let a hash of (cell, time) pick a character for each. The choice function is the whole show.&#xA;Flip the axes. Instead of many tiny cells with per-cell choices, sample from a single virtual cell that fills the frame and drive the character choice from a scrolling world x — a linear coordinate that advances one integer per glyph.</description>
+    </item>
+  </channel>
+</rss>

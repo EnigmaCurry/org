@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Build a custom installer ISO on book.rymcg.tech</title>
+    <link>https://book.rymcg.tech/nixos-workstation/build-iso/</link>
+    <description>Recent content in Build a custom installer ISO on book.rymcg.tech</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="https://book.rymcg.tech/nixos-workstation/build-iso/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Boot the installer and run setup</title>
+      <link>https://book.rymcg.tech/nixos-workstation/build-iso/boot-installer/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/nixos-workstation/build-iso/boot-installer/</guid>
+      <description>With your custom ISO written to a USB stick, you are ready to install NixOS onto the target machine.&#xA;Boot the machine Plug the USB stick into the target machine and boot from it. The first time, you will likely need a monitor and keyboard attached to tell the machine to boot from USB: many computers let you pick a one-time boot device from a menu (often F12, but the key varies by manufacturer), or you can enter the UEFI/BIOS setup and change the boot order permanently.</description>
+    </item>
+    <item>
+      <title>Configure the disk</title>
+      <link>https://book.rymcg.tech/nixos-workstation/build-iso/setup-disk/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/nixos-workstation/build-iso/setup-disk/</guid>
+      <description>The first phase partitions, formats, and mounts the target disk. It lays out the filesystem declaratively with disko, as a GPT disk with:&#xA;a btrfs root, all mounted with compress=zstd and noatime, split into subvolumes: @ → / @home → /home @nix → /nix a boot partition chosen automatically from the detected firmware: an EFI System Partition on UEFI machines, or a small bios_grub partition on legacy BIOS machines; optionally, full-disk LUKS encryption of the root; optionally, a swap partition.</description>
+    </item>
+    <item>
+      <title>Generate the host configuration</title>
+      <link>https://book.rymcg.tech/nixos-workstation/build-iso/setup-host/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/nixos-workstation/build-iso/setup-host/</guid>
+      <description>The second phase generates a fresh, self-contained NixOS flake repository for this one machine, and places it on the freshly mounted target at /mnt/home/&amp;lt;user&amp;gt;/nixos.&#xA;This is a key idea in the sway-home design: sway-home itself holds no per-host configuration. It is a shared library of NixOS modules. Each machine you own gets its own small repo that depends on sway-home as a pinned flake input and calls sway-home.lib.mkHost. That per-host repo holds only this machine&amp;rsquo;s disko.</description>
+    </item>
+    <item>
+      <title>Install NixOS</title>
+      <link>https://book.rymcg.tech/nixos-workstation/build-iso/setup-install/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://book.rymcg.tech/nixos-workstation/build-iso/setup-install/</guid>
+      <description>The final phase builds and installs NixOS from the per-host repo that setup host generated, sets your passwords, and makes the machine reachable after reboot.&#xA;Run it from the menu, or directly:&#xA;[bash]: Run this on your workstation: setup install It auto-discovers the host repo and reads the host name from its flake, then shows a review screen:&#xA;================ Review ================= Host repo: /mnt/home/ryan/nixos Host: box User: ryan Target root: /mnt ========================================= This builds and installs NixOS into /mnt (downloads the system closure from the binary cache) and sets passwords.</description>
+    </item>
+  </channel>
+</rss>
